@@ -8,23 +8,29 @@ const footerLinks = [
   { name: 'Blog', path: '/blog' },
   { name: 'Dashboard', path: '/dashboard' }
 ]
+
+import logo from '../../assets/ANT-Forum.png'
 </script>
 
 <template>
   <footer class="bg-white border-top mt-auto pt-5">
-    
+
     <!-- Top Section -->
     <div class="container">
       <div class="row g-4">
 
         <!-- Branding -->
         <div class="col-12 col-md-4">
-          <h5 class="fw-bold text-primary">🐜 ANT-Forum</h5>
-          <p class="text-muted mb-2">
+          <router-link to="/" class="navbar-brand d-flex align-items-center mb-2">
+            <img :src="logo" width="40" height="34" class="me-2 rounded" />
+            <span class="fw-bold text-primary">ANT-Forum</span>
+          </router-link>
+
+          <p class="text-muted small mb-2">
             A modern community platform for developers.
           </p>
 
-          <!-- Optional Social Icons -->
+          <!-- Social Icons -->
           <div class="mt-2">
             <i class="bi bi-github me-2"></i>
             <i class="bi bi-facebook me-2"></i>
@@ -33,7 +39,7 @@ const footerLinks = [
         </div>
 
         <!-- Links -->
-        <div class="col-12 col-md-4">
+        <div class="col-6 col-md-4">
           <h6 class="fw-semibold mb-3">Quick Links</h6>
           <ul class="list-unstyled">
             <li v-for="link in footerLinks" :key="link.path">
@@ -47,10 +53,10 @@ const footerLinks = [
           </ul>
         </div>
 
-        <!-- Info -->
-        <div class="col-12 col-md-4">
+        <!-- About -->
+        <div class="col-6 col-md-4">
           <h6 class="fw-semibold mb-3">About</h6>
-          <p class="text-muted mb-0">
+          <p class="text-muted small mb-0">
             Built with Vue 3, Pinia, Bootstrap and modern UI practices.
           </p>
         </div>
@@ -67,9 +73,12 @@ const footerLinks = [
 </template>
 
 <style scoped>
-.footer-link:hover {
-  color: var(--bs-primary) !important;
-  transform: translateX(3px);
-  transition: 0.2s ease;
-}
+  .footer-link {
+    transition: 0.2s ease;
+  }
+
+  .footer-link:hover {
+    color: var(--bs-primary) !important;
+    transform: translateX(4px);
+  }
 </style>
