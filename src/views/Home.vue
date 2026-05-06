@@ -1,6 +1,9 @@
 <template>
-    <homePage/>
+    <MainLayout/>
 </template>
 <script setup>
-    import homePage from "../layouts/homePage.vue"
+    import MainLayout from '../layouts/mainLayout.vue';
 </script>
+<style scoped>
+
+</style>
