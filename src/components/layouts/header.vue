@@ -79,11 +79,11 @@ const logout = () => {
                 Login
               </router-link>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
               <router-link class="nav-link" to="/register" @click="closeMenu">
                 Register
               </router-link>
-            </li>
+            </li> -->
           </template>
 
           <template v-else>
