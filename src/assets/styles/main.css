@@ -15,16 +15,3 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  font-family: 'Sora', sans-serif;
-  background-color: var(--bg-grid);
-  background-image:
-    linear-gradient(rgba(109,40,217,.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(109,40,217,.06) 1px, transparent 1px);
-  background-size: 40px 40px;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
-}

@@ -8,20 +8,27 @@
 </template>
 
 <script setup>
-import LoginForm from './components/LoginForm.vue'
-import RightPanel from './components/RightPanel.vue'
+import LoginForm from './LoginForm.vue'
+import RightPanel from './RightPanel.vue'
 </script>
 
 <style scoped>
-.login-container {
+ .login-container  {
+  font-family: 'Sora', sans-serif;
+  background-color: var(--bg-grid);
+  background-image:
+    linear-gradient(rgba(109,40,217,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(109,40,217,.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
+  padding: 2rem 1rem;
 }
 
 .login-card {
+  background: var(--card-bg);
   border-radius: 24px;
   box-shadow: 0 20px 60px rgba(109,40,217,.12), 0 4px 16px rgba(0,0,0,.06);
   overflow: visible;
