@@ -1,7 +1,9 @@
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
+import axios from 'axios'
 import Navbar from "../components/layouts/header.vue"
 import Footer from "../components/layouts/footer.vue"
+import { useAuthStore } from '../stores/auth'
 // Form
 const form = reactive({
   name: '',
@@ -10,9 +12,94 @@ const form = reactive({
   linkedin: ''
 })
 
+const authStore = useAuthStore()
+const successMessage = ref('')
+const errorMessage = ref('')
+const isSaving = ref(false)
+
 // Avatar
 const avatarFile = ref(null)
 const avatarPreview = ref('')
+const savedAvatarPreview = ref('')
+
+const savedProfile = reactive({
+  name: '',
+  bio: '',
+  github: '',
+  linkedin: '',
+  skills: []
+})
+
+const isEditing = ref(false)
+
+const resetForm = () => {
+  form.name = savedProfile.name
+  form.bio = savedProfile.bio
+  form.github = savedProfile.github
+  form.linkedin = savedProfile.linkedin
+  skills.value = [...savedProfile.skills]
+  avatarFile.value = null
+  avatarPreview.value = savedAvatarPreview.value
+}
+
+const startEdit = () => {
+  isEditing.value = true
+  resetForm()
+}
+
+const handleCancel = () => {
+  resetForm()
+  isEditing.value = false
+}
+
+const saveProfileState = () => {
+  savedProfile.name = form.name
+  savedProfile.bio = form.bio
+  savedProfile.github = form.github
+  savedProfile.linkedin = form.linkedin
+  savedProfile.skills = [...skills.value]
+  savedAvatarPreview.value = avatarPreview.value
+}
+
+const applyUpdateToStore = (updatedUser) => {
+  authStore.user = {
+    ...authStore.user,
+    name: updatedUser.name ?? form.name,
+    bio: updatedUser.bio ?? form.bio,
+    github: updatedUser.github ?? form.github,
+    linkedin: updatedUser.linkedin ?? form.linkedin,
+    skills: updatedUser.skills ?? [...skills.value],
+    avatar: updatedUser.avatar ?? updatedUser.avatarUrl ?? avatarPreview.value
+  }
+}
+
+const showSuccess = (message) => {
+  successMessage.value = message
+  setTimeout(() => {
+    successMessage.value = ''
+  }, 3000)
+}
+
+const showError = (message) => {
+  errorMessage.value = message
+  setTimeout(() => {
+    errorMessage.value = ''
+  }, 5000)
+}
+
+const loadSavedProfile = () => {
+  const user = authStore.user || {}
+  savedProfile.name = user.name || ''
+  savedProfile.bio = user.bio || ''
+  savedProfile.github = user.github || ''
+  savedProfile.linkedin = user.linkedin || ''
+  savedProfile.skills = Array.isArray(user.skills) ? [...user.skills] : []
+  savedAvatarPreview.value = user.avatar || user.avatarUrl || ''
+  avatarPreview.value = savedAvatarPreview.value
+  resetForm()
+}
+
+onMounted(loadSavedProfile)
 
 // Skills
 const skillInput = ref('')
@@ -47,13 +134,13 @@ const handleAvatarChange = (e) => {
     return
   }
 
-  avatarFile.value = file
-
-  const reader = new FileReader()
-  reader.onload = (event) => {
-    avatarPreview.value = event.target.result
+  // Revoke previous object URL to free memory
+  if (avatarPreview.value && avatarPreview.value.startsWith('blob:')) {
+    URL.revokeObjectURL(avatarPreview.value)
   }
-  reader.readAsDataURL(file)
+
+  avatarFile.value = file
+  avatarPreview.value = URL.createObjectURL(file)
 }
 
 // Skills
@@ -92,8 +179,8 @@ const isValid = computed(() => {
 })
 
 // Submit
-const handleSubmit = () => {
-  if (!isValid.value) return
+const handleSubmit = async () => {
+  if (!isValid.value || isSaving.value) return
 
   const payload = new FormData()
 
@@ -110,7 +197,27 @@ const handleSubmit = () => {
     payload.append('avatar', avatarFile.value)
   }
 
-  console.log('Submit:', payload)
+  isSaving.value = true
+  errorMessage.value = ''
+
+  try {
+    const response = await axios.put('/api/users/me', payload, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    const updatedUser = response.data?.user ?? response.data ?? {}
+    applyUpdateToStore(updatedUser)
+    saveProfileState()
+    isEditing.value = false
+    showSuccess('Profile saved successfully.')
+  } catch (error) {
+    console.error('Profile update failed:', error)
+    showError('Unable to save profile. Please try again.')
+  } finally {
+    isSaving.value = false
+  }
 }
 </script>
 
@@ -120,7 +227,37 @@ const handleSubmit = () => {
     
     <div class="card shadow-sm p-4">
 
-      <h4 class="mb-4">Edit Profile</h4>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Profile</h4>
+        <div>
+          <button
+            v-if="!isEditing"
+            class="btn btn-outline-primary"
+            @click="startEdit"
+          >
+            Edit Profile
+          </button>
+          <div v-else class="d-flex gap-2">
+            <button class="btn btn-secondary" @click="handleCancel" :disabled="isSaving">
+              Cancel
+            </button>
+            <button
+              class="btn btn-primary"
+              :disabled="!isValid || isSaving"
+              @click="handleSubmit"
+            >
+              {{ isSaving ? 'Saving...' : 'Save Profile' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="successMessage" class="alert alert-success mt-2" role="alert">
+        {{ successMessage }}
+      </div>
+      <div v-if="errorMessage" class="alert alert-danger mt-2" role="alert">
+        {{ errorMessage }}
+      </div>
 
       <!-- Avatar Upload -->
       <div class="text-center mb-4">
@@ -136,6 +273,7 @@ const handleSubmit = () => {
           class="form-control"
           accept="image/*"
           @change="handleAvatarChange"
+          :disabled="!isEditing"
         />
       </div>
 
@@ -146,6 +284,7 @@ const handleSubmit = () => {
           v-model="form.name"
           class="form-control"
           :class="{ 'is-invalid': errors.name }"
+          :disabled="!isEditing"
         />
         <div class="invalid-feedback">{{ errors.name }}</div>
       </div>
@@ -158,6 +297,7 @@ const handleSubmit = () => {
           class="form-control"
           rows="3"
           :class="{ 'is-invalid': errors.bio }"
+          :disabled="!isEditing"
         ></textarea>
         <div class="invalid-feedback">{{ errors.bio }}</div>
         <small class="text-muted">{{ form.bio.length }}/200</small>
@@ -173,8 +313,13 @@ const handleSubmit = () => {
             @keyup.enter="addSkill"
             class="form-control me-2"
             placeholder="Add skill"
+            :disabled="!isEditing"
           />
-          <button class="btn btn-outline-primary" @click="addSkill">
+          <button
+            class="btn btn-outline-primary"
+            @click="addSkill"
+            :disabled="!isEditing"
+          >
             Add
           </button>
         </div>
@@ -187,6 +332,7 @@ const handleSubmit = () => {
           >
             {{ skill }}
             <span
+              v-if="isEditing"
               class="ms-1"
               style="cursor:pointer"
               @click="removeSkill(index)"
@@ -204,6 +350,7 @@ const handleSubmit = () => {
           v-model="form.github"
           class="form-control"
           :class="{ 'is-invalid': errors.github }"
+          :disabled="!isEditing"
         />
         <div class="invalid-feedback">{{ errors.github }}</div>
       </div>
@@ -215,18 +362,10 @@ const handleSubmit = () => {
           v-model="form.linkedin"
           class="form-control"
           :class="{ 'is-invalid': errors.linkedin }"
+          :disabled="!isEditing"
         />
         <div class="invalid-feedback">{{ errors.linkedin }}</div>
       </div>
-
-      <!-- Submit -->
-      <button
-        class="btn btn-primary w-100"
-        :disabled="!isValid"
-        @click="handleSubmit"
-      >
-        Save Profile
-      </button>
 
     </div>
 
