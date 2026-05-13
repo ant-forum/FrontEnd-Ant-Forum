@@ -1,36 +1,48 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import Navbar from "../components/layouts/header.vue"
 import BaseFooter from "../components/layouts/footer.vue"
+import SkeletonLoader from "../components/SkeletonLoader.vue"
+import EmptyState from "../components/EmptyState.vue"
 
-const recentPosts = [
-  {
-    category: "DEVOPS",
-    title: "Zero-Downtime Migrations in Kubernetes",
-    description: "Strategies for managing stateful applications during cluster upgrades, focusing on pod disruption budgets.",
-    author: "Sarah Jenkins",
-    readTime: "8 min",
-    date: "Oct 18",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCB2sdCEKnAG-jYy3YmOU73Fq4gq-1chXqB2y_e2cLyj5-UnCQEl7nsC79vtaQAVoq84zsNfB8Hiln0ea736Wm5QtMilvYWwbnkp3oXZWjtn-7tlO-MI2sqBQXqoyst1iby1ZJZasMsyRNj19nwD1dE_4HpFsUNjgDJQx9zXkP_yUck03_ixdbEPA5v7BGSyU7-YCtyUbM0LixImwF2sXxtNqA2hjc84nmFSSpB_jGGFMPHBG6GOmRWRUqGcPVg9FGCIO5_s0ROoP8"
-  },
-  {
-    category: "FRONTEND",
-    title: "React Context vs. Signals: A Performance Benchmark",
-    description: "An empirical study comparing render cycles and memory footprint when scaling global state.",
-    author: "David Park",
-    readTime: "6 min",
-    date: "Oct 12",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDu_Rf69uYa8hP1M0Qx_hpMYmnbw_Nm8e5JkE1-fRHhTDN0lLWPT5WdoEDwnxYVgnNJUJC27Y73upk0OeQOXcirdQua1ILTJh9FrHiQcPgfWF2kFlVtRplg2bDfn_CrIqwNfGx8oLjapldTiEKuZIhdUAjMFz9tpcMMcdHpJaqfXrQkau6B3kz-0KcyfW3M3TuGU2nAalmx92x6mNsQVwMilvxWHSJpqIZGkXZp2oFlVt_DeVtE_6m1GwQ5APQjhhj6d8z1rUzuV_7M"
-  },
-  {
-    category: "SYSTEMS",
-    title: "Designing Idempotent APIs",
-    description: "Why idempotency keys are critical for distributed systems reliability, preventing duplicate transactions.",
-    author: "Elena Rodriguez",
-    readTime: "9 min",
-    date: "Oct 05",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuArlYEHQrTu4obaqv3ymp3jjXYE6wEApFKkGDTrcAYFfgWabzMxSzoW0SQ3IBRhlCmiUT5nbLyKT3YUjWmrYfAlfmLGNt1g-9Fog1rqEM-M76IBeDES4AlZlSoK8VWKNAL8TDyc4y1fqeYB7pIY77xpjvu37IqhVyBDXdQI0k6RlYWCHFyGgRYzHevS2T57TcMSCCnu0nQ0B0ZB9unbJRfl5LQs7UQ3d8P9i0v6_WwbP46RdPUTz6H5JudN847OuvBy7zQURXS627g"
-  }
-]
+const isLoading = ref(true)
+const recentPosts = ref([])
+
+onMounted(() => {
+  // Simulate API fetch
+  setTimeout(() => {
+    recentPosts.value = [
+      {
+        category: "DEVOPS",
+        title: "Zero-Downtime Migrations in Kubernetes",
+        description: "Strategies for managing stateful applications during cluster upgrades, focusing on pod disruption budgets.",
+        author: "Sarah Jenkins",
+        readTime: "8 min",
+        date: "Oct 18",
+        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCB2sdCEKnAG-jYy3YmOU73Fq4gq-1chXqB2y_e2cLyj5-UnCQEl7nsC79vtaQAVoq84zsNfB8Hiln0ea736Wm5QtMilvYWwbnkp3oXZWjtn-7tlO-MI2sqBQXqoyst1iby1ZJZasMsyRNj19nwD1dE_4HpFsUNjgDJQx9zXkP_yUck03_ixdbEPA5v7BGSyU7-YCtyUbM0LixImwF2sXxtNqA2hjc84nmFSSpB_jGGFMPHBG6GOmRWRUqGcPVg9FGCIO5_s0ROoP8"
+      },
+      {
+        category: "FRONTEND",
+        title: "React Context vs. Signals: A Performance Benchmark",
+        description: "An empirical study comparing render cycles and memory footprint when scaling global state.",
+        author: "David Park",
+        readTime: "6 min",
+        date: "Oct 12",
+        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDu_Rf69uYa8hP1M0Qx_hpMYmnbw_Nm8e5JkE1-fRHhTDN0lLWPT5WdoEDwnxYVgnNJUJC27Y73upk0OeQOXcirdQua1ILTJh9FrHiQcPgfWF2kFlVtRplg2bDfn_CrIqwNfGx8oLjapldTiEKuZIhdUAjMFz9tpcMMcdHpJaqfXrQkau6B3kz-0KcyfW3M3TuGU2nAalmx92x6mNsQVwMilvxWHSJpqIZGkXZp2oFlVt_DeVtE_6m1GwQ5APQjhhj6d8z1rUzuV_7M"
+      },
+      {
+        category: "SYSTEMS",
+        title: "Designing Idempotent APIs",
+        description: "Why idempotency keys are critical for distributed systems reliability, preventing duplicate transactions.",
+        author: "Elena Rodriguez",
+        readTime: "9 min",
+        date: "Oct 05",
+        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuArlYEHQrTu4obaqv3ymp3jjXYE6wEApFKkGDTrcAYFfgWabzMxSzoW0SQ3IBRhlCmiUT5nbLyKT3YUjWmrYfAlfmLGNt1g-9Fog1rqEM-M76IBeDES4AlZlSoK8VWKNAL8TDyc4y1fqeYB7pIY77xpjvu37IqhVyBDXdQI0k6RlYWCHFyGgRYzHevS2T57TcMSCCnu0nQ0B0ZB9unbJRfl5LQs7UQ3d8P9i0v6_WwbP46RdPUTz6H5JudN847OuvBy7zQURXS627g"
+      }
+    ]
+    isLoading.value = false
+  }, 1500)
+})
 </script>
 
 <template>
@@ -111,7 +123,30 @@ const recentPosts = [
 
       <section class="container pb-5 mt-4">
         <h3 class="fw-bold mb-4 border-bottom pb-2">Recent Publications</h3>
-        <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div v-if="isLoading" class="row row-cols-1 row-cols-md-3 g-4">
+          <div v-for="i in 3" :key="i" class="col">
+            <div class="card h-100 border-0 shadow-sm p-3">
+              <SkeletonLoader height="150px" class="mb-3" />
+              <SkeletonLoader width="60%" height="20px" class="mb-2" />
+              <SkeletonLoader height="15px" class="mb-2" />
+              <SkeletonLoader height="15px" class="mb-2" />
+              <SkeletonLoader width="80%" height="15px" class="mb-3" />
+              <div class="d-flex justify-content-between mt-auto">
+                <SkeletonLoader width="30%" height="12px" />
+                <SkeletonLoader width="20%" height="12px" />
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div v-else-if="recentPosts.length === 0" class="py-4">
+          <EmptyState 
+            title="No Publications Found" 
+            description="We haven't published any articles yet. Check back soon!" 
+          />
+        </div>
+
+        <div v-else class="row row-cols-1 row-cols-md-3 g-4">
           <div v-for="post in recentPosts" :key="post.title" class="col">
             <article class="card h-100 border-0 glass-panel shadow-sm hover-up rounded-4 overflow-hidden">
               <div style="height: 200px; overflow: hidden;">

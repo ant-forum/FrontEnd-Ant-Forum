@@ -242,10 +242,11 @@ const handleSubmit = async () => {
               Cancel
             </button>
             <button
-              class="btn btn-primary"
+              class="btn btn-primary d-flex align-items-center gap-2"
               :disabled="!isValid || isSaving"
               @click="handleSubmit"
             >
+              <span v-if="isSaving" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               {{ isSaving ? 'Saving...' : 'Save Profile' }}
             </button>
           </div>
