@@ -52,7 +52,7 @@
           <input type="checkbox" v-model="form.remember" />
           <span>Remember me</span>
         </label>
-        <a href="#" class="forgot-link">Forgot Password?</a>
+        <router-link to="/forgot-password" class="forgot-link">Forgot Password?</router-link>
       </div>
 
       <!-- Sign In -->
