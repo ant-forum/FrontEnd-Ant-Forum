@@ -29,7 +29,7 @@
   top: 0;
   left: 0;
   width: 88%;
-  background: black;
+  background: var(--code-bg);
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 16px 48px rgba(0,0,0,.28);
