@@ -4,6 +4,8 @@ import Home from '../views/Home.vue';
 import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
+import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
+import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
 
 const routes = [
   {
@@ -12,6 +14,18 @@ const routes = [
       component: LoginView,
       meta: { title: "Login" },
 
+  },
+  {
+    path: "/forgot-password",
+    name: "forgot-password",
+    component: ForgotPasswordView,
+    meta: { title: "Reset Password" },
+  },
+  {
+    path: "/verify",
+    name: "verify",
+    component: VerifyAccountView,
+    meta: { title: "Verify Account" },
   },
   {
     path: '/',
