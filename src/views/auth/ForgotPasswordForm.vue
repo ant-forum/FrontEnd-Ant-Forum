@@ -29,8 +29,20 @@
         </template>
         <template v-else>
           <span>Reset Password</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M5 12h14M13 6l6 6-6 6"
+            />
           </svg>
         </template>
       </button>
@@ -38,53 +50,61 @@
 
     <!-- Back to Login -->
     <div class="back-link text-center mt-4">
-      Remember your password? <router-link to="/login">Back to Login</router-link>
+      Remember your password?
+      <router-link to="/login">Back to Login</router-link>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import api from "../../api/api";
 
-const router = useRouter()
-const loading = ref(false)
+const router = useRouter();
+const loading = ref(false);
 
-const form = reactive({ email: '' })
-const errors = reactive({ email: '' })
+const form = reactive({ email: "" });
+const errors = reactive({ email: "" });
 
-function clearError(field) { errors[field] = '' }
+function clearError(field) {
+  errors[field] = "";
+}
 
 function validate() {
-  let ok = true
+  let ok = true;
   if (!form.email.trim()) {
-    errors.email = 'Email address is required.'
-    ok = false
+    errors.email = "Email address is required.";
+    ok = false;
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = 'Please enter a valid email address.'
-    ok = false
+    errors.email = "Please enter a valid email address.";
+    ok = false;
   }
-  return ok
+  return ok;
 }
 
 async function handleReset() {
-  if (!validate()) return
-  loading.value = true
-  // Mock API call
-  await new Promise(r => setTimeout(r, 1500))
-  loading.value = false
-  // Redirect to verify step or show success
-  router.push('/verify')
+  if (!validate()) return;
+  loading.value = true;
+  try {
+    await api.post("/api/auth/forgot-password", { email: form.email });
+    router.push("/verify");
+  } catch (error) {
+    // The global interceptor in src/api/api.js shows the error toast.
+    console.error("Password reset failed:", error);
+  } finally {
+    loading.value = false;
+  }
 }
 </script>
 
 <style scoped>
 .left-panel {
-  padding: 3.5rem 3rem 3rem;
+  padding: var(--spacing-xl) var(--spacing-2xl) var(--spacing-2xl);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border-radius: 24px 0 0 24px;
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
   background: #fff;
 }
 
@@ -92,101 +112,151 @@ h1 {
   font-size: 2rem;
   font-weight: 700;
   color: var(--text-dark);
-  letter-spacing: -.5px;
-  margin-bottom: .5rem;
+  letter-spacing: 0;
+  margin-bottom: 0.5rem;
+  line-height: var(--line-height-heading);
 }
 
 .subtitle {
   color: var(--text-muted);
-  font-size: .93rem;
+  font-size: 0.93rem;
   line-height: 1.55;
   margin-bottom: 2rem;
 }
 
-.form-stack { display: flex; flex-direction: column; gap: 1rem; }
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
 
 .input-label {
   display: block;
-  font-size: .75rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #6b7280;
-  margin-bottom: .5rem;
-  letter-spacing: .05em;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .form-control-custom {
   width: 100%;
-  padding: .75rem 1rem;
+  padding: 0.75rem var(--spacing-md);
   border: 1.5px solid var(--input-border);
-  border-radius: 10px;
-  font-family: 'Sora', sans-serif;
-  font-size: .9rem;
+  border-radius: var(--radius-md);
+  font-family: "Sora", sans-serif;
+  font-size: 0.9rem;
   color: var(--text-dark);
   background: #fff;
   outline: none;
-  transition: border-color .2s, box-shadow .2s;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background-color var(--transition-base);
 }
-.form-control-custom::placeholder { color: #9ca3af; }
+.form-control-custom::placeholder {
+  color: #9ca3af;
+}
 .form-control-custom:focus {
   border-color: var(--brand-light);
-  box-shadow: 0 0 0 3px rgba(124,58,237,.15);
+  box-shadow: var(--focus-ring);
 }
 .form-control-custom.error {
   border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
 
-.error-msg { font-size: .78rem; color: #ef4444; margin-top: 4px; }
+.error-msg {
+  font-size: 0.78rem;
+  color: #ef4444;
+  margin-top: 4px;
+}
 
 .btn-signin {
   width: 100%;
-  padding: .8rem;
+  padding: 0.8rem;
   background: var(--brand);
   color: #fff;
   border: none;
-  border-radius: 10px;
-  font-family: 'Sora', sans-serif;
-  font-size: .95rem;
+  border-radius: var(--radius-md);
+  font-family: "Sora", sans-serif;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: .5rem;
-  transition: background .2s, transform .15s, box-shadow .2s;
-  box-shadow: 0 4px 14px rgba(109,40,217,.35);
+  gap: 0.5rem;
+  transition:
+    background var(--transition-base),
+    transform var(--transition-fast),
+    box-shadow var(--transition-base);
+  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.35);
 }
-.btn-signin:hover {
-  background: var(--brand-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(109,40,217,.45);
-}
-.btn-signin:active { transform: translateY(0); }
-.btn-signin:disabled { opacity: .7; cursor: not-allowed; transform: none; }
 
-.back-link { font-size: .875rem; color: var(--text-muted); }
-.back-link a { color: var(--brand-light); text-decoration: none; font-weight: 600; }
-.back-link a:hover { text-decoration: underline; }
+@media (hover: hover) {
+  .btn-signin:hover {
+    background: var(--brand-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-brand);
+  }
+}
+.btn-signin:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-brand), var(--focus-ring);
+}
+.btn-signin:active {
+  transform: translateY(0);
+}
+.btn-signin:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.back-link {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+.back-link a {
+  color: var(--brand-light);
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+.back-link a:hover,
+.back-link a:focus-visible {
+  color: var(--brand-hover);
+  text-decoration: underline;
+}
 
 .spinner {
   width: 18px;
   height: 18px;
-  border: 2.5px solid rgba(255,255,255,.4);
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
   border-top-color: #fff;
   border-radius: 50%;
-  animation: spin .7s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 @media (max-width: 768px) {
   .left-panel {
-    padding: 2.5rem 2rem;
-    border-radius: 20px;
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    border-radius: var(--radius-lg);
   }
-  h1 { font-size: 1.6rem; }
+  h1 {
+    font-size: 1.6rem;
+  }
 }
 @media (max-width: 420px) {
-  .left-panel { padding: 2rem 1.5rem; }
+  .left-panel {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
 }
 </style>

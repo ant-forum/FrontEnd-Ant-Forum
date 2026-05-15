@@ -1,11 +1,11 @@
 <script setup>
 defineProps({
-  stats: Object
-})
+  stats: Object,
+});
 </script>
 
 <template>
-  <div class="card p-3 shadow-sm">
+  <div class="card dashboard-card p-3 shadow-sm">
     <h5>Dashboard Stats</h5>
 
     <ul class="mb-0">
@@ -15,3 +15,9 @@ defineProps({
     </ul>
   </div>
 </template>
+
+<style scoped>
+.dashboard-card {
+  border-radius: var(--radius-lg);
+}
+</style>
