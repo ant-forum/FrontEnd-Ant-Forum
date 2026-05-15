@@ -1,19 +1,19 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "../stores/auth";
 
-import Home from '../views/Home.vue';
-import Dashboard from '../views/Dashboard.vue';
-import Profile from "../views/Profile.vue"
-import LoginView from '../views/auth/LoginView.vue';
-import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
-import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
+import Home from "../views/Home.vue";
+import Dashboard from "../views/Dashboard.vue";
+import Profile from "../views/Profile.vue";
+import LoginView from "../views/auth/LoginView.vue";
+import ForgotPasswordView from "../views/auth/ForgotPasswordView.vue";
+import VerifyAccountView from "../views/auth/VerifyAccountView.vue";
 
 const routes = [
   {
     path: "/login",
-      name: "login",
-      component: LoginView,
-      meta: { title: "Login" },
-
+    name: "login",
+    component: LoginView,
+    meta: { title: "Login" },
   },
   {
     path: "/forgot-password",
@@ -28,32 +28,35 @@ const routes = [
     meta: { title: "Verify Account" },
   },
   {
-    path: '/',
+    path: "/",
     component: Home,
     name: "HomeLayout",
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
-    path: '/blog', 
-    name: 'Blog', 
-    meta: { requiresAuth: true }
-    // component
+    path: "/blog",
+    name: "Blog",
+    meta: { requiresAuth: true },
+    component: () => import("../views/Home.vue"), // placeholder until Blog view is built
   },
-  { path: '/dashboard', 
-    name: 'Dashboard', 
+  {
+    path: "/dashboard",
+    name: "Dashboard",
     meta: { requiresAuth: true },
-    component: Dashboard
-   },
-   { path: '/profile', 
-    name: 'Profile', 
+    component: Dashboard,
+  },
+  {
+    path: "/profile",
+    name: "Profile",
     meta: { requiresAuth: true },
-    component: Profile
-   },
-]
+    component: Profile,
+  },
+];
+
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
-export default router
+export default router;

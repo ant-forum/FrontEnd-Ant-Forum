@@ -4,10 +4,15 @@ export function useRequiredValidator() {
   const errors = reactive({});
 
   const validateField = (field, value, message) => {
-    errors[field] = value ? "" : message;
-    return !errors[field];
+    // Check if value is empty (or empty string after trim)
+    const isValid = typeof value === "string" ? value.trim() !== "" : !!value;
+    errors[field] = isValid ? "" : message;
+    return isValid;
   };
 
-  return { errors, validateField };
-}
+  const clearError = (field) => {
+    errors[field] = "";
+  };
 
+  return { errors, validateField, clearError };
+}

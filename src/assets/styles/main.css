@@ -1,17 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 :root {
-  --brand:        #6d28d9;
-  --brand-light:  #7c3aed;
-  --brand-hover:  #5b21b6;
-  --accent:       #10b981;
-  --bg-grid:      #ede9f6;
-  --card-bg:      #ffffff;
+  --brand: #6d28d9;
+  --brand-light: #7c3aed;
+  --brand-hover: #5b21b6;
+  --accent: #10b981;
+  --bg-grid: #ede9f6;
+  --card-bg: #ffffff;
   --input-border: #d1d5db;
-  --text-muted:   #6b7280;
-  --text-dark:    #111827;
-  --code-bg:      #1e1e2e;
+  --text-muted: #6b7280;
+  --text-dark: #111827;
+  --code-bg: #1e1e2e;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-family-display);
+  line-height: var(--line-height-base);
+  background: var(--color-bg);
+  color: var(--text-dark);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}

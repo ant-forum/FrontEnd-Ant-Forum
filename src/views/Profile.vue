@@ -1,13 +1,13 @@
 <template>
-    <main class="main-layout d-flex flex-column min-vh-100">
-        <Profile/>
-    </main>
+  <main class="main-layout d-flex flex-column min-vh-100">
+    <Profile />
+  </main>
 </template>
 <script setup>
-    import Profile from '../layouts/Profile.vue';
+import Profile from "../layouts/Profile.vue";
 </script>
 <style scoped>
-    .main-layout {
-        background-color: #f8f9fa;
-    }
+.main-layout {
+  background-color: #f8f9fa;
+}
 </style>
