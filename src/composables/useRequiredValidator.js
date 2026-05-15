@@ -3,8 +3,6 @@ import { reactive } from "vue";
 export function useRequiredValidator() {
   const errors = reactive({});
 
-  // ─── Generic ────────────────────────────────────────────────────────────────
-
   const validateField = (field, value, message) => {
     const isValid = typeof value === "string" ? value.trim() !== "" : !!value;
     errors[field] = isValid ? "" : message;
@@ -15,7 +13,6 @@ export function useRequiredValidator() {
     errors[field] = "";
   };
 
-  // ─── Email ───────────────────────────────────────────────────────────────────
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -32,7 +29,6 @@ export function useRequiredValidator() {
     return true;
   };
 
-  // ─── Password ────────────────────────────────────────────────────────────────
 
   const validatePassword = (value) => {
     if (!value || value === "") {
@@ -47,7 +43,6 @@ export function useRequiredValidator() {
     return true;
   };
 
-  // ─── Username ────────────────────────────────────────────────────────────────
 
   const validateUsername = (value) => {
     if (!value || value.trim() === "") {
