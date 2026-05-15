@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "../stores/auth";
 
 import Home from '../views/Home.vue';
 import HomePage from '../views/HomePage.vue';
@@ -9,16 +10,27 @@ import LoginView from '../views/auth/LoginView.vue';
 const routes = [
   {
     path: "/login",
-      name: "login",
-      component: LoginView,
-      meta: { title: "Login" },
-
+    name: "login",
+    component: LoginView,
+    meta: { title: "Login" },
   },
   {
-    path: '/',
+    path: "/forgot-password",
+    name: "forgot-password",
+    component: ForgotPasswordView,
+    meta: { title: "Reset Password" },
+  },
+  {
+    path: "/verify",
+    name: "verify",
+    component: VerifyAccountView,
+    meta: { title: "Verify Account" },
+  },
+  {
+    path: "/",
     component: Home,
     name: "HomeLayout",
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/home',
@@ -32,21 +44,24 @@ const routes = [
     meta: { requiresAuth: true }
     // component
   },
-  { path: '/dashboard', 
-    name: 'Dashboard', 
+  {
+    path: "/dashboard",
+    name: "Dashboard",
     meta: { requiresAuth: true },
-    component: Dashboard
-   },
-   { path: '/profile', 
-    name: 'Profile', 
+    component: Dashboard,
+  },
+  {
+    path: "/profile",
+    name: "Profile",
     meta: { requiresAuth: true },
-    component: Profile
-   },
-]
+    component: Profile,
+  },
+];
+
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
-export default router
+export default router;

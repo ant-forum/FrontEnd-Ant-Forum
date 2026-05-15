@@ -13,14 +13,17 @@
 
     <div class="right-bottom">
       <h3>Connect with developers worldwide</h3>
-      <p>Join discussions, share code snippets, and<br/>collaborate on open-source projects.</p>
+      <p>
+        Join discussions, share code snippets, and<br />collaborate on
+        open-source projects.
+      </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import CodeCard from './CodeCard.vue'
-import PerfCard from './PerfCard.vue'
+import CodeCard from "../../views/auth/CodeCard.vue";
+import PerfCard from "../../views/auth/PerfCard.vue";
 </script>
 
 <style scoped>
@@ -39,11 +42,15 @@ import PerfCard from './PerfCard.vue'
 }
 
 .right-panel::before {
-  content: '';
+  content: "";
   position: absolute;
   width: 280px;
   height: 280px;
-  background: radial-gradient(circle, rgba(109,40,217,.12) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(109, 40, 217, 0.12) 0%,
+    transparent 70%
+  );
   top: -60px;
   right: -60px;
   border-radius: 50%;
@@ -66,10 +73,10 @@ import PerfCard from './PerfCard.vue'
   background: #fff;
   border-radius: 30px;
   padding: 6px 14px;
-  font-size: .75rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #111;
-  box-shadow: 0 4px 14px rgba(0,0,0,.13);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.13);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -85,8 +92,15 @@ import PerfCard from './PerfCard.vue'
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: .6; transform: scale(1.3); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.3);
+  }
 }
 
 .right-bottom h3 {
@@ -97,14 +111,16 @@ import PerfCard from './PerfCard.vue'
 }
 
 .right-bottom p {
-  font-size: .82rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
   text-align: center;
-  margin-top: .3rem;
+  margin-top: 0.3rem;
   line-height: 1.5;
 }
 
 @media (max-width: 768px) {
-  .right-panel { display: none; }
+  .right-panel {
+    display: none;
+  }
 }
 </style>

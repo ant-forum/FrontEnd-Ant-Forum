@@ -1,65 +1,65 @@
 <script setup>
-import { reactive, ref, computed, watch, onMounted } from 'vue'
-import axios from 'axios'
-import Navbar from "../components/layouts/header.vue"
-import Footer from "../components/layouts/footer.vue"
-import { useAuthStore } from '../stores/auth'
+import { reactive, ref, computed, watch, onMounted } from "vue";
+import api from "../api/api";
+import Navbar from "../components/layouts/header.vue";
+import Footer from "../components/layouts/footer.vue";
+import { useAuthStore } from "../stores/auth";
 // Form
 const form = reactive({
-  name: '',
-  bio: '',
-  github: '',
-  linkedin: ''
-})
+  name: "",
+  bio: "",
+  github: "",
+  linkedin: "",
+});
 
-const authStore = useAuthStore()
-const successMessage = ref('')
-const errorMessage = ref('')
-const isSaving = ref(false)
+const authStore = useAuthStore();
+const successMessage = ref("");
+const errorMessage = ref("");
+const isSaving = ref(false);
 
 // Avatar
-const avatarFile = ref(null)
-const avatarPreview = ref('')
-const savedAvatarPreview = ref('')
+const avatarFile = ref(null);
+const avatarPreview = ref("");
+const savedAvatarPreview = ref("");
 
 const savedProfile = reactive({
-  name: '',
-  bio: '',
-  github: '',
-  linkedin: '',
-  skills: []
-})
+  name: "",
+  bio: "",
+  github: "",
+  linkedin: "",
+  skills: [],
+});
 
-const isEditing = ref(false)
+const isEditing = ref(false);
 
 const resetForm = () => {
-  form.name = savedProfile.name
-  form.bio = savedProfile.bio
-  form.github = savedProfile.github
-  form.linkedin = savedProfile.linkedin
-  skills.value = [...savedProfile.skills]
-  avatarFile.value = null
-  avatarPreview.value = savedAvatarPreview.value
-}
+  form.name = savedProfile.name;
+  form.bio = savedProfile.bio;
+  form.github = savedProfile.github;
+  form.linkedin = savedProfile.linkedin;
+  skills.value = [...savedProfile.skills];
+  avatarFile.value = null;
+  avatarPreview.value = savedAvatarPreview.value;
+};
 
 const startEdit = () => {
-  isEditing.value = true
-  resetForm()
-}
+  isEditing.value = true;
+  resetForm();
+};
 
 const handleCancel = () => {
-  resetForm()
-  isEditing.value = false
-}
+  resetForm();
+  isEditing.value = false;
+};
 
 const saveProfileState = () => {
-  savedProfile.name = form.name
-  savedProfile.bio = form.bio
-  savedProfile.github = form.github
-  savedProfile.linkedin = form.linkedin
-  savedProfile.skills = [...skills.value]
-  savedAvatarPreview.value = avatarPreview.value
-}
+  savedProfile.name = form.name;
+  savedProfile.bio = form.bio;
+  savedProfile.github = form.github;
+  savedProfile.linkedin = form.linkedin;
+  savedProfile.skills = [...skills.value];
+  savedAvatarPreview.value = avatarPreview.value;
+};
 
 const applyUpdateToStore = (updatedUser) => {
   authStore.user = {
@@ -69,164 +69,162 @@ const applyUpdateToStore = (updatedUser) => {
     github: updatedUser.github ?? form.github,
     linkedin: updatedUser.linkedin ?? form.linkedin,
     skills: updatedUser.skills ?? [...skills.value],
-    avatar: updatedUser.avatar ?? updatedUser.avatarUrl ?? avatarPreview.value
-  }
-}
+    avatar: updatedUser.avatar ?? updatedUser.avatarUrl ?? avatarPreview.value,
+  };
+};
 
 const showSuccess = (message) => {
-  successMessage.value = message
+  successMessage.value = message;
   setTimeout(() => {
-    successMessage.value = ''
-  }, 3000)
-}
+    successMessage.value = "";
+  }, 3000);
+};
 
 const showError = (message) => {
-  errorMessage.value = message
+  errorMessage.value = message;
   setTimeout(() => {
-    errorMessage.value = ''
-  }, 5000)
-}
+    errorMessage.value = "";
+  }, 5000);
+};
 
 const loadSavedProfile = () => {
-  const user = authStore.user || {}
-  savedProfile.name = user.name || ''
-  savedProfile.bio = user.bio || ''
-  savedProfile.github = user.github || ''
-  savedProfile.linkedin = user.linkedin || ''
-  savedProfile.skills = Array.isArray(user.skills) ? [...user.skills] : []
-  savedAvatarPreview.value = user.avatar || user.avatarUrl || ''
-  avatarPreview.value = savedAvatarPreview.value
-  resetForm()
-}
+  const user = authStore.user || {};
+  savedProfile.name = user.name || "";
+  savedProfile.bio = user.bio || "";
+  savedProfile.github = user.github || "";
+  savedProfile.linkedin = user.linkedin || "";
+  savedProfile.skills = Array.isArray(user.skills) ? [...user.skills] : [];
+  savedAvatarPreview.value = user.avatar || user.avatarUrl || "";
+  avatarPreview.value = savedAvatarPreview.value;
+  resetForm();
+};
 
-onMounted(loadSavedProfile)
+onMounted(loadSavedProfile);
 
 // Skills
-const skillInput = ref('')
-const skills = ref([])
+const skillInput = ref("");
+const skills = ref([]);
 
 // Errors
 const errors = reactive({
-  name: '',
-  bio: '',
-  github: '',
-  linkedin: ''
-})
+  name: "",
+  bio: "",
+  github: "",
+  linkedin: "",
+});
 
 // URL validation
 const isValidURL = (url) => {
-  return /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/.+)?$/.test(url)
-}
+  return /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/.+)?$/.test(url);
+};
 
 // Handle avatar upload
 const handleAvatarChange = (e) => {
-  const file = e.target.files[0]
-  if (!file) return
+  const file = e.target.files[0];
+  if (!file) return;
 
   // Validate file
-  if (!file.type.startsWith('image/')) {
-    alert('Only image files allowed')
-    return
+  if (!file.type.startsWith("image/")) {
+    alert("Only image files allowed");
+    return;
   }
 
   if (file.size > 2 * 1024 * 1024) {
-    alert('Max size is 2MB')
-    return
+    alert("Max size is 2MB");
+    return;
   }
 
   // Revoke previous object URL to free memory
-  if (avatarPreview.value && avatarPreview.value.startsWith('blob:')) {
-    URL.revokeObjectURL(avatarPreview.value)
+  if (avatarPreview.value && avatarPreview.value.startsWith("blob:")) {
+    URL.revokeObjectURL(avatarPreview.value);
   }
 
-  avatarFile.value = file
-  avatarPreview.value = URL.createObjectURL(file)
-}
+  avatarFile.value = file;
+  avatarPreview.value = URL.createObjectURL(file);
+};
 
 // Skills
 const addSkill = () => {
-  const value = skillInput.value.trim()
+  const value = skillInput.value.trim();
   if (value && !skills.value.includes(value)) {
-    skills.value.push(value)
+    skills.value.push(value);
   }
-  skillInput.value = ''
-}
+  skillInput.value = "";
+};
 
 const removeSkill = (index) => {
-  skills.value.splice(index, 1)
-}
+  skills.value.splice(index, 1);
+};
 
 // Validation
-watch(form, () => {
-  errors.name = form.name ? '' : 'Name is required'
+watch(
+  form,
+  () => {
+    errors.name = form.name ? "" : "Name is required";
 
-  errors.bio =
-    form.bio.length > 200 ? 'Bio must be under 200 characters' : ''
+    errors.bio =
+      form.bio.length > 200 ? "Bio must be under 200 characters" : "";
 
-  errors.github =
-    form.github && !isValidURL(form.github)
-      ? 'Invalid GitHub URL'
-      : ''
+    errors.github =
+      form.github && !isValidURL(form.github) ? "Invalid GitHub URL" : "";
 
-  errors.linkedin =
-    form.linkedin && !isValidURL(form.linkedin)
-      ? 'Invalid LinkedIn URL'
-      : ''
-}, { deep: true })
+    errors.linkedin =
+      form.linkedin && !isValidURL(form.linkedin) ? "Invalid LinkedIn URL" : "";
+  },
+  { deep: true },
+);
 
 const isValid = computed(() => {
-  return !errors.name && !errors.bio && !errors.github && !errors.linkedin
-})
+  return !errors.name && !errors.bio && !errors.github && !errors.linkedin;
+});
 
 // Submit
 const handleSubmit = async () => {
-  if (!isValid.value || isSaving.value) return
+  if (!isValid.value || isSaving.value) return;
 
-  const payload = new FormData()
+  const payload = new FormData();
 
-  payload.append('name', form.name)
-  payload.append('bio', form.bio)
-  payload.append('github', form.github)
-  payload.append('linkedin', form.linkedin)
+  payload.append("name", form.name);
+  payload.append("bio", form.bio);
+  payload.append("github", form.github);
+  payload.append("linkedin", form.linkedin);
 
   skills.value.forEach((skill, i) => {
-    payload.append(`skills[${i}]`, skill)
-  })
+    payload.append(`skills[${i}]`, skill);
+  });
 
   if (avatarFile.value) {
-    payload.append('avatar', avatarFile.value)
+    payload.append("avatar", avatarFile.value);
   }
 
-  isSaving.value = true
-  errorMessage.value = ''
+  isSaving.value = true;
+  errorMessage.value = "";
 
   try {
-    const response = await axios.put('/api/users/me', payload, {
+    const response = await api.put("/api/users/me", payload, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-    const updatedUser = response.data?.user ?? response.data ?? {}
-    applyUpdateToStore(updatedUser)
-    saveProfileState()
-    isEditing.value = false
-    showSuccess('Profile saved successfully.')
+    const updatedUser = response.data?.user ?? response.data ?? {};
+    applyUpdateToStore(updatedUser);
+    saveProfileState();
+    isEditing.value = false;
+    showSuccess("Profile saved successfully.");
   } catch (error) {
-    console.error('Profile update failed:', error)
-    showError('Unable to save profile. Please try again.')
+    console.error("Profile update failed:", error);
+    showError("Unable to save profile. Please try again.");
   } finally {
-    isSaving.value = false
+    isSaving.value = false;
   }
-}
+};
 </script>
 
 <template>
-    <Navbar />
-  <div class="container py-4">
-    
-    <div class="card shadow-sm p-4">
-
+  <Navbar />
+  <div class="container profile-page py-4">
+    <div class="card profile-card shadow-sm p-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0">Profile</h4>
         <div>
@@ -238,15 +236,25 @@ const handleSubmit = async () => {
             Edit Profile
           </button>
           <div v-else class="d-flex gap-2">
-            <button class="btn btn-secondary" @click="handleCancel" :disabled="isSaving">
+            <button
+              class="btn btn-secondary"
+              @click="handleCancel"
+              :disabled="isSaving"
+            >
               Cancel
             </button>
             <button
-              class="btn btn-primary"
+              class="btn btn-primary d-flex align-items-center gap-2"
               :disabled="!isValid || isSaving"
               @click="handleSubmit"
             >
-              {{ isSaving ? 'Saving...' : 'Save Profile' }}
+              <span
+                v-if="isSaving"
+                class="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+              ></span>
+              {{ isSaving ? "Saving..." : "Save Profile" }}
             </button>
           </div>
         </div>
@@ -333,8 +341,7 @@ const handleSubmit = async () => {
             {{ skill }}
             <span
               v-if="isEditing"
-              class="ms-1"
-              style="cursor:pointer"
+              class="skill-remove ms-1"
               @click="removeSkill(index)"
             >
               ✕
@@ -366,9 +373,82 @@ const handleSubmit = async () => {
         />
         <div class="invalid-feedback">{{ errors.linkedin }}</div>
       </div>
-
     </div>
-
   </div>
-  <Footer/>
+  <Footer />
 </template>
+
+<style scoped>
+.profile-page {
+  max-width: 960px;
+}
+
+.profile-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.profile-card h4 {
+  line-height: var(--line-height-heading);
+}
+
+.profile-card img {
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: var(--spacing-sm);
+}
+
+.form-control {
+  border-color: var(--input-border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem var(--spacing-md);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.form-control:disabled {
+  background-color: #f8fafc;
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.btn {
+  border-radius: var(--radius-md);
+}
+
+.badge {
+  border-radius: var(--radius-pill);
+  padding: 0.45rem 0.7rem;
+}
+
+.skill-remove {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.skill-remove:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (hover: hover) {
+  .profile-card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .profile-card {
+    padding: var(--spacing-lg) !important;
+  }
+}
+</style>
