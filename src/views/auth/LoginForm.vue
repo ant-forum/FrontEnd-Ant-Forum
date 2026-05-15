@@ -203,28 +203,11 @@ const router = useRouter();
 
 const form = reactive({ email: "", password: "", remember: false });
 
-const { errors, validateField, clearError } = useRequiredValidator();
+const { errors, clearError, validateEmail, validatePassword } = useRequiredValidator();
 
 function validate() {
-  const isEmailValid = validateField(
-    "email",
-    form.email,
-    "Email or username is required.",
-  );
-
-  let isPasswordValid = true;
-  if (!form.password) {
-    isPasswordValid = validateField("password", "", "Password is required.");
-  } else if (form.password.length < 6) {
-    isPasswordValid = validateField(
-      "password",
-      "",
-      "Password must be at least 6 characters.",
-    );
-  } else {
-    clearError("password");
-  }
-
+  const isEmailValid = validateEmail(form.email);
+  const isPasswordValid = validatePassword(form.password);
   return isEmailValid && isPasswordValid;
 }
 
