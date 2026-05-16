@@ -20,6 +20,8 @@ import AdminDashboard from '../views/admin/AdminDashboard.vue';
 import UserManagement from '../views/admin/UserManagement.vue';
 import ProjectManagement from '../views/admin/ProjectManagement.vue';
 import ThreadManagement from '../views/admin/ThreadManagement.vue';
+// import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
+
 
 
 
@@ -67,6 +69,12 @@ const routes = [
     path: "/",
     component: Home,
     name: "HomeLayout",
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/home",
+    name: "HomePage",
+    component: HomePage,
     meta: { requiresAuth: true },
   },
   {
@@ -120,7 +128,7 @@ const routes = [
     name: "ReviewProject",
     meta: { requiresAuth: true },
     component: ReviewProject,
-  },
+  },{
     path: "/admin",
     name: "AdminDashboard",
     meta: { requiresAuth: true },
@@ -144,11 +152,13 @@ const routes = [
     meta: { requiresAuth: true },
     component: ThreadManagement,
   },
+  {
     path: "/forum",
     name: "Forum",
     meta: { requiresAuth: true },
     component: ForumView,
-  }
+  },
+
 ];
 
 
