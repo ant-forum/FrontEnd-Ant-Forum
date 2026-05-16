@@ -8,6 +8,14 @@ import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
 import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
+
+import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
+import ShowcaseProjectDetail from '../views/showcase/ShowcaseProjectDetail.vue';
+import CreateProject from '../views/showcase/showcaseCRUD/createProject.vue';
+import VisualProject from '../views/showcase/showcaseCRUD/visaulProject.vue';
+import ReviewProject from '../views/showcase/showcaseCRUD/reviewCreateProject.vue';
+
+
 import AdminDashboard from '../views/admin/AdminDashboard.vue';
 import UserManagement from '../views/admin/UserManagement.vue';
 import ProjectManagement from '../views/admin/ProjectManagement.vue';
@@ -86,6 +94,35 @@ const routes = [
     component: Profile,
   },
   {
+    path: "/showcase",
+    name: "ShowcaseDashboard",
+    meta: { requiresAuth: true },
+    component: ShowcaseDashboard,
+  },
+  {
+    path: "/showcase/:id",
+    name: "ShowcaseProjectDetail",
+    meta: { requiresAuth: true },
+    component: ShowcaseProjectDetail,
+  },
+  {
+    path: "/showcase/create",
+    name: "CreateProject",
+    meta: { requiresAuth: true },
+    component: CreateProject,
+  },
+  {
+    path: "/showcase/create/assets",
+    name: "VisualProject",
+    meta: { requiresAuth: true },
+    component: VisualProject,
+  },
+  {
+    path: "/showcase/create/review",
+    name: "ReviewProject",
+    meta: { requiresAuth: true },
+    component: ReviewProject,
+  },
     path: "/admin",
     name: "AdminDashboard",
     meta: { requiresAuth: true },
