@@ -12,6 +12,8 @@ import AdminDashboard from '../views/admin/AdminDashboard.vue';
 import UserManagement from '../views/admin/UserManagement.vue';
 import ProjectManagement from '../views/admin/ProjectManagement.vue';
 import ThreadManagement from '../views/admin/ThreadManagement.vue';
+import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
+
 
 
 
@@ -107,11 +109,13 @@ const routes = [
     meta: { requiresAuth: true },
     component: ThreadManagement,
   },
+  {
     path: "/forum",
     name: "Forum",
     meta: { requiresAuth: true },
     component: ForumView,
-  }
+  },
+
 ];
 
 
