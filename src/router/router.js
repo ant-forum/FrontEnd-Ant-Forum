@@ -6,6 +6,14 @@ import HomePage from '../views/HomePage.vue';
 import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
+import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
+import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
+import AdminDashboard from '../views/admin/AdminDashboard.vue';
+import UserManagement from '../views/admin/UserManagement.vue';
+import ProjectManagement from '../views/admin/ProjectManagement.vue';
+import ThreadManagement from '../views/admin/ThreadManagement.vue';
+
+
 
 const routes = [
   {
@@ -55,6 +63,30 @@ const routes = [
     name: "Profile",
     meta: { requiresAuth: true },
     component: Profile,
+  },
+  {
+    path: "/admin",
+    name: "AdminDashboard",
+    meta: { requiresAuth: true },
+    component: AdminDashboard,
+  },
+  {
+    path: "/admin/users",
+    name: "UserManagement",
+    meta: { requiresAuth: true },
+    component: UserManagement,
+  },
+  {
+    path: "/admin/projects",
+    name: "ProjectManagement",
+    meta: { requiresAuth: true },
+    component: ProjectManagement,
+  },
+  {
+    path: "/admin/threads",
+    name: "ThreadManagement",
+    meta: { requiresAuth: true },
+    component: ThreadManagement,
   },
 ];
 
