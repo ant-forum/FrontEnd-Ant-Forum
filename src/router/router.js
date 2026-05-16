@@ -15,7 +15,28 @@ import ThreadManagement from '../views/admin/ThreadManagement.vue';
 
 
 
+import ForumView from "../views/forum/ForumView.vue";
+
+import Loading from "../components/layouts/Loading.vue";
+import Page404 from "../components/layouts/404Page.vue";
+import Empty from "../components/layouts/Empty.vue";
+
 const routes = [
+  {
+    path: "/loading",
+    name: "loading",
+    component: Loading,
+  },
+  {
+    path: "/404",
+    name: "not-found",
+    component: Page404,
+  },
+  {
+    path: "/empty",
+    name: "empty",
+    component: Empty,
+  },
   {
     path: "/login",
     name: "login",
@@ -41,16 +62,14 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/home',
-    component: HomePage,
-    name: "HomePage",
-    meta: { requiresAuth: true }
+    path: "/blog",
+    name: "Blog",
+    component: () => import("../views/blog/Blog.vue"),
   },
   {
-    path: '/blog', 
-    name: 'Blog', 
-    meta: { requiresAuth: true }
-    // component
+    path: "/blog/:id",
+    name: "BlogDetail",
+    component: () => import("../views/blog/BlogDetail.vue"),
   },
   {
     path: "/dashboard",
@@ -88,6 +107,11 @@ const routes = [
     meta: { requiresAuth: true },
     component: ThreadManagement,
   },
+    path: "/forum",
+    name: "Forum",
+    meta: { requiresAuth: true },
+    component: ForumView,
+  }
 ];
 
 

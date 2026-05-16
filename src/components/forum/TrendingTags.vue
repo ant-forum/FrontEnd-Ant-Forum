@@ -1,0 +1,87 @@
+<script setup>
+const tags = [
+  { id: 1, name: '#React19' },
+  { id: 2, name: '#WebAssembly' },
+  { id: 3, name: '#GraphQL' },
+  { id: 4, name: '#RustLang' },
+  { id: 5, name: '#Kubernetes' },
+  { id: 6, name: '#AI-Agents' },
+];
+</script>
+
+<template>
+  <div class="trending-section">
+    <h3 class="section-title">
+      <span class="title-icon">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          <polyline points="17 6 23 6 23 12"/>
+        </svg>
+      </span>
+      Trending Tags
+    </h3>
+
+    <div class="tags-wrap">
+      <button v-for="tag in tags" :key="tag.id" class="tag-btn">
+        {{ tag.name }}
+      </button>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.trending-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.title-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  border-radius: 8px;
+  color: #7c3aed;
+  flex-shrink: 0;
+}
+
+.tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-btn {
+  padding: 6px 14px;
+  background: #f3f0ff;
+  border: none;
+  color: #6d28d9;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  font-family: inherit;
+  letter-spacing: 0.1px;
+}
+
+.tag-btn:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3);
+}
+</style>
