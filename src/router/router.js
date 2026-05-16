@@ -6,6 +6,10 @@ import HomePage from '../views/HomePage.vue';
 import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
+import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
+import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
+
+import ForumView from "../views/forum/ForumView.vue";
 
 const routes = [
   {
@@ -56,6 +60,12 @@ const routes = [
     meta: { requiresAuth: true },
     component: Profile,
   },
+  {
+    path: "/forum",
+    name: "Forum",
+    meta: { requiresAuth: true },
+    component: ForumView,
+  }
 ];
 
 
