@@ -8,7 +8,26 @@ import LoginView from "../views/auth/LoginView.vue";
 import ForgotPasswordView from "../views/auth/ForgotPasswordView.vue";
 import VerifyAccountView from "../views/auth/VerifyAccountView.vue";
 
+import Loading from "../components/layouts/Loading.vue";
+import Page404 from "../components/layouts/404Page.vue";
+import Empty from "../components/layouts/Empty.vue";
+
 const routes = [
+  {
+    path: "/loading",
+    name: "loading",
+    component: Loading,
+  },
+  {
+    path: "/404",
+    name: "not-found",
+    component: Page404,
+  },
+  {
+    path: "/empty",
+    name: "empty",
+    component: Empty,
+  },
   {
     path: "/login",
     name: "login",
