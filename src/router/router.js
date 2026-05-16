@@ -55,8 +55,12 @@ const routes = [
   {
     path: "/blog",
     name: "Blog",
-    meta: { requiresAuth: true },
-    component: () => import("../views/Home.vue"), // placeholder until Blog view is built
+    component: () => import("../views/blog/Blog.vue"),
+  },
+  {
+    path: "/blog/:id",
+    name: "BlogDetail",
+    component: () => import("../views/blog/BlogDetail.vue"),
   },
   {
     path: "/dashboard",

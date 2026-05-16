@@ -8,9 +8,9 @@
     <!-- Center Navigation -->
     <div class="nav-center">
       <ul class="nav-links">
-        <li><a href="#" class="nav-link">Forum</a></li>
-        <li><a href="#" class="nav-link active">Showcase</a></li>
-        <li><a href="#" class="nav-link">Blog</a></li>
+        <li><router-link to="/" class="nav-link" active-class="active" exact-active-class="active">Forum</router-link></li>
+        <li><router-link to="/showcase" class="nav-link" active-class="active">Showcase</router-link></li>
+        <li><router-link to="/blog" class="nav-link" active-class="active">Blog</router-link></li>
       </ul>
     </div>
 
