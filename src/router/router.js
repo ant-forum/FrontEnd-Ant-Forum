@@ -16,14 +16,16 @@ import VisualProject from '../views/showcase/showcaseCRUD/visaulProject.vue';
 import ReviewProject from '../views/showcase/showcaseCRUD/reviewCreateProject.vue';
 
 
-import AdminDashboard from '../views/admin/AdminDashboard.vue';
+import AdminDashboard from '../views/admin/adminDashboard.vue';
 import UserManagement from '../views/admin/UserManagement.vue';
+import CreateUserView from '../views/admin/CreateUserView.vue';
 import ProjectManagement from '../views/admin/ProjectManagement.vue';
+import CreateProjectView from '../views/admin/CreateProjectView.vue';
 import ThreadManagement from '../views/admin/ThreadManagement.vue';
 // import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
 
-
+//this is new
 
 import ForumView from "../views/forum/ForumView.vue";
 
@@ -141,10 +143,22 @@ const routes = [
     component: UserManagement,
   },
   {
+    path: "/admin/users/create",
+    name: "CreateUser",
+    meta: { requiresAuth: true },
+    component: CreateUserView,
+  },
+  {
     path: "/admin/projects",
     name: "ProjectManagement",
     meta: { requiresAuth: true },
     component: ProjectManagement,
+  },
+  {
+    path: "/admin/projects/create",
+    name: "CreateProjectAdmin",
+    meta: { requiresAuth: true },
+    component: CreateProjectView,
   },
   {
     path: "/admin/threads",

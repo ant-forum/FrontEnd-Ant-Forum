@@ -71,42 +71,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-
 defineEmits(['select-user']);
 
-const users = ref([
-  {
-    id: 1,
-    name: 'Sarah Connor',
-    email: 's.connor@antforum.io',
-    avatar: 'https://i.pravatar.cc/150?u=sarah',
-    role: 'Mentor',
-    roleClass: 'role-mentor',
-    status: 'active',
-    statusLabel: 'Active'
-  },
-  {
-    id: 2,
-    name: 'Marcus Wright',
-    email: 'm.wright@proton.me',
-    avatar: 'https://i.pravatar.cc/150?u=marcus',
-    role: 'Student',
-    roleClass: 'role-student',
-    status: 'idle',
-    statusLabel: 'Idle'
-  },
-  {
-    id: 3,
-    name: 'Elena Fisher',
-    email: 'e.fisher@enterprise.io',
-    avatar: 'https://i.pravatar.cc/150?u=elena',
-    role: 'Admin',
-    roleClass: 'role-admin',
-    status: 'active',
-    statusLabel: 'Active'
+defineProps({
+  users: {
+    type: Array,
+    required: true
   }
-]);
+});
 </script>
 
 <style scoped>

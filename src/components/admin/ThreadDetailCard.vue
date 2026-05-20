@@ -42,13 +42,27 @@
     <div class="moderation-actions">
       <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 1px;">Admin Actions</h6>
       <div class="d-grid gap-2">
-        <button class="btn btn-outline-primary rounded-pill py-2 fw-bold" style="font-size: 0.85rem;">
-          <i class="bi bi-pin-angle me-2"></i> Pin Thread
+        <button 
+          class="btn rounded-pill py-2 fw-bold" 
+          :class="thread.status === 'PINNED' ? 'btn-primary' : 'btn-outline-primary'"
+          style="font-size: 0.85rem;"
+          @click="$emit('toggle-pin', thread.id)"
+        >
+          <i class="bi bi-pin-angle me-2"></i> {{ thread.status === 'PINNED' ? 'Unpin Thread' : 'Pin Thread' }}
         </button>
-        <button class="btn btn-outline-warning rounded-pill py-2 fw-bold" style="font-size: 0.85rem;">
-          <i class="bi bi-lock me-2"></i> Lock Discussion
+        <button 
+          class="btn rounded-pill py-2 fw-bold" 
+          :class="thread.status === 'LOCKED' ? 'btn-warning text-white' : 'btn-outline-warning'"
+          style="font-size: 0.85rem;"
+          @click="$emit('toggle-lock', thread.id)"
+        >
+          <i class="bi bi-lock me-2"></i> {{ thread.status === 'LOCKED' ? 'Unlock Discussion' : 'Lock Discussion' }}
         </button>
-        <button class="btn btn-outline-danger rounded-pill py-2 fw-bold" style="font-size: 0.85rem;">
+        <button 
+          class="btn btn-outline-danger rounded-pill py-2 fw-bold" 
+          style="font-size: 0.85rem;"
+          @click="$emit('delete-thread', thread.id)"
+        >
           <i class="bi bi-trash me-2"></i> Delete Content
         </button>
       </div>
@@ -57,19 +71,14 @@
 </template>
 
 <script setup>
-const props = defineProps({
+defineProps({
   thread: {
     type: Object,
-    default: () => ({
-      title: 'How to optimize Docker images for Node.js?',
-      status: 'ACTIVE',
-      statusClass: 'status-active',
-      author: { name: 'David Smith', avatar: 'https://i.pravatar.cc/150?u=david' },
-      replies: 24,
-      reports: 0
-    })
+    required: true
   }
 });
+
+defineEmits(['toggle-pin', 'toggle-lock', 'delete-thread']);
 </script>
 
 <style scoped>
