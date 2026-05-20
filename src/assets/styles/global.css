@@ -1,4 +1,4 @@
-@import './theme.css';
+@import "./theme.css";
 * {
   margin: 0;
   padding: 0;
@@ -13,6 +13,70 @@ body {
   color: var(--color-text);
 }
 
+button,
+a,
+input,
+textarea,
+select,
+.btn,
+.nav-link,
+.card {
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-fast),
+    opacity var(--transition-base);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+.btn:focus-visible,
+.nav-link:focus-visible,
+.form-control:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--brand-light, var(--color-primary));
+  box-shadow: var(--focus-ring);
+}
+
+.btn {
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled,
+.btn.disabled,
+button:disabled {
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    border-color: rgba(124, 58, 237, 0.18);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+}
+
+.card:focus-within {
+  border-color: rgba(124, 58, 237, 0.22);
+  box-shadow: var(--shadow-md);
+}
+
 /* Utility classes (optional but useful) */
 .container {
   padding: var(--spacing-md);
@@ -25,6 +89,18 @@ body {
 .card {
   background: var(--color-surface);
   border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
   padding: var(--spacing-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

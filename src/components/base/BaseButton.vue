@@ -11,36 +11,57 @@
 </template>
 
 <script setup>
-  defineProps({
-    variant: {
-      type: String,
-      default: "primary",
-    },
-    type: {
-      type: String,
-      default: "button",
-    },
-    isLoading: {
-      type: Boolean,
-      default: false,
-    },
-    isDisabled: {
-      type: Boolean,
-      default: false,
-    },
-  });
-  defineEmits(["click"]);
+defineProps({
+  variant: {
+    type: String,
+    default: "primary",
+  },
+  type: {
+    type: String,
+    default: "button",
+  },
+  isLoading: {
+    type: Boolean,
+    default: false,
+  },
+  isDisabled: {
+    type: Boolean,
+    default: false,
+  },
+});
+defineEmits(["click"]);
 </script>
 
 <style>
-  .btn {
-    font-weight: 600;
-    border-radius: 0.5rem;
-  }
+.btn {
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-fast);
+}
 
-  .btn-primary {
-    background-color: #25397e;
-    border-color: #25397e;
-    color: #fff;
-  }
+.btn-primary {
+  background-color: #25397e;
+  border-color: #25397e;
+  color: #fff;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
 </style>

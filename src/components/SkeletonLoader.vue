@@ -1,5 +1,8 @@
 <template>
-  <div class="skeleton-loader" :class="{ 'skeleton-round': round }">
+  <div
+    class="skeleton-loader"
+    :class="[`skeleton-${variant}`, { 'skeleton-round': round }]"
+  >
     <div
       class="skeleton-item"
       :style="{ width: width, height: height, borderRadius: borderRadius }"
@@ -11,20 +14,25 @@
 defineProps({
   width: {
     type: String,
-    default: '100%'
+    default: "100%",
   },
   height: {
     type: String,
-    default: '20px'
+    default: "20px",
   },
   borderRadius: {
     type: String,
-    default: '4px'
+    default: "var(--radius-sm)",
+  },
+  variant: {
+    type: String,
+    default: "text",
+    validator: (value) => ["text", "card", "avatar", "image"].includes(value),
   },
   round: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 </script>
 
@@ -32,16 +40,31 @@ defineProps({
 .skeleton-loader {
   display: inline-block;
   width: 100%;
+  line-height: 0;
 }
 
 .skeleton-item {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%);
   background-size: 200% 100%;
-  animation: loading 1.5s infinite;
+  animation: loading 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  display: block;
+  overflow: hidden;
 }
 
 .skeleton-round .skeleton-item {
   border-radius: 50%;
+}
+
+.skeleton-card .skeleton-item {
+  border-radius: 1rem;
+}
+
+.skeleton-avatar .skeleton-item {
+  border-radius: 50%;
+}
+
+.skeleton-image .skeleton-item {
+  border-radius: 0.75rem;
 }
 
 @keyframes loading {

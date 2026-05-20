@@ -1,13 +1,13 @@
 <template>
-    <main class="main-layout d-flex flex-column min-vh-100">
-        <Dashboard/>
-    </main>
+  <main class="main-layout d-flex flex-column min-vh-100">
+    <Dashboard />
+  </main>
 </template>
 <script setup>
-    import Dashboard from "../layouts/Dashborad.vue"
+import Dashboard from "../layouts/Dashborad.vue";
 </script>
 <style scoped>
-    .main-layout {
-        background-color: #f8f9fa;
-    }
+.main-layout {
+  background-color: #f8f9fa;
+}
 </style>

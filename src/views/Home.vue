@@ -1,9 +1,7 @@
 <template>
-    <MainLayout/>
+  <MainLayout />
 </template>
 <script setup>
-    import MainLayout from '../layouts/LeadingPage.vue';
+import MainLayout from "../layouts/LeadingPage.vue";
 </script>
-<style scoped>
-
-</style>
+<style scoped></style>
