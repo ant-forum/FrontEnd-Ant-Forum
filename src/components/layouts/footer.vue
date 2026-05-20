@@ -120,13 +120,14 @@ import logo from "../../assets/ANT-Forum.png";
 <style scoped>
 .ant-footer {
   background-color: #4A0E4E;
-  color: white;
+  color: rgb(185, 2, 2);
 }
 
 .footer-wave {
   position: relative;
   height: 120px;
-  background-color: white;
+  /* background-color: transparent; */
+  background-color: #f5f3ff;
 }
 
 .footer-wave svg {

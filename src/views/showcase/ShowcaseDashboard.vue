@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import Navbar from '../../components/layouts/header.vue';
+import BaseFooter from '../../components/layouts/footer.vue';
 
 const activeExplore = ref('Trending');
 
@@ -190,19 +191,7 @@ const projects = [
       </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="container-fluid py-4 px-lg-5 mt-5 border-top">
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-        <div class="text-muted small fw-bold">ANT-Forum</div>
-        <div class="text-muted small">© 2024 ANT-Forum Ecosystem. Built for developers.</div>
-        <div class="footer-links d-flex gap-4">
-          <a href="#" class="text-muted text-decoration-none small fw-bold">Privacy</a>
-          <a href="#" class="text-muted text-decoration-none small fw-bold">Terms</a>
-          <a href="#" class="text-muted text-decoration-none small fw-bold">Github</a>
-          <a href="#" class="text-muted text-decoration-none small fw-bold">Status</a>
-        </div>
-      </div>
-    </footer>
+    <BaseFooter />
   </div>
 </template>
 

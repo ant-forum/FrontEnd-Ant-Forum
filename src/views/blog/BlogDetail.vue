@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import navbar from "../../components/layouts/header.vue";
+import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
 
 const activeSection = ref('evolution');
@@ -16,7 +16,7 @@ const scrollTo = (id) => {
 
 <template>
   <div class="blog-detail-layout min-vh-100 d-flex flex-column bg-white">
-    <navbar class="bg-white border-bottom" />
+    <Navbar class="bg-white border-bottom" />
 
     <main class="flex-grow-1 container py-5">
       <div class="row position-relative">

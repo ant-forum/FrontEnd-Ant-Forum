@@ -16,7 +16,7 @@ const navLinks = [
   <header class="global-header sticky-top">
     <div class="container py-3 d-flex align-items-center justify-content-between">
       <!-- Logo Section -->
-      <div class="header-left d-flex align-items-center">
+      <div class="header-left d-flex align-items-center flex-1">
         <router-link to="/" class="text-decoration-none d-flex align-items-center">
           <span class="logo-text fw-black fs-3 text-gradient">ANTFORUM</span>
         </router-link>
@@ -38,13 +38,7 @@ const navLinks = [
       </div>
 
       <!-- Right Actions -->
-      <div class="header-right d-flex align-items-center gap-3">
-        <div class="search-box-modern d-none d-lg-flex align-items-center bg-light rounded-pill px-3 py-2 border">
-          <i class="bi bi-search text-muted me-2"></i>
-          <input type="text" class="border-0 bg-transparent small fw-medium" placeholder="Search..." style="outline: none; width: 180px;">
-          <span class="badge bg-white text-muted border border-light-subtle rounded px-2 py-1 ms-2 x-small">⌘K</span>
-        </div>
-        
+      <div class="header-right d-flex align-items-center justify-content-end gap-3 flex-1">
         <div class="d-flex gap-2">
           <button class="btn btn-icon-modern"><i class="bi bi-bell"></i></button>
           <!-- Settings icon removed as per user request -->
@@ -65,6 +59,10 @@ const navLinks = [
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   z-index: 1000;
+}
+
+.flex-1 {
+  flex: 1;
 }
 
 .logo-text {

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import navbar from "../../components/layouts/header.vue";
+import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
 
 const recentPosts = ref([
@@ -39,7 +39,7 @@ const recentPosts = ref([
 
 <template>
   <div class="blog-layout min-vh-100 d-flex flex-column">
-    <navbar class="bg-white" />
+    <Navbar class="bg-white" />
 
     <main class="flex-grow-1 bg-light-purple">
       <!-- Hero Section -->
