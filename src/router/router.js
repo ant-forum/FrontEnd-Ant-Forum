@@ -25,7 +25,7 @@ import ThreadManagement from '../views/admin/ThreadManagement.vue';
 // import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
 
-
+//this is new
 
 import ForumView from "../views/forum/ForumView.vue";
 
