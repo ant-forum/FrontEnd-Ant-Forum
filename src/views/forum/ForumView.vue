@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import Navbar from '../../components/layouts/header.vue';
+import BaseFooter from '../../components/layouts/footer.vue';
 import FeaturedDiscussion from '../../components/forum/FeaturedDiscussion.vue';
 import DiscussionThreadList from '../../components/forum/DiscussionThreadList.vue';
 import ForumSidebar from '../../components/forum/ForumSidebar.vue';
@@ -92,6 +93,8 @@ const handleLoadMore = () => {
         <ForumSidebar />
       </div>
     </div>
+    
+    <BaseFooter />
   </div>
 </template>
 
