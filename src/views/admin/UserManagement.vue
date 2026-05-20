@@ -23,7 +23,7 @@
           <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
             <div>
               <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Total Users</p>
-              <h2 class="fw-bold mb-1">12,842</h2>
+              <h2 class="fw-bold mb-1">{{ users.length }}</h2>
               <div class="d-flex align-items-center text-success small">
                 <i class="bi bi-graph-up me-1"></i>
                 <span class="fw-bold">+14% from last month</span>
@@ -38,7 +38,7 @@
           <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
             <div>
               <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Active Today</p>
-              <h2 class="fw-bold mb-1">3,109</h2>
+              <h2 class="fw-bold mb-1">{{ users.filter(u => u.isOnline).length }}</h2>
               <div class="d-flex align-items-center text-warning small">
                 <i class="bi bi-lightning-charge-fill me-1"></i>
                 <span class="fw-bold">High server load</span>
@@ -74,10 +74,23 @@
       <!-- Main Directory and Details -->
       <div class="row g-4">
         <div class="col-xl-8">
-          <UserTable :users="users" @select-user="selectedUser = $event" />
+          <UserTable 
+            :users="filteredUsers" 
+            v-model:searchQuery="searchQuery"
+            v-model:roleFilter="roleFilter"
+            v-model:selectedIds="selectedIds"
+            @select-user="selectedUser = $event"
+            @suspend-user="handleSuspend"
+            @delete-user="handleDelete"
+            @bulk-delete="handleBulkDelete"
+          />
         </div>
         <div class="col-xl-4">
-          <UserDetailsCard :user="selectedUser" />
+          <UserDetailsCard v-if="selectedUser" :user="selectedUser" @suspend="handleSuspend(selectedUser.id)" />
+          <div v-else class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white h-100 d-flex flex-column align-items-center justify-content-center">
+            <i class="bi bi-person-bounding-box fs-1 text-muted opacity-25 mb-3"></i>
+            <p class="text-muted">Select a user to view details</p>
+          </div>
         </div>
       </div>
     </main>
@@ -85,10 +98,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
 import UserTable from '../../components/admin/UserTable.vue';
 import UserDetailsCard from '../../components/admin/UserDetailsCard.vue';
+
+const searchQuery = ref('');
+const roleFilter = ref('ALL');
+const selectedIds = ref([]);
 
 const users = ref([
   {
@@ -99,7 +116,12 @@ const users = ref([
     role: 'Mentor',
     roleClass: 'role-mentor',
     status: 'active',
-    statusLabel: 'Active'
+    statusLabel: 'Active',
+    joinedDate: 'Jan 2024',
+    reputation: '2.4k',
+    location: 'Los Angeles, CA',
+    lastIp: '192.168.1.45',
+    isOnline: true
   },
   {
     id: 2,
@@ -109,7 +131,12 @@ const users = ref([
     role: 'Student',
     roleClass: 'role-student',
     status: 'idle',
-    statusLabel: 'Idle'
+    statusLabel: 'Idle',
+    joinedDate: 'Mar 2024',
+    reputation: '850',
+    location: 'San Francisco, CA',
+    lastIp: '10.0.0.12',
+    isOnline: false
   },
   {
     id: 3,
@@ -119,11 +146,65 @@ const users = ref([
     role: 'Admin',
     roleClass: 'role-admin',
     status: 'active',
-    statusLabel: 'Active'
+    statusLabel: 'Active',
+    joinedDate: 'Dec 2023',
+    reputation: '5.1k',
+    location: 'London, UK',
+    lastIp: '172.16.254.1',
+    isOnline: true
+  },
+  {
+    id: 4,
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    avatar: 'https://i.pravatar.cc/150?u=john',
+    role: 'Student',
+    roleClass: 'role-student',
+    status: 'active',
+    statusLabel: 'Active',
+    joinedDate: 'Feb 2024',
+    reputation: '1.1k',
+    location: 'New York, NY',
+    lastIp: '192.168.1.10',
+    isOnline: true
   }
 ]);
 
-const selectedUser = ref(users.value[1]);
+const selectedUser = ref(users.value[0]);
+
+const filteredUsers = computed(() => {
+  return users.value.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+                         user.email.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesRole = roleFilter.value === 'ALL' || user.role === roleFilter.value;
+    return matchesSearch && matchesRole;
+  });
+});
+
+const handleSuspend = (userId) => {
+  const user = users.value.find(u => u.id === userId);
+  if (user) {
+    user.status = user.status === 'suspended' ? 'active' : 'suspended';
+    user.statusLabel = user.status === 'suspended' ? 'Suspended' : 'Active';
+  }
+};
+
+const handleDelete = (userId) => {
+  if (confirm('Are you sure you want to delete this user?')) {
+    users.value = users.value.filter(u => u.id !== userId);
+    if (selectedUser.value && selectedUser.value.id === userId) {
+      selectedUser.value = users.value[0] || null;
+    }
+  }
+};
+
+const handleBulkDelete = (ids) => {
+  if (confirm(`Are you sure you want to delete ${ids.length} users?`)) {
+    users.value = users.value.filter(u => !ids.includes(u.id));
+    selectedIds.value = [];
+    selectedUser.value = users.value[0] || null;
+  }
+};
 </script>
 
 <style scoped>

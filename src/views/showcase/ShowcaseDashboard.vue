@@ -3,15 +3,6 @@ import { ref } from 'vue';
 import Navbar from '../../components/layouts/header.vue';
 import BaseFooter from '../../components/layouts/footer.vue';
 
-const activeExplore = ref('Trending');
-
-const exploreMenu = [
-  { name: 'Trending', icon: 'bi-graph-up-arrow' },
-  { name: 'Latest Drops', icon: 'bi-patch-check' },
-  { name: 'Top Rated', icon: 'bi-star' },
-  { name: 'My Saved', icon: 'bi-bookmark' }
-];
-
 const projects = [
   {
     id: 1,
@@ -51,70 +42,9 @@ const projects = [
     <Navbar />
 
     <main class="container py-4 flex-grow-1">
-      <div class="row g-4">
-        <!-- Sidebar -->
-        <aside class="col-lg-3">
-          <!-- Profile Card -->
-          <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 profile-card-modern">
-            <div class="text-center mb-4">
-              <div class="avatar-wrapper position-relative d-inline-block">
-                <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle mb-3 border border-4 border-white shadow-md profile-img" width="90" height="90">
-                <span class="status-indicator online"></span>
-              </div>
-              <h5 class="fw-bold mb-1">Alex Chen</h5>
-              <p class="text-muted small fw-medium mb-0">Senior Frontend Engineer</p>
-              <div class="badge bg-primary-subtle text-primary mt-2 px-3 rounded-pill x-small fw-bold">PRO DEVELOPER</div>
-            </div>
-            
-            <div class="skills-section-modern mb-4">
-              <div class="skill-item-modern mb-3">
-                <div class="d-flex justify-content-between small fw-bold mb-2">
-                  <span class="text-muted">Vue.js Ecosystem</span>
-                  <span class="text-primary">92%</span>
-                </div>
-                <div class="progress-modern">
-                  <div class="progress-fill" style="width: 92%; background: linear-gradient(90deg, #6366f1, #8b5cf6);"></div>
-                </div>
-              </div>
-              <div class="skill-item-modern mb-3">
-                <div class="d-flex justify-content-between small fw-bold mb-2">
-                  <span class="text-muted">Node.js / GraphQL</span>
-                  <span class="text-primary">85%</span>
-                </div>
-                <div class="progress-modern">
-                  <div class="progress-fill" style="width: 85%; background: linear-gradient(90deg, #6366f1, #8b5cf6);"></div>
-                </div>
-              </div>
-            </div>
-
-            <button class="btn btn-cv-modern w-100 rounded-pill d-flex align-items-center justify-content-center gap-2 py-2 fw-bold">
-              <i class="bi bi-file-earmark-pdf"></i> View Digital CV
-            </button>
-          </div>
-
-          <!-- Explore Menu -->
-          <div class="card border-0 shadow-sm rounded-4 p-3 explore-menu-modern">
-            <div class="d-flex align-items-center gap-2 mb-3 ps-2">
-              <div class="explore-dot"></div>
-              <h6 class="text-dark small fw-black mb-0 text-uppercase tracking-wider">Explore Feed</h6>
-            </div>
-            <nav class="nav flex-column gap-1">
-              <a v-for="item in exploreMenu" :key="item.name" href="#" 
-                 class="nav-link-modern-sidebar d-flex align-items-center gap-3 px-3 py-2 rounded-3"
-                 :class="{ 'active': activeExplore === item.name }"
-                 @click.prevent="activeExplore = item.name">
-                <div class="icon-circle shadow-sm">
-                  <i :class="['bi', item.icon]"></i>
-                </div>
-                <span class="fw-semibold">{{ item.name }}</span>
-                <i v-if="activeExplore === item.name" class="bi bi-chevron-right ms-auto small opacity-50"></i>
-              </a>
-            </nav>
-          </div>
-        </aside>
-
+      <div class="row justify-content-center">
         <!-- Main Content -->
-        <div class="col-lg-9">
+        <div class="col-lg-11">
           <!-- Pipeline Banner -->
           <div class="card border-0 shadow-sm rounded-4 p-4 p-lg-5 mb-4 pipeline-banner-modern position-relative overflow-hidden">
             <div class="banner-abstract-shape-1"></div>
@@ -197,106 +127,9 @@ const projects = [
 
 <style scoped>
 .showcase-page {
-  background-color: #f8fafc;
   min-height: 100vh;
   font-family: 'Sora', sans-serif;
   color: #1e293b;
-}
-
-/* Profile Card Modern */
-.profile-card-modern {
-  background: white;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
-}
-
-.profile-img {
-  transition: transform 0.3s ease;
-}
-
-.avatar-wrapper:hover .profile-img {
-  transform: scale(1.05);
-}
-
-.status-indicator {
-  position: absolute;
-  bottom: 15px;
-  right: 5px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 3px solid white;
-}
-
-.status-indicator.online { background-color: #10b981; }
-
-.progress-modern {
-  height: 8px;
-  background: #f1f5f9;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 10px;
-}
-
-.btn-cv-modern {
-  background: #1e293b;
-  color: white;
-  border: none;
-  transition: all 0.2s;
-}
-
-.btn-cv-modern:hover {
-  background: #0f172a;
-  transform: translateY(-2px);
-}
-
-/* Explore Menu Modern */
-.explore-menu-modern {
-  background: white;
-}
-
-.explore-dot {
-  width: 8px;
-  height: 8px;
-  background: #6366f1;
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-}
-
-.nav-link-modern-sidebar {
-  text-decoration: none;
-  color: #64748b;
-  transition: all 0.2s ease;
-}
-
-.icon-circle {
-  width: 32px;
-  height: 32px;
-  background: #f8fafc;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.nav-link-modern-sidebar:hover .icon-circle {
-  background: #f1f5f9;
-  color: #6366f1;
-}
-
-.nav-link-modern-sidebar.active {
-  background: #f5f3ff;
-  color: #6366f1;
-}
-
-.nav-link-modern-sidebar.active .icon-circle {
-  background: #6366f1;
-  color: white;
 }
 
 /* Banner Modern */
@@ -412,7 +245,6 @@ const projects = [
 }
 
 @media (max-width: 991px) {
-  .sidebar { margin-bottom: 2rem; }
   .pipeline-banner-modern { text-align: center; }
 }
 </style>

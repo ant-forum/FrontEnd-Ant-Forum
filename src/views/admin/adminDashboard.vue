@@ -54,66 +54,103 @@
           </div>
 
           <!-- Platform Engagement Chart -->
-          <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 engagement-card">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <div>
                 <h6 class="fw-bold mb-1">Platform Engagement</h6>
-                <p class="text-muted small mb-0">User interactions and platform growth trends</p>
-              </div>
-              <div class="dropdown">
-                <button class="btn btn-light btn-sm rounded-pill px-3 dropdown-toggle" type="button">
-                  Last 12 Months
-                </button>
-              </div>
-            </div>
-            <div class="chart-container rounded-4 bg-dark d-flex align-items-center justify-content-center" style="height: 300px; overflow: hidden;">
-              <!-- Placeholder for Chart -->
-              <div class="w-100 h-100 position-relative">
-                <div class="engagement-grid w-100 h-100 position-absolute"></div>
-                <div class="engagement-line"></div>
-                <span class="position-absolute top-0 end-0 m-3 text-white-50 small">160</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Network Topology -->
-          <div class="card border-0 shadow-sm rounded-4 p-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <div>
-                <h6 class="fw-bold mb-1">Network Topology</h6>
-                <div class="d-flex gap-3 mt-1">
-                  <small class="text-primary fw-bold" style="font-size: 0.65rem;">1,204 ACTIVE NODES</small>
-                  <small class="text-success fw-bold" style="font-size: 0.65rem;">24ms LATENCY</small>
+                <div class="d-flex align-items-center gap-3">
+                  <p class="text-muted small mb-0 d-flex align-items-center">
+                    <span class="live-dot me-2"></span>
+                    Real-time Activity
+                  </p>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill x-small fw-bold">
+                    <i class="bi bi-arrow-up-short"></i> +12.5%
+                  </span>
                 </div>
               </div>
-              <a href="#" class="text-primary small text-decoration-none fw-bold">View Map</a>
-            </div>
-            <div class="topology-map rounded-4 d-flex align-items-center justify-content-center position-relative" style="height: 350px; background: #f1f5f9;">
-              <!-- Map Visualization Placeholder -->
-              <div class="map-overlay position-absolute top-0 end-0 m-4 p-3 bg-white rounded-3 shadow-sm border" style="z-index: 2;">
-                <ul class="list-unstyled mb-0" style="font-size: 0.65rem;">
-                  <li class="mb-2 d-flex align-items-center">
-                    <span class="dot rounded-circle bg-success me-2" style="width: 6px; height: 6px;"></span>
-                    <span class="text-muted fw-bold">US-EAST: NORMAL</span>
-                  </li>
-                  <li class="mb-2 d-flex align-items-center">
-                    <span class="dot rounded-circle bg-success me-2" style="width: 6px; height: 6px;"></span>
-                    <span class="text-muted fw-bold">EU-WEST: NORMAL</span>
-                  </li>
-                  <li class="d-flex align-items-center">
-                    <span class="dot rounded-circle bg-warning me-2" style="width: 6px; height: 6px;"></span>
-                    <span class="text-muted fw-bold">AS-SOUTH: BUSY</span>
-                  </li>
-                </ul>
+              <div class="d-flex gap-2">
+                <div class="btn-group btn-group-sm rounded-pill p-1 bg-light">
+                  <button 
+                    v-for="t in ['Year', 'Month', 'Week']" 
+                    :key="t"
+                    @click="activeTimeframe = t"
+                    :class="['btn rounded-pill px-3 transition-all', activeTimeframe === t ? 'btn-white shadow-sm active' : 'btn-transparent text-muted']"
+                  >
+                    {{ t }}
+                  </button>
+                </div>
               </div>
-              <div class="topology-grid w-100 h-100"></div>
+            </div>
+            <div class="chart-container rounded-4 bg-dark position-relative" style="height: 300px; overflow: hidden;">
+              <!-- Interactive Chart -->
+              <div class="w-100 h-100 position-relative p-4">
+                <div class="engagement-grid w-100 h-100 position-absolute top-0 start-0"></div>
+                
+                <!-- Data Tooltip (Dynamic) -->
+                <div class="chart-info-overlay position-absolute top-0 start-0 m-4 z-index-5">
+                  <div class="d-flex flex-column">
+                    <span class="text-white-50 xx-small fw-bold text-uppercase">Peak Interaction</span>
+                    <span class="text-white fw-bold h4 mb-0">{{ activeTimeframe === 'Year' ? '12.8k' : activeTimeframe === 'Month' ? '1.2k' : '342' }}</span>
+                  </div>
+                </div>
+
+                <svg class="chart-svg w-100 h-100" viewBox="0 0 1000 300" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" style="stop-color:rgba(139, 92, 246, 0.4)" />
+                      <stop offset="100%" style="stop-color:rgba(139, 92, 246, 0)" />
+                    </linearGradient>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  
+                  <!-- Background Area -->
+                  <path 
+                    :key="'area-' + activeTimeframe"
+                    class="chart-line-anim" 
+                    :d="chartPaths[activeTimeframe].area" 
+                    fill="url(#chartGradient)"
+                  />
+                  
+                  <!-- Glowing Line -->
+                  <path 
+                    :key="'line-' + activeTimeframe"
+                    class="chart-stroke-anim" 
+                    :d="chartPaths[activeTimeframe].line" 
+                    fill="none" 
+                    stroke="#a78bfa" 
+                    stroke-width="3"
+                    filter="url(#glow)"
+                  />
+
+                  <!-- Interactive Hover Points -->
+                  <g class="chart-points">
+                    <circle 
+                      v-for="(p, i) in chartPaths[activeTimeframe].points" 
+                      :key="i"
+                      :cx="p.x" :cy="p.y" r="4" 
+                      fill="#fff" 
+                      class="pulsing-point-white" 
+                    />
+                  </g>
+                </svg>
+                
+                <!-- X-Axis Labels -->
+                <div class="d-flex justify-content-between text-white-50 xx-small fw-bold mt-2 px-2">
+                  <span v-for="label in chartPaths[activeTimeframe].labels" :key="label">{{ label }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Right Column -->
         <div class="col-xl-4">
-          <SystemEvents />
           <ActiveSessions />
         </div>
       </div>
@@ -122,10 +159,33 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
 import MetricCard from '../../components/admin/MetricCard.vue';
-import SystemEvents from '../../components/admin/SystemEvents.vue';
 import ActiveSessions from '../../components/admin/ActiveSessions.vue';
+
+const activeTimeframe = ref('Year');
+
+const chartPaths = {
+  Year: {
+    line: "M0,250 Q100,220 200,240 T400,180 T600,200 T800,120 T1000,150",
+    area: "M0,250 Q100,220 200,240 T400,180 T600,200 T800,120 T1000,150 L1000,300 L0,300 Z",
+    points: [{x: 200, y: 240}, {x: 400, y: 180}, {x: 600, y: 200}, {x: 800, y: 120}],
+    labels: ['JAN', 'MAR', 'MAY', 'JUL', 'SEP', 'NOV']
+  },
+  Month: {
+    line: "M0,280 Q150,250 300,200 T500,220 T700,150 T1000,100",
+    area: "M0,280 Q150,250 300,200 T500,220 T700,150 T1000,100 L1000,300 L0,300 Z",
+    points: [{x: 300, y: 200}, {x: 500, y: 220}, {x: 700, y: 150}],
+    labels: ['WK1', 'WK2', 'WK3', 'WK4']
+  },
+  Week: {
+    line: "M0,200 Q200,250 400,150 T700,180 T1000,220",
+    area: "M0,200 Q200,250 400,150 T700,180 T1000,220 L1000,300 L0,300 Z",
+    points: [{x: 400, y: 150}, {x: 700, y: 180}],
+    labels: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+  }
+};
 </script>
 
 <style scoped>
@@ -135,36 +195,79 @@ import ActiveSessions from '../../components/admin/ActiveSessions.vue';
 }
 
 .chart-container {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
 .engagement-grid {
   background-image: 
-    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
 }
 
-.engagement-line {
-  position: absolute;
-  bottom: 20%;
-  left: 0;
-  right: 0;
-  height: 60%;
-  background: linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0.3) 50%, transparent 100%);
-  clip-path: polygon(0% 100%, 10% 80%, 20% 90%, 30% 60%, 40% 70%, 50% 30%, 60% 50%, 70% 20%, 80% 40%, 90% 10%, 100% 30%, 100% 100%);
-  border-top: 2px solid #a78bfa;
+.chart-line-anim {
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.4));
+  animation: chart-reveal 1.2s ease-out;
 }
 
-.topology-map {
-  background-image: radial-gradient(circle at center, #cbd5e1 1px, transparent 1px);
-  background-size: 24px 24px;
+.chart-stroke-anim {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: line-draw 1.8s ease-out forwards;
 }
 
-.topology-grid {
-  background: radial-gradient(circle at center, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+@keyframes line-draw {
+  to { stroke-dashoffset: 0; }
 }
 
+@keyframes chart-reveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pulsing-point-white {
+  animation: pulse-point-white 2s infinite;
+  box-shadow: 0 0 10px #fff;
+}
+
+@keyframes pulse-point-white {
+  0% { r: 3; opacity: 0.5; }
+  50% { r: 5; opacity: 1; }
+  100% { r: 3; opacity: 0.5; }
+}
+
+.z-index-5 { z-index: 5; }
+
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-white.active {
+  background-color: white !important;
+  color: #6366f1 !important;
+}
+
+.bg-success-subtle { background-color: rgba(16, 185, 129, 0.1); }
+.border-success-subtle { border-color: rgba(16, 185, 129, 0.2) !important; }
+
+/* Utilities */
+.fw-black { font-weight: 900; }
+.x-small { font-size: 0.7rem; }
 .bg-light {
   background-color: #f8fafc !important;
 }

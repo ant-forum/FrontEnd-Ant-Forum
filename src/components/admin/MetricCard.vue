@@ -10,14 +10,14 @@
       </div>
     </div>
     <div class="metric-content">
-      <h3 class="fw-bold mb-1">{{ value }}</h3>
+      <h3 class="fw-bold mb-1">{{ displayValue }}</h3>
       <p class="text-muted text-uppercase fw-semibold mb-0" style="font-size: 0.7rem; letter-spacing: 0.5px;">{{ label }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 
 const props = defineProps({
   label: String,
@@ -32,6 +32,30 @@ const props = defineProps({
     type: String,
     default: 'bg-light-primary'
   }
+});
+
+const displayValue = ref('0');
+
+onMounted(() => {
+  // Simple simulation of counting up
+  const finalValue = props.value;
+  let current = 0;
+  const isK = finalValue.includes('k');
+  const target = parseFloat(finalValue);
+  
+  const duration = 1500;
+  const steps = 60;
+  const increment = target / steps;
+  
+  const timer = setInterval(() => {
+    current += increment;
+    if (current >= target) {
+      displayValue.value = finalValue;
+      clearInterval(timer);
+    } else {
+      displayValue.value = current.toFixed(1) + (isK ? 'k' : '');
+    }
+  }, duration / steps);
 });
 
 const trendClass = computed(() => {

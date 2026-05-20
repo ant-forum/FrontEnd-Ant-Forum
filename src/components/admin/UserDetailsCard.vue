@@ -1,47 +1,114 @@
 <template>
   <div class="user-details-card card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 2rem;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h6 class="fw-bold mb-0">User Details</h6>
-      <a href="#" class="text-primary small text-decoration-none fw-bold">View Full Profile</a>
-    </div>
-
-    <div class="text-center mb-4">
-      <div class="position-relative d-inline-block">
-        <img :src="user.avatar" :alt="user.name" class="rounded-circle border border-4 border-white shadow-sm" width="100" height="100">
-        <span class="status-indicator position-absolute bottom-0 end-0 border border-4 border-white rounded-circle active" style="width: 24px; height: 24px;"></span>
+      <h6 class="fw-bold mb-0">User Profile</h6>
+      <div class="dropdown">
+        <button class="btn btn-link p-0 text-muted" data-bs-toggle="dropdown">
+          <i class="bi bi-three-dots"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
+          <li><a class="dropdown-item small py-2" href="#"><i class="bi bi-person-badge me-2"></i>View Public Profile</a></li>
+          <li><a class="dropdown-item small py-2" href="#" @click.prevent="isEditing = !isEditing"><i class="bi bi-pencil me-2"></i>{{ isEditing ? 'Cancel Editing' : 'Edit Profile' }}</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item small py-2 text-danger" href="#" @click.prevent="$emit('suspend', user.id)"><i class="bi bi-slash-circle me-2"></i>{{ user.status === 'suspended' ? 'Unsuspend' : 'Suspend' }} User</a></li>
+        </ul>
       </div>
-      <h4 class="fw-bold mt-3 mb-1">{{ user.name }}</h4>
-      <p class="text-muted small">Joined January 2024</p>
     </div>
 
-    <div class="tech-stack-section mb-4">
-      <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 1px;">Tech Stack</h6>
-      <div class="d-flex flex-wrap gap-2">
-        <span v-for="tech in techStack" :key="tech" class="badge bg-light text-muted border px-2 py-1 fw-medium" style="font-size: 0.7rem;">
-          {{ tech }}
+    <div class="text-center mb-4 pb-2 border-bottom position-relative">
+      <div v-if="isEditing" class="position-absolute top-0 end-0">
+        <button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm" @click="isEditing = false">Save</button>
+      </div>
+      <div class="position-relative d-inline-block avatar-container">
+        <img :src="user.avatar" :alt="user.name" class="rounded-circle border border-4 border-white shadow-sm profile-main-img" width="110" height="110">
+        <span :class="['status-indicator position-absolute bottom-0 end-0 border border-4 border-white rounded-circle', user.status]" style="width: 28px; height: 28px;"></span>
+        <div v-if="isEditing" class="avatar-overlay rounded-circle d-flex align-items-center justify-content-center">
+          <i class="bi bi-camera text-white fs-4"></i>
+        </div>
+      </div>
+      
+      <div v-if="!isEditing">
+        <h4 class="fw-bold mt-3 mb-1">{{ user.name }}</h4>
+        <p class="text-muted small mb-3">{{ user.email }}</p>
+      </div>
+      <div v-else class="mt-3 mb-3 px-3">
+        <input type="text" class="form-control form-control-sm mb-2 text-center fw-bold" :value="user.name">
+        <input type="email" class="form-control form-control-sm text-center" :value="user.email">
+      </div>
+      
+      <div class="d-flex justify-content-center gap-2 mb-2">
+        <span :class="['badge rounded-pill px-3 py-2 fw-bold', user.roleClass]" style="font-size: 0.65rem;">
+          {{ user.role.toUpperCase() }}
+        </span>
+        <span class="badge bg-light text-dark border rounded-pill px-3 py-2 fw-bold" style="font-size: 0.65rem;">
+          ID: #{{ user.id }}
         </span>
       </div>
     </div>
 
-    <div class="activity-section mb-4">
-      <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 1px;">Recent Activity</h6>
-      <div class="activity-timeline">
-        <div v-for="activity in activities" :key="activity.id" class="activity-item d-flex gap-3 mb-3">
-          <div :class="['activity-icon rounded-circle d-flex align-items-center justify-content-center', activity.bgClass]">
-            <i :class="[activity.icon, 'text-white']" style="font-size: 0.75rem;"></i>
+    <div class="info-grid mb-4">
+      <div class="row g-3">
+        <div class="col-6">
+          <div class="p-3 rounded-4 bg-light text-center">
+            <p class="text-muted xx-small fw-bold text-uppercase mb-1">Joined</p>
+            <p class="fw-bold small mb-0">{{ user.joinedDate || 'Jan 2024' }}</p>
           </div>
-          <div class="activity-content">
-            <p class="mb-0 fw-bold" style="font-size: 0.85rem;">{{ activity.title }}</p>
-            <p class="text-muted small mb-1">{{ activity.desc }}</p>
-            <small class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem;">{{ activity.time }}</small>
+        </div>
+        <div class="col-6">
+          <div class="p-3 rounded-4 bg-light text-center">
+            <p class="text-muted xx-small fw-bold text-uppercase mb-1">Reputation</p>
+            <p class="fw-bold small mb-0 text-primary">{{ user.reputation || '1.2k' }}</p>
           </div>
         </div>
       </div>
     </div>
 
-    <button class="btn btn-outline-danger w-100 rounded-pill py-3 fw-bold mt-2" style="font-size: 0.85rem;">
-      Suspend Account
-    </button>
+    <div class="metadata-section mb-4">
+      <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 1px;">Session Info</h6>
+      <div class="d-flex flex-column gap-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted small">Location</span>
+          <span class="fw-semibold small d-flex align-items-center">
+            <i class="bi bi-geo-alt me-1 text-primary"></i> {{ user.location || 'Sweden' }}
+          </span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted small">Last IP</span>
+          <span class="fw-semibold small text-muted">{{ user.lastIp || '192.168.1.1' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="activity-section mb-4">
+      <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 1px;">Activity Feed</h6>
+      <div class="activity-timeline">
+        <div v-for="activity in activities" :key="activity.id" class="activity-item d-flex gap-3 mb-3">
+          <div :class="['activity-icon rounded-circle d-flex align-items-center justify-content-center shadow-sm', activity.bgClass]">
+            <i :class="[activity.icon, 'text-white']" style="font-size: 0.75rem;"></i>
+          </div>
+          <div class="activity-content flex-grow-1">
+            <div class="d-flex justify-content-between">
+              <p class="mb-0 fw-bold" style="font-size: 0.85rem;">{{ activity.title }}</p>
+              <small class="text-muted xx-small fw-bold">{{ activity.time }}</small>
+            </div>
+            <p class="text-muted small mb-0">{{ activity.desc }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-grid gap-2">
+      <button class="btn btn-primary rounded-pill py-2 fw-bold shadow-brand">
+        Message User
+      </button>
+      <button 
+        :class="['btn rounded-pill py-2 fw-bold', user.status === 'suspended' ? 'btn-outline-success' : 'btn-outline-danger']" 
+        style="font-size: 0.85rem;"
+        @click="$emit('suspend', user.id)"
+      >
+        {{ user.status === 'suspended' ? 'Unsuspend Account' : 'Suspend Account' }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -51,39 +118,38 @@ import { ref } from 'vue';
 const props = defineProps({
   user: {
     type: Object,
-    default: () => ({
-      name: 'Marcus Wright',
-      avatar: 'https://i.pravatar.cc/150?u=marcus'
-    })
+    required: true
   }
 });
 
-const techStack = ref(['React', 'TypeScript', 'Node.js', 'TailwindCSS', 'PostgreSQL']);
+const emit = defineEmits(['suspend']);
+
+const isEditing = ref(false);
 
 const activities = ref([
   {
     id: 1,
     title: 'Replied to thread',
     desc: '"Scaling microservices in Node..."',
-    time: '2 hours ago',
+    time: '2h ago',
     icon: 'bi bi-chat-dots',
-    bgClass: 'bg-primary-soft'
+    bgClass: 'bg-primary-main'
   },
   {
     id: 2,
-    title: 'Project Completed',
-    desc: 'ANT-Ecosystem v2.1 Migration',
-    time: 'Yesterday, 4:15 PM',
-    icon: 'bi bi-check2',
-    bgClass: 'bg-success-soft'
+    title: 'Project Updated',
+    desc: 'Nexus Analytics v1.2',
+    time: 'Yesterday',
+    icon: 'bi bi-arrow-repeat',
+    bgClass: 'bg-success-main'
   },
   {
     id: 3,
-    title: 'System Login',
-    desc: 'IP: 192.168.1.45 (New Device)',
-    time: 'May 12, 09:12 AM',
-    icon: 'bi bi-box-arrow-in-right',
-    bgClass: 'bg-warning-soft'
+    title: 'Login Detected',
+    desc: 'Chrome on macOS',
+    time: '3 days ago',
+    icon: 'bi bi-shield-check',
+    bgClass: 'bg-info-main'
   }
 ]);
 </script>
@@ -93,17 +159,44 @@ const activities = ref([
   background: white;
 }
 
-.bg-primary-soft { background-color: #8b5cf6; }
-.bg-success-soft { background-color: #10b981; }
-.bg-warning-soft { background-color: #f59e0b; }
+.profile-main-img {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.avatar-container:hover .profile-main-img {
+  transform: scale(1.08) rotate(2deg);
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-container:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.suspended { background-color: #ef4444; }
+
+.bg-primary-main { background-color: #8b5cf6; }
+.bg-success-main { background-color: #10b981; }
+.bg-info-main { background-color: #3b82f6; }
 
 .activity-icon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
 }
 
 .active { background-color: #10b981; }
+.idle { background-color: #94a3b8; }
 
 .activity-timeline {
   position: relative;
@@ -112,8 +205,8 @@ const activities = ref([
 .activity-item:not(:last-child)::after {
   content: '';
   position: absolute;
-  left: 14px;
-  top: 28px;
+  left: 16px;
+  top: 32px;
   bottom: 0;
   width: 1px;
   background-color: #f1f5f9;
@@ -124,4 +217,14 @@ const activities = ref([
   position: relative;
   z-index: 1;
 }
+
+.xx-small { font-size: 0.6rem; }
+
+.shadow-brand {
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.role-mentor { background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+.role-student { background-color: rgba(100, 116, 139, 0.1); color: #64748b; }
+.role-admin { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
 </style>

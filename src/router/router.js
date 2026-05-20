@@ -20,7 +20,6 @@ import AdminDashboard from '../views/admin/adminDashboard.vue';
 import UserManagement from '../views/admin/UserManagement.vue';
 import CreateUserView from '../views/admin/CreateUserView.vue';
 import ProjectManagement from '../views/admin/ProjectManagement.vue';
-import CreateProjectView from '../views/admin/CreateProjectView.vue';
 import ThreadManagement from '../views/admin/ThreadManagement.vue';
 // import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
@@ -68,13 +67,13 @@ const routes = [
     meta: { title: "Verify Account" },
   },
   {
-    path: "/",
+    path: "/home",
     component: Home,
     name: "HomeLayout",
     meta: { requiresAuth: true },
   },
   {
-    path: "/home",
+    path: "/",
     name: "HomePage",
     component: HomePage,
     meta: { requiresAuth: true },
@@ -155,12 +154,6 @@ const routes = [
     component: ProjectManagement,
   },
   {
-    path: "/admin/projects/create",
-    name: "CreateProjectAdmin",
-    meta: { requiresAuth: true },
-    component: CreateProjectView,
-  },
-  {
     path: "/admin/threads",
     name: "ThreadManagement",
     meta: { requiresAuth: true },
@@ -191,6 +184,10 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    // always scroll to top
+    return { top: 0 }
+  },
 });
 
 export default router;
