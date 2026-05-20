@@ -6,7 +6,7 @@
       the developer community and resources.
     </p>
 
-    <div class="form-stack">
+    <form class="form-stack" @submit.prevent="handleSignIn">
       <!-- Email -->
       <div>
         <input
@@ -15,6 +15,7 @@
           class="form-control-custom"
           :class="{ error: errors.email }"
           placeholder="Username or Email"
+          autocomplete="username"
           @focus="clearError('email')"
         />
         <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
@@ -29,6 +30,7 @@
             class="form-control-custom"
             :class="{ error: errors.password }"
             placeholder="Password"
+            autocomplete="current-password"
             @focus="clearError('password')"
           />
           <button
@@ -96,7 +98,7 @@
       </div>
 
       <!-- Sign In -->
-      <button class="btn-signin" :disabled="loading" @click="handleSignIn">
+      <button type="submit" class="btn-signin" :disabled="loading">
         <template v-if="loading">
           <div class="spinner"></div>
           <span>Signing in…</span>
@@ -120,7 +122,7 @@
           </svg>
         </template>
       </button>
-    </div>
+    </form>
 
     <!-- Divider -->
     <div class="divider mt-4 mb-3">or continue with</div>

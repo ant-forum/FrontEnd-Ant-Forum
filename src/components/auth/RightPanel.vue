@@ -22,8 +22,8 @@
 </template>
 
 <script setup>
-import CodeCard from "../../views/auth/CodeCard.vue";
-import PerfCard from "../../views/auth/PerfCard.vue";
+import CodeCard from "./CodeCard.vue";
+import PerfCard from "./PerfCard.vue";
 </script>
 
 <style scoped>

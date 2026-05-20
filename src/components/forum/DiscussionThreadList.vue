@@ -1,4 +1,6 @@
 <script setup>
+import { ref } from 'vue';
+
 defineProps({
   discussions: { type: Array, required: true }
 });
@@ -21,6 +23,21 @@ function getTagStyle(color) {
 
 function toggleSave(d) {
   d.saved = !d.saved;
+}
+
+const copiedId = ref(null);
+
+async function shareThread(id) {
+  const url = `${window.location.origin}/forum/${id}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    copiedId.value = id;
+    setTimeout(() => {
+      if (copiedId.value === id) copiedId.value = null;
+    }, 2000);
+  } catch (err) {
+    console.error('Failed to copy: ', err);
+  }
 }
 </script>
 
@@ -56,7 +73,7 @@ function toggleSave(d) {
         </div>
 
         <!-- Title -->
-        <h3 class="thread-title">{{ d.title }}</h3>
+        <h3 class="thread-title" @click="$router.push(`/forum/${d.id}`)">{{ d.title }}</h3>
 
         <!-- Excerpt -->
         <p class="thread-excerpt">{{ d.excerpt }}</p>
@@ -74,7 +91,7 @@ function toggleSave(d) {
 
         <!-- Footer -->
         <div class="thread-footer">
-          <button class="foot-btn">
+          <button class="foot-btn" @click="$router.push(`/forum/${d.id}`)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
@@ -90,12 +107,15 @@ function toggleSave(d) {
 
           <div class="foot-spacer"></div>
 
-          <button class="foot-btn share">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="foot-btn share" :class="{ 'is-copied': copiedId === d.id }" @click.stop="shareThread(d.id)">
+            <svg v-if="copiedId === d.id" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
               <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
             </svg>
-            Share
+            {{ copiedId === d.id ? 'Copied!' : 'Share' }}
           </button>
         </div>
       </div>
@@ -326,6 +346,16 @@ function toggleSave(d) {
 .foot-btn.share:hover {
   background: #f5f3ff;
   color: #6d28d9;
+}
+
+.foot-btn.is-copied {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.foot-btn.is-copied:hover {
+  background: #ecfdf5;
+  color: #059669;
 }
 
 @media (max-width: 600px) {

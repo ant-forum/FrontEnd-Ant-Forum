@@ -1,34 +1,40 @@
 <template>
   <div class="left-panel">
-    <h1>Reset Password</h1>
+    <h1>Check your email</h1>
     <p class="subtitle">
-      Enter your email address and we'll send you a link to reset<br />
-      your password. Your access remains uninterrupted and secure.
+      We've sent a 6-digit verification code to your email<br />
+      address. Please enter it below to verify your account.
     </p>
 
-    <div class="form-stack">
-      <!-- Email -->
-      <div>
-        <label class="input-label">EMAIL ADDRESS</label>
+    <form class="form-stack" @submit.prevent="handleVerify">
+      <div class="otp-container">
         <input
-          v-model="form.email"
-          type="email"
-          class="form-control-custom"
-          :class="{ error: errors.email }"
-          placeholder="name@company.com"
-          @focus="clearError('email')"
+          v-for="(digit, index) in 6"
+          :key="index"
+          type="text"
+          class="otp-input form-control-custom"
+          :class="{ error: hasError }"
+          maxlength="1"
+          autocomplete="one-time-code"
+          v-model="otp[index]"
+          @input="handleInput($event, index)"
+          @keydown="handleKeyDown($event, index)"
+          @paste="handlePaste"
+          ref="otpInputs"
         />
-        <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
+      </div>
+      <div v-if="hasError" class="error-msg text-center mt-1">
+        Please enter all 6 digits.
       </div>
 
       <!-- Submit -->
-      <button class="btn-signin mt-2" :disabled="loading" @click="handleReset">
+      <button type="submit" class="btn-signin mt-3" :disabled="loading">
         <template v-if="loading">
           <div class="spinner"></div>
-          <span>Sending link…</span>
+          <span>Verifying…</span>
         </template>
         <template v-else>
-          <span>Reset Password</span>
+          <span>Verify Account</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="18"
@@ -46,54 +52,91 @@
           </svg>
         </template>
       </button>
-    </div>
+    </form>
 
-    <!-- Back to Login -->
+    <!-- Resend -->
     <div class="back-link text-center mt-4">
-      Remember your password?
-      <router-link to="/login">Back to Login</router-link>
+      Didn't receive the code?
+      <a href="#" @click.prevent="resendCode">Resend code</a>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, nextTick } from "vue";
 import { useRouter } from "vue-router";
+import { useToast } from "vue-toastification";
 import api from "../../api/api";
 
 const router = useRouter();
+const toast = useToast();
 const loading = ref(false);
+const hasError = ref(false);
 
-const form = reactive({ email: "" });
-const errors = reactive({ email: "" });
+const otp = reactive(["", "", "", "", "", ""]);
+const otpInputs = ref([]);
 
-function clearError(field) {
-  errors[field] = "";
-}
+function handleInput(event, index) {
+  hasError.value = false;
+  const val = event.target.value;
 
-function validate() {
-  let ok = true;
-  if (!form.email.trim()) {
-    errors.email = "Email address is required.";
-    ok = false;
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = "Please enter a valid email address.";
-    ok = false;
+  if (val && !/^[0-9]$/.test(val)) {
+    otp[index] = "";
+    return;
   }
-  return ok;
+
+  if (val && index < 5) {
+    nextTick(() => {
+      otpInputs.value[index + 1].focus();
+    });
+  }
 }
 
-async function handleReset() {
-  if (!validate()) return;
+function handleKeyDown(event, index) {
+  if (event.key === "Backspace" && !otp[index] && index > 0) {
+    otpInputs.value[index - 1].focus();
+  }
+}
+
+function handlePaste(event) {
+  event.preventDefault();
+  const pastedData = event.clipboardData.getData("text").slice(0, 6);
+  if (!/^[0-9]+$/.test(pastedData)) return;
+
+  for (let i = 0; i < pastedData.length; i++) {
+    otp[i] = pastedData[i];
+  }
+
+  const focusIndex = Math.min(pastedData.length, 5);
+  otpInputs.value[focusIndex].focus();
+}
+
+async function handleVerify() {
+  const code = otp.join("");
+  if (code.length < 6) {
+    hasError.value = true;
+    return;
+  }
+
   loading.value = true;
   try {
-    await api.post("/api/auth/forgot-password", { email: form.email });
-    router.push("/verify");
+    await api.post("/api/auth/verify", { code });
+    toast.success("Account verified successfully! 🎉");
+    router.push("/login");
   } catch (error) {
     // The global interceptor in src/api/api.js shows the error toast.
-    console.error("Password reset failed:", error);
+    console.error("Verification failed:", error);
   } finally {
     loading.value = false;
+  }
+}
+
+async function resendCode() {
+  try {
+    await api.post("/api/auth/resend-code");
+    toast.success("Verification code resent!");
+  } catch (error) {
+    console.error("Resend failed:", error);
   }
 }
 </script>
@@ -130,23 +173,25 @@ h1 {
   gap: var(--spacing-md);
 }
 
-.input-label {
-  display: block;
-  font-size: 0.75rem;
+.otp-container {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: space-between;
+}
+
+.otp-input {
+  width: 48px;
+  height: 54px;
+  text-align: center;
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  padding: 0;
 }
 
 .form-control-custom {
-  width: 100%;
-  padding: 0.75rem var(--spacing-md);
   border: 1.5px solid var(--input-border);
   border-radius: var(--radius-md);
   font-family: "Sora", sans-serif;
-  font-size: 0.9rem;
   color: var(--text-dark);
   background: #fff;
   outline: none;
@@ -154,9 +199,6 @@ h1 {
     border-color var(--transition-base),
     box-shadow var(--transition-base),
     background-color var(--transition-base);
-}
-.form-control-custom::placeholder {
-  color: #9ca3af;
 }
 .form-control-custom:focus {
   border-color: var(--brand-light);
@@ -168,9 +210,8 @@ h1 {
 }
 
 .error-msg {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: #ef4444;
-  margin-top: 4px;
 }
 
 .btn-signin {
@@ -253,10 +294,22 @@ h1 {
   h1 {
     font-size: 1.6rem;
   }
+  .otp-container {
+    gap: 0.3rem;
+  }
+  .otp-input {
+    width: 42px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
 }
 @media (max-width: 420px) {
   .left-panel {
     padding: var(--spacing-lg) var(--spacing-md);
+  }
+  .otp-input {
+    width: 36px;
+    height: 46px;
   }
 }
 </style>
