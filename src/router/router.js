@@ -172,6 +172,18 @@ const routes = [
     meta: { requiresAuth: true },
     component: ForumView,
   },
+  {
+    path: "/forum/create",
+    name: "CreateDiscussion",
+    meta: { requiresAuth: true },
+    component: () => import("../views/forum/CreateDiscussionView.vue"),
+  },
+  {
+    path: "/forum/:id",
+    name: "ThreadReplies",
+    meta: { requiresAuth: true },
+    component: () => import("../views/forum/ThreadRepliesView.vue"),
+  },
 
 ];
 
