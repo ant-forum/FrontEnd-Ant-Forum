@@ -3,15 +3,31 @@
     <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
       <h5 class="fw-bold mb-0">Discussions</h5>
       <div class="d-flex gap-2">
-        <div class="dropdown">
-          <button class="btn btn-light btn-sm rounded-pill px-3 dropdown-toggle d-flex align-items-center" type="button">
-            <i class="bi bi-filter-left me-2"></i>
-            All Categories
-          </button>
+        <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border">
+          <span class="input-group-text bg-white border-0 ps-3">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <input 
+            :value="searchQuery"
+            @input="$emit('update:searchQuery', $event.target.value)"
+            type="text" 
+            class="form-control border-0 py-1 px-2 small" 
+            placeholder="Search threads..."
+            style="font-size: 0.85rem; width: 180px;"
+          >
         </div>
-        <button class="btn btn-light btn-sm rounded-pill px-2">
-          <i class="bi bi-search"></i>
-        </button>
+        <div class="dropdown">
+          <button class="btn btn-light btn-sm rounded-pill px-3 dropdown-toggle d-flex align-items-center fw-bold" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-filter-left me-2"></i>
+            {{ categoryFilter === 'ALL' ? 'Categories' : categoryFilter }}
+          </button>
+          <ul class="dropdown-menu border-0 shadow-sm rounded-3">
+            <li><a class="dropdown-item small" href="#" @click.prevent="$emit('update:categoryFilter', 'ALL')">All Categories</a></li>
+            <li v-for="cat in categories" :key="cat">
+              <a class="dropdown-item small" href="#" @click.prevent="$emit('update:categoryFilter', cat)">{{ cat }}</a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -52,12 +68,18 @@
               </span>
             </td>
             <td class="text-end pe-4">
-              <button class="btn btn-icon btn-light btn-sm rounded-circle me-1">
+              <button class="btn btn-icon btn-light btn-sm rounded-circle me-1" @click.stop="$emit('select-thread', thread)">
                 <i class="bi bi-eye" style="font-size: 0.8rem;"></i>
               </button>
-              <button class="btn btn-icon btn-light btn-sm rounded-circle">
+              <button class="btn btn-icon btn-light-red btn-sm rounded-circle" @click.stop="$emit('delete-thread', thread.id)">
                 <i class="bi bi-trash" style="font-size: 0.8rem;"></i>
               </button>
+            </td>
+          </tr>
+          <tr v-if="threads.length === 0">
+            <td colspan="5" class="text-center py-5 text-muted">
+              <i class="bi bi-chat-square-text fs-1 opacity-25 d-block mb-2"></i>
+              No discussions found
             </td>
           </tr>
         </tbody>
@@ -65,7 +87,7 @@
     </div>
 
     <div class="card-footer bg-white border-0 p-4 d-flex justify-content-between align-items-center border-top">
-      <small class="text-muted">Showing 4 of 842 threads</small>
+      <small class="text-muted">Showing {{ threads.length }} threads</small>
       <div class="pagination-buttons d-flex gap-2">
         <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold">Prev</button>
         <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-brand">Next</button>
@@ -75,52 +97,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+defineProps({
+  threads: {
+    type: Array,
+    required: true
+  },
+  searchQuery: String,
+  categoryFilter: String,
+  categories: Array
+});
 
-defineEmits(['select-thread']);
-
-const threads = ref([
-  {
-    id: 1,
-    title: 'How to optimize Docker images for Node.js?',
-    category: 'Development / DevOps',
-    author: { name: 'David Smith', avatar: 'https://i.pravatar.cc/150?u=david' },
-    replies: 24,
-    views: '1.2k',
-    status: 'ACTIVE',
-    statusClass: 'status-active'
-  },
-  {
-    id: 2,
-    title: 'Best practices for Vue 3 Composition API in large scale apps',
-    category: 'Frontend / Vue',
-    author: { name: 'Sarah Chen', avatar: 'https://i.pravatar.cc/150?u=sarahc' },
-    replies: 45,
-    views: '3.5k',
-    status: 'PINNED',
-    statusClass: 'status-pinned'
-  },
-  {
-    id: 3,
-    title: 'Is it worth moving from REST to GraphQL in 2024?',
-    category: 'Backend / API',
-    author: { name: 'Marcus Wright', avatar: 'https://i.pravatar.cc/150?u=marcus' },
-    replies: 12,
-    views: '840',
-    status: 'FLAGGED',
-    statusClass: 'status-flagged'
-  },
-  {
-    id: 4,
-    title: 'New security vulnerability found in popular npm package',
-    category: 'Security / Announcements',
-    author: { name: 'Elena Vance', avatar: 'https://i.pravatar.cc/150?u=elena' },
-    replies: 8,
-    views: '2.1k',
-    status: 'LOCKED',
-    statusClass: 'status-locked'
-  }
-]);
+defineEmits(['select-thread', 'delete-thread', 'update:searchQuery', 'update:categoryFilter']);
 </script>
 
 <style scoped>
@@ -134,12 +121,30 @@ const threads = ref([
 .status-flagged { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
 .status-locked { background-color: rgba(100, 116, 139, 0.1); color: #64748b; }
 
+.search-group {
+  max-width: 250px;
+}
+
+.search-group input:focus {
+  box-shadow: none;
+}
+
 .btn-icon {
   width: 32px;
   height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.btn-light-red {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.btn-light-red:hover {
+  background-color: #ef4444;
+  color: white;
 }
 
 .cursor-pointer {

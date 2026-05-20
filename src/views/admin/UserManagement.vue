@@ -5,6 +5,18 @@
 
     <!-- Main Content -->
     <main class="flex-grow-1 p-4 p-lg-5">
+      <!-- Header with Action -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h3 class="fw-bold mb-0">User Management</h3>
+          <p class="text-muted small mb-0">Manage and monitor platform users</p>
+        </div>
+        <router-link to="/admin/users/create" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-brand d-flex align-items-center">
+          <i class="bi bi-person-plus-fill me-2"></i>
+          Create User
+        </router-link>
+      </div>
+
       <!-- Metrics Section -->
       <div class="row g-4 mb-5">
         <div class="col-md-4">
@@ -62,7 +74,7 @@
       <!-- Main Directory and Details -->
       <div class="row g-4">
         <div class="col-xl-8">
-          <UserTable @select-user="selectedUser = $event" />
+          <UserTable :users="users" @select-user="selectedUser = $event" />
         </div>
         <div class="col-xl-4">
           <UserDetailsCard :user="selectedUser" />
@@ -78,14 +90,40 @@ import AdminSidebar from '../../components/admin/AdminSidebar.vue';
 import UserTable from '../../components/admin/UserTable.vue';
 import UserDetailsCard from '../../components/admin/UserDetailsCard.vue';
 
-const selectedUser = ref({
-  id: 2,
-  name: 'Marcus Wright',
-  email: 'm.wright@proton.me',
-  avatar: 'https://i.pravatar.cc/150?u=marcus',
-  role: 'Student',
-  status: 'idle'
-});
+const users = ref([
+  {
+    id: 1,
+    name: 'Sarah Connor',
+    email: 's.connor@antforum.io',
+    avatar: 'https://i.pravatar.cc/150?u=sarah',
+    role: 'Mentor',
+    roleClass: 'role-mentor',
+    status: 'active',
+    statusLabel: 'Active'
+  },
+  {
+    id: 2,
+    name: 'Marcus Wright',
+    email: 'm.wright@proton.me',
+    avatar: 'https://i.pravatar.cc/150?u=marcus',
+    role: 'Student',
+    roleClass: 'role-student',
+    status: 'idle',
+    statusLabel: 'Idle'
+  },
+  {
+    id: 3,
+    name: 'Elena Fisher',
+    email: 'e.fisher@enterprise.io',
+    avatar: 'https://i.pravatar.cc/150?u=elena',
+    role: 'Admin',
+    roleClass: 'role-admin',
+    status: 'active',
+    statusLabel: 'Active'
+  }
+]);
+
+const selectedUser = ref(users.value[1]);
 </script>
 
 <style scoped>
@@ -122,5 +160,19 @@ const selectedUser = ref({
 
 .bg-light {
   background-color: #f8fafc !important;
+}
+
+.shadow-brand {
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2);
+}
+
+.btn-primary {
+  background-color: #8b5cf6;
+  border-color: #8b5cf6;
+}
+
+.btn-primary:hover {
+  background-color: #7c3aed;
+  border-color: #7c3aed;
 }
 </style>
