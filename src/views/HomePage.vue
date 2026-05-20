@@ -1,5 +1,6 @@
 <script setup>
 import { useAuthStore } from '../stores/auth'
+import Navbar from '../components/layouts/header.vue'
 
 const auth = useAuthStore()
 
@@ -108,27 +109,7 @@ const recentThreads = [
 
 <template>
   <div class="home-page-container">
-    <!-- Custom Navigation to match the image -->
-    <nav class="custom-nav container-fluid d-flex align-items-center justify-content-between py-3 px-lg-5">
-      <div class="nav-left d-flex align-items-center">
-        <div class="logo-circle me-2"></div>
-        <span class="logo-text fw-bold">ANT-Forum</span>
-      </div>
-      
-      <div class="nav-center d-none d-md-block">
-        <div class="nav-pill d-flex gap-4 px-4 py-2 border rounded-pill bg-white shadow-sm">
-          <router-link to="/showcase" class="nav-item-link">Showcase</router-link>
-          <router-link to="/forum" class="nav-item-link">Forum</router-link>
-          <router-link to="/blog" class="nav-item-link">Blog</router-link>
-        </div>
-      </div>
-      
-      <div class="nav-right">
-        <button class="btn btn-dark rounded-pill px-4 py-2 d-flex align-items-center gap-2 let-talk-btn">
-          Let's Talk <i class="bi bi-arrow-up-right"></i>
-        </button>
-      </div>
-    </nav>
+    <Navbar />
 
     <main class="hero-section position-relative">
       <!-- Background Glows -->
@@ -402,39 +383,6 @@ const recentThreads = [
     linear-gradient(90deg, #f1f0f5 1px, transparent 1px);
   background-size: 40px 40px;
   color: #0f172a;
-}
-
-/* Custom Nav Styles */
-.custom-nav {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  z-index: 100;
-}
-
-.logo-circle {
-  width: 28px;
-  height: 28px;
-  border: 4px solid #1e293b;
-  border-radius: 50%;
-}
-
-.nav-item-link {
-  color: #64748b;
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.nav-item-link:hover {
-  color: #1e293b;
-}
-
-.let-talk-btn {
-  font-size: 0.9rem;
-  font-weight: 600;
-  background-color: #0f172a !important;
 }
 
 /* Hero Section */

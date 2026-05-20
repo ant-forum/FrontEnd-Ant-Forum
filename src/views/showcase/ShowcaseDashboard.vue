@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import Navbar from '../../components/layouts/header.vue';
 
 const activeExplore = ref('Trending');
 
@@ -46,42 +47,7 @@ const projects = [
 
 <template>
   <div class="showcase-page">
-    <!-- Header -->
-    <header class="showcase-header sticky-top">
-      <div class="container py-3 d-flex align-items-center justify-content-between">
-        <div class="header-left d-flex align-items-center">
-          <span class="logo-text fw-black fs-3 text-gradient">ANT</span>
-          <span class="ms-1 fw-bold fs-5 text-muted opacity-50">Showcase</span>
-        </div>
-
-      <div class="header-center d-none d-md-block">
-        <div class="nav-pills-modern d-flex gap-1 p-1 border rounded-pill bg-white shadow-sm">
-          <router-link v-for="link in ['Forum', 'Showcase', 'Blog']" :key="link" 
-                       :to="'/' + link.toLowerCase()" 
-                       class="nav-link-modern" 
-                       :class="{ 'active': link === 'Showcase' }">
-            {{ link }}
-          </router-link>
-        </div>
-      </div>
-
-      <div class="header-right d-flex align-items-center gap-3">
-        <div class="search-box-modern d-none d-lg-flex align-items-center bg-light rounded-pill px-3 py-2 border">
-          <i class="bi bi-search text-muted me-2"></i>
-          <input type="text" class="border-0 bg-transparent small fw-medium" placeholder="Search projects..." style="outline: none; width: 180px;">
-          <span class="badge bg-white text-muted border border-light-subtle rounded px-2 py-1 ms-2 x-small">⌘K</span>
-        </div>
-        <div class="d-flex gap-2">
-          <button class="btn btn-icon-modern"><i class="bi bi-bell"></i></button>
-          <button class="btn btn-icon-modern"><i class="bi bi-gear"></i></button>
-        </div>
-        <div class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 bg-white border rounded-pill shadow-sm">
-          <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle border border-2 border-primary-subtle" width="32" height="32" alt="User">
-          <span class="small fw-bold d-none d-xl-block">Alex Chen</span>
-        </div>
-      </div>
-    </div>
-  </header>
+    <Navbar />
 
     <main class="container py-4 flex-grow-1">
       <div class="row g-4">
@@ -246,60 +212,6 @@ const projects = [
   min-height: 100vh;
   font-family: 'Sora', sans-serif;
   color: #1e293b;
-}
-
-/* Header Modern */
-.showcase-header {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  z-index: 1000;
-}
-
-.text-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.nav-link-modern {
-  padding: 6px 18px;
-  border-radius: 50px;
-  text-decoration: none;
-  color: #64748b;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.nav-link-modern:hover {
-  color: #1e293b;
-  background: #f1f5f9;
-}
-
-.nav-link-modern.active {
-  background: #6366f1;
-  color: white;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-}
-
-.btn-icon-modern {
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  background: white;
-  border: 1px solid #f1f5f9;
-  color: #64748b;
-  transition: all 0.2s;
-}
-
-.btn-icon-modern:hover {
-  background: #f8fafc;
-  color: #6366f1;
-  border-color: #e0e7ff;
 }
 
 /* Profile Card Modern */

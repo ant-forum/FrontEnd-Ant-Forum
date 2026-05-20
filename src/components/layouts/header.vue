@@ -1,175 +1,154 @@
+<script setup>
+import { ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const activeLink = ref(route.name || 'Forum');
+
+const navLinks = [
+  { name: 'Forum', path: '/forum' },
+  { name: 'Showcase', path: '/showcase' },
+  { name: 'Blog', path: '/blog' }
+];
+</script>
+
 <template>
-  <nav class="navbar-custom">
-    <!-- Logo -->
-    <div class="logo">
-      ANT-Forum
-    </div>
-
-    <!-- Center Navigation -->
-    <div class="nav-center">
-      <ul class="nav-links">
-        <li><router-link to="/" class="nav-link" active-class="active" exact-active-class="active">Forum</router-link></li>
-        <li><router-link to="/showcase" class="nav-link" active-class="active">Showcase</router-link></li>
-        <li><router-link to="/blog" class="nav-link" active-class="active">Blog</router-link></li>
-      </ul>
-    </div>
-
-    <!-- Right Actions -->
-    <div class="nav-actions">
-      <div class="search-container">
-        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" placeholder="Search..." class="search-input" />
+  <header class="global-header sticky-top">
+    <div class="container py-3 d-flex align-items-center justify-content-between">
+      <!-- Logo Section -->
+      <div class="header-left d-flex align-items-center">
+        <router-link to="/" class="text-decoration-none d-flex align-items-center">
+          <span class="logo-text fw-black fs-3 text-gradient">ANTFORUM</span>
+        </router-link>
       </div>
-      
-      <button class="notification-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-      </button>
 
-      <div class="avatar-container">
-        <img src="/avatar.png" alt="User Avatar" class="avatar-image" />
+      <!-- Center Navigation -->
+      <div class="header-center d-none d-md-block">
+        <div class="nav-pills-modern d-flex gap-1 p-1 border rounded-pill bg-white shadow-sm">
+          <router-link 
+            v-for="link in navLinks" 
+            :key="link.name" 
+            :to="link.path" 
+            class="nav-link-modern" 
+            :class="{ 'active': route.path.startsWith(link.path) || (link.path === '/forum' && route.path === '/') }"
+          >
+            {{ link.name }}
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Right Actions -->
+      <div class="header-right d-flex align-items-center gap-3">
+        <div class="search-box-modern d-none d-lg-flex align-items-center bg-light rounded-pill px-3 py-2 border">
+          <i class="bi bi-search text-muted me-2"></i>
+          <input type="text" class="border-0 bg-transparent small fw-medium" placeholder="Search..." style="outline: none; width: 180px;">
+          <span class="badge bg-white text-muted border border-light-subtle rounded px-2 py-1 ms-2 x-small">⌘K</span>
+        </div>
+        
+        <div class="d-flex gap-2">
+          <button class="btn btn-icon-modern"><i class="bi bi-bell"></i></button>
+          <!-- Settings icon removed as per user request -->
+        </div>
+
+        <div class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 bg-white border rounded-pill shadow-sm cursor-pointer">
+          <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle border border-2 border-primary-subtle" width="32" height="32" alt="User">
+          <span class="small fw-bold d-none d-xl-block">Alex Chen</span>
+        </div>
       </div>
     </div>
-  </nav>
+  </header>
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-.navbar-custom {
-  font-family: 'Inter', sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 2rem;
-  background: linear-gradient(90deg, #f0f1f5 0%, #fafafa 50%, #f0f1f5 100%);
-  width: 100%;
-  box-sizing: border-box;
+.global-header {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  z-index: 1000;
 }
 
-.logo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1a1e29;
+.logo-text {
+  letter-spacing: -1px;
 }
 
-.nav-center {
-  background-color: #ffffff;
-  padding: 0.5rem 1.25rem;
-  border-radius: 9999px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+.text-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.nav-links {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin: 0;
-  padding: 0;
+.nav-pills-modern {
+  transition: all 0.3s ease;
 }
 
-.nav-link {
+.nav-link-modern {
+  padding: 6px 18px;
+  border-radius: 50px;
   text-decoration: none;
   color: #64748b;
-  font-weight: 500;
-  font-size: 0.95rem;
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: #9333ea;
-}
-
-.nav-link.active {
-  color: #9333ea;
-}
-
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-}
-
-.search-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.8rem;
-  color: #64748b;
-  pointer-events: none;
-}
-
-.search-input {
-  padding: 0.5rem 1rem 0.5rem 2.2rem;
-  border-radius: 9999px;
-  border: 1px solid #e2e8f0;
-  background-color: #f8fafc;
-  outline: none;
+  font-weight: 600;
   font-size: 0.9rem;
-  color: #334155;
-  width: 250px;
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.search-input:focus {
-  border-color: #a855f7;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+.nav-link-modern:hover {
+  color: #1e293b;
+  background: #f1f5f9;
 }
 
-.search-input::placeholder {
-  color: #94a3b8;
+.nav-link-modern.active {
+  background: #6366f1;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
-.notification-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #0f172a;
-  padding: 0.25rem;
+.btn-icon-modern {
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease, transform 0.2s ease;
-}
-
-.notification-btn:hover {
-  color: #9333ea;
-  transform: scale(1.05);
-}
-
-.avatar-container {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid #f1f5f9;
+  color: #64748b;
+  transition: all 0.2s;
   cursor: pointer;
-  border: 1px solid #e2e8f0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.avatar-container:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.btn-icon-modern:hover {
+  background: #f8fafc;
+  color: #6366f1;
+  border-color: #e0e7ff;
 }
 
-.avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.search-box-modern:focus-within {
+  border-color: #6366f1 !important;
+  background-color: white !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
-/* Responsive adjustments if needed */
+.user-profile-pill {
+  transition: all 0.2s ease;
+}
+
+.user-profile-pill:hover {
+  border-color: #6366f1 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.x-small {
+  font-size: 0.7rem;
+}
+
 @media (max-width: 768px) {
-  .nav-center {
-    display: none;
-  }
-  .search-input {
-    width: 150px;
+  .header-center {
+    display: none !important;
   }
 }
 </style>
