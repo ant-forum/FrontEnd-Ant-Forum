@@ -21,6 +21,8 @@ import UserManagement from '../views/admin/UserManagement.vue';
 import CreateUserView from '../views/admin/CreateUserView.vue';
 import ProjectManagement from '../views/admin/ProjectManagement.vue';
 import ThreadManagement from '../views/admin/ThreadManagement.vue';
+import AnalyticsView from '../views/admin/AnalyticsView.vue';
+import SettingsView from '../views/admin/SettingsView.vue';
 // import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
 
@@ -158,6 +160,18 @@ const routes = [
     name: "ThreadManagement",
     meta: { requiresAuth: true },
     component: ThreadManagement,
+  },
+  {
+    path: "/admin/analytics",
+    name: "Analytics",
+    meta: { requiresAuth: true },
+    component: AnalyticsView,
+  },
+  {
+    path: "/admin/settings",
+    name: "Settings",
+    meta: { requiresAuth: true },
+    component: SettingsView,
   },
   {
     path: "/forum",

@@ -5,14 +5,14 @@
 
     <!-- Main Content -->
     <main class="flex-grow-1 p-4 p-lg-5">
-      <!-- Header with Action -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-          <h3 class="fw-bold mb-0">User Management</h3>
-          <p class="text-muted small mb-0">Manage and monitor platform users</p>
+          <h2 class="fw-bold mb-1">User Directory</h2>
+          <p class="text-muted small mb-0">Manage platform members and their access levels</p>
         </div>
-        <router-link to="/admin/users/create" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-brand d-flex align-items-center">
-          <i class="bi bi-person-plus-fill me-2"></i>
+        <router-link to="/admin/users/create" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-brand d-flex align-items-center gap-2">
+          <i class="bi bi-person-plus-fill"></i>
           Create User
         </router-link>
       </div>
@@ -88,8 +88,11 @@
         <div class="col-xl-4">
           <UserDetailsCard v-if="selectedUser" :user="selectedUser" @suspend="handleSuspend(selectedUser.id)" />
           <div v-else class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white h-100 d-flex flex-column align-items-center justify-content-center">
-            <i class="bi bi-person-bounding-box fs-1 text-muted opacity-25 mb-3"></i>
-            <p class="text-muted">Select a user to view details</p>
+            <div class="icon-circle-large mb-4 bg-light-purple-soft d-flex align-items-center justify-content-center rounded-circle mx-auto" style="width: 80px; height: 80px;">
+              <i class="bi bi-person-bounding-box fs-1 text-purple"></i>
+            </div>
+            <h5 class="fw-bold mb-2 text-dark">Select a User</h5>
+            <p class="text-muted small mb-0 px-3">Choose a member from the directory to view their full profile and manage permissions.</p>
           </div>
         </div>
       </div>
@@ -213,8 +216,8 @@ const handleBulkDelete = (ids) => {
 }
 
 .icon-box {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -228,6 +231,16 @@ const handleBulkDelete = (ids) => {
 
 .bg-light-green { background-color: rgba(16, 185, 129, 0.1); }
 .text-green { color: #10b981; }
+
+.icon-circle-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.bg-light-purple-soft {
+  background-color: rgba(139, 92, 246, 0.05);
+}
 
 .mini-chart .bar {
   width: 3px;

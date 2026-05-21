@@ -3,7 +3,7 @@
     <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
       <h5 class="fw-bold mb-0">Platform Discussions</h5>
       <div class="d-flex gap-3">
-        <div class="input-group search-group shadow-sm rounded-pill border bg-light d-flex align-items-center">
+        <div class="input-group search-group shadow-sm rounded-pill border bg-white d-flex align-items-center">
           <span class="input-group-text bg-transparent border-0 ps-3 py-0">
             <i class="bi bi-search text-muted"></i>
           </span>

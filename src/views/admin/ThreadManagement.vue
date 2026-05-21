@@ -6,9 +6,9 @@
     <!-- Main Content -->
     <main class="flex-grow-1 p-4 p-lg-5">
       <!-- Header -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-          <h3 class="fw-bold mb-0">Discussion Moderation</h3>
+          <h2 class="fw-bold mb-1">Discussion Moderation</h2>
           <p class="text-muted small mb-0">Monitor and manage community conversations</p>
         </div>
       </div>
@@ -237,8 +237,8 @@ const handleDeleteThread = (id) => {
 }
 
 .icon-box {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
