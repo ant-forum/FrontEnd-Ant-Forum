@@ -108,7 +108,7 @@ const activityFeed = [
 <template>
   <Navbar />
   
-  <div class="container-fluid profile-dashboard py-4 px-lg-5">
+  <div class="container profile-dashboard py-4">
     <div class="row g-4">
       
       <!-- Left Sidebar Column -->
@@ -222,6 +222,8 @@ const activityFeed = [
 
 <style scoped>
 .profile-dashboard {
+  max-width: 1280px;
+  margin: 0 auto;
   background-color: #f8fafc;
   min-height: 90vh;
   font-family: var(--font-family-base);
