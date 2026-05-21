@@ -86,11 +86,33 @@ export const useForumStore = defineStore("forum", {
     },
 
     async fetchDiscussion(id) {
-      try {
-        const res = await api.get(`/discussions/${id}`);
-        this.discussion = res.data;
-      } catch (error) {
-        console.error("Error fetching discussion:", error);
+      // Mock data for UI testing
+      if (this.discussions.length === 0) {
+        await this.fetchDiscussions();
+      }
+      
+      const found = this.discussions.find((d) => d.id == id);
+      
+      if (found) {
+        this.discussion = {
+          ...found,
+          replies: [
+            {
+              author: '@senior_dev',
+              timestamp: '45 mins ago',
+              body: 'I highly recommend extracting the logic into a custom hook or composable. It keeps the component clean and makes testing much easier.',
+              likes: 12
+            },
+            {
+              author: '@frontend_wizard',
+              timestamp: '15 mins ago',
+              body: 'This is a great question! Make sure you are also checking the dependency array in your watchers to avoid infinite loops.',
+              likes: 8
+            }
+          ]
+        };
+      } else {
+        this.discussion = null;
       }
     },
 

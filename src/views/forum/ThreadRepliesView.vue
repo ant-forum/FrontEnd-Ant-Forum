@@ -86,8 +86,7 @@ const discussion = () => {
               </div>
             </div>
           </div>
-          <div class="thread-body">
-            {{ discussion().excerpt || discussion().body || 'No description provided.' }}
+          <div class="thread-body" v-html="discussion().excerpt || discussion().body || 'No description provided.'">
           </div>
           <div class="thread-actions">
             <button class="action-btn">
@@ -122,8 +121,7 @@ const discussion = () => {
                   <span class="reply-time">{{ reply.timestamp || 'Just now' }}</span>
                 </div>
               </div>
-              <div class="reply-body">
-                {{ reply.body }}
+              <div class="reply-body" v-html="reply.body">
               </div>
               <div class="reply-actions">
                 <button class="action-btn">
@@ -257,6 +255,55 @@ const discussion = () => {
   color: #4b5563;
   line-height: 1.7;
   margin-bottom: 24px;
+}
+
+.thread-body :deep(code),
+.reply-body :deep(code),
+.thread-body :deep(font[face="monospace"]),
+.reply-body :deep(font[face="monospace"]),
+.thread-body :deep(span[style*="monospace"]),
+.reply-body :deep(span[style*="monospace"]) {
+  background-color: #e5e7eb !important;
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-size: 13.5px !important;
+  color: #111827 !important;
+}
+
+.thread-body :deep(pre),
+.reply-body :deep(pre) {
+  background: #f3f4f6 !important;
+  padding: 12px !important;
+  border-radius: 6px !important;
+  overflow-x: auto !important;
+  font-family: monospace !important;
+  margin: 12px 0;
+}
+
+.thread-body :deep(blockquote),
+.reply-body :deep(blockquote) {
+  border-left: 4px solid #d1d5db !important;
+  margin: 12px 0 12px 10px !important;
+  padding: 0 0 0 12px !important;
+  color: #374151 !important;
+}
+
+.thread-body :deep(table),
+.reply-body :deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 16px 0;
+}
+.thread-body :deep(th), .thread-body :deep(td),
+.reply-body :deep(th), .reply-body :deep(td) {
+  border: 1px solid #d1d5db;
+  padding: 10px 14px;
+  text-align: left;
+}
+.thread-body :deep(th),
+.reply-body :deep(th) {
+  background-color: #f3f4f6;
 }
 
 .thread-actions {
