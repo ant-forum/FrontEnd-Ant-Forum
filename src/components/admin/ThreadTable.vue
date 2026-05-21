@@ -1,25 +1,33 @@
 <template>
   <div class="thread-table-card card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
-      <h5 class="fw-bold mb-0">Discussions</h5>
-      <div class="d-flex gap-2">
-        <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border">
-          <span class="input-group-text bg-white border-0 ps-3">
+      <h5 class="fw-bold mb-0">Platform Discussions</h5>
+      <div class="d-flex gap-3">
+        <div class="input-group search-group shadow-sm rounded-pill border bg-white d-flex align-items-center">
+          <span class="input-group-text bg-transparent border-0 ps-3 py-0">
             <i class="bi bi-search text-muted"></i>
           </span>
           <input 
             :value="searchQuery"
             @input="$emit('update:searchQuery', $event.target.value)"
             type="text" 
-            class="form-control border-0 py-1 px-2 small" 
-            placeholder="Search threads..."
-            style="font-size: 0.85rem; width: 180px;"
+            class="form-control border-0 py-2 small bg-transparent" 
+            placeholder="Search discussions..."
+            style="font-size: 0.9rem; width: 220px; box-shadow: none;"
           >
+          <button 
+            v-if="searchQuery" 
+            class="btn border-0 bg-transparent pe-3 text-muted" 
+            type="button"
+            @click="$emit('update:searchQuery', '')"
+          >
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
         </div>
         <div class="dropdown">
-          <button class="btn btn-light btn-sm rounded-pill px-3 dropdown-toggle d-flex align-items-center fw-bold" type="button" data-bs-toggle="dropdown">
-            <i class="bi bi-filter-left me-2"></i>
-            {{ categoryFilter === 'ALL' ? 'Categories' : categoryFilter }}
+          <button class="btn btn-white border shadow-sm rounded-pill px-4 py-2 dropdown-toggle d-flex align-items-center fw-bold small" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-funnel me-2"></i>
+            {{ categoryFilter === 'ALL' ? 'All Categories' : categoryFilter }}
           </button>
           <ul class="dropdown-menu border-0 shadow-sm rounded-3">
             <li><a class="dropdown-item small" href="#" @click.prevent="$emit('update:categoryFilter', 'ALL')">All Categories</a></li>
@@ -43,17 +51,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="thread in threads" :key="thread.id" class="cursor-pointer" @click="$emit('select-thread', thread)">
+          <tr v-for="thread in threads" :key="thread.id" :class="['cursor-pointer transition-all', thread.reports > 0 ? 'bg-light-red-soft' : '']" @click="$emit('select-thread', thread)">
             <td class="ps-4 py-3">
               <div class="d-flex flex-column" style="max-width: 300px;">
-                <span class="fw-bold text-truncate mb-1" style="font-size: 0.95rem;">{{ thread.title }}</span>
-                <span class="text-muted small text-truncate">{{ thread.category }}</span>
+                <span class="fw-bold text-truncate mb-1" style="font-size: 0.95rem;" v-html="highlight(thread.title)"></span>
+                <span class="text-muted small text-truncate" v-html="highlight(thread.category)"></span>
               </div>
             </td>
             <td>
               <div class="d-flex align-items-center">
                 <img :src="thread.author.avatar" :alt="thread.author.name" class="rounded-circle me-2" width="32" height="32">
-                <span class="small fw-medium">{{ thread.author.name }}</span>
+                <span class="small fw-medium" v-html="highlight(thread.author.name)"></span>
               </div>
             </td>
             <td>
@@ -97,7 +105,7 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   threads: {
     type: Array,
     required: true
@@ -108,6 +116,12 @@ defineProps({
 });
 
 defineEmits(['select-thread', 'delete-thread', 'update:searchQuery', 'update:categoryFilter']);
+
+const highlight = (text) => {
+  if (!props.searchQuery) return text;
+  const regex = new RegExp(`(${props.searchQuery})`, 'gi');
+  return text.toString().replace(regex, '<mark class="bg-purple-light p-0">$1</mark>');
+};
 </script>
 
 <style scoped>
@@ -122,7 +136,14 @@ defineEmits(['select-thread', 'delete-thread', 'update:searchQuery', 'update:cat
 .status-locked { background-color: rgba(100, 116, 139, 0.1); color: #64748b; }
 
 .search-group {
-  max-width: 250px;
+  max-width: 300px;
+  height: 42px;
+}
+
+.search-group .input-group-text {
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .search-group input:focus {
@@ -145,6 +166,23 @@ defineEmits(['select-thread', 'delete-thread', 'update:searchQuery', 'update:cat
 .btn-light-red:hover {
   background-color: #ef4444;
   color: white;
+}
+
+.bg-light-red-soft {
+  background-color: rgba(239, 68, 68, 0.02);
+}
+
+.bg-purple-light {
+  background-color: rgba(139, 92, 246, 0.2);
+  color: inherit;
+}
+
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(139, 92, 246, 0.02) !important;
 }
 
 .cursor-pointer {

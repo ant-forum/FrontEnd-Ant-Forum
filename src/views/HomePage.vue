@@ -377,11 +377,6 @@ const recentThreads = [
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #fdfcff;
-  background-image: 
-    linear-gradient(#f1f0f5 1px, transparent 1px),
-    linear-gradient(90deg, #f1f0f5 1px, transparent 1px);
-  background-size: 40px 40px;
   color: #0f172a;
 }
 
@@ -393,29 +388,6 @@ const recentThreads = [
   justify-content: center;
   padding-top: 120px;
   min-height: 85vh;
-}
-
-.glow-bg {
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  filter: blur(120px);
-  opacity: 0.15;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.glow-pink {
-  background: #f472b6;
-  top: 10%;
-  right: -5%;
-}
-
-.glow-purple {
-  background: #818cf8;
-  bottom: 20%;
-  left: -5%;
 }
 
 .hero-content {

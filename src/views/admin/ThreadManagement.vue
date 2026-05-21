@@ -5,10 +5,21 @@
 
     <!-- Main Content -->
     <main class="flex-grow-1 p-4 p-lg-5">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+          <h2 class="fw-bold mb-1">Discussion Moderation</h2>
+          <p class="text-muted small mb-0">Monitor and manage community conversations</p>
+        </div>
+      </div>
+
       <!-- Metrics Section -->
       <div class="row g-4 mb-5">
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
+          <div 
+            :class="['metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center cursor-pointer transition-all', currentFilter === 'ALL' ? 'active-metric' : '']"
+            @click="currentFilter = 'ALL'"
+          >
             <div>
               <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Total Threads</p>
               <h2 class="fw-bold mb-1">{{ totalThreads }}</h2>
@@ -23,7 +34,10 @@
           </div>
         </div>
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
+          <div 
+            :class="['metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center cursor-pointer transition-all', currentFilter === 'PINNED' ? 'active-metric' : '']"
+            @click="currentFilter = 'PINNED'"
+          >
             <div>
               <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Pinned</p>
               <h2 class="fw-bold mb-1">{{ pinnedThreads }}</h2>
@@ -38,9 +52,12 @@
           </div>
         </div>
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
+          <div 
+            :class="['metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center cursor-pointer transition-all', currentFilter === 'FLAGGED' ? 'active-metric' : '']"
+            @click="currentFilter = 'FLAGGED'"
+          >
             <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Flagged Content</p>
+              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Flagged</p>
               <h2 class="fw-bold mb-1">{{ flaggedThreads }}</h2>
               <div class="d-flex align-items-center text-danger small">
                 <i class="bi bi-exclamation-circle-fill me-1"></i>
@@ -87,6 +104,7 @@ import ThreadDetailCard from '../../components/admin/ThreadDetailCard.vue';
 
 const searchQuery = ref('');
 const categoryFilter = ref('ALL');
+const currentFilter = ref('ALL');
 
 const threads = ref([
   {
@@ -98,7 +116,8 @@ const threads = ref([
     views: '1.2k',
     status: 'ACTIVE',
     statusClass: 'status-active',
-    reports: 0
+    reports: 0,
+    content: "I've been working on a project where Docker image sizes are getting out of control. Does anyone have specific tips for Node.js multi-stage builds?"
   },
   {
     id: 2,
@@ -109,7 +128,8 @@ const threads = ref([
     views: '3.5k',
     status: 'PINNED',
     statusClass: 'status-pinned',
-    reports: 2
+    reports: 2,
+    content: "When building large enterprise applications with Vue 3, should I stick to standard setup scripts or are there better ways to organize composables?"
   },
   {
     id: 3,
@@ -120,7 +140,8 @@ const threads = ref([
     views: '840',
     status: 'FLAGGED',
     statusClass: 'status-flagged',
-    reports: 5
+    reports: 5,
+    content: "I'm considering migrating our legacy REST API to GraphQL. Is the overhead of schema definition and tooling worth the performance benefits?"
   },
   {
     id: 4,
@@ -131,7 +152,8 @@ const threads = ref([
     views: '2.1k',
     status: 'LOCKED',
     statusClass: 'status-locked',
-    reports: 0
+    reports: 0,
+    content: "Critical security alert: A remote code execution vulnerability was discovered in the 'fast-utils' package. Everyone should update to v2.4.1 immediately."
   }
 ]);
 
@@ -151,6 +173,10 @@ const flaggedThreads = computed(() => threads.value.filter(t => t.status === 'FL
 const filteredThreads = computed(() => {
   let result = [...threads.value];
 
+  if (currentFilter.value !== 'ALL') {
+    result = result.filter(t => t.status === currentFilter.value);
+  }
+
   if (categoryFilter.value !== 'ALL') {
     result = result.filter(t => t.category === categoryFilter.value);
   }
@@ -159,7 +185,9 @@ const filteredThreads = computed(() => {
     const query = searchQuery.value.toLowerCase();
     result = result.filter(t => 
       t.title.toLowerCase().includes(query) || 
-      t.author.name.toLowerCase().includes(query)
+      t.author.name.toLowerCase().includes(query) ||
+      t.category.toLowerCase().includes(query) ||
+      t.id.toString().includes(query)
     );
   }
 
@@ -209,8 +237,8 @@ const handleDeleteThread = (id) => {
 }
 
 .icon-box {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,5 +255,25 @@ const handleDeleteThread = (id) => {
 
 .bg-light {
   background-color: #f8fafc !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  border-color: #8b5cf6 !important;
+}
+
+.active-metric {
+  border-color: #8b5cf6 !important;
+  background-color: rgba(139, 92, 246, 0.02) !important;
+  box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.1) !important;
 }
 </style>

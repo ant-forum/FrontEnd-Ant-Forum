@@ -26,10 +26,6 @@
 
     <!-- Sidebar Footer -->
     <div class="sidebar-footer p-4">
-      <router-link to="/admin/projects" class="btn btn-primary w-100 rounded-3 py-3 mb-4 shadow-sm fw-bold">
-        New Project
-      </router-link>
-
       <div class="user-profile d-flex align-items-center">
         <img src="https://i.pravatar.cc/150?u=alex" alt="Alex Rivera" class="rounded-circle me-3" width="36" height="36">
         <div class="user-info overflow-hidden">
@@ -49,8 +45,8 @@ const navItems = ref([
   { label: 'Users', icon: 'bi bi-people', path: '/admin/users' },
   { label: 'Projects', icon: 'bi bi-folder2', path: '/admin/projects' },
   { label: 'Threads', icon: 'bi bi-chat-dots', path: '/admin/threads' },
-  { label: 'Analytics', icon: 'bi bi-bar-chart', path: '#' },
-  { label: 'Settings', icon: 'bi bi-gear', path: '#' },
+  { label: 'Analytics', icon: 'bi bi-bar-chart', path: '/admin/analytics' },
+  { label: 'Settings', icon: 'bi bi-gear', path: '/admin/settings' },
 ]);
 </script>
 
