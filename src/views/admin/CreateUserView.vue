@@ -4,401 +4,420 @@
     <AdminSidebar />
 
     <!-- Main Content -->
-    <main class="flex-grow-1 p-4 p-lg-5 position-relative">
-      <!-- Toast Notification -->
-      <Transition name="toast">
-        <div v-if="toast.show" :class="['toast-notification', `bg-${toast.type}`]">
-          <i :class="['bi', toast.icon, 'me-2']"></i>
-          {{ toast.message }}
-        </div>
-      </Transition>
-
+    <main class="flex-grow-1 p-4 p-lg-5">
       <!-- Header -->
-      <header class="d-flex justify-content-between align-items-center mb-5">
-        <div class="d-flex align-items-center gap-3">
-          <router-link to="/admin/users" class="btn btn-white border shadow-sm rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-            <i class="bi bi-arrow-left text-dark"></i>
+      <header class="mb-4 d-flex justify-content-between align-items-end">
+        <div>
+          <router-link to="/admin/users" class="back-link d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-arrow-left"></i>
+            <span>Back to User Directory</span>
           </router-link>
-          <div>
-            <h2 class="fw-bold mb-1">Add New User</h2>
-            <p class="text-muted small mb-0">Step {{ currentStep }} of 3: {{ stepTitles[currentStep - 1] }}</p>
+          <h1 class="fw-bold mb-1">Create New User</h1>
+          <p class="text-muted small mb-0">Platform registration for new members</p>
+        </div>
+        <div class="completion-stats text-end d-none d-md-block">
+          <div class="xx-small fw-bold text-uppercase text-muted mb-1">Form Completion</div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress" style="width: 120px; height: 6px;">
+              <div class="progress-bar bg-purple" :style="{ width: completionPercentage + '%' }"></div>
+            </div>
+            <span class="small fw-bold text-purple">{{ completionPercentage }}%</span>
           </div>
         </div>
       </header>
 
-      <div class="row">
-        <div class="col-xl-9 mx-auto">
-          <!-- Stepper -->
-          <div class="stepper-container mb-5">
-            <div class="d-flex justify-content-between position-relative">
-              <div class="stepper-line" :style="{ width: ((currentStep - 1) / 2) * 100 + '%' }"></div>
-              <div v-for="n in 3" :key="n" 
-                class="step-item d-flex flex-column align-items-center position-relative z-1"
-                :class="{ 'active': currentStep >= n, 'completed': currentStep > n }"
-              >
-                <div class="step-circle shadow-sm">
-                  <i v-if="currentStep > n" class="bi bi-check-lg"></i>
-                  <span v-else>{{ n }}</span>
+      <div class="row g-4">
+        <div class="col-xl-8">
+          <!-- Main Card -->
+          <div class="card create-card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4">
+            <form @submit.prevent="handleSubmit">
+              <!-- Avatar Section -->
+              <div class="d-flex align-items-center gap-4 mb-5 pb-4 border-bottom border-light">
+                <div class="avatar-wrapper position-relative">
+                  <img :src="avatarUrl" class="rounded-circle shadow-sm border border-4 border-white" width="100" height="100" alt="Avatar Preview">
+                  <button type="button" @click="refreshAvatar" class="camera-btn position-absolute bottom-0 end-0 rounded-circle border-0 d-flex align-items-center justify-content-center shadow-sm">
+                    <i class="bi bi-camera-fill text-white small"></i>
+                  </button>
                 </div>
-                <span class="step-label xx-small fw-bold text-uppercase mt-2">{{ stepTitles[n-1] }}</span>
+                <div>
+                  <h5 class="fw-bold mb-1">Profile Photo</h5>
+                  <p class="text-muted xx-small mb-0">This will be visible to other members across the platform.</p>
+                </div>
+              </div>
+
+              <!-- Section: Basic Info -->
+              <div class="mb-5">
+                <h6 class="fw-bold text-uppercase small tracking-wider text-purple mb-4">
+                  <i class="bi bi-person-circle me-2"></i>Personal Details
+                </h6>
+                <div class="row g-4">
+                  <div class="col-md-6">
+                    <label class="form-label text-muted xx-small fw-bold text-uppercase">Full Name</label>
+                    <input v-model="form.name" type="text" class="form-control custom-input border-0" placeholder="e.g. John Doe" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-muted xx-small fw-bold text-uppercase">Email Address</label>
+                    <input v-model="form.email" type="email" class="form-control custom-input border-0" placeholder="john@example.com" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-muted xx-small fw-bold text-uppercase">Role</label>
+                    <div class="custom-select-wrapper position-relative" v-click-outside="() => showRoleDropdown = false">
+                      <div @click="showRoleDropdown = !showRoleDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer">
+                        <div class="d-flex align-items-center gap-2">
+                          <i :class="['bi', getRoleIcon(form.role), 'text-purple']"></i>
+                          <span>{{ form.role }}</span>
+                        </div>
+                        <i class="bi bi-chevron-down small opacity-50"></i>
+                      </div>
+                      <Transition name="dropdown">
+                        <div v-if="showRoleDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 bg-white z-3">
+                          <div v-for="role in roleOptions" :key="role.label" 
+                            @click="selectRole(role.label)"
+                            class="dropdown-item-custom p-3 rounded-3 d-flex align-items-center gap-3 mb-1 cursor-pointer"
+                            :class="{ 'active': form.role === role.label }"
+                          >
+                            <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center" :class="role.bg">
+                              <i :class="['bi', role.icon, role.text]"></i>
+                            </div>
+                            <div>
+                              <div class="fw-bold small">{{ role.label }}</div>
+                              <div class="xx-small text-muted">{{ role.desc }}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </Transition>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-muted xx-small fw-bold text-uppercase">Department</label>
+                    <div class="custom-select-wrapper position-relative" v-click-outside="() => showDeptDropdown = false">
+                      <div @click="showDeptDropdown = !showDeptDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer">
+                        <div class="d-flex align-items-center gap-2">
+                          <i :class="['bi', getDeptIcon(form.department), 'text-purple']"></i>
+                          <span>{{ form.department }}</span>
+                        </div>
+                        <i class="bi bi-chevron-down small opacity-50"></i>
+                      </div>
+                      <Transition name="dropdown">
+                        <div v-if="showDeptDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 bg-white z-3">
+                          <div v-for="dept in deptOptions" :key="dept.label" 
+                            @click="selectDept(dept.label)"
+                            class="dropdown-item-custom p-3 rounded-3 d-flex align-items-center gap-3 mb-1 cursor-pointer"
+                            :class="{ 'active': form.department === dept.label }"
+                          >
+                            <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center bg-light">
+                              <i :class="['bi', dept.icon, 'text-muted']"></i>
+                            </div>
+                            <div>
+                              <div class="fw-bold small">{{ dept.label }}</div>
+                              <div class="xx-small text-muted">{{ dept.desc }}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </Transition>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section: Work & Projects -->
+              <div class="mb-5">
+                <h6 class="fw-bold text-uppercase small tracking-wider text-purple mb-4">
+                  <i class="bi bi-briefcase me-2"></i>Work & Assignments
+                </h6>
+                <div class="row g-4">
+                  <div class="col-12">
+                    <label class="form-label text-muted xx-small fw-bold text-uppercase">Assign to Projects</label>
+                    <div class="d-flex flex-wrap gap-2 p-3 bg-light rounded-4">
+                      <div v-for="project in availableProjects" :key="project" 
+                        class="project-pill px-3 py-1 rounded-pill small fw-bold border"
+                        :class="form.projects.includes(project) ? 'bg-purple text-white border-purple' : 'bg-white text-muted border-light'"
+                        @click="toggleProject(project)"
+                        style="cursor: pointer; transition: all 0.2s ease;"
+                      >
+                        <i :class="form.projects.includes(project) ? 'bi bi-check-lg' : 'bi bi-plus'" class="me-1"></i>
+                        {{ project }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-muted xx-small fw-bold text-uppercase">Initial Status</label>
+                    <div class="custom-select-wrapper position-relative" v-click-outside="() => showStatusDropdown = false">
+                      <div @click="showStatusDropdown = !showStatusDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer">
+                        <div class="d-flex align-items-center gap-2">
+                          <i :class="['bi', getStatusIcon(form.status), form.status === 'active' ? 'text-success' : 'text-warning']"></i>
+                          <span>{{ form.status.charAt(0).toUpperCase() + form.status.slice(1) }}</span>
+                        </div>
+                        <i class="bi bi-chevron-down small opacity-50"></i>
+                      </div>
+                      <Transition name="dropdown">
+                        <div v-if="showStatusDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 bg-white z-3">
+                          <div v-for="status in statusOptions" :key="status.value" 
+                            @click="selectStatus(status.value)"
+                            class="dropdown-item-custom p-3 rounded-3 d-flex align-items-center gap-3 mb-1 cursor-pointer"
+                            :class="{ 'active': form.status === status.value }"
+                          >
+                            <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center" :class="status.bg">
+                              <i :class="['bi', status.icon, status.text]"></i>
+                            </div>
+                            <div>
+                              <div class="fw-bold small">{{ status.label }}</div>
+                              <div class="xx-small text-muted">{{ status.desc }}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </Transition>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-muted xx-small fw-bold text-uppercase">Workspace Location</label>
+                    <div class="custom-select-wrapper position-relative" v-click-outside="() => showLocationDropdown = false">
+                      <div @click="showLocationDropdown = !showLocationDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer">
+                        <div class="d-flex align-items-center gap-2">
+                          <i :class="['bi', getLocationIcon(form.location), 'text-purple']"></i>
+                          <span>{{ form.location }}</span>
+                        </div>
+                        <i class="bi bi-chevron-down small opacity-50"></i>
+                      </div>
+                      <Transition name="dropdown">
+                        <div v-if="showLocationDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 bg-white z-3">
+                          <div v-for="loc in locationOptions" :key="loc.label" 
+                            @click="selectLocation(loc.label)"
+                            class="dropdown-item-custom p-3 rounded-3 d-flex align-items-center gap-3 mb-1 cursor-pointer"
+                            :class="{ 'active': form.location === loc.label }"
+                          >
+                            <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center bg-light">
+                              <i :class="['bi', loc.icon, 'text-muted']"></i>
+                            </div>
+                            <div>
+                              <div class="fw-bold small">{{ loc.label }}</div>
+                              <div class="xx-small text-muted">{{ loc.desc }}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </Transition>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <hr class="my-5 opacity-10">
+
+              <!-- Section: Settings & Access -->
+              <div class="mb-5">
+                <h6 class="fw-bold text-uppercase small tracking-wider text-purple mb-4">
+                  <i class="bi bi-shield-lock me-2"></i>Security & Notifications
+                </h6>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <div class="form-check form-switch custom-switch mb-3 d-flex align-items-center gap-3 ps-0">
+                      <input v-model="form.sendInvitation" class="form-check-input ms-0 mt-0" type="checkbox" id="sendInvitation">
+                      <label class="form-check-label text-muted small fw-bold text-uppercase mt-1" for="sendInvitation">
+                        Send Welcome Email Invitation
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-check form-switch custom-switch mb-3 d-flex align-items-center gap-3 ps-0">
+                      <input v-model="form.require2FA" class="form-check-input ms-0 mt-0" type="checkbox" id="require2FA">
+                      <label class="form-check-label text-muted small fw-bold text-uppercase mt-1" for="require2FA">
+                        Enforce Two-Factor Authentication (2FA)
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-check form-switch custom-switch d-flex align-items-center gap-3 ps-0">
+                      <input v-model="form.requirePasswordChange" class="form-check-input ms-0 mt-0" type="checkbox" id="requirePasswordChange">
+                      <label class="form-check-label text-muted small fw-bold text-uppercase mt-1" for="requirePasswordChange">
+                        Require Password Change on First Login
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer Actions -->
+              <div class="d-flex justify-content-end gap-3 pt-4 border-top border-light mt-5">
+                <router-link to="/admin/users" class="btn btn-cancel rounded-pill px-4 py-2 fw-bold border-0">
+                  Cancel
+                </router-link>
+                <button 
+                  type="submit" 
+                  class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-brand border-0"
+                  :disabled="isSubmitting"
+                >
+                  <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  Create User Account
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Side: Sidebar Tips -->
+        <div class="col-xl-4">
+          <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 2rem; z-index: 10;">
+            <h6 class="fw-bold mb-4 small text-uppercase tracking-wider">Onboarding Checklist</h6>
+            
+            <div class="checklist-item d-flex gap-3 mb-4">
+              <div class="icon-box-sm bg-purple-soft text-purple rounded-circle d-flex align-items-center justify-content-center">
+                <i class="bi bi-envelope small"></i>
+              </div>
+              <div>
+                <div class="small fw-bold">Email Verification</div>
+                <p class="xx-small text-muted mb-0">System will verify email format and domain accessibility.</p>
               </div>
             </div>
-          </div>
 
-          <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-            <div class="row g-0">
-              <!-- Left Side: Form -->
-              <div class="col-lg-8 p-4 p-md-5">
-                <form @submit.prevent="handleSubmit">
-                  <!-- Step 1: Account Information -->
-                  <div v-if="currentStep === 1" class="animate__animated animate__fadeIn">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                      <div class="icon-box bg-purple-soft text-purple rounded-4 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                        <i class="bi bi-person-lines-fill fs-4"></i>
-                      </div>
-                      <div>
-                        <h5 class="fw-bold mb-0">Account Information</h5>
-                        <p class="text-muted xx-small mb-0">Basic identity and organizational details</p>
-                      </div>
-                    </div>
-                    <div class="row g-4">
-                      <div class="col-md-6">
-                        <label class="form-label text-muted xx-small fw-bold text-uppercase">Full Name</label>
-                        <div class="input-group">
-                          <span class="input-group-text border-0 bg-light pe-0"><i class="bi bi-person text-muted"></i></span>
-                          <input 
-                            v-model="form.name" 
-                            type="text" 
-                            :class="['form-control border-0 bg-light p-3 ps-2 rounded-3', errors.name ? 'is-invalid' : '']" 
-                            placeholder="John Doe" 
-                          >
-                        </div>
-                        <div v-if="errors.name" class="text-danger xx-small mt-1 ps-2">{{ errors.name }}</div>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label text-muted xx-small fw-bold text-uppercase">Email Address</label>
-                        <div class="input-group position-relative">
-                          <span class="input-group-text border-0 bg-light pe-0"><i class="bi bi-envelope text-muted"></i></span>
-                          <input 
-                            v-model="form.email" 
-                            type="email" 
-                            :class="['form-control border-0 bg-light p-3 ps-2 rounded-3', errors.email ? 'is-invalid' : '']" 
-                            placeholder="john@example.com" 
-                          >
-                          <div v-if="isCheckingEmail" class="position-absolute end-0 top-50 translate-middle-y me-3">
-                            <div class="spinner-border spinner-border-sm text-purple" role="status"></div>
-                          </div>
-                          <i v-else-if="emailAvailable === true" class="bi bi-check-circle-fill text-success position-absolute end-0 top-50 translate-middle-y me-3"></i>
-                        </div>
-                        <div v-if="errors.email" class="text-danger xx-small mt-1 ps-2">{{ errors.email }}</div>
-                      </div>
-                      <div class="col-md-12">
-                        <label class="form-label text-muted xx-small fw-bold text-uppercase">Department</label>
-                        <div class="input-group">
-                          <span class="input-group-text border-0 bg-light pe-0"><i class="bi bi-building text-muted"></i></span>
-                          <select v-model="form.department" class="form-select border-0 bg-light p-3 ps-2 rounded-3 shadow-none">
-                            <option value="Engineering">Engineering</option>
-                            <option value="Design">Design</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Management">Management</option>
-                            <option value="Education">Education</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Step 2: Access & Permissions -->
-                  <div v-if="currentStep === 2" class="animate__animated animate__fadeIn">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                      <div class="icon-box bg-purple-soft text-purple rounded-4 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                        <i class="bi bi-shield-lock fs-4"></i>
-                      </div>
-                      <div>
-                        <h5 class="fw-bold mb-0">Access & Permissions</h5>
-                        <p class="text-muted xx-small mb-0">Define the user's role and platform access</p>
-                      </div>
-                    </div>
-                    <div class="row g-4">
-                      <div class="col-md-6">
-                        <label class="form-label text-muted xx-small fw-bold text-uppercase">Access Level</label>
-                        <div class="input-group">
-                          <span class="input-group-text border-0 bg-light pe-0"><i class="bi bi-shield-check text-muted"></i></span>
-                          <select v-model="form.role" class="form-select border-0 bg-light p-3 ps-2 rounded-3 shadow-none">
-                            <option value="Student">Student</option>
-                            <option value="Mentor">Mentor</option>
-                            <option value="Admin">Admin</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label text-muted xx-small fw-bold text-uppercase">Initial Status</label>
-                        <div class="input-group">
-                          <span class="input-group-text border-0 bg-light pe-0"><i class="bi bi-activity text-muted"></i></span>
-                          <select v-model="form.status" class="form-select border-0 bg-light p-3 ps-2 rounded-3 shadow-none">
-                            <option value="active">Active</option>
-                            <option value="idle">Idle</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div class="col-12">
-                        <label class="form-label text-muted xx-small fw-bold text-uppercase">Professional Bio</label>
-                        <textarea 
-                          v-model="form.bio" 
-                          class="form-control border-0 bg-light p-3 rounded-3" 
-                          rows="4" 
-                          placeholder="Briefly describe the user's expertise..."
-                        ></textarea>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Step 3: Security & Finish -->
-                  <div v-if="currentStep === 3" class="animate__animated animate__fadeIn">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                      <div class="icon-box bg-purple-soft text-purple rounded-4 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                        <i class="bi bi-key fs-4"></i>
-                      </div>
-                      <div>
-                        <h5 class="fw-bold mb-0">Security Setup</h5>
-                        <p class="text-muted xx-small mb-0">Configure account password and final review</p>
-                      </div>
-                    </div>
-                    <div class="row g-4">
-                      <div class="col-12">
-                        <label class="form-label text-muted xx-small fw-bold text-uppercase d-flex justify-content-between">
-                          Initial Password
-                          <button type="button" @click="generatePassword" class="btn btn-link p-0 xx-small text-purple text-decoration-none fw-bold">Generate Random</button>
-                        </label>
-                        <div class="input-group">
-                          <span class="input-group-text border-0 bg-light pe-0"><i class="bi bi-lock text-muted"></i></span>
-                          <input 
-                            v-model="form.password" 
-                            :type="showPassword ? 'text' : 'password'" 
-                            :class="['form-control border-0 bg-light p-3 ps-2 rounded-3', errors.password ? 'is-invalid' : '']" 
-                            placeholder="••••••••" 
-                          >
-                          <button type="button" @click="showPassword = !showPassword" class="btn btn-light border-0 bg-light px-3">
-                            <i :class="['bi', showPassword ? 'bi-eye-slash' : 'bi-eye', 'text-muted']"></i>
-                          </button>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                          <div class="form-text xx-small text-muted mb-0">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Minimum 8 characters.
-                          </div>
-                          <div v-if="form.password" class="xx-small fw-bold" :class="passwordStrength.color">
-                            {{ passwordStrength.label }}
-                          </div>
-                        </div>
-                        <div v-if="errors.password" class="text-danger xx-small mt-1 ps-2">{{ errors.password }}</div>
-                      </div>
-
-                      <!-- Final Review Section -->
-                      <div class="col-12 mt-4">
-                        <div class="p-4 rounded-4 bg-light border border-dashed">
-                          <h6 class="fw-bold xx-small text-uppercase tracking-wider mb-3">Onboarding Summary</h6>
-                          <div class="row g-3">
-                            <div class="col-sm-6">
-                              <div class="xx-small text-muted">User</div>
-                              <div class="small fw-bold">{{ form.name || 'Not set' }}</div>
-                            </div>
-                            <div class="col-sm-6">
-                              <div class="xx-small text-muted">Email</div>
-                              <div class="small fw-bold">{{ form.email || 'Not set' }}</div>
-                            </div>
-                            <div class="col-sm-6">
-                              <div class="xx-small text-muted">Role</div>
-                              <div class="small fw-bold"><span class="badge bg-purple-soft text-purple">{{ form.role }}</span></div>
-                            </div>
-                            <div class="col-sm-6">
-                              <div class="xx-small text-muted">Department</div>
-                              <div class="small fw-bold">{{ form.department }}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Footer Actions -->
-                  <div class="mt-5 pt-4 border-top d-flex justify-content-between align-items-center">
-                    <button 
-                      v-if="currentStep > 1" 
-                      type="button" 
-                      @click="prevStep" 
-                      class="btn btn-link text-decoration-none text-muted fw-bold p-0 d-flex align-items-center gap-2"
-                    >
-                      <i class="bi bi-chevron-left"></i> Previous
-                    </button>
-                    <div v-else></div>
-
-                    <div class="d-flex gap-3">
-                      <router-link v-if="currentStep === 1" to="/admin/users" class="btn btn-light rounded-pill px-4 py-2 fw-bold">Cancel</router-link>
-                      
-                      <button 
-                        v-if="currentStep < 3"
-                        type="button" 
-                        @click="nextStep"
-                        class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-brand d-flex align-items-center gap-2"
-                      >
-                        Next Step <i class="bi bi-chevron-right"></i>
-                      </button>
-
-                      <button 
-                        v-else
-                        type="submit" 
-                        class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-brand d-flex align-items-center gap-2"
-                        :disabled="isSubmitting"
-                      >
-                        <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status"></span>
-                        {{ isSubmitting ? 'Finalizing...' : 'Complete Onboarding' }}
-                      </button>
-                    </div>
-                  </div>
-                </form>
+            <div class="checklist-item d-flex gap-3 mb-4">
+              <div class="icon-box-sm bg-success-soft text-success rounded-circle d-flex align-items-center justify-content-center">
+                <i class="bi bi-shield-check small"></i>
               </div>
+              <div>
+                <div class="small fw-bold">Permission Logic</div>
+                <p class="xx-small text-muted mb-0">Role determines initial access to dashboard modules.</p>
+              </div>
+            </div>
 
-              <!-- Right Side: Preview & Info -->
-              <div class="col-lg-4 bg-light p-4 p-md-5 border-start">
-                <div class="text-center mb-5">
-                  <div class="avatar-preview-container mb-4 mx-auto position-relative">
-                    <img :src="avatarUrl" class="rounded-circle shadow-sm border border-4 border-white" width="120" height="120">
-                    <div class="status-indicator position-absolute" :class="form.status === 'active' ? 'bg-success' : 'bg-warning'"></div>
-                    <button 
-                      type="button" 
-                      @click="refreshAvatar" 
-                      class="btn btn-white shadow-sm rounded-circle p-1 position-absolute top-0 end-0"
-                      title="Refresh Avatar"
-                    >
-                      <i class="bi bi-arrow-clockwise small"></i>
-                    </button>
-                  </div>
-                  <h6 class="fw-bold mb-1">{{ form.name || 'New User' }}</h6>
-                  <p class="text-muted xx-small text-uppercase fw-bold mb-1">{{ form.role }} • {{ form.status }}</p>
-                  <p v-if="form.department" class="text-purple xx-small fw-bold mb-0">{{ form.department }} Team</p>
-                </div>
+            <div class="checklist-item d-flex gap-3 mb-4">
+              <div class="icon-box-sm bg-warning-soft text-warning rounded-circle d-flex align-items-center justify-content-center">
+                <i class="bi bi-lightning small"></i>
+              </div>
+              <div>
+                <div class="small fw-bold">Auto-Provisioning</div>
+                <p class="xx-small text-muted mb-0">Projects assigned will be ready for the user immediately.</p>
+              </div>
+            </div>
 
-                <div v-if="form.bio" class="bio-preview p-3 rounded-4 bg-white border shadow-sm mb-4 animate__animated animate__fadeIn">
-                  <h6 class="fw-bold mb-2 xx-small text-uppercase tracking-wider opacity-50">About</h6>
-                  <p class="xx-small text-muted mb-0 lh-sm fst-italic">"{{ form.bio }}"</p>
-                </div>
-
-                <div class="role-info p-4 rounded-4 bg-white border shadow-sm mb-4">
-                  <h6 class="fw-bold mb-3 small text-uppercase tracking-wider d-flex align-items-center gap-2">
-                    <i class="bi bi-shield-check text-purple"></i>
-                    Role Permissions
-                  </h6>
-                  <div v-if="form.role === 'Student'" class="animate__animated animate__fadeIn">
-                    <div class="permission-item d-flex gap-3 mb-3">
-                      <div class="icon-box bg-success bg-opacity-10 text-success rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; min-width: 24px;">
-                        <i class="bi bi-check2 small"></i>
-                      </div>
-                      <span class="xx-small text-muted leading-tight">Access to all course materials, video lectures, and resources</span>
-                    </div>
-                    <div class="permission-item d-flex gap-3 mb-3">
-                      <div class="icon-box bg-success bg-opacity-10 text-success rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; min-width: 24px;">
-                        <i class="bi bi-check2 small"></i>
-                      </div>
-                      <span class="xx-small text-muted leading-tight">Participate in community discussions and Q&A sessions</span>
-                    </div>
-                    <div class="permission-item d-flex gap-3">
-                      <div class="icon-box bg-success bg-opacity-10 text-success rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; min-width: 24px;">
-                        <i class="bi bi-check2 small"></i>
-                      </div>
-                      <span class="xx-small text-muted leading-tight">Track personal progress and receive achievement badges</span>
-                    </div>
-                  </div>
-                  <div v-if="form.role === 'Mentor'" class="animate__animated animate__fadeIn">
-                    <div class="permission-item d-flex gap-3 mb-3">
-                      <div class="icon-box bg-purple bg-opacity-10 text-purple rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; min-width: 24px;">
-                        <i class="bi bi-pencil-square small"></i>
-                      </div>
-                      <span class="xx-small text-muted leading-tight">Create, edit, and manage educational course content</span>
-                    </div>
-                    <div class="permission-item d-flex gap-3 mb-3">
-                      <div class="icon-box bg-purple bg-opacity-10 text-purple rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; min-width: 24px;">
-                        <i class="bi bi-chat-left-dots small"></i>
-                      </div>
-                      <span class="xx-small text-muted leading-tight">Moderate forums and provide feedback on student submissions</span>
-                    </div>
-                    <div class="permission-item d-flex gap-3">
-                      <div class="icon-box bg-purple bg-opacity-10 text-purple rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; min-width: 24px;">
-                        <i class="bi bi-graph-up-arrow small"></i>
-                      </div>
-                      <span class="xx-small text-muted leading-tight">Access analytics for assigned courses and student performance</span>
-                    </div>
-                  </div>
-                  <div v-if="form.role === 'Admin'" class="animate__animated animate__fadeIn">
-                    <div class="permission-item d-flex gap-3 mb-3">
-                      <div class="icon-box bg-danger bg-opacity-10 text-danger rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; min-width: 24px;">
-                        <i class="bi bi-shield-lock small"></i>
-                      </div>
-                      <span class="xx-small fw-bold text-dark leading-tight">Full administrative control over users, projects, and system settings</span>
-                    </div>
-                    <div class="permission-item d-flex gap-3 mb-3">
-                      <div class="icon-box bg-danger bg-opacity-10 text-danger rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; min-width: 24px;">
-                        <i class="bi bi-database-fill-gear small"></i>
-                      </div>
-                      <span class="xx-small fw-bold text-dark leading-tight">Manage database records, API keys, and platform security</span>
-                    </div>
-                    <div class="permission-item d-flex gap-3">
-                      <div class="icon-box bg-danger bg-opacity-10 text-danger rounded-circle p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; min-width: 24px;">
-                        <i class="bi bi-receipt small"></i>
-                      </div>
-                      <span class="xx-small fw-bold text-dark leading-tight">Access financial reports and detailed audit logs</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="alert alert-purple border-0 rounded-4 p-3 mb-0">
-                  <div class="d-flex gap-2">
-                    <i class="bi bi-lightning-charge-fill"></i>
-                    <div>
-                      <div class="fw-bold xx-small text-uppercase">Auto-Onboarding</div>
-                      <p class="xx-small mb-0 mt-1 opacity-75">Welcome email with login instructions will be sent immediately.</p>
-                    </div>
-                  </div>
-                </div>
+            <div class="alert alert-purple border-0 rounded-4 p-3 mt-2 mb-0">
+              <div class="d-flex gap-2">
+                <i class="bi bi-info-circle-fill fs-5"></i>
+                <p class="xx-small mb-0 opacity-75 fw-medium">Need to import multiple users? Use the <strong>Bulk Import</strong> tool on the main directory page.</p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </main>
+
+    <!-- Toast Notification -->
+    <Transition name="toast">
+      <div v-if="toast.show" :class="['toast-notification', `bg-${toast.type}`]">
+        <i :class="['bi', toast.icon, 'me-2']"></i>
+        {{ toast.message }}
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
 
 const router = useRouter();
 const isSubmitting = ref(false);
-const showPassword = ref(false);
 const avatarSeed = ref(Math.random().toString(36).substring(7));
 
-// Step Management
-const currentStep = ref(1);
-const stepTitles = ['Account Details', 'Access & Role', 'Security Setup'];
-const isCheckingEmail = ref(false);
-const emailAvailable = ref(null);
+// Dropdown States
+const showRoleDropdown = ref(false);
+const showDeptDropdown = ref(false);
+const showStatusDropdown = ref(false);
+const showLocationDropdown = ref(false);
+
+const roleOptions = [
+  { label: 'Student', icon: 'bi-person', bg: 'bg-info-soft', text: 'text-info', desc: 'Standard member access' },
+  { label: 'Mentor', icon: 'bi-mortarboard', bg: 'bg-purple-soft', text: 'text-purple', desc: 'Course management access' },
+  { label: 'Admin', icon: 'bi-shield-lock', bg: 'bg-danger-soft', text: 'text-danger', desc: 'Full platform control' }
+];
+
+const deptOptions = [
+  { label: 'Engineering', icon: 'bi-cpu', desc: 'Development & Infrastructure' },
+  { label: 'Design', icon: 'bi-palette', desc: 'UI/UX & Creative' },
+  { label: 'Marketing', icon: 'bi-megaphone', desc: 'Growth & Outreach' },
+  { label: 'Support', icon: 'bi-headset', desc: 'Customer Success' }
+];
+
+const statusOptions = [
+  { label: 'Active', value: 'active', icon: 'bi-check-circle', bg: 'bg-success-soft', text: 'text-success', desc: 'Full account access enabled' },
+  { label: 'Idle', value: 'idle', icon: 'bi-clock-history', bg: 'bg-warning-soft', text: 'text-warning', desc: 'Temporary account pause' }
+];
+
+const locationOptions = [
+  { label: 'Remote', icon: 'bi-house-door', desc: 'Working from home/outside' },
+  { label: 'On-site', icon: 'bi-building', desc: 'Main headquarters office' },
+  { label: 'Hybrid', icon: 'bi-intersect', desc: 'Mix of office and remote' }
+];
+
+const getRoleIcon = (roleName) => roleOptions.find(r => r.label === roleName)?.icon || 'bi-person';
+const getDeptIcon = (deptName) => deptOptions.find(d => d.label === deptName)?.icon || 'bi-building';
+const getStatusIcon = (statusValue) => statusOptions.find(s => s.value === statusValue)?.icon || 'bi-circle';
+const getLocationIcon = (locName) => locationOptions.find(l => l.label === locName)?.icon || 'bi-geo-alt';
+
+const selectRole = (role) => {
+  form.value.role = role;
+  showRoleDropdown.value = false;
+};
+
+const selectDept = (dept) => {
+  form.value.department = dept;
+  showDeptDropdown.value = false;
+};
+
+const selectStatus = (status) => {
+  form.value.status = status;
+  showStatusDropdown.value = false;
+};
+
+const selectLocation = (loc) => {
+  form.value.location = loc;
+  showLocationDropdown.value = false;
+};
+
+// Custom directive for clicking outside
+const vClickOutside = {
+  mounted(el, binding) {
+    el.clickOutsideEvent = (event) => {
+      if (!(el === event.target || el.contains(event.target))) {
+        binding.value();
+      }
+    };
+    document.addEventListener('click', el.clickOutsideEvent);
+  },
+  unmounted(el) {
+    document.removeEventListener('click', el.clickOutsideEvent);
+  }
+};
 
 const form = ref({
   name: '',
   email: '',
   role: 'Student',
   department: 'Engineering',
-  bio: '',
   status: 'active',
-  password: ''
+  location: 'Remote',
+  projects: [],
+  sendInvitation: true,
+  require2FA: false,
+  requirePasswordChange: false
 });
 
-const errors = ref({
-  name: '',
-  email: '',
-  password: ''
+const availableProjects = ['ANT Dashboard', 'Mobile App', 'E-commerce API', 'DevOps Pipeline', 'Design System'];
+
+const toggleProject = (project) => {
+  const index = form.value.projects.indexOf(project);
+  if (index === -1) {
+    form.value.projects.push(project);
+  } else {
+    form.value.projects.splice(index, 1);
+  }
+};
+
+const completionPercentage = computed(() => {
+  const fields = ['name', 'email', 'role', 'department'];
+  const completed = fields.filter(f => !!form.value[f]).length;
+  const projectBonus = form.value.projects.length > 0 ? 1 : 0;
+  return Math.round(((completed + projectBonus) / (fields.length + 1)) * 100);
 });
 
 const toast = ref({
@@ -415,65 +434,7 @@ const showToast = (message, type = 'success', icon = 'bi-check-circle') => {
   }, 3000);
 };
 
-const validateField = (field) => {
-  if (field === 'name') {
-    errors.value.name = form.value.name.length < 3 ? 'Name must be at least 3 characters' : '';
-  }
-  if (field === 'email') {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.value.email)) {
-      errors.value.email = 'Please enter a valid email address';
-      emailAvailable.value = null;
-    } else {
-      errors.value.email = '';
-      // Mock email check
-      if (form.value.email) checkEmailAvailability();
-    }
-  }
-  if (field === 'password') {
-    errors.value.password = form.value.password.length < 8 ? 'Password must be at least 8 characters' : '';
-  }
-};
-
-const checkEmailAvailability = () => {
-  isCheckingEmail.value = true;
-  setTimeout(() => {
-    isCheckingEmail.value = false;
-    emailAvailable.value = true; // Always available in mock
-  }, 800);
-};
-
-watch(() => form.value.name, () => validateField('name'));
-watch(() => form.value.email, () => validateField('email'));
-watch(() => form.value.password, () => validateField('password'));
-
-const nextStep = () => {
-  if (currentStep.value === 1) {
-    validateField('name');
-    validateField('email');
-    if (errors.value.name || errors.value.email || !form.value.name || !form.value.email) {
-      showToast('Please complete account details correctly', 'danger', 'bi-exclamation-triangle');
-      return;
-    }
-  }
-  if (currentStep.value === 2) {
-    // No specific validation for step 2 yet
-  }
-  if (currentStep.value < 3) currentStep.value++;
-};
-
-const prevStep = () => {
-  if (currentStep.value > 1) currentStep.value--;
-};
-
-const passwordStrength = computed(() => {
-  const pwd = form.value.password;
-  if (!pwd) return { score: 0, label: 'Empty', color: 'text-muted' };
-  if (pwd.length < 6) return { score: 1, label: 'Weak', color: 'text-danger' };
-  if (pwd.length < 10) return { score: 2, label: 'Fair', color: 'text-warning' };
-  return { score: 3, label: 'Strong', color: 'text-success' };
-});
-
+// Computed avatar URL
 const avatarUrl = computed(() => {
   const seed = avatarSeed.value + (form.value.name || '');
   return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
@@ -481,32 +442,22 @@ const avatarUrl = computed(() => {
 
 const refreshAvatar = () => {
   avatarSeed.value = Math.random().toString(36).substring(7);
-  showToast('Avatar style refreshed!', 'purple', 'bi-magic');
-};
-
-const generatePassword = () => {
-  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-  const length = 14;
-  let password = "";
-  for (let i = 0; i < length; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  form.value.password = password;
-  showPassword.value = true;
-  showToast('Secure password generated', 'success', 'bi-shield-lock');
+  showToast('Avatar refreshed!', 'purple', 'bi-magic');
 };
 
 const handleSubmit = () => {
-  validateField('password');
-  if (errors.value.password || !form.value.password) {
-    showToast('Please set a secure password', 'danger', 'bi-exclamation-triangle');
+  if (!form.value.name || !form.value.email) {
+    showToast('Please fill in required fields', 'danger', 'bi-exclamation-triangle');
     return;
   }
   
   isSubmitting.value = true;
+  
+  // Mock save delay
   setTimeout(() => {
     isSubmitting.value = false;
     showToast('Account created successfully!', 'success', 'bi-check-circle-fill');
+    
     setTimeout(() => {
       router.push('/admin/users');
     }, 1000);
@@ -519,166 +470,170 @@ const handleSubmit = () => {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.shadow-brand {
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+.back-link {
+  text-decoration: none;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: color 0.2s ease;
 }
 
-.xx-small {
-  font-size: 0.7rem;
-  letter-spacing: 0.025em;
-}
-
-.text-purple {
-  color: #8b5cf6;
-}
-
-.bg-purple-soft {
-  background-color: rgba(139, 92, 246, 0.1);
-}
-
-.alert-purple {
-  background-color: #f5f3ff;
-  color: #5b21b6;
-  border: 1px solid rgba(139, 92, 246, 0.1);
-}
-
-/* Stepper Styles */
-.stepper-container {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.stepper-line {
-  position: absolute;
-  top: 18px;
-  left: 0;
-  height: 2px;
-  background: #8b5cf6;
-  transition: width 0.4s ease;
-  z-index: 0;
-}
-
-.stepper-line::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100%;
-  background: #e2e8f0;
-  z-index: -1;
-}
-
-.step-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  z-index: 2;
-}
-
-.step-item.active .step-circle {
-  border-color: #8b5cf6;
-  color: #8b5cf6;
-}
-
-.step-item.completed .step-circle {
-  background: #8b5cf6;
-  border-color: #8b5cf6;
-  color: white;
-}
-
-.step-label {
-  color: #94a3b8;
-  transition: color 0.3s ease;
-}
-
-.step-item.active .step-label {
+.back-link:hover {
   color: #1e293b;
 }
 
-textarea:focus, input:focus, select:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-  background-color: white !important;
-  border-color: #8b5cf6 !important;
-}
-
-.btn-white {
+.create-card {
   background: white;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
 }
 
-.btn-white:hover {
-  background: #f8fafc;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+.avatar-wrapper {
+  width: 100px;
+  height: 100px;
 }
 
-.avatar-preview-container {
-  width: 120px;
-  height: 120px;
-  transition: transform 0.3s ease;
+.icon-box-sm {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
 }
 
-.avatar-preview-container:hover {
-  transform: scale(1.05);
+.bg-success-soft { background-color: rgba(16, 185, 129, 0.1); }
+.bg-warning-soft { background-color: rgba(245, 158, 11, 0.1); }
+.bg-info-soft { background-color: rgba(13, 202, 240, 0.1); }
+.bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+
+.project-pill:hover {
+  border-color: #8b5cf6 !important;
+  background-color: rgba(139, 92, 246, 0.05);
 }
 
-.status-indicator {
-  width: 16px;
-  height: 16px;
-  border: 3px solid white;
-  border-radius: 50%;
-  bottom: 8px;
-  right: 8px;
+.cursor-pointer {
+  cursor: pointer;
 }
 
-.role-info {
-  transition: all 0.3s ease;
+.dropdown-menu-custom {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.05) !important;
+  transform-origin: top;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
 }
 
-.tracking-wider {
-  letter-spacing: 0.05em;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
-}
-
-.form-control::placeholder {
-  color: #94a3b8;
-  font-size: 0.9rem;
-}
-
-.input-group-text {
+.dropdown-item-custom {
   transition: all 0.2s ease;
 }
 
-.input-group:focus-within .input-group-text {
-  color: #8b5cf6 !important;
+.dropdown-item-custom:hover {
+  background-color: #f8fafc;
 }
 
-.is-invalid {
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
-  border: 1px solid #dc3545 !important;
+.dropdown-item-custom.active {
+  background-color: rgba(139, 92, 246, 0.05);
+  border-left: 3px solid #8b5cf6 !important;
+}
+
+.dropdown-enter-active {
+  animation: dropdown-in 0.2s ease-out;
+}
+.dropdown-leave-active {
+  animation: dropdown-in 0.15s ease-in reverse;
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.camera-btn {
+  width: 28px;
+  height: 28px;
+  background: #8b5cf6;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.camera-btn:hover {
+  transform: scale(1.1);
+  background: #7c3aed;
+}
+
+.custom-input {
+  background-color: #f8fafc;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 0.75rem;
+  color: #1e293b;
+  border: 1px solid transparent !important;
+}
+
+.custom-input:focus {
+  background-color: white;
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+.form-label {
+  letter-spacing: 0.025em;
+  margin-bottom: 0.5rem;
+}
+
+/* Custom Switch Styling */
+.custom-switch .form-check-input {
+  width: 2.5rem;
+  height: 1.25rem;
+  cursor: pointer;
+  background-color: #e2e8f0;
+  border: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
+}
+
+.custom-switch .form-check-input:checked {
+  background-color: #8b5cf6;
+}
+
+.custom-switch .form-check-input:focus {
+  box-shadow: none;
+}
+
+.btn-cancel {
+  background-color: #f1f5f9;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-primary {
+  background-color: #8b5cf6;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.3);
+}
+
+.progress-bar {
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sticky-top {
+  transition: all 0.3s ease;
+}
+
+.shadow-brand {
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.25);
 }
 
 /* Toast Styles */
@@ -711,21 +666,5 @@ textarea:focus, input:focus, select:focus {
 .toast-leave-to {
   transform: translateY(-20px);
   opacity: 0;
-}
-
-.bio-preview {
-  border-left: 3px solid #8b5cf6 !important;
-}
-
-.lh-sm {
-  line-height: 1.25;
-}
-
-textarea {
-  resize: none;
-}
-
-.border-dashed {
-  border-style: dashed !important;
 }
 </style>
