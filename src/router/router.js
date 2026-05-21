@@ -180,9 +180,9 @@ const routes = [
   },
   {
     path: "/forum/:id",
-    name: "ThreadReplies",
+    name: "DetailForum",
     meta: { requiresAuth: true },
-    component: () => import("../views/forum/ThreadRepliesView.vue"),
+    component: () => import("../views/forum/ViewDetialForum.vue"),
   },
 
 ];
