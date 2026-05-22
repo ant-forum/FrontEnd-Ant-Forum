@@ -1,40 +1,97 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Navbar from '../../components/layouts/header.vue';
 import BaseFooter from '../../components/layouts/footer.vue';
 
-const projects = [
+const sortBy = ref('latest');
+const searchQuery = ref('');
+
+const allProjects = [
   {
     id: 1,
     title: 'Nexus Analytics Dashboard',
-    desc: 'A high-performance data visualization engine built for real-time tracking.',
+    description: 'A high-performance data visualization engine built for real-time tracking.',
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600',
     tags: ['VUE.JS', 'D3.JS', 'TYPESCRIPT'],
-    stars: '1.2k',
+    avg_rating: 4.8,
     views: '8.4k',
-    authors: ['https://i.pravatar.cc/150?u=1', 'https://i.pravatar.cc/150?u=2']
+    author: 'Sarah Jenkins',
+    author_avatar: 'https://i.pravatar.cc/150?u=1',
+    created_at: '2024-05-20',
+    category: 'Technology'
   },
   {
     id: 2,
     title: 'Aether OS Gateway',
-    desc: 'Microservices API gateway designed for low-latency financial systems.',
+    description: 'Microservices API gateway designed for low-latency financial systems.',
     image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&q=80&w=600',
     tags: ['NODE.JS', 'REDIS', 'GRAPHQL'],
-    stars: '1.2k',
-    views: '8.4k',
-    authors: ['https://i.pravatar.cc/150?u=3']
+    avg_rating: 4.5,
+    views: '12.1k',
+    author: 'Marcus Chen',
+    author_avatar: 'https://i.pravatar.cc/150?u=3',
+    created_at: '2024-05-18',
+    category: 'Infrastructure'
   },
   {
     id: 3,
     title: 'Lumina Design System',
-    desc: 'A comprehensive suite of accessible React components for scale.',
+    description: 'A comprehensive suite of accessible React components for scale.',
     image: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=600',
     tags: ['REACT', 'TAILWIND', 'STORYBOOK'],
-    stars: '1.2k',
-    views: '8.4k',
-    authors: ['https://i.pravatar.cc/150?u=4', 'https://i.pravatar.cc/150?u=5', 'https://i.pravatar.cc/150?u=6']
+    avg_rating: 4.9,
+    views: '5.2k',
+    author: 'Elena Rodriguez',
+    author_avatar: 'https://i.pravatar.cc/150?u=4',
+    created_at: '2024-05-22',
+    category: 'Design'
+  },
+  {
+    id: 4,
+    title: 'Quantum Ledger',
+    description: 'Immutable distributed ledger technology for secure asset management.',
+    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=600',
+    tags: ['RUST', 'WEBASSEMBLY', 'GRPC'],
+    avg_rating: 4.7,
+    views: '15.6k',
+    author: 'David Wu',
+    author_avatar: 'https://i.pravatar.cc/150?u=5',
+    created_at: '2024-05-25',
+    category: 'Infrastructure'
   }
 ];
+
+const categories = ['All', 'Technology', 'Infrastructure', 'Design'];
+const selectedCategory = ref('All');
+
+const filteredProjects = computed(() => {
+  let result = [...allProjects];
+
+  // Category filter
+  if (selectedCategory.value !== 'All') {
+    result = result.filter(p => p.category === selectedCategory.value);
+  }
+
+  // Search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    result = result.filter(p => 
+      p.title.toLowerCase().includes(query) || 
+      p.description.toLowerCase().includes(query)
+    );
+  }
+
+  // Sort filter
+  if (sortBy.value === 'top_rated') {
+    result.sort((a, b) => b.avg_rating - a.avg_rating);
+  } else if (sortBy.value === 'most_viewed') {
+    result.sort((a, b) => parseFloat(b.views) - parseFloat(a.views));
+  } else {
+    result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }
+
+  return result;
+});
 </script>
 
 <template>
@@ -44,31 +101,88 @@ const projects = [
     <main class="container py-4 flex-grow-1">
       <div class="row justify-content-center">
         <!-- Main Content -->
-        <div class="col-lg-11">
-          <!-- Pipeline Banner -->
-          <div class="card border-0 shadow-sm rounded-4 p-4 p-lg-5 mb-4 pipeline-banner-modern position-relative overflow-hidden">
-            <div class="banner-abstract-shape-1"></div>
-            <div class="banner-abstract-shape-2"></div>
-            
-            <div class="row align-items-center position-relative z-1">
-              <div class="col-md-8">
-                <div class="badge bg-white text-primary rounded-pill px-3 py-2 fw-bold mb-3 shadow-sm x-small">
-                  <i class="bi bi-stars me-1"></i> COMMUNITY SHOWCASE
+        <div class="col-12 showcase-wrapper">
+          <!-- Pipeline Banner (Clean Soft Style) -->
+          <div class="banner-wrapper mb-5">
+            <div class="card border-0 rounded-5 p-4 p-lg-5 pipeline-banner-soft position-relative overflow-hidden">
+              <!-- Soft Background Shapes -->
+              <div class="soft-blob blob-left"></div>
+              <div class="soft-blob blob-right"></div>
+              
+              <div class="row align-items-center position-relative z-2">
+                <div class="col-lg-9">
+                  <div class="soft-badge mb-3">
+                    <span class="dot"></span>
+                    <span class="badge-text text-uppercase">Community Showcase</span>
+                  </div>
+                  <h3 class="fw-bold text-dark-blue mb-3">Project Pipeline</h3>
+                  <p class="soft-description mb-4">
+                    Discover top-tier technical projects, explore production architectures, and connect with visionary developers across the ecosystem.
+                  </p>
+                  
+                  <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <router-link to="/showcase/create" class="btn btn-soft-purple rounded-4 px-4 py-3 fw-bold d-inline-flex align-items-center gap-2 shadow-sm">
+                      <i class="bi bi-play-fill fs-5"></i> Submit Your Work
+                    </router-link>
+                    
+                    <!-- Avatar Group -->
+                    <div class="d-flex align-items-center gap-2 ms-lg-3">
+                      <div class="avatar-group-soft">
+                        <div class="avatar-mini bg-primary">AM</div>
+                        <div class="avatar-mini bg-danger">SK</div>
+                        <div class="avatar-mini bg-success">JL</div>
+                      </div>
+                      <span class="text-muted small fw-medium">+42 members</span>
+                    </div>
+                  </div>
                 </div>
-                <h2 class="display-6 fw-black mb-3">Project Pipeline</h2>
-                <p class="text-muted mb-0 lead-small opacity-75">Discover top-tier technical projects, explore production architectures, and connect with visionary developers across the ecosystem.</p>
               </div>
-              <div class="col-md-4 text-md-end mt-4 mt-md-0">
-                <router-link to="/showcase/create" class="btn btn-submit-modern-hero rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2 ms-md-auto text-decoration-none justify-content-center shadow-lg">
-                  <i class="bi bi-plus-lg fs-5"></i> Submit Your Work
-                </router-link>
+            </div>
+          </div>
+
+          <!-- Filters Section -->
+          <div class="mb-5">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-4">
+              <div class="search-box-modern position-relative flex-grow-1">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input v-model="searchQuery" type="text" class="form-control rounded-pill ps-5 py-2 border-0 shadow-sm" placeholder="Search projects...">
               </div>
+              
+              <div class="filter-group d-flex gap-2 overflow-x-auto pb-1">
+                <button @click="sortBy = 'latest'" :class="['btn rounded-pill px-4 py-2 fw-semibold transition-all whitespace-nowrap', sortBy === 'latest' ? 'btn-primary shadow-sm' : 'btn-light border']">
+                  Latest
+                </button>
+                <button @click="sortBy = 'top_rated'" :class="['btn rounded-pill px-4 py-2 fw-semibold transition-all whitespace-nowrap', sortBy === 'top_rated' ? 'btn-primary shadow-sm' : 'btn-light border']">
+                  Top Rated
+                </button>
+                <button @click="sortBy = 'most_viewed'" :class="['btn rounded-pill px-4 py-2 fw-semibold transition-all whitespace-nowrap', sortBy === 'most_viewed' ? 'btn-primary shadow-sm' : 'btn-light border']">
+                  Most Viewed
+                </button>
+              </div>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="d-flex flex-wrap gap-2 mt-4 justify-content-center">
+              <button 
+                v-for="cat in categories" 
+                :key="cat"
+                @click="selectedCategory = cat"
+                :class="['btn btn-sm rounded-pill px-3 py-1 transition-all', selectedCategory === cat ? 'btn-dark' : 'btn-outline-secondary border-0 opacity-75']"
+              >
+                {{ cat }}
+              </button>
             </div>
           </div>
 
           <!-- Projects Grid -->
           <div class="row g-4">
-            <div v-for="project in projects" :key="project.title" class="col-md-6 col-xl-4">
+            <div v-if="filteredProjects.length === 0" class="col-12 text-center py-5">
+              <div class="opacity-50">
+                <i class="bi bi-folder2-open display-1 mb-3 d-block"></i>
+                <h4>No projects found matching your criteria.</h4>
+              </div>
+            </div>
+            <div v-for="project in filteredProjects" :key="project.id" class="col-md-6 col-xl-4">
               <div class="card border-0 shadow-sm rounded-4 h-100 project-card-modern transition-up overflow-hidden">
                 <div class="project-image-container position-relative overflow-hidden">
                   <img :src="project.image" class="card-img-top object-fit-cover project-img-zoom" height="220">
@@ -85,25 +199,22 @@ const projects = [
                       <h5 class="fw-bold mb-0 project-title-modern">{{ project.title }}</h5>
                     </router-link>
                   </div>
-                  <p class="text-muted small mb-4 line-clamp-2">{{ project.desc }}</p>
+                  <p class="text-muted small mb-4 line-clamp-2">{{ project.description }}</p>
                   
-                  <div class="tags-container-modern d-flex flex-wrap gap-2 mb-4">
-                    <span v-for="tag in project.tags" :key="tag" class="tag-badge-modern">{{ tag }}</span>
-                  </div>
-
                   <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
                     <div class="d-flex gap-3 text-muted x-small fw-bold">
-                      <span class="d-flex align-items-center gap-1"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
-                      <span class="d-flex align-items-center gap-1"><i class="bi bi-eye"></i> {{ project.views }}</span>
+                      <span class="d-flex align-items-center gap-1">
+                        <i class="bi bi-star-fill text-warning"></i> 
+                        {{ project.avg_rating }}
+                      </span>
+                      <span class="d-flex align-items-center gap-1">
+                        <i class="bi bi-eye"></i> 
+                        {{ project.views }}
+                      </span>
                     </div>
-                    <div class="author-avatars-modern d-flex">
-                      <div class="avatar-stack d-flex">
-                        <img v-for="(avatar, idx) in project.authors.slice(0, 3)" :key="idx" 
-                             :src="avatar" class="rounded-circle border border-2 border-white ms-n2 shadow-sm stack-item" 
-                             width="30" height="30" :style="{ zIndex: 10 - idx }">
-                        <div v-if="project.authors.length > 3" class="rounded-circle border border-2 border-white ms-n2 shadow-sm bg-light-subtle d-flex align-items-center justify-content-center x-small fw-bold stack-item" 
-                             style="width: 30px; height: 30px; z-index: 0;">+{{ project.authors.length - 3 }}</div>
-                      </div>
+                    <div class="author-info d-flex align-items-center gap-2">
+                      <img :src="project.author_avatar" class="rounded-circle" width="24" height="24">
+                      <span class="x-small text-muted">{{ project.author }}</span>
                     </div>
                   </div>
                 </div>
@@ -112,7 +223,7 @@ const projects = [
           </div>
 
           <!-- Load More -->
-          <div class="text-center mt-5">
+          <div v-if="filteredProjects.length > 0" class="text-center mt-5">
             <button class="btn btn-white rounded-pill px-5 py-2 border shadow-sm fw-semibold d-inline-flex align-items-center gap-2">
               Load More Projects <i class="bi bi-chevron-down"></i>
             </button>
@@ -126,13 +237,121 @@ const projects = [
 </template>
 
 <style scoped>
+/* Clean Soft Banner Styles */
+.showcase-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+.pipeline-banner-soft {
+  background-color: #f8f7ff;
+  min-height: 280px;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+}
+
+.soft-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 1;
+}
+
+.blob-left {
+  width: 300px;
+  height: 300px;
+  background: rgba(139, 92, 246, 0.08);
+  top: -100px;
+  left: -50px;
+}
+
+.blob-right {
+  width: 400px;
+  height: 400px;
+  background: rgba(168, 85, 247, 0.12);
+  bottom: -150px;
+  right: -100px;
+}
+
+.soft-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ede9ff;
+  padding: 6px 16px;
+  border-radius: 100px;
+}
+
+.soft-badge .dot {
+  width: 6px;
+  height: 6px;
+  background-color: #7c3aed;
+  border-radius: 50%;
+}
+
+.soft-badge .badge-text {
+  color: #7c3aed;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.text-dark-blue {
+  color: #1e1b4b;
+  font-size: 1.75rem;
+}
+
+.soft-description {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 650px;
+}
+
+.btn-soft-purple {
+  background-color: #7c3aed;
+  color: white;
+  border: none;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.btn-soft-purple:hover {
+  background-color: #6d28d9;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3) !important;
+}
+
+.avatar-group-soft {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 2px solid #f8f7ff;
+  margin-left: -10px;
+}
+
+.avatar-mini:first-child {
+  margin-left: 0;
+}
+
+/* Original Styles Fallback/Compatibility */
 .showcase-page {
   min-height: 100vh;
   font-family: 'Sora', sans-serif;
   color: #1e293b;
 }
 
-/* Banner Modern */
 .pipeline-banner-modern {
   background: linear-gradient(135deg, #f8faff 0%, #f1f0ff 100%);
   border: 1px solid #e0e7ff;
@@ -171,7 +390,24 @@ const projects = [
   box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4) !important;
 }
 
-/* Project Card Modern */
+.search-box-modern {
+  min-width: 300px;
+}
+
+.search-box-modern input {
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+.search-box-modern input:focus {
+  background: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
 .project-card-modern {
   background: white;
   border: 1px solid #f1f5f9 !important;
@@ -214,29 +450,8 @@ const projects = [
   color: #6366f1;
 }
 
-.tag-badge-modern {
-  background: #f1f5f9;
-  color: #475569;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.avatar-stack .stack-item {
-  transition: transform 0.2s ease;
-}
-
-.avatar-stack:hover .stack-item {
-  transform: translateX(4px);
-}
-
-/* Utilities */
 .fw-black { font-weight: 900; }
 .x-small { font-size: 0.7rem; }
-.tracking-wider { letter-spacing: 0.05em; }
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -244,7 +459,14 @@ const projects = [
   overflow: hidden;
 }
 
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
 @media (max-width: 991px) {
+  .showcase-wrapper { padding: 20px 16px 40px; }
   .pipeline-banner-modern { text-align: center; }
+  .search-box-modern { width: 100%; }
+  .filter-group { width: 100%; justify-content: center; }
 }
 </style>
