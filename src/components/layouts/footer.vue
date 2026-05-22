@@ -119,15 +119,14 @@ import logo from "../../assets/ANT-Forum.png";
 
 <style scoped>
 .ant-footer {
-  background-color: #4A0E4E;
+  background-color: transparent;
   color: rgb(185, 2, 2);
 }
 
 .footer-wave {
   position: relative;
   height: 120px;
-  /* background-color: transparent; */
-  background-color: #f5f3ff;
+  background-color: transparent;
 }
 
 .footer-wave svg {
@@ -166,6 +165,7 @@ import logo from "../../assets/ANT-Forum.png";
 }
 
 .footer-content {
+  background-color: #4A0E4E;
   position: relative;
   z-index: 2;
 }
