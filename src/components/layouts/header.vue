@@ -44,10 +44,10 @@ const navLinks = [
           <!-- Settings icon removed as per user request -->
         </div>
 
-        <div class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 bg-white border rounded-pill shadow-sm cursor-pointer">
+        <router-link to="/profile" class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 bg-white border rounded-pill shadow-sm cursor-pointer text-decoration-none text-dark">
           <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle border border-2 border-primary-subtle" width="32" height="32" alt="User">
           <span class="small fw-bold d-none d-xl-block">Alex Chen</span>
-        </div>
+        </router-link>
       </div>
     </div>
   </header>

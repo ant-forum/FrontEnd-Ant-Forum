@@ -1,27 +1,21 @@
 <script setup>
-import { reactive, ref, computed, watch, onMounted } from "vue";
-import api from "../api/api";
+import { reactive, ref, computed, onMounted } from "vue";
 import Navbar from "../components/layouts/header.vue";
 import Footer from "../components/layouts/footer.vue";
 import { useAuthStore } from "../stores/auth";
-// Form
-const form = reactive({
-  name: "",
-  bio: "",
-  github: "",
-  linkedin: "",
-});
 
+// Sub-components
+import ProfileOverview from "../components/profile/ProfileOverview.vue";
+import ProfileProject from "../components/profile/ProfileProject.vue";
+import ProfileSetting from "../components/profile/ProfileSetting.vue";
+
+// Auth Store
 const authStore = useAuthStore();
-const successMessage = ref("");
-const errorMessage = ref("");
-const isSaving = ref(false);
 
-// Avatar
-const avatarFile = ref(null);
-const avatarPreview = ref("");
+// Tab state: 'profile' | 'projects' | 'settings'
+const activeTab = ref("profile");
+
 const savedAvatarPreview = ref("");
-
 const savedProfile = reactive({
   name: "",
   bio: "",
@@ -29,63 +23,6 @@ const savedProfile = reactive({
   linkedin: "",
   skills: [],
 });
-
-const isEditing = ref(false);
-
-const resetForm = () => {
-  form.name = savedProfile.name;
-  form.bio = savedProfile.bio;
-  form.github = savedProfile.github;
-  form.linkedin = savedProfile.linkedin;
-  skills.value = [...savedProfile.skills];
-  avatarFile.value = null;
-  avatarPreview.value = savedAvatarPreview.value;
-};
-
-const startEdit = () => {
-  isEditing.value = true;
-  resetForm();
-};
-
-const handleCancel = () => {
-  resetForm();
-  isEditing.value = false;
-};
-
-const saveProfileState = () => {
-  savedProfile.name = form.name;
-  savedProfile.bio = form.bio;
-  savedProfile.github = form.github;
-  savedProfile.linkedin = form.linkedin;
-  savedProfile.skills = [...skills.value];
-  savedAvatarPreview.value = avatarPreview.value;
-};
-
-const applyUpdateToStore = (updatedUser) => {
-  authStore.user = {
-    ...authStore.user,
-    name: updatedUser.name ?? form.name,
-    bio: updatedUser.bio ?? form.bio,
-    github: updatedUser.github ?? form.github,
-    linkedin: updatedUser.linkedin ?? form.linkedin,
-    skills: updatedUser.skills ?? [...skills.value],
-    avatar: updatedUser.avatar ?? updatedUser.avatarUrl ?? avatarPreview.value,
-  };
-};
-
-const showSuccess = (message) => {
-  successMessage.value = message;
-  setTimeout(() => {
-    successMessage.value = "";
-  }, 3000);
-};
-
-const showError = (message) => {
-  errorMessage.value = message;
-  setTimeout(() => {
-    errorMessage.value = "";
-  }, 5000);
-};
 
 const loadSavedProfile = () => {
   const user = authStore.user || {};
@@ -95,360 +32,299 @@ const loadSavedProfile = () => {
   savedProfile.linkedin = user.linkedin || "";
   savedProfile.skills = Array.isArray(user.skills) ? [...user.skills] : [];
   savedAvatarPreview.value = user.avatar || user.avatarUrl || "";
-  avatarPreview.value = savedAvatarPreview.value;
-  resetForm();
 };
 
 onMounted(loadSavedProfile);
 
-// Skills
-const skillInput = ref("");
-const skills = ref([]);
-
-// Errors
-const errors = reactive({
-  name: "",
-  bio: "",
-  github: "",
-  linkedin: "",
-});
-
-// URL validation
-const isValidURL = (url) => {
-  return /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/.+)?$/.test(url);
+const handleProfileSaved = (updatedUser) => {
+  savedProfile.name = updatedUser.name;
+  savedProfile.bio = updatedUser.bio;
+  savedProfile.github = updatedUser.github;
+  savedProfile.linkedin = updatedUser.linkedin;
+  savedProfile.skills = Array.isArray(updatedUser.skills) ? [...updatedUser.skills] : [];
+  savedAvatarPreview.value = updatedUser.avatar || updatedUser.avatarUrl || "";
+  
+  // Switch tab back to profile overview dashboard
+  activeTab.value = "profile";
 };
 
-// Handle avatar upload
-const handleAvatarChange = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+// Profile Dashboard Dynamic Data / Mock Data
+const profileName = computed(() => savedProfile.name || "Alex 'Dev' Rivera");
+const profileBio = computed(() => savedProfile.bio || "Passionate full-stack architect with 8+ years of experience building scalable distributed systems and open-source ecosystems. Specializing in high-performance React architectures and Go-based microservices. Active contributor to the ANT-Forum core and mentor for emerging tech talent.");
+const profileGithub = computed(() => savedProfile.github || "https://github.com");
+const profileLinkedin = computed(() => savedProfile.linkedin || "https://linkedin.com");
+const profileSkills = computed(() => savedProfile.skills.length > 0 ? savedProfile.skills : ["Rust", "Go", "TypeScript", "Python"]);
+const profileAvatar = computed(() => savedAvatarPreview.value || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300");
 
-  // Validate file
-  if (!file.type.startsWith("image/")) {
-    alert("Only image files allowed");
-    return;
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    alert("Max size is 2MB");
-    return;
-  }
-
-  // Revoke previous object URL to free memory
-  if (avatarPreview.value && avatarPreview.value.startsWith("blob:")) {
-    URL.revokeObjectURL(avatarPreview.value);
-  }
-
-  avatarFile.value = file;
-  avatarPreview.value = URL.createObjectURL(file);
-};
-
-// Skills
-const addSkill = () => {
-  const value = skillInput.value.trim();
-  if (value && !skills.value.includes(value)) {
-    skills.value.push(value);
-  }
-  skillInput.value = "";
-};
-
-const removeSkill = (index) => {
-  skills.value.splice(index, 1);
-};
-
-// Validation
-watch(
-  form,
-  () => {
-    errors.name = form.name ? "" : "Name is required";
-
-    errors.bio =
-      form.bio.length > 200 ? "Bio must be under 200 characters" : "";
-
-    errors.github =
-      form.github && !isValidURL(form.github) ? "Invalid GitHub URL" : "";
-
-    errors.linkedin =
-      form.linkedin && !isValidURL(form.linkedin) ? "Invalid LinkedIn URL" : "";
+// Default Showcase Projects (matches screenshot)
+const defaultProjects = [
+  {
+    title: "Nexus UI Engine",
+    stars: "2.4k",
+    desc: "A low-latency rendering engine for technical dashboards and real-time data visualization systems.",
+    tags: ["REACT", "WEBGPU", "TYPESCRIPT"]
   },
-  { deep: true },
-);
-
-const isValid = computed(() => {
-  return !errors.name && !errors.bio && !errors.github && !errors.linkedin;
-});
-
-// Submit
-const handleSubmit = async () => {
-  if (!isValid.value || isSaving.value) return;
-
-  const payload = new FormData();
-
-  payload.append("name", form.name);
-  payload.append("bio", form.bio);
-  payload.append("github", form.github);
-  payload.append("linkedin", form.linkedin);
-
-  skills.value.forEach((skill, i) => {
-    payload.append(`skills[${i}]`, skill);
-  });
-
-  if (avatarFile.value) {
-    payload.append("avatar", avatarFile.value);
+  {
+    title: "ANT-Gateway",
+    stars: "842",
+    desc: "High-performance API gateway and authentication layer optimized for the ANT-Forum ecosystem.",
+    tags: ["GO", "REDIS", "GRPC"]
   }
+];
 
-  isSaving.value = true;
-  errorMessage.value = "";
-
-  try {
-    const response = await api.put("/api/users/me", payload, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    const updatedUser = response.data?.user ?? response.data ?? {};
-    applyUpdateToStore(updatedUser);
-    saveProfileState();
-    isEditing.value = false;
-    showSuccess("Profile saved successfully.");
-  } catch (error) {
-    console.error("Profile update failed:", error);
-    showError("Unable to save profile. Please try again.");
-  } finally {
-    isSaving.value = false;
+// Additional Projects for Showcase tab
+const additionalProjects = [
+  {
+    title: "Aether OS Gateway",
+    stars: "1.2k",
+    desc: "Microservices API gateway designed for low-latency financial systems.",
+    tags: ["NODE.JS", "REDIS", "GRAPHQL"]
+  },
+  {
+    title: "Lumina Design System",
+    stars: "3.4k",
+    desc: "A comprehensive suite of accessible React components for scale.",
+    tags: ["REACT", "TAILWIND", "STORYBOOK"]
   }
-};
+];
+
+// Activity Feed (matches screenshot)
+const activityFeed = [
+  {
+    type: "discussion",
+    title: "How to optimize SSR in large-scale Next.js apps?",
+    meta: "FORUM DISCUSSION • 2H AGO • 48 COMMENTS",
+    icon: "bi-chat-left-text"
+  },
+  {
+    type: "merge",
+    title: "Merge pull request #452: Implement dynamic layout slots",
+    meta: "REPOSITORY: ANT-UI • 1D AGO",
+    icon: "bi-git"
+  }
+];
 </script>
 
 <template>
   <Navbar />
-  <div class="container profile-page py-4">
-    <div class="card profile-card shadow-sm p-4">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">Profile</h4>
-        <div>
-          <button
-            v-if="!isEditing"
-            class="btn btn-outline-primary"
-            @click="startEdit"
-          >
-            Edit Profile
-          </button>
-          <div v-else class="d-flex gap-2">
-            <button
-              class="btn btn-secondary"
-              @click="handleCancel"
-              :disabled="isSaving"
-            >
-              Cancel
-            </button>
-            <button
-              class="btn btn-primary d-flex align-items-center gap-2"
-              :disabled="!isValid || isSaving"
-              @click="handleSubmit"
-            >
-              <span
-                v-if="isSaving"
-                class="spinner-border spinner-border-sm"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              {{ isSaving ? "Saving..." : "Save Profile" }}
+  
+  <div class="container profile-dashboard py-4">
+    <div class="row g-4">
+      
+      <!-- Left Sidebar Column -->
+      <aside class="col-lg-3 col-md-4">
+        <div class="sidebar-card-modern shadow-sm p-4">
+          <!-- Sidebar Header: User Info -->
+          <div class="sidebar-user-info d-flex align-items-center gap-3 mb-4">
+            <img :src="profileAvatar" class="rounded-circle border border-2 border-primary-subtle" width="48" height="48" alt="Profile avatar" style="object-fit: cover;">
+            <div class="user-meta overflow-hidden">
+              <h6 class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">DevProfile</h6>
+              <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Technical Contributor</small>
+            </div>
+          </div>
+          
+          <!-- Navigation Menu -->
+          <nav class="sidebar-nav mb-4">
+            <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+              <li>
+                <button 
+                  @click="activeTab = 'profile'" 
+                  class="nav-btn-modern" 
+                  :class="{ 'active': activeTab === 'profile' }"
+                >
+                  <i class="bi bi-person-fill fs-5"></i>
+                  <span>Profile</span>
+                </button>
+              </li>
+              <li>
+                <button 
+                  @click="activeTab = 'projects'" 
+                  class="nav-btn-modern" 
+                  :class="{ 'active': activeTab === 'projects' }"
+                >
+                  <i class="bi bi-folder-fill fs-5"></i>
+                  <span>Projects</span>
+                </button>
+              </li>
+              <li>
+                <button 
+                  @click="activeTab = 'settings'" 
+                  class="nav-btn-modern" 
+                  :class="{ 'active': activeTab === 'settings' }"
+                >
+                  <i class="bi bi-gear-fill fs-5"></i>
+                  <span>Settings</span>
+                </button>
+              </li>
+            </ul>
+          </nav>
+          
+          <hr class="my-4 border-slate">
+          
+          <!-- New Project Button -->
+          <router-link to="/showcase/create" class="btn btn-new-project w-100 py-2-5 mb-4 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2">
+            <span>New Project</span>
+          </router-link>
+          
+          <!-- Bottom actions sticking to bottom -->
+          <div class="sidebar-bottom d-flex flex-column gap-2">
+            <a href="#" class="sidebar-link-btn text-decoration-none">
+              <i class="bi bi-question-circle fs-5"></i>
+              <span>Help</span>
+            </a>
+            <button @click="authStore.logout()" class="sidebar-link-btn bg-transparent border-0 text-start">
+              <i class="bi bi-box-arrow-right fs-5"></i>
+              <span>Logout</span>
             </button>
           </div>
         </div>
-      </div>
-
-      <div v-if="successMessage" class="alert alert-success mt-2" role="alert">
-        {{ successMessage }}
-      </div>
-      <div v-if="errorMessage" class="alert alert-danger mt-2" role="alert">
-        {{ errorMessage }}
-      </div>
-
-      <!-- Avatar Upload -->
-      <div class="text-center mb-4">
-        <img
-          :src="avatarPreview || 'https://via.placeholder.com/100'"
-          class="rounded-circle mb-3"
-          width="100"
-          height="100"
-        />
-
-        <input
-          type="file"
-          class="form-control"
-          accept="image/*"
-          @change="handleAvatarChange"
-          :disabled="!isEditing"
-        />
-      </div>
-
-      <!-- Name -->
-      <div class="mb-3">
-        <label class="form-label">Name *</label>
-        <input
-          v-model="form.name"
-          class="form-control"
-          :class="{ 'is-invalid': errors.name }"
-          :disabled="!isEditing"
-        />
-        <div class="invalid-feedback">{{ errors.name }}</div>
-      </div>
-
-      <!-- Bio -->
-      <div class="mb-3">
-        <label class="form-label">Bio</label>
-        <textarea
-          v-model="form.bio"
-          class="form-control"
-          rows="3"
-          :class="{ 'is-invalid': errors.bio }"
-          :disabled="!isEditing"
-        ></textarea>
-        <div class="invalid-feedback">{{ errors.bio }}</div>
-        <small class="text-muted">{{ form.bio.length }}/200</small>
-      </div>
-
-      <!-- Skills -->
-      <div class="mb-3">
-        <label class="form-label">Skills</label>
-
-        <div class="d-flex mb-2">
-          <input
-            v-model="skillInput"
-            @keyup.enter="addSkill"
-            class="form-control me-2"
-            placeholder="Add skill"
-            :disabled="!isEditing"
+      </aside>
+      
+      <!-- Main Content Column -->
+      <main class="col-lg-9 col-md-8">
+        
+        <!-- Tab 1: Profile Dashboard -->
+        <div v-if="activeTab === 'profile'" class="fade-in-content">
+          <ProfileOverview
+            :profileName="profileName"
+            :profileBio="profileBio"
+            :profileGithub="profileGithub"
+            :profileLinkedin="profileLinkedin"
+            :profileSkills="profileSkills"
+            :profileAvatar="profileAvatar"
+            :defaultProjects="defaultProjects"
+            :activityFeed="activityFeed"
           />
-          <button
-            class="btn btn-outline-primary"
-            @click="addSkill"
-            :disabled="!isEditing"
-          >
-            Add
-          </button>
         </div>
-
-        <div>
-          <span
-            v-for="(skill, index) in skills"
-            :key="index"
-            class="badge bg-primary me-2 mb-2"
-          >
-            {{ skill }}
-            <span
-              v-if="isEditing"
-              class="skill-remove ms-1"
-              @click="removeSkill(index)"
-            >
-              ✕
-            </span>
-          </span>
+        
+        <!-- Tab 2: Projects Showcase -->
+        <div v-else-if="activeTab === 'projects'" class="fade-in-content">
+          <ProfileProject
+            :projects="[...defaultProjects, ...additionalProjects]"
+          />
         </div>
-      </div>
-
-      <!-- GitHub -->
-      <div class="mb-3">
-        <label class="form-label">GitHub</label>
-        <input
-          v-model="form.github"
-          class="form-control"
-          :class="{ 'is-invalid': errors.github }"
-          :disabled="!isEditing"
-        />
-        <div class="invalid-feedback">{{ errors.github }}</div>
-      </div>
-
-      <!-- LinkedIn -->
-      <div class="mb-3">
-        <label class="form-label">LinkedIn</label>
-        <input
-          v-model="form.linkedin"
-          class="form-control"
-          :class="{ 'is-invalid': errors.linkedin }"
-          :disabled="!isEditing"
-        />
-        <div class="invalid-feedback">{{ errors.linkedin }}</div>
-      </div>
+        
+        <!-- Tab 3: Settings (Edit Form) -->
+        <div v-else-if="activeTab === 'settings'" class="fade-in-content">
+          <ProfileSetting
+            :user="authStore.user || {}"
+            @saved="handleProfileSaved"
+          />
+        </div>
+        
+      </main>
+      
     </div>
   </div>
+  
   <Footer />
 </template>
 
 <style scoped>
-.profile-page {
-  max-width: 960px;
-}
-
-.profile-card {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm) !important;
-}
-
-.profile-card h4 {
-  line-height: var(--line-height-heading);
-}
-
-.profile-card img {
-  object-fit: cover;
-  border: 3px solid #fff;
-  box-shadow: var(--shadow-sm);
-}
-
-.form-label {
-  font-weight: 600;
-  color: var(--text-dark);
-  margin-bottom: var(--spacing-sm);
-}
-
-.form-control {
-  border-color: var(--input-border);
-  border-radius: var(--radius-md);
-  padding: 0.75rem var(--spacing-md);
-  transition:
-    border-color var(--transition-base),
-    box-shadow var(--transition-base),
-    background-color var(--transition-base);
-}
-
-.form-control:disabled {
+.profile-dashboard {
+  max-width: 1280px;
+  margin: 0 auto;
   background-color: #f8fafc;
-  color: var(--text-muted);
-  cursor: not-allowed;
+  min-height: 90vh;
+  font-family: var(--font-family-base);
+  color: #1e293b;
 }
 
-.btn {
+/* Sidebar */
+.sidebar-card-modern {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-nav {
+  width: 100%;
+}
+
+.nav-btn-modern {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 0.75rem var(--spacing-md);
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.95rem;
   border-radius: var(--radius-md);
+  text-align: left;
+  transition: all var(--transition-base);
 }
 
-.badge {
-  border-radius: var(--radius-pill);
-  padding: 0.45rem 0.7rem;
+.nav-btn-modern:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
-.skill-remove {
-  cursor: pointer;
-  border-radius: var(--radius-sm);
+.nav-btn-modern.active {
+  background: #7c3aed;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
 }
 
-.skill-remove:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+.border-slate {
+  border-color: #f1f5f9;
 }
 
-@media (hover: hover) {
-  .profile-card:hover {
-    transform: none;
-  }
+.btn-new-project {
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all var(--transition-base);
 }
 
-@media (max-width: 576px) {
-  .profile-card {
-    padding: var(--spacing-lg) !important;
-  }
+.btn-new-project:hover {
+  background: #6d28d9;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+}
+
+.sidebar-bottom {
+  border-top: 1px solid #f1f5f9;
+  padding-top: var(--spacing-md);
+}
+
+.sidebar-link-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 0.6rem var(--spacing-md);
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  text-decoration: none;
+}
+
+.sidebar-link-btn:hover {
+  background: #f8fafc;
+  color: #7c3aed;
+}
+
+.py-2-5 {
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+}
+
+/* Fade in animation */
+.fade-in-content {
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
