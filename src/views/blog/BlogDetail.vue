@@ -1,9 +1,16 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
 
 const activeSection = ref('evolution');
+const scrollProgress = ref(0);
+
+const updateScrollProgress = () => {
+  const winScroll = document.documentElement.scrollTop;
+  const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  scrollProgress.value = (winScroll / height) * 100;
+};
 
 const scrollTo = (id) => {
   const el = document.getElementById(id);
@@ -12,41 +19,74 @@ const scrollTo = (id) => {
     activeSection.value = id;
   }
 };
+
+onMounted(() => {
+  window.addEventListener('scroll', updateScrollProgress);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateScrollProgress);
+});
 </script>
 
 <template>
-  <div class="blog-detail-layout min-vh-100 d-flex flex-column bg-white">
-    <Navbar class="bg-white border-bottom" />
+  <div class="blog-detail-layout min-vh-100 d-flex flex-column">
+    <!-- Reading Progress Bar -->
+    <div class="reading-progress-container">
+      <div class="reading-progress-bar" :style="{ width: scrollProgress + '%' }"></div>
+    </div>
 
-    <main class="flex-grow-1 container py-5">
+    <Navbar />
+
+    <main class="flex-grow-1 blog-detail-wrapper">
+      <!-- Back Button -->
+      <div class="mb-4">
+        <router-link to="/blog" class="btn-back-soft text-decoration-none d-inline-flex align-items-center gap-2">
+          <i class="bi bi-arrow-left"></i>
+          <span>Back to Articles</span>
+        </router-link>
+      </div>
+
       <div class="row position-relative">
         
-        <!-- Sticky Sidebar (Table of Contents) -->
+        <!-- Sticky Sidebar (Table of Contents & Share) -->
         <aside class="col-lg-3 d-none d-lg-block">
-          <div class="sticky-toc p-4 rounded-4 bg-light-purple">
-            <h6 class="text-muted fw-bold mb-4 font-xs text-uppercase tracking-wide">Table of Contents</h6>
-            <nav class="toc-nav d-flex flex-column gap-3">
-              <a href="#evolution" 
-                 @click.prevent="scrollTo('evolution')" 
-                 :class="['text-decoration-none font-sm toc-link', activeSection === 'evolution' ? 'text-purple fw-bold active' : 'text-muted']">
-                The Evolution of Vue State
-              </a>
-              <a href="#options-vs-composition" 
-                 @click.prevent="scrollTo('options-vs-composition')"
-                 :class="['text-decoration-none font-sm toc-link', activeSection === 'options-vs-composition' ? 'text-purple fw-bold active' : 'text-muted']">
-                Options API vs Composition API
-              </a>
-              <a href="#enter-pinia" 
-                 @click.prevent="scrollTo('enter-pinia')"
-                 :class="['text-decoration-none font-sm toc-link', activeSection === 'enter-pinia' ? 'text-purple fw-bold active' : 'text-muted']">
-                Enter Pinia
-              </a>
-              <a href="#key-takeaways" 
-                 @click.prevent="scrollTo('key-takeaways')"
-                 :class="['text-decoration-none font-sm toc-link', activeSection === 'key-takeaways' ? 'text-purple fw-bold active' : 'text-muted']">
-                Key Takeaways
-              </a>
-            </nav>
+          <div class="sticky-sidebar-container">
+            <div class="sticky-toc p-4 rounded-4 bg-light-purple mb-4">
+              <h6 class="text-muted fw-bold mb-4 font-xs text-uppercase tracking-wide">Table of Contents</h6>
+              <nav class="toc-nav d-flex flex-column gap-3">
+                <a href="#evolution" 
+                   @click.prevent="scrollTo('evolution')" 
+                   :class="['text-decoration-none font-sm toc-link', activeSection === 'evolution' ? 'text-purple fw-bold active' : 'text-muted']">
+                  The Evolution of Vue State
+                </a>
+                <a href="#options-vs-composition" 
+                   @click.prevent="scrollTo('options-vs-composition')"
+                   :class="['text-decoration-none font-sm toc-link', activeSection === 'options-vs-composition' ? 'text-purple fw-bold active' : 'text-muted']">
+                  Options API vs Composition API
+                </a>
+                <a href="#enter-pinia" 
+                   @click.prevent="scrollTo('enter-pinia')"
+                   :class="['text-decoration-none font-sm toc-link', activeSection === 'enter-pinia' ? 'text-purple fw-bold active' : 'text-muted']">
+                  Enter Pinia
+                </a>
+                <a href="#key-takeaways" 
+                   @click.prevent="scrollTo('key-takeaways')"
+                   :class="['text-decoration-none font-sm toc-link', activeSection === 'key-takeaways' ? 'text-purple fw-bold active' : 'text-muted']">
+                  Key Takeaways
+                </a>
+              </nav>
+            </div>
+
+            <!-- Social Share -->
+            <div class="p-4 rounded-4 border share-card bg-white">
+              <h6 class="text-muted fw-bold mb-3 font-xs text-uppercase tracking-wide">Share this Story</h6>
+              <div class="d-flex gap-2">
+                <button class="btn btn-light rounded-circle share-btn" title="Share on Twitter"><i class="bi bi-twitter-x"></i></button>
+                <button class="btn btn-light rounded-circle share-btn" title="Share on LinkedIn"><i class="bi bi-linkedin"></i></button>
+                <button class="btn btn-light rounded-circle share-btn" title="Copy Link"><i class="bi bi-link-45deg"></i></button>
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -242,28 +282,55 @@ const scrollTo = (id) => {
 .tracking-wide { letter-spacing: 0.05em; }
 .lh-lg { line-height: 1.8; }
 
+/* Reading Progress */
+.reading-progress-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: transparent;
+  z-index: 9999;
+}
+
+.reading-progress-bar {
+  height: 100%;
+  background: #7c3aed;
+  transition: width 0.1s ease-out;
+}
+
+/* Back Button */
+.btn-back-soft {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-back-soft:hover {
+  color: #7c3aed;
+  transform: translateX(-3px);
+}
+
+.blog-detail-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
 .blog-detail-layout {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #fdfcff;
+  font-family: 'Sora', sans-serif;
 }
 
 /* Typography Overrides */
 .article-title {
   letter-spacing: -0.03em;
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
-.article-body h3 {
-  letter-spacing: -0.01em;
-  color: #1f2937;
-}
-
-.article-body p {
-  color: #4b5563;
-  font-size: 1.05rem;
-}
-
-/* Sticky TOC */
-.sticky-toc {
+/* Sticky Sidebar */
+.sticky-sidebar-container {
   position: sticky;
   top: 100px;
 }
@@ -271,6 +338,26 @@ const scrollTo = (id) => {
 .toc-nav {
   border-left: 2px solid #e5e7eb;
   padding-left: 1rem;
+}
+
+/* Share Buttons */
+.share-card {
+  border: 1px solid #f1f5f9 !important;
+}
+
+.share-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.share-btn:hover {
+  background-color: #f3e8ff;
+  color: #7c3aed;
 }
 
 .toc-link {
@@ -357,5 +444,9 @@ const scrollTo = (id) => {
 .related-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 15px rgba(0,0,0,0.05) !important;
+}
+
+@media (max-width: 991px) {
+  .blog-detail-wrapper { padding: 20px 16px 40px; }
 }
 </style>
