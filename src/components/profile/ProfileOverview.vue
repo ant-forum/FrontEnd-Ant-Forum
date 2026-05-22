@@ -3,6 +3,7 @@ import { defineProps } from "vue";
 
 const props = defineProps({
   profileName: { type: String, required: true },
+  profileRole: { type: String, default: "Student" },
   profileBio: { type: String, required: true },
   profileGithub: { type: String, required: true },
   profileLinkedin: { type: String, required: true },
@@ -17,31 +18,21 @@ const props = defineProps({
   <div class="row g-4">
     <!-- Center Column -->
     <div class="col-xl-8 col-lg-7 d-flex flex-column gap-4">
-      <!-- Profile Main Info Card -->
-      <div class="dashboard-card-modern p-4">
+      <!-- Profile Main Info Card (Hero Banner) -->
+      <div class="profile-hero-card p-4">
         <div class="d-flex flex-column flex-sm-row align-items-start gap-4">
           <!-- Big Avatar with Online Badge -->
-          <div class="position-relative flex-shrink-0">
-            <img :src="profileAvatar" class="rounded-3 object-fit-cover shadow-sm border border-3 border-white" width="130" height="130" alt="Developer Avatar">
+          <div class="position-relative flex-shrink-0 profile-avatar-wrapper">
+            <img :src="profileAvatar" class="rounded-4 object-fit-cover shadow-sm" width="120" height="120" alt="Developer Avatar">
             <span class="status-indicator-dot"></span>
           </div>
           
           <!-- Info Block -->
           <div class="flex-grow-1">
-            <div class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3 mb-3">
+            <div class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3 mb-2">
               <div>
-                <h3 class="fw-bold mb-1 profile-name">{{ profileName }}</h3>
-                <span class="text-primary-purple fw-semibold" style="font-size: 0.95rem;">Full-Stack Architect</span>
-              </div>
-              <!-- Action Buttons -->
-              <div class="d-flex gap-2">
-                <a :href="profileGithub" target="_blank" class="btn btn-social-icon shadow-sm" title="GitHub">
-                  <i class="bi bi-link-45deg"></i>
-                </a>
-                <a :href="profileLinkedin" target="_blank" class="btn btn-social-icon shadow-sm" title="LinkedIn">
-                  <i class="bi bi-youtube"></i>
-                </a>
-                <button class="btn btn-follow px-4 fw-bold shadow-sm">Follow</button>
+                <h3 class="fw-bold mb-2 profile-name">{{ profileName }}</h3>
+                <span class="role-badge-overview">{{ profileRole }}</span>
               </div>
             </div>
             <!-- Description -->
@@ -56,16 +47,16 @@ const props = defineProps({
       <div class="featured-projects-section">
         <div class="d-flex align-items-center gap-2 mb-3">
           <i class="bi bi-rocket-takeoff text-primary-purple fs-4"></i>
-          <h5 class="mb-0 fw-bold">Featured Projects</h5>
+          <h5 class="mb-0 fw-bold header-title">Featured Projects</h5>
         </div>
         
         <div class="row g-3">
           <div v-for="project in defaultProjects" :key="project.title" class="col-md-6">
-            <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between shadow-sm">
+            <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
               <div>
                 <div class="d-flex justify-content-between align-items-start mb-2">
                   <h6 class="fw-bold mb-0 text-dark project-title-v2">{{ project.title }}</h6>
-                  <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star"></i> {{ project.stars }}</span>
+                  <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
                 </div>
                 <p class="text-muted small mb-4 line-clamp-3">
                   {{ project.desc }}
@@ -86,11 +77,11 @@ const props = defineProps({
       <div class="recent-activity-section">
         <div class="d-flex align-items-center gap-2 mb-3">
           <i class="bi bi-clock-history text-primary-purple fs-4"></i>
-          <h5 class="mb-0 fw-bold">Recent Activity</h5>
+          <h5 class="mb-0 fw-bold header-title">Recent Activity</h5>
         </div>
         
         <div class="d-flex flex-column gap-3">
-          <div v-for="activity in activityFeed" :key="activity.title" class="activity-row-modern p-3 shadow-sm d-flex align-items-center gap-3">
+          <div v-for="activity in activityFeed" :key="activity.title" class="activity-row-modern p-3 d-flex align-items-center gap-3">
             <div class="activity-icon-container">
               <i :class="['bi', activity.icon, 'text-primary-purple']"></i>
             </div>
@@ -106,41 +97,9 @@ const props = defineProps({
     
     <!-- Right Column: Vitals & Skills -->
     <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
-      <!-- Vitals Card -->
-      <div class="dashboard-card-modern p-4">
-        <h6 class="text-muted text-uppercase fw-bold mb-4" style="font-size: 0.75rem; letter-spacing: 1px;">Vitals</h6>
-        
-        <div class="row g-4">
-          <div class="col-6">
-            <div class="vital-item">
-              <span class="vital-number">42</span>
-              <span class="vital-label">PROJECTS</span>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="vital-item">
-              <span class="vital-number">1.2k</span>
-              <span class="vital-label">COMMITS</span>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="vital-item">
-              <span class="vital-number">4.8k</span>
-              <span class="vital-label">REPUTATION</span>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="vital-item">
-              <span class="vital-number">Lvl 8</span>
-              <span class="vital-label">MENTOR</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
       <!-- Stack Proficiency -->
       <div class="dashboard-card-modern p-4">
-        <h6 class="text-dark fw-bold mb-4" style="font-size: 0.9rem;">Stack Proficiency</h6>
+        <h6 class="text-dark fw-bold mb-4" style="font-size: 0.9rem; letter-spacing: 0.3px;">Stack Proficiency</h6>
         
         <div class="d-flex flex-column gap-3 mb-4">
           <div class="proficiency-item">
@@ -182,109 +141,114 @@ const props = defineProps({
         </div>
       </div>
       
-      <!-- Achievements -->
-      <div class="dashboard-card-modern p-4">
-        <h6 class="text-dark fw-bold mb-3" style="font-size: 0.9rem;">Achievements</h6>
-        
-        <div class="d-flex gap-3 justify-content-start">
-          <div class="achievement-icon-circle bg-purple-subtle" title="Verified Contributor">
-            <i class="bi bi-patch-check-fill text-purple"></i>
-          </div>
-          <div class="achievement-icon-circle bg-rose-subtle" title="Bug Hunter">
-            <i class="bi bi-bug-fill text-rose"></i>
-          </div>
-          <div class="achievement-icon-circle bg-green-subtle" title="Mentor">
-            <i class="bi bi-mortarboard-fill text-green"></i>
-          </div>
-          <div class="achievement-icon-circle bg-blue-subtle" title="Top Contributor">
-            <i class="bi bi-trophy-fill text-blue"></i>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .dashboard-card-modern {
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+}
+
+.profile-hero-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-hero-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
+}
+
+.profile-avatar-wrapper img {
+  border: 3px solid #ffffff;
+  box-shadow: 0 8px 20px -6px rgba(124, 58, 237, 0.25);
+  transition: all var(--transition-base);
+}
+
+.profile-avatar-wrapper:hover img {
+  transform: scale(1.02);
+  box-shadow: 0 12px 24px -4px rgba(124, 58, 237, 0.35);
 }
 
 .status-indicator-dot {
   position: absolute;
-  bottom: 6px;
-  right: 6px;
+  bottom: 4px;
+  right: 4px;
   width: 16px;
   height: 16px;
   background-color: #10b981;
   border: 3px solid #ffffff;
   border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
 .profile-name {
   color: #0f172a;
   letter-spacing: -0.5px;
+  font-weight: 800;
+}
+
+.role-badge-overview {
+  display: inline-block;
+  background: rgba(124, 58, 237, 0.08);
+  color: #7c3aed;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(124, 58, 237, 0.15);
 }
 
 .text-primary-purple {
   color: #7c3aed;
 }
 
-.btn-social-icon {
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  font-size: 1.1rem;
-  transition: all var(--transition-base);
-}
-
-.btn-social-icon:hover {
-  background: #f8fafc;
-  color: #7c3aed;
-  border-color: #ddd6fe;
-}
-
-.btn-follow {
-  background: #7c3aed;
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-base);
-}
-
-.btn-follow:hover {
-  background: #6d28d9;
-  transform: translateY(-1px);
-}
-
 .bio-text {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   line-height: 1.6;
+  color: #475569 !important;
 }
 
+.header-title {
+  color: #0f172a;
+  letter-spacing: -0.3px;
+}
+
+/* Projects Section */
 .project-card-modern-v2 {
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--radius-xl);
   transition: all var(--transition-base);
+  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.02);
 }
 
 .project-card-modern-v2:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md) !important;
-  border-color: #ddd6fe;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(124, 58, 237, 0.3);
 }
 
 .project-title-v2 {
+  font-size: 0.95rem;
   transition: color var(--transition-base);
 }
 
@@ -308,53 +272,37 @@ const props = defineProps({
 .tag-badge-v2.redis { background: #fef2f2; color: #dc2626; }
 .tag-badge-v2.grpc { background: #f5f3ff; color: #6d28d9; }
 
+/* Timeline Activity */
 .activity-row-modern {
   background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: var(--radius-md);
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  border-radius: var(--radius-lg);
   transition: all var(--transition-base);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.01);
 }
 
 .activity-row-modern:hover {
-  border-color: #ddd6fe;
+  border-color: rgba(124, 58, 237, 0.3);
   transform: translateX(4px);
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.03);
 }
 
 .activity-icon-container {
-  width: 36px;
-  height: 36px;
-  background: #f5f3ff;
+  width: 38px;
+  height: 38px;
+  background: rgba(124, 58, 237, 0.08);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
 }
 
 .small-title {
   font-size: 0.9rem;
 }
 
-.vital-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.vital-number {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #7c3aed;
-  line-height: 1.1;
-}
-
-.vital-label {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #94a3b8;
-  letter-spacing: 0.5px;
-}
-
+/* Side Info Section */
 .proficiency-label {
   font-size: 0.75rem;
   font-weight: 800;
@@ -368,7 +316,7 @@ const props = defineProps({
 }
 
 .proficiency-progress {
-  height: 8px;
+  height: 6px;
   background: #f1f5f9;
   border-radius: var(--radius-pill);
   overflow: hidden;
@@ -376,8 +324,9 @@ const props = defineProps({
 
 .proficiency-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
   border-radius: var(--radius-pill);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.2);
 }
 
 .language-badge {
@@ -387,33 +336,13 @@ const props = defineProps({
   font-weight: 700;
   padding: 4px 12px;
   border-radius: var(--radius-pill);
+  transition: all 0.2s ease;
 }
 
-.achievement-icon-circle {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  transition: transform var(--transition-fast);
-  cursor: help;
+.language-badge:hover {
+  background: #dbeafe;
+  transform: scale(1.05);
 }
-
-.achievement-icon-circle:hover {
-  transform: scale(1.1);
-}
-
-.bg-purple-subtle { background-color: #f3e8ff; }
-.bg-rose-subtle { background-color: #ffe4e6; }
-.bg-green-subtle { background-color: #dcfce7; }
-.bg-blue-subtle { background-color: #dbeafe; }
-
-.text-purple { color: #8b5cf6; }
-.text-rose { color: #f43f5e; }
-.text-green { color: #22c55e; }
-.text-blue { color: #3b82f6; }
 
 .border-slate {
   border-color: #f1f5f9;
