@@ -1,9 +1,12 @@
 <script setup>
 import { ref } from 'vue';
+import { useForumStore } from '../../stores/ForumStore';
 
 defineProps({
   discussions: { type: Array, required: true }
 });
+
+const forumStore = useForumStore();
 
 const tagColorMap = {
   blue:   { bg: '#dbeafe', color: '#1d4ed8' },
@@ -14,6 +17,14 @@ const tagColorMap = {
   teal:   { bg: '#ccfbf1', color: '#0f766e' },
   red:    { bg: '#fee2e2', color: '#dc2626' },
   gray:   { bg: '#f3f4f6', color: '#374151' },
+};
+
+const categoryMap = {
+  question:   { label: 'Question', icon: 'bi-question-circle-fill', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', shadow: 'rgba(59, 130, 246, 0.25)' },
+  discussion: { label: 'Discussion', icon: 'bi-chat-left-text-fill', gradient: 'linear-gradient(135deg, #10b981, #047857)', shadow: 'rgba(16, 185, 129, 0.25)' },
+  showcase:   { label: 'Show & Tell', icon: 'bi-rocket-takeoff-fill', gradient: 'linear-gradient(135deg, #a855f7, #6d28d9)', shadow: 'rgba(168, 85, 247, 0.25)' },
+  tutorial:   { label: 'Tutorial', icon: 'bi-book-half', gradient: 'linear-gradient(135deg, #f59e0b, #b45309)', shadow: 'rgba(245, 158, 11, 0.25)' },
+  idea:       { label: 'Idea', icon: 'bi-lightbulb-fill', gradient: 'linear-gradient(135deg, #0d9488, #0f766e)', shadow: 'rgba(13, 148, 136, 0.25)' }
 };
 
 function getTagStyle(color) {
@@ -39,32 +50,49 @@ async function shareThread(id) {
     console.error('Failed to copy: ', err);
   }
 }
+
+function handleVote(id, direction) {
+  forumStore.toggleVoteDiscussion(id, direction);
+}
 </script>
 
 <template>
   <div class="thread-list">
-    <div v-for="d in discussions" :key="d.id" class="thread-card">
+    <div v-for="d in discussions" :key="d.id" class="thread-card" @click="$router.push(`/forum/${d.id}`)">
 
-      <!-- Vote -->
-      <div class="vote-col">
-        <button class="vote-btn">
+      <!-- Vote Column (Highly Reactive) -->
+      <div class="vote-col" :class="{ 'has-voted-up': d.voted === 'up', 'has-voted-down': d.voted === 'down' }" @click.stop>
+        <button class="vote-btn up" :class="{ active: d.voted === 'up' }" @click.stop="handleVote(d.id, 'up')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="18 15 12 9 6 15"/>
           </svg>
         </button>
-        <span class="vote-num">{{ d.votes }}</span>
-        <button class="vote-btn">
+        <span class="vote-num" :class="{ 'voted-up': d.voted === 'up', 'voted-down': d.voted === 'down' }">
+          {{ d.votes }}
+        </span>
+        <button class="vote-btn down" :class="{ active: d.voted === 'down' }" @click.stop="handleVote(d.id, 'down')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
         </button>
       </div>
 
-      <!-- Content -->
+      <!-- Content Column -->
       <div class="thread-content">
-        <!-- Meta -->
+        <!-- Meta Row -->
         <div class="thread-meta">
           <div class="thread-tags">
+            <!-- Sleek Category indicator badge -->
+            <span v-if="d.category && categoryMap[d.category]" class="category-badge" :style="{ background: categoryMap[d.category].gradient, boxShadow: '0 2px 8px ' + categoryMap[d.category].shadow }">
+              <i :class="['bi', categoryMap[d.category].icon]"></i>
+              {{ categoryMap[d.category].label }}
+            </span>
+
+            <!-- Code snippet badge indicator -->
+            <span v-if="d.hasCode" class="snippet-badge">
+              <i class="bi bi-code-slash"></i> Snippet
+            </span>
+
             <span v-for="tag in d.tags" :key="tag.label" class="tag-chip" :style="getTagStyle(tag.color)">
               {{ tag.label }}
             </span>
@@ -73,7 +101,7 @@ async function shareThread(id) {
         </div>
 
         <!-- Title -->
-        <h3 class="thread-title" @click="$router.push(`/forum/${d.id}`)">{{ d.title }}</h3>
+        <h3 class="thread-title">{{ d.title }}</h3>
 
         <!-- Excerpt -->
         <p class="thread-excerpt">{{ d.excerpt }}</p>
@@ -91,14 +119,14 @@ async function shareThread(id) {
 
         <!-- Footer -->
         <div class="thread-footer">
-          <button class="foot-btn" @click="$router.push(`/forum/${d.id}`)">
+          <button class="foot-btn replies" @click.stop="$router.push(`/forum/${d.id}`)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
-            {{ d.replies }} Replies
+            {{ d.replies?.length || 0 }} Replies
           </button>
 
-          <button class="foot-btn" :class="{ 'is-saved': d.saved }" @click="toggleSave(d)">
+          <button class="foot-btn bookmark" :class="{ 'is-saved': d.saved }" @click.stop="toggleSave(d)">
             <svg width="13" height="13" viewBox="0 0 24 24" :fill="d.saved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
             </svg>
@@ -127,33 +155,47 @@ async function shareThread(id) {
 .thread-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .thread-card {
   display: flex;
   background: white;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(229, 231, 235, 0.6);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
 .thread-card:hover {
-  box-shadow: 0 8px 28px rgba(109, 40, 217, 0.1);
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.08);
+  border-color: rgba(168, 85, 247, 0.25);
   transform: translateY(-1px);
 }
 
-/* Vote */
+/* Vote Column styling */
 .vote-col {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   padding: 22px 10px;
-  gap: 2px;
-  min-width: 48px;
-  background: #faf9ff;
+  gap: 3px;
+  min-width: 52px;
+  background: rgba(250, 249, 255, 0.7);
+  border-right: 1px solid rgba(229, 231, 235, 0.5);
+  transition: all 0.25s ease;
+  cursor: default;
+}
+
+.vote-col.has-voted-up {
+  background: rgba(59, 130, 246, 0.03);
+}
+
+.vote-col.has-voted-down {
+  background: rgba(239, 68, 68, 0.03);
 }
 
 .vote-btn {
@@ -164,24 +206,43 @@ async function shareThread(id) {
   justify-content: center;
   border: none;
   background: transparent;
-  color: #c4b5fd;
+  color: #a78bfa;
   cursor: pointer;
   border-radius: 8px;
-  transition: all 0.18s ease;
+  transition: all 0.2s ease;
 }
 
 .vote-btn:hover {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: rgba(124, 58, 237, 0.08);
+  color: #7c3aed;
+}
+
+.vote-btn.up.active {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+
+.vote-btn.down.active {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
 }
 
 .vote-num {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   color: #1f1030;
   text-align: center;
   padding: 2px 0;
   line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.vote-num.voted-up {
+  color: #2563eb;
+}
+
+.vote-num.voted-down {
+  color: #dc2626;
 }
 
 /* Content */
@@ -191,7 +252,7 @@ async function shareThread(id) {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 12px;
 }
 
 /* Meta */
@@ -205,48 +266,79 @@ async function shareThread(id) {
 
 .thread-tags {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.tag-chip {
-  padding: 3px 10px;
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
   font-size: 11px;
   font-weight: 700;
   border-radius: 100px;
-  letter-spacing: 0.2px;
+  color: white;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+}
+
+.category-badge i {
+  font-size: 10.5px;
+}
+
+.snippet-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: rgba(124, 58, 237, 0.08);
+  color: #7c3aed;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 100px;
+  border: 1px solid rgba(168, 85, 247, 0.15);
+}
+
+.tag-chip {
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 100px;
+  letter-spacing: 0.1px;
 }
 
 .thread-time {
-  font-size: 11.5px;
-  color: #b0b7c3;
+  font-size: 12px;
+  color: #9ca3af;
   white-space: nowrap;
 }
 
 .thread-time em {
   font-style: normal;
   color: #7c3aed;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* Title */
 .thread-title {
   margin: 0;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 800;
   color: #111827;
-  line-height: 1.5;
-  cursor: pointer;
+  line-height: 1.4;
   transition: color 0.18s ease;
 }
 
-.thread-title:hover { color: #6d28d9; }
+.thread-card:hover .thread-title {
+  color: #7c3aed;
+}
 
 /* Excerpt */
 .thread-excerpt {
   margin: 0;
-  font-size: 13px;
-  color: #9ca3af;
+  font-size: 13.5px;
+  color: #6b7280;
   line-height: 1.65;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -256,24 +348,27 @@ async function shareThread(id) {
 
 /* Code block */
 .code-block {
-  background: #13111c;
-  border-radius: 12px;
+  background: #110e1a;
+  border-radius: 14px;
   overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+  border: 1px solid rgba(168, 85, 247, 0.1);
 }
 
 .code-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
-  background: #1c1928;
+  padding: 10px 16px;
+  background: #191624;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
 .code-lang {
   font-size: 10.5px;
   font-weight: 700;
-  color: #a78bfa;
-  letter-spacing: 0.5px;
+  color: #c084fc;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
@@ -286,7 +381,6 @@ async function shareThread(id) {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #374151;
 }
 
 .code-dots span:nth-child(1) { background: #ef4444; }
@@ -295,15 +389,15 @@ async function shareThread(id) {
 
 .code-block pre {
   margin: 0;
-  padding: 12px 16px 16px;
+  padding: 14px 18px 18px;
   overflow-x: auto;
 }
 
 .code-block code {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
   line-height: 1.7;
-  color: #c4b5fd;
+  color: #e9d5ff;
   white-space: pre;
 }
 
@@ -311,8 +405,10 @@ async function shareThread(id) {
 .thread-footer {
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin-top: 2px;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(243, 244, 246, 0.8);
 }
 
 .foot-spacer { flex: 1; }
@@ -320,47 +416,49 @@ async function shareThread(id) {
 .foot-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border: none;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
   background: transparent;
-  color: #c4b5fd;
-  font-size: 12px;
-  font-weight: 500;
+  color: #9ca3af;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.18s ease;
+  border-radius: 9px;
+  transition: all 0.2s ease;
   font-family: inherit;
 }
 
 .foot-btn:hover {
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: rgba(124, 58, 237, 0.05);
+  color: #7c3aed;
 }
 
-.foot-btn.is-saved {
+.foot-btn.replies:hover {
+  background: rgba(124, 58, 237, 0.05);
   color: #7c3aed;
-  font-weight: 600;
+}
+
+.foot-btn.bookmark.is-saved {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.04);
+  border-color: rgba(168, 85, 247, 0.15);
 }
 
 .foot-btn.share:hover {
-  background: #f5f3ff;
-  color: #6d28d9;
-}
-
-.foot-btn.is-copied {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.foot-btn.is-copied:hover {
-  background: #ecfdf5;
+  background: rgba(16, 185, 129, 0.05);
   color: #059669;
+}
+
+.foot-btn.share.is-copied {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(52, 211, 153, 0.2);
 }
 
 @media (max-width: 600px) {
   .thread-card { flex-direction: column; }
-  .vote-col { flex-direction: row; padding: 12px 16px; min-width: auto; gap: 10px; }
+  .vote-col { flex-direction: row; padding: 12px 16px; min-width: auto; gap: 12px; border-right: none; border-bottom: 1px solid rgba(229, 231, 235, 0.5); }
   .thread-meta { flex-direction: column; align-items: flex-start; }
 }
 </style>
