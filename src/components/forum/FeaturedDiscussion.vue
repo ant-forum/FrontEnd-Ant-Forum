@@ -8,7 +8,7 @@ const memberCount = 42;
 </script>
 
 <template>
-  <div class="featured-section">
+  <!-- <div class="featured-section">
     <div class="featured-content">
       <span class="featured-badge">
         <span class="badge-dot"></span>
@@ -74,7 +74,7 @@ const memberCount = 42;
         <circle cx="270" cy="120" r="20" fill="#ddd6fe" opacity="0.5"/>
       </svg>
     </div>
-  </div>
+  </div> -->
 </template>
 
 <style scoped>

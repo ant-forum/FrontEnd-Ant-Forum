@@ -103,6 +103,12 @@ const routes = [
     component: Profile,
   },
   {
+    path: "/help",
+    name: "Help",
+    meta: { requiresAuth: true },
+    component: () => import("../views/HelpView.vue"),
+  },
+  {
     path: "/showcase",
     name: "ShowcaseDashboard",
     meta: { requiresAuth: true },

@@ -13,7 +13,7 @@ const projects = ref([
   {
     id: 1,
     title: 'Nexus Analytics Dashboard',
-    desc: 'A high-performance data visualization engine built for real-time tracking.',
+    description: 'A high-performance data visualization engine built for real-time tracking.',
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600',
     tags: ['VUE.JS', 'D3.JS', 'TYPESCRIPT'],
     stars: 1200,
@@ -23,7 +23,7 @@ const projects = ref([
   {
     id: 2,
     title: 'Aether OS Gateway',
-    desc: 'Microservices API gateway designed for low-latency financial systems.',
+    description: 'Microservices API gateway designed for low-latency financial systems.',
     image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&q=80&w=600',
     tags: ['NODE.JS', 'REDIS', 'GRAPHQL'],
     stars: 950,
@@ -33,7 +33,7 @@ const projects = ref([
   {
     id: 3,
     title: 'Lumina Design System',
-    desc: 'A comprehensive suite of accessible React components for scale.',
+    description: 'A comprehensive suite of accessible React components for scale.',
     image: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=600',
     tags: ['REACT', 'TAILWIND', 'STORYBOOK'],
     stars: 2100,
@@ -149,6 +149,30 @@ const formatNumber = (num) => {
                   View Details
                 </router-link>
               </div>
+              
+              <div class="filter-group d-flex gap-2 overflow-x-auto pb-1">
+                <button @click="sortBy = 'latest'" :class="['btn rounded-pill px-4 py-2 fw-semibold transition-all whitespace-nowrap', sortBy === 'latest' ? 'btn-primary shadow-sm' : 'btn-light border']">
+                  Latest
+                </button>
+                <button @click="sortBy = 'top_rated'" :class="['btn rounded-pill px-4 py-2 fw-semibold transition-all whitespace-nowrap', sortBy === 'top_rated' ? 'btn-primary shadow-sm' : 'btn-light border']">
+                  Top Rated
+                </button>
+                <button @click="sortBy = 'most_viewed'" :class="['btn rounded-pill px-4 py-2 fw-semibold transition-all whitespace-nowrap', sortBy === 'most_viewed' ? 'btn-primary shadow-sm' : 'btn-light border']">
+                  Most Viewed
+                </button>
+              </div>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="d-flex flex-wrap gap-2 mt-4 justify-content-center">
+              <button 
+                v-for="cat in categories" 
+                :key="cat"
+                @click="selectedCategory = cat"
+                :class="['btn btn-sm rounded-pill px-3 py-1 transition-all', selectedCategory === cat ? 'btn-dark' : 'btn-outline-secondary border-0 opacity-75']"
+              >
+                {{ cat }}
+              </button>
             </div>
             
             <div class="card-body p-4 d-flex flex-column">
@@ -206,6 +230,115 @@ const formatNumber = (num) => {
 </template>
 
 <style scoped>
+/* Clean Soft Banner Styles */
+.showcase-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+.pipeline-banner-soft {
+  background-color: #f8f7ff;
+  min-height: 280px;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+}
+
+.soft-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 1;
+}
+
+.blob-left {
+  width: 300px;
+  height: 300px;
+  background: rgba(139, 92, 246, 0.08);
+  top: -100px;
+  left: -50px;
+}
+
+.blob-right {
+  width: 400px;
+  height: 400px;
+  background: rgba(168, 85, 247, 0.12);
+  bottom: -150px;
+  right: -100px;
+}
+
+.soft-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ede9ff;
+  padding: 6px 16px;
+  border-radius: 100px;
+}
+
+.soft-badge .dot {
+  width: 6px;
+  height: 6px;
+  background-color: #7c3aed;
+  border-radius: 50%;
+}
+
+.soft-badge .badge-text {
+  color: #7c3aed;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.text-dark-blue {
+  color: #1e1b4b;
+  font-size: 1.75rem;
+}
+
+.soft-description {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 650px;
+}
+
+.btn-soft-purple {
+  background-color: #7c3aed;
+  color: white;
+  border: none;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.btn-soft-purple:hover {
+  background-color: #6d28d9;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3) !important;
+}
+
+.avatar-group-soft {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 2px solid #f8f7ff;
+  margin-left: -10px;
+}
+
+.avatar-mini:first-child {
+  margin-left: 0;
+}
+
+/* Original Styles Fallback/Compatibility */
 .showcase-page {
   min-height: 100vh;
   font-family: 'Sora', sans-serif;
@@ -238,7 +371,6 @@ const formatNumber = (num) => {
   color: #7c3aed;
 }
 
-/* Banner Modern */
 .pipeline-banner-modern {
   background: linear-gradient(135deg, #f8faff 0%, #f1f0ff 100%);
   border: 1px solid #e0e7ff;
@@ -277,7 +409,24 @@ const formatNumber = (num) => {
   box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4) !important;
 }
 
-/* Project Card Modern */
+.search-box-modern {
+  min-width: 300px;
+}
+
+.search-box-modern input {
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+.search-box-modern input:focus {
+  background: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
 .project-card-modern {
   background: white;
   border: 1px solid #f1f5f9 !important;
@@ -342,7 +491,6 @@ const formatNumber = (num) => {
 /* Utilities */
 .fw-black { font-weight: 900; }
 .x-small { font-size: 0.7rem; }
-.tracking-wider { letter-spacing: 0.05em; }
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -350,7 +498,14 @@ const formatNumber = (num) => {
   overflow: hidden;
 }
 
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
 @media (max-width: 991px) {
+  .showcase-wrapper { padding: 20px 16px 40px; }
   .pipeline-banner-modern { text-align: center; }
+  .search-box-modern { width: 100%; }
+  .filter-group { width: 100%; justify-content: center; }
 }
 </style>

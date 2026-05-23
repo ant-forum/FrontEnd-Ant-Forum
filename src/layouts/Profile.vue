@@ -50,6 +50,11 @@ const handleProfileSaved = (updatedUser) => {
 
 // Profile Dashboard Dynamic Data / Mock Data
 const profileName = computed(() => savedProfile.name || "Alex 'Dev' Rivera");
+const profileRole = computed(() => {
+  const role = authStore.user?.role || "Student";
+  if (role.toLowerCase() === 'mentor') return 'Teacher';
+  return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+});
 const profileBio = computed(() => savedProfile.bio || "Passionate full-stack architect with 8+ years of experience building scalable distributed systems and open-source ecosystems. Specializing in high-performance React architectures and Go-based microservices. Active contributor to the ANT-Forum core and mentor for emerging tech talent.");
 const profileGithub = computed(() => savedProfile.github || "https://github.com");
 const profileLinkedin = computed(() => savedProfile.linkedin || "https://linkedin.com");
@@ -118,8 +123,8 @@ const activityFeed = [
           <div class="sidebar-user-info d-flex align-items-center gap-3 mb-4">
             <img :src="profileAvatar" class="rounded-circle border border-2 border-primary-subtle" width="48" height="48" alt="Profile avatar" style="object-fit: cover;">
             <div class="user-meta overflow-hidden">
-              <h6 class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">DevProfile</h6>
-              <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Technical Contributor</small>
+              <h6 class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">{{ profileName }}</h6>
+              <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ profileRole }}</small>
             </div>
           </div>
           
@@ -168,10 +173,10 @@ const activityFeed = [
           
           <!-- Bottom actions sticking to bottom -->
           <div class="sidebar-bottom d-flex flex-column gap-2">
-            <a href="#" class="sidebar-link-btn text-decoration-none">
+            <router-link to="/help" class="sidebar-link-btn text-decoration-none">
               <i class="bi bi-question-circle fs-5"></i>
               <span>Help</span>
-            </a>
+            </router-link>
             <button @click="authStore.logout()" class="sidebar-link-btn bg-transparent border-0 text-start">
               <i class="bi bi-box-arrow-right fs-5"></i>
               <span>Logout</span>
@@ -187,6 +192,7 @@ const activityFeed = [
         <div v-if="activeTab === 'profile'" class="fade-in-content">
           <ProfileOverview
             :profileName="profileName"
+            :profileRole="profileRole"
             :profileBio="profileBio"
             :profileGithub="profileGithub"
             :profileLinkedin="profileLinkedin"
@@ -224,7 +230,7 @@ const activityFeed = [
 .profile-dashboard {
   max-width: 1280px;
   margin: 0 auto;
-  background-color: #f8fafc;
+  background-color: transparent;
   min-height: 90vh;
   font-family: var(--font-family-base);
   color: #1e293b;
@@ -232,11 +238,20 @@ const activityFeed = [
 
 /* Sidebar */
 .sidebar-card-modern {
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-user-info {
+  background: rgba(248, 250, 252, 0.6);
+  border-radius: var(--radius-lg);
+  border: 1px solid #f1f5f9;
+  padding: 0.75rem;
 }
 
 .sidebar-nav {
@@ -248,12 +263,12 @@ const activityFeed = [
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  padding: 0.75rem var(--spacing-md);
+  padding: 0.8rem var(--spacing-md);
   border: none;
   background: transparent;
   color: #64748b;
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 700;
+  font-size: 0.9rem;
   border-radius: var(--radius-md);
   text-align: left;
   transition: all var(--transition-base);
@@ -262,12 +277,13 @@ const activityFeed = [
 .nav-btn-modern:hover {
   background: #f1f5f9;
   color: #0f172a;
+  transform: translateX(2px);
 }
 
 .nav-btn-modern.active {
-  background: #7c3aed;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+  box-shadow: 0 8px 20px -6px rgba(124, 58, 237, 0.4);
 }
 
 .border-slate {
@@ -275,19 +291,21 @@ const activityFeed = [
 }
 
 .btn-new-project {
-  background: #7c3aed;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
   text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 6px 16px -4px rgba(124, 58, 237, 0.35);
   transition: all var(--transition-base);
 }
 
 .btn-new-project:hover {
-  background: #6d28d9;
+  background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%);
   color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -2px rgba(124, 58, 237, 0.45);
 }
 
 .sidebar-bottom {
@@ -299,9 +317,9 @@ const activityFeed = [
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  padding: 0.6rem var(--spacing-md);
+  padding: 0.65rem var(--spacing-md);
   color: #64748b;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.9rem;
   border-radius: var(--radius-md);
   transition: all var(--transition-base);
@@ -311,6 +329,7 @@ const activityFeed = [
 .sidebar-link-btn:hover {
   background: #f8fafc;
   color: #7c3aed;
+  transform: translateX(2px);
 }
 
 .py-2-5 {
@@ -320,11 +339,11 @@ const activityFeed = [
 
 /* Fade in animation */
 .fade-in-content {
-  animation: fadeIn 0.3s ease-in-out forwards;
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 </style>

@@ -171,8 +171,11 @@ const handleSubmit = async () => {
 
 <template>
   <div class="dashboard-card-modern p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="mb-0 fw-bold">Edit Profile</h4>
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+      <div>
+        <h4 class="mb-0 fw-bold header-title">Edit Profile</h4>
+        <p class="text-muted small mb-0">Update your profile info, avatar, skills, and links.</p>
+      </div>
       <div class="d-flex gap-2">
         <button
           class="btn btn-secondary px-4"
@@ -207,24 +210,32 @@ const handleSubmit = async () => {
     <div class="row g-4 mt-2">
       <!-- Avatar Upload -->
       <div class="col-md-4 text-center border-end border-slate-subtle">
-        <div class="mb-3 d-inline-block position-relative">
+        <div class="mb-3 d-inline-block position-relative avatar-preview-container">
           <img
             :src="avatarPreview || 'https://via.placeholder.com/130'"
-            class="rounded-circle border border-4 border-white shadow"
-            width="130"
-            height="130"
+            class="rounded-circle"
+            width="120"
+            height="120"
             style="object-fit: cover;"
           />
+          <div class="avatar-overlay d-flex align-items-center justify-content-center rounded-circle">
+            <i class="bi bi-camera-fill text-white fs-4"></i>
+          </div>
         </div>
-        <div class="px-3">
-          <label class="form-label text-muted small fw-bold">Upload New Avatar</label>
-          <input
-            type="file"
-            class="form-control form-control-sm"
-            accept="image/*"
-            @change="handleAvatarChange"
-          />
-          <small class="text-muted d-block mt-1">PNG, JPG up to 2MB</small>
+        <div class="px-2 mt-2">
+          <label class="form-label text-muted small fw-bold d-block mb-2">Profile Picture</label>
+          <div class="custom-file-upload">
+            <label class="btn btn-sm btn-outline-primary px-3 rounded-pill cursor-pointer">
+              Choose Image
+              <input
+                type="file"
+                class="d-none"
+                accept="image/*"
+                @change="handleAvatarChange"
+              />
+            </label>
+          </div>
+          <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">PNG, JPG up to 2MB</small>
         </div>
       </div>
 
@@ -232,7 +243,7 @@ const handleSubmit = async () => {
       <div class="col-md-8">
         <!-- Name -->
         <div class="mb-3">
-          <label class="form-label">Full Name *</label>
+          <label class="form-label fw-bold small text-dark">Full Name *</label>
           <input
             v-model="form.name"
             class="form-control"
@@ -245,7 +256,7 @@ const handleSubmit = async () => {
         <!-- Bio -->
         <div class="mb-3">
           <div class="d-flex justify-content-between">
-            <label class="form-label">Biography</label>
+            <label class="form-label fw-bold small text-dark">Biography</label>
             <span class="text-muted small">{{ form.bio ? form.bio.length : 0 }}/200</span>
           </div>
           <textarea
@@ -260,7 +271,7 @@ const handleSubmit = async () => {
 
         <!-- Skills -->
         <div class="mb-4">
-          <label class="form-label">Languages & Skills</label>
+          <label class="form-label fw-bold small text-dark">Languages & Skills</label>
           <div class="d-flex mb-2">
             <input
               v-model="skillInput"
@@ -268,7 +279,7 @@ const handleSubmit = async () => {
               class="form-control me-2"
               placeholder="Add a technology (e.g. React, Go, Docker)"
             />
-            <button class="btn btn-outline-primary px-3" @click="addSkill">
+            <button class="btn btn-outline-primary px-3 fw-bold" @click="addSkill">
               Add
             </button>
           </div>
@@ -276,10 +287,10 @@ const handleSubmit = async () => {
             <span
               v-for="(skill, index) in skills"
               :key="index"
-              class="badge bg-primary-purple-subtle text-primary-purple d-flex align-items-center gap-2 py-2 px-3 rounded-pill"
+              class="skill-badge-premium"
             >
               {{ skill }}
-              <span class="cursor-pointer font-bold" @click="removeSkill(index)">✕</span>
+              <span class="remove-skill-trigger" @click="removeSkill(index)">✕</span>
             </span>
           </div>
         </div>
@@ -288,7 +299,7 @@ const handleSubmit = async () => {
         <div class="row g-3">
           <!-- GitHub -->
           <div class="col-sm-6">
-            <label class="form-label">GitHub URL</label>
+            <label class="form-label fw-bold small text-dark">GitHub URL</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-github"></i></span>
               <input
@@ -302,7 +313,7 @@ const handleSubmit = async () => {
           </div>
           <!-- LinkedIn -->
           <div class="col-sm-6">
-            <label class="form-label">LinkedIn URL</label>
+            <label class="form-label fw-bold small text-dark">LinkedIn URL</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-linkedin"></i></span>
               <input
@@ -323,22 +334,167 @@ const handleSubmit = async () => {
 
 <style scoped>
 .dashboard-card-modern {
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+}
+
+.header-title {
+  color: #0f172a;
+  letter-spacing: -0.5px;
 }
 
 .border-slate-subtle {
   border-color: #f1f5f9 !important;
 }
 
-.bg-primary-purple-subtle {
-  background-color: #f5f3ff;
+/* Avatar Experience */
+.avatar-preview-container {
+  cursor: pointer;
+  overflow: hidden;
 }
 
-.text-primary-purple {
+.avatar-preview-container img {
+  border: 3px solid #ffffff;
+  box-shadow: 0 8px 20px -6px rgba(124, 58, 237, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  right: 0;
+  background: rgba(15, 23, 42, 0.4);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-preview-container:hover img {
+  transform: scale(1.03);
+}
+
+.avatar-preview-container:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.custom-file-upload {
+  display: inline-block;
+}
+
+/* Form Styles */
+.form-control {
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.92rem;
+  color: #334155;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+  background-color: #ffffff;
+}
+
+.input-group-text {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.input-group:focus-within .input-group-text {
+  border-color: #7c3aed;
   color: #7c3aed;
+  background-color: rgba(124, 58, 237, 0.02);
+}
+
+/* Skills */
+.skill-badge-premium {
+  background: rgba(124, 58, 237, 0.08);
+  color: #7c3aed;
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 50px;
+  transition: all 0.2s ease;
+}
+
+.skill-badge-premium:hover {
+  background: rgba(124, 58, 237, 0.12);
+  transform: translateY(-1px);
+}
+
+.remove-skill-trigger {
+  cursor: pointer;
+  opacity: 0.6;
+  font-weight: bold;
+  transition: opacity 0.2s;
+}
+
+.remove-skill-trigger:hover {
+  opacity: 1;
+  color: #ef4444;
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -2px rgba(124, 58, 237, 0.4);
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-outline-primary {
+  color: #7c3aed;
+  border-color: #ddd6fe;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: #7c3aed;
+  color: #ffffff;
+  border-color: #7c3aed;
 }
 
 @media (max-width: 768px) {
