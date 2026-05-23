@@ -1,11 +1,15 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import Navbar from '../../components/layouts/header.vue';
 import BaseFooter from '../../components/layouts/footer.vue';
 import FeaturedDiscussion from '../../components/forum/FeaturedDiscussion.vue';
 import DiscussionThreadList from '../../components/forum/DiscussionThreadList.vue';
 import ForumSidebar from '../../components/forum/ForumSidebar.vue';
+import LeftSidebar from '../../components/forum/LeftSidebar.vue';
 import { useForumStore } from '../../stores/ForumStore';
+
+const route = useRoute();
 
 const forumStore = useForumStore();
 
@@ -14,6 +18,9 @@ const loading = ref(false);
 const searchLoading = ref(false);
 const searchQuery = ref('');
 const selectedCategory = ref('all');
+
+const activeTab = ref(route.query.tab || 'questions');
+const showSavedOnly = ref(activeTab.value === 'saves');
 
 const searchInput = ref(null);
 
@@ -40,6 +47,11 @@ const filteredDiscussions = computed(() => {
       (d.author && d.author.toLowerCase().includes(q)) ||
       (d.tags && d.tags.some(t => t.label.toLowerCase().includes(q)))
     );
+  }
+
+  // 1.5 Saves filter
+  if (showSavedOnly.value) {
+    list = list.filter(d => d.saved);
   }
 
   // 2. Category filter
@@ -71,6 +83,27 @@ const handleSearchInput = () => {
   }, 350);
 };
 
+const handleSidebarSelect = (tabId) => {
+  activeTab.value = tabId;
+  searchLoading.value = true;
+  setTimeout(() => {
+    searchLoading.value = false;
+  }, 350);
+
+  if (tabId === 'saves') {
+    showSavedOnly.value = true;
+    selectedCategory.value = 'all';
+  } else if (tabId === 'questions') {
+    showSavedOnly.value = false;
+    selectedCategory.value = 'question';
+  } else if (tabId === 'home') {
+    showSavedOnly.value = false;
+    selectedCategory.value = 'all';
+  } else {
+    showSavedOnly.value = false;
+  }
+};
+
 const handleCategorySelect = (id) => {
   selectedCategory.value = id;
   searchLoading.value = true;
@@ -78,6 +111,12 @@ const handleCategorySelect = (id) => {
     searchLoading.value = false;
   }, 400);
 };
+
+watch(() => route.query.tab, (newTab) => {
+  if (newTab) {
+    handleSidebarSelect(newTab);
+  }
+});
 
 onMounted(async () => {
   loading.value = true;
@@ -122,125 +161,132 @@ const clearFilters = () => {
   <div class="forum-page">
     <Navbar />
 
-    <div class="forum-wrapper">
-      <FeaturedDiscussion />
+    <div class="forum-global-grid">
+      <!-- Left Column: Left Sidebar Navigation stuck on the left -->
+      <LeftSidebar :active-tab="activeTab" @select-tab="handleSidebarSelect" />
 
-      <!-- Interactive Search & Filtering Bar -->
-      <div class="search-filter-section">
-        <div class="search-input-wrapper">
-          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            ref="searchInput"
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search discussions, tags, or authors..."
-            class="search-bar"
-            @input="handleSearchInput"
-          />
-          <button v-if="searchQuery" class="clear-search-btn" @click="clearSearch">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+      <!-- Right Column: Main Content Container -->
+      <div class="forum-main-container">
+        <FeaturedDiscussion />
+
+        <!-- Interactive Search & Filtering Bar -->
+        <div class="search-filter-section">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-          </button>
-          <span v-else class="kbd-indicator">/</span>
-        </div>
-
-        <div class="filter-actions-bar">
-          <div class="tabs-group">
-            <button
-              v-for="filter in filters"
-              :key="filter"
-              :class="['tab-btn', { active: filterTab === filter.toLowerCase() }]"
-              @click="filterTab = filter.toLowerCase()"
-            >
-              {{ filter }}
-            </button>
-          </div>
-          <button class="create-btn" @click="$router.push('/forum/create')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Create Question
-          </button>
-        </div>
-      </div>
-
-      <!-- Categories Pills Grid Slider -->
-      <div class="categories-grid-bar">
-        <button
-          v-for="cat in categories"
-          :key="cat.id"
-          class="category-pill-btn"
-          :class="[{ active: selectedCategory === cat.id }, cat.color]"
-          @click="handleCategorySelect(cat.id)"
-        >
-          <span class="cat-pill-icon-wrap" :style="{ background: cat.gradient }">
-            <i :class="['bi', cat.icon]"></i>
-          </span>
-          <span class="cat-pill-label">{{ cat.label }}</span>
-        </button>
-      </div>
-
-      <div class="forum-content">
-        <!-- Left: Discussions -->
-        <div class="discussions-column">
-          <!-- Skeletons Loader State -->
-          <div v-if="loading || searchLoading" class="skeletons-list">
-            <div v-for="i in 3" :key="i" class="skeleton-card">
-              <div class="skeleton-vote-col">
-                <div class="skeleton-circle"></div>
-                <div class="skeleton-line-sm"></div>
-                <div class="skeleton-circle"></div>
-              </div>
-              <div class="skeleton-body">
-                <div class="skeleton-header">
-                  <div class="skeleton-tags">
-                    <div class="skeleton-pill"></div>
-                    <div class="skeleton-pill"></div>
-                  </div>
-                  <div class="skeleton-line-sm right"></div>
-                </div>
-                <div class="skeleton-title"></div>
-                <div class="skeleton-excerpt"></div>
-                <div class="skeleton-footer"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Empty Search State -->
-          <div v-else-if="filteredDiscussions.length === 0" class="empty-state-card">
-            <div class="empty-icon-wrap">
-              <i class="bi bi-chat-square-text"></i>
-            </div>
-            <h2>No Threads Found</h2>
-            <p>We couldn't find any threads matching your active search terms or category choices. Try resetting filters or write the very first discussion yourself!</p>
-            <div class="empty-actions">
-              <button class="reset-btn" @click="clearFilters">Reset All Filters</button>
-              <button class="create-secondary" @click="$router.push('/forum/create')">Write Discussion</button>
-            </div>
-          </div>
-
-          <!-- Discussions List -->
-          <DiscussionThreadList v-else :discussions="filteredDiscussions" />
-
-          <div v-if="filteredDiscussions.length > 0 && !loading && !searchLoading" class="load-more-wrap">
-            <button @click="handleLoadMore" :disabled="loading" class="load-more-btn">
-              <svg v-if="!loading" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            <input
+              ref="searchInput"
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search discussions, tags, or authors..."
+              class="search-bar"
+              @input="handleSearchInput"
+            />
+            <button v-if="searchQuery" class="clear-search-btn" @click="clearSearch">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
-              <span v-if="loading" class="btn-spinner"></span>
-              {{ loading ? 'Loading...' : 'Load More Threads' }}
+            </button>
+            <span v-else class="kbd-indicator">/</span>
+          </div>
+
+          <div class="filter-actions-bar">
+            <div class="tabs-group">
+              <button
+                v-for="filter in filters"
+                :key="filter"
+                :class="['tab-btn', { active: filterTab === filter.toLowerCase() }]"
+                @click="filterTab = filter.toLowerCase()"
+              >
+                {{ filter }}
+              </button>
+            </div>
+            <button class="create-btn" @click="$router.push('/forum/create')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Create Question
             </button>
           </div>
         </div>
 
-        <!-- Right: Sidebar -->
-        <ForumSidebar />
+        <!-- Categories Pills Grid Slider -->
+        <div class="categories-grid-bar">
+          <button
+            v-for="cat in categories"
+            :key="cat.id"
+            class="category-pill-btn"
+            :class="[{ active: selectedCategory === cat.id }, cat.color]"
+            @click="handleCategorySelect(cat.id)"
+          >
+            <span class="cat-pill-icon-wrap" :style="{ background: cat.gradient }">
+              <i :class="['bi', cat.icon]"></i>
+            </span>
+            <span class="cat-pill-label">{{ cat.label }}</span>
+          </button>
+        </div>
+
+        <!-- Inner Content Grid (Discussions Feed + Right Sidebar) -->
+        <div class="forum-feed-content">
+          <!-- Center: Discussions -->
+          <div class="discussions-column">
+            <!-- Skeletons Loader State -->
+            <div v-if="loading || searchLoading" class="skeletons-list">
+              <div v-for="i in 3" :key="i" class="skeleton-card">
+                <div class="skeleton-vote-col">
+                  <div class="skeleton-circle"></div>
+                  <div class="skeleton-line-sm"></div>
+                  <div class="skeleton-circle"></div>
+                </div>
+                <div class="skeleton-body">
+                  <div class="skeleton-header">
+                    <div class="skeleton-tags">
+                      <div class="skeleton-pill"></div>
+                      <div class="skeleton-pill"></div>
+                    </div>
+                    <div class="skeleton-line-sm right"></div>
+                  </div>
+                  <div class="skeleton-title"></div>
+                  <div class="skeleton-excerpt"></div>
+                  <div class="skeleton-footer"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty Search State -->
+            <div v-else-if="filteredDiscussions.length === 0" class="empty-state-card">
+              <div class="empty-icon-wrap">
+                <i class="bi bi-chat-square-text"></i>
+              </div>
+              <h2>No Threads Found</h2>
+              <p>We couldn't find any threads matching your active search terms or category choices. Try resetting filters or write the very first discussion yourself!</p>
+              <div class="empty-actions">
+                <button class="reset-btn" @click="clearFilters">Reset All Filters</button>
+                <button class="create-secondary" @click="$router.push('/forum/create')">Write Discussion</button>
+              </div>
+            </div>
+
+            <!-- Discussions List -->
+            <DiscussionThreadList v-else :discussions="filteredDiscussions" />
+
+            <div v-if="filteredDiscussions.length > 0 && !loading && !searchLoading" class="load-more-wrap">
+              <button @click="handleLoadMore" :disabled="loading" class="load-more-btn">
+                <svg v-if="!loading" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span v-if="loading" class="btn-spinner"></span>
+                {{ loading ? 'Loading...' : 'Load More Threads' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Sidebar -->
+          <ForumSidebar />
+        </div>
       </div>
     </div>
     
@@ -254,10 +300,19 @@ const clearFilters = () => {
   background: #fdfcff;
 }
 
-.forum-wrapper {
+.forum-global-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
   max-width: 1280px;
   margin: 0 auto;
   padding: 32px 24px 60px;
+}
+
+.forum-main-container {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Search and Filter Section */
@@ -497,7 +552,7 @@ const clearFilters = () => {
   box-shadow: 0 4px 14px rgba(13, 148, 136, 0.1);
 }
 
-.forum-content {
+.forum-feed-content {
   display: grid;
   grid-template-columns: 1fr 292px;
   gap: 28px;
@@ -747,11 +802,13 @@ const clearFilters = () => {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 1024px) {
-  .forum-content { grid-template-columns: 1fr; }
+  .forum-global-grid { grid-template-columns: 1fr; }
+  .forum-feed-content { grid-template-columns: 1fr; }
+  .left-sidebar-navigation { display: none !important; }
 }
 
 @media (max-width: 640px) {
-  .forum-wrapper { padding: 20px 16px 40px; }
+  .forum-global-grid { padding: 20px 16px 40px; }
   .filter-actions-bar { flex-direction: column; align-items: stretch; gap: 10px; }
   .tabs-group { width: 100%; justify-content: center; }
   .tab-btn { flex: 1; text-align: center; }
