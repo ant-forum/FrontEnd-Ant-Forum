@@ -16,186 +16,129 @@ export const useForumStore = defineStore("forum", {
       if (this.discussions && this.discussions.length > 0) {
         return;
       }
-      console.log("Using mock data for UI testing");
+      
+      // Using static mock data for admin moderation UI
       this.discussions = [
         {
           id: 1,
-          votes: 128,
-          voted: null,
-          category: "question",
-          tags: [
-            { label: "React", color: "blue" },
-            { label: "Performance", color: "orange" },
-          ],
-          title:
-            "Memory Leak when using custom hooks with IntersectionObserver",
-          excerpt:
-            "I've been noticing a steady increase in memory usage when implementing an infinite scroll feature. I suspect my custom useIntersection hook isn't cleaning up properly on component unmount...",
-          author: "@dev_marco",
-          timestamp: "Posted 2h ago",
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          saved: false,
-          hasCode: false,
-          replies: [
-            {
-              author: "@senior_dev",
-              timestamp: "45 mins ago",
-              body: "I highly recommend extracting the logic into a custom hook or composable. It keeps the component clean and makes testing much easier.",
-              likes: 12,
-              likedByUser: false,
-            },
-            {
-              author: "@frontend_wizard",
-              timestamp: "15 mins ago",
-              body: "This is a great question! Make sure you are also checking the dependency array in your watchers to avoid infinite loops.",
-              likes: 8,
-              likedByUser: false,
-            },
-          ],
+          title: 'How to optimize Docker images for Node.js?',
+          category: 'Development / DevOps',
+          author: { name: 'David Smith', avatar: 'https://i.pravatar.cc/150?u=david' },
+          replies: 24,
+          views: 1200,
+          status: 'ACTIVE',
+          statusClass: 'status-active',
+          reports: 0,
+          created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+          description: "I've been working on a project where Docker image sizes are getting out of control. Does anyone have specific tips for Node.js multi-stage builds?"
         },
         {
           id: 2,
-          votes: 85,
-          voted: null,
-          category: "discussion",
-          tags: [
-            { label: "System Design", color: "green" },
-            { label: "Architecture", color: "purple" },
-          ],
-          title:
-            "Architecting a real-time notification system for scale (1M+ concurrent users)",
-          excerpt:
-            "Looking for feedback on a proposed architecture using Redis Pub/Sub, WebSockets, and a set of Go microservices to handle high-throughput...",
-          author: "@sys_admin_sarah",
-          timestamp: "Posted 5h ago",
-          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          saved: false,
-          hasCode: true,
-          code: `// Go snippet example\nfunc (s *Sub) Subscribe(ctx context.Context, channel string) error {\n  pubsub := s.rdb.Subscribe(ctx, channel)\n  defer pubsub.Close()\n  // handle messages...\n}`,
-          replies: [
-            {
-              author: "@gopher_guru",
-              timestamp: "2 hours ago",
-              body: "Using WebSockets with Go microservices is a solid choice. Have you considered using gRPC for high-throughput communication between internal services?",
-              likes: 15,
-              likedByUser: false,
-            },
-            {
-              author: "@scaling_expert",
-              timestamp: "1 hour ago",
-              body: "Redis Pub/Sub might become a bottleneck at 1M+ concurrent users. You might want to evaluate Apache Kafka or NATS for long-term scalability.",
-              likes: 9,
-              likedByUser: false,
-            },
-          ],
+          title: 'Best practices for Vue 3 Composition API in large scale apps',
+          category: 'Frontend / Vue',
+          author: { name: 'Sarah Chen', avatar: 'https://i.pravatar.cc/150?u=sarahc' },
+          replies: 45,
+          views: 3500,
+          status: 'PINNED',
+          statusClass: 'status-pinned',
+          reports: 2,
+          created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+          description: "When building large enterprise applications with Vue 3, should I stick to standard setup scripts or are there better ways to organize composables?"
         },
         {
           id: 3,
-          votes: 42,
-          voted: null,
-          category: "tutorial",
-          tags: [
-            { label: "CSS", color: "pink" },
-            { label: "Tailwind", color: "teal" },
-          ],
-          title:
-            "Best practices for organizing large Tailwind configuration files",
-          excerpt:
-            "As our design system grows, our tailwind.config.js is becoming a monolithic nightmare. How are larger teams structuring and splitting their configs for...",
-          author: "@ui_josh",
-          timestamp: "Posted 1d ago",
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          saved: false,
-          hasCode: false,
-          replies: [
-            {
-              author: "@css_ninja",
-              timestamp: "18 hours ago",
-              body: "We split our Tailwind config into multiple smaller helper files (colors.js, typography.js) and import them into the main config. It works wonderfully!",
-              likes: 6,
-              likedByUser: false,
-            },
-          ],
+          title: 'Is it worth moving from REST to GraphQL in 2024?',
+          category: 'Backend / API',
+          author: { name: 'Marcus Wright', avatar: 'https://i.pravatar.cc/150?u=marcus' },
+          replies: 12,
+          views: 840,
+          status: 'FLAGGED',
+          statusClass: 'status-flagged',
+          reports: 5,
+          created_at: new Date(Date.now() - 24 * 3600000).toISOString(),
+          description: "I'm considering migrating our legacy REST API to GraphQL. Is the overhead of schema definition and tooling worth the performance benefits?"
         },
         {
           id: 4,
-          votes: 310,
-          voted: null,
-          category: "showcase",
-          tags: [
-            { label: "Vue.js", color: "green" },
-            { label: "Pinia", color: "yellow" },
-          ],
-          title:
-            "How to structure Pinia stores in a large modular Vue application?",
-          excerpt:
-            "I am migrating from Vuex to Pinia. The documentation is great, but I am wondering if there are best practices for splitting stores by domain versus keeping them feature-based.",
-          author: "@vue_master",
-          timestamp: "Posted 10m ago",
-          createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-          saved: true,
-          hasCode: false,
-          replies: [],
+          title: 'New security vulnerability found in popular npm package',
+          category: 'Security / Announcements',
+          author: { name: 'Elena Vance', avatar: 'https://i.pravatar.cc/150?u=elena' },
+          replies: 8,
+          views: 2100,
+          status: 'LOCKED',
+          statusClass: 'status-locked',
+          reports: 0,
+          created_at: new Date(Date.now() - 12 * 3600000).toISOString(),
+          description: "Critical security alert: A remote code execution vulnerability was discovered in the 'fast-utils' package. Everyone should update to v2.4.1 immediately."
         },
         {
           id: 5,
-          votes: 5,
-          voted: null,
-          category: "idea",
-          tags: [{ label: "JavaScript", color: "yellow" }],
-          title: "Uncaught TypeError: Cannot read properties of undefined",
-          excerpt:
-            "I keep getting this error when trying to access a deeply nested property in an API response. What is the most elegant way to handle this without optional chaining?",
-          author: "@js_newbie",
-          timestamp: "Posted 1m ago",
-          createdAt: new Date(Date.now() - 1 * 60 * 1000).toISOString(),
-          saved: false,
-          hasCode: true,
-          code: `const user = response.data.user;\nconsole.log(user.profile.settings.theme);`,
-          replies: [],
-        },
+          title: 'Microservices vs Monolith: A practical guide',
+          category: 'Architecture',
+          author: { name: 'James Wilson', avatar: 'https://i.pravatar.cc/150?u=james' },
+          replies: 15,
+          views: 950,
+          status: 'ACTIVE',
+          statusClass: 'status-active',
+          reports: 0,
+          created_at: new Date(Date.now() - 48 * 3600000).toISOString(),
+          description: "When should a startup consider moving to microservices? We discuss the trade-offs in complexity vs scalability."
+        }
       ];
+    },
+
+    getStatusClass(status) {
+      const classes = {
+        'ACTIVE': 'status-active',
+        'PINNED': 'status-pinned',
+        'FLAGGED': 'status-flagged',
+        'LOCKED': 'status-locked'
+      };
+      return classes[status] || 'status-active';
     },
 
     async fetchDiscussion(id) {
       if (this.discussions.length === 0) {
         await this.fetchDiscussions();
       }
+      this.discussion = this.discussions.find(d => d.id == id) || null;
+    },
 
-      const found = this.discussions.find((d) => d.id == id);
+    async togglePin(id) {
+      const discussion = this.discussions.find(d => d.id === id);
+      if (discussion) {
+        const newStatus = discussion.status === 'PINNED' ? 'ACTIVE' : 'PINNED';
+        discussion.status = newStatus;
+        discussion.statusClass = this.getStatusClass(newStatus);
+      }
+    },
 
-      if (found) {
-        // Ensure replies array exists
-        if (!found.replies) {
-          found.replies = [];
-        }
-        this.discussion = found;
-      } else {
-        this.discussion = null;
+    async toggleLock(id) {
+      const discussion = this.discussions.find(d => d.id === id);
+      if (discussion) {
+        const newStatus = discussion.status === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
+        discussion.status = newStatus;
+        discussion.statusClass = this.getStatusClass(newStatus);
       }
     },
 
     async createDiscussion(data) {
-      try {
-        const res = await api.post("/discussions", data);
-        const newD = {
-          ...res.data,
-          replies: res.data.replies || [],
-          voted: null,
-        };
-        this.discussions.unshift(newD);
-      } catch (error) {
-        console.error("Error creating discussion:", error);
-      }
+      const newD = {
+        id: Date.now(),
+        ...data,
+        author: { name: 'Current User', avatar: 'https://i.pravatar.cc/150' },
+        replies: 0,
+        views: 0,
+        status: 'ACTIVE',
+        statusClass: 'status-active',
+        reports: 0,
+        created_at: new Date().toISOString()
+      };
+      this.discussions.unshift(newD);
     },
 
     async deleteDiscussion(id) {
-      try {
-        await api.delete(`/discussions/${id}`);
-        this.discussions = this.discussions.filter((d) => d.id !== id);
-      } catch (error) {
-        console.error("Error deleting discussion:", error);
-      }
+      this.discussions = this.discussions.filter((d) => d.id !== id);
     },
 
     // Reactive reply posting

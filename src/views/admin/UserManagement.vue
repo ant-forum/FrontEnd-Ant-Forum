@@ -4,7 +4,8 @@
     <AdminSidebar />
 
     <!-- Main Content -->
-    <main class="flex-grow-1 p-4 p-lg-5">
+    <main class="admin-main flex-grow-1">
+      <div class="admin-content-wrapper">
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
@@ -20,54 +21,48 @@
       <!-- Metrics Section -->
       <div class="row g-4 mb-5">
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Total Users</p>
-              <h2 class="fw-bold mb-1">{{ users.length }}</h2>
-              <div class="d-flex align-items-center text-success small">
-                <i class="bi bi-graph-up me-1"></i>
-                <span class="fw-bold">+14% from last month</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-purple p-3">
-              <i class="bi bi-people text-purple fs-4"></i>
-            </div>
-          </div>
+          <StatCard
+            label="Total Users"
+            :value="users.length"
+            footer-icon="bi-graph-up"
+            footer-text="+14% from last month"
+            footer-class="text-success"
+            main-icon="bi-people"
+            icon-class="text-purple"
+            bg-class="bg-light-purple"
+          />
         </div>
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Active Today</p>
-              <h2 class="fw-bold mb-1">{{ users.filter(u => u.isOnline).length }}</h2>
-              <div class="d-flex align-items-center text-warning small">
-                <i class="bi bi-lightning-charge-fill me-1"></i>
-                <span class="fw-bold">High server load</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-orange p-3">
-              <i class="bi bi-eye text-orange fs-4"></i>
-            </div>
-          </div>
+          <StatCard
+            label="Active Today"
+            :value="users.filter(u => u.isOnline).length"
+            footer-icon="bi-lightning-charge-fill"
+            footer-text="High server load"
+            footer-class="text-warning"
+            main-icon="bi-eye"
+            icon-class="text-orange"
+            bg-class="bg-light-orange"
+          />
         </div>
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">New Signups</p>
-              <h2 class="fw-bold mb-1">84</h2>
-              <div class="d-flex align-items-center text-purple-light small">
-                <div class="mini-chart me-2 d-flex align-items-end gap-1">
-                  <span class="bar" style="height: 8px;"></span>
-                  <span class="bar" style="height: 12px;"></span>
-                  <span class="bar active" style="height: 16px;"></span>
-                  <span class="bar" style="height: 10px;"></span>
-                </div>
-                <span class="fw-bold">Weekly trend</span>
+          <StatCard
+            label="New Signups"
+            value="84"
+            footer-class="text-purple-light"
+            main-icon="bi-person-plus"
+            icon-class="text-green"
+            bg-class="bg-light-green"
+          >
+            <template #footer>
+              <div class="mini-chart me-2 d-flex align-items-end gap-1">
+                <span class="bar" style="height: 8px;"></span>
+                <span class="bar" style="height: 12px;"></span>
+                <span class="bar active" style="height: 16px;"></span>
+                <span class="bar" style="height: 10px;"></span>
               </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-green p-3">
-              <i class="bi bi-person-plus text-green fs-4"></i>
-            </div>
-          </div>
+              <span class="fw-bold">Weekly trend</span>
+            </template>
+          </StatCard>
         </div>
       </div>
 
@@ -96,6 +91,7 @@
           </div>
         </div>
       </div>
+      </div>
     </main>
   </div>
 </template>
@@ -105,6 +101,7 @@ import { ref, computed } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
 import UserTable from '../../components/admin/UserTable.vue';
 import UserDetailsCard from '../../components/admin/UserDetailsCard.vue';
+import StatCard from '../../components/admin/StatCard.vue';
 
 const searchQuery = ref('');
 const roleFilter = ref('ALL');
@@ -215,23 +212,6 @@ const handleBulkDelete = (ids) => {
   font-family: var(--font-family-base);
 }
 
-.icon-box {
-  width: 52px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bg-light-purple { background-color: rgba(139, 92, 246, 0.1); }
-.text-purple { color: #8b5cf6; }
-
-.bg-light-orange { background-color: rgba(245, 158, 11, 0.1); }
-.text-orange { color: #f59e0b; }
-
-.bg-light-green { background-color: rgba(16, 185, 129, 0.1); }
-.text-green { color: #10b981; }
-
 .icon-circle-large {
   width: 80px;
   height: 80px;
@@ -241,6 +221,8 @@ const handleBulkDelete = (ids) => {
 .bg-light-purple-soft {
   background-color: rgba(139, 92, 246, 0.05);
 }
+
+.text-purple { color: #8b5cf6; }
 
 .mini-chart .bar {
   width: 3px;

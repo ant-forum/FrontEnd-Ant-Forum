@@ -51,17 +51,23 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="thread in threads" :key="thread.id" :class="['cursor-pointer transition-all', thread.reports > 0 ? 'bg-light-red-soft' : '']" @click="$emit('select-thread', thread)">
+          <tr v-for="thread in threads" :key="thread.id" :class="['cursor-pointer transition-all', thread.reports > 0 ? 'bg-light-red-soft' : '', selectedId === thread.id ? 'bg-purple-extra-light' : '']" @click="$emit('select-thread', thread)">
             <td class="ps-4 py-3">
               <div class="d-flex flex-column" style="max-width: 300px;">
                 <span class="fw-bold text-truncate mb-1" style="font-size: 0.95rem;" v-html="highlight(thread.title)"></span>
-                <span class="text-muted small text-truncate" v-html="highlight(thread.category)"></span>
+                <span class="text-muted small text-truncate d-flex align-items-center">
+                  <i class="bi bi-tag me-1"></i>
+                  <span v-html="highlight(thread.category)"></span>
+                </span>
               </div>
             </td>
             <td>
               <div class="d-flex align-items-center">
-                <img :src="thread.author.avatar" :alt="thread.author.name" class="rounded-circle me-2" width="32" height="32">
-                <span class="small fw-medium" v-html="highlight(thread.author.name)"></span>
+                <img :src="thread.author?.avatar || 'https://i.pravatar.cc/150'" :alt="thread.author?.name" class="rounded-circle me-2" width="32" height="32" onerror="this.src='https://i.pravatar.cc/150'">
+                <div class="d-flex flex-column">
+                  <span class="small fw-medium" v-html="highlight(thread.author?.name || 'Unknown')"></span>
+                  <span class="xx-small text-muted">{{ thread.created_at ? new Date(thread.created_at).toLocaleDateString() : '' }}</span>
+                </div>
               </div>
             </td>
             <td>
@@ -95,10 +101,23 @@
     </div>
 
     <div class="card-footer bg-white border-0 p-4 d-flex justify-content-between align-items-center border-top">
-      <small class="text-muted">Showing {{ threads.length }} threads</small>
-      <div class="pagination-buttons d-flex gap-2">
-        <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold">Prev</button>
-        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-brand">Next</button>
+      <small class="text-muted">Showing {{ threads.length }} of {{ totalThreads }} threads</small>
+      <div class="pagination-buttons d-flex gap-2 align-items-center">
+        <button 
+          class="btn btn-light btn-sm rounded-pill px-3 fw-bold" 
+          :disabled="currentPage === 1"
+          @click="$emit('page-change', currentPage - 1)"
+        >
+          <i class="bi bi-chevron-left"></i> Prev
+        </button>
+        <span class="small fw-bold text-muted px-2">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <button 
+          class="btn btn-light btn-sm rounded-pill px-3 fw-bold" 
+          :disabled="currentPage === totalPages || totalPages === 0"
+          @click="$emit('page-change', currentPage + 1)"
+        >
+          Next <i class="bi bi-chevron-right"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -110,12 +129,16 @@ const props = defineProps({
     type: Array,
     required: true
   },
+  totalThreads: Number,
+  currentPage: Number,
+  totalPages: Number,
   searchQuery: String,
   categoryFilter: String,
-  categories: Array
+  categories: Array,
+  selectedId: [Number, String]
 });
 
-defineEmits(['select-thread', 'delete-thread', 'update:searchQuery', 'update:categoryFilter']);
+defineEmits(['select-thread', 'delete-thread', 'update:searchQuery', 'update:categoryFilter', 'page-change']);
 
 const highlight = (text) => {
   if (!props.searchQuery) return text;
@@ -175,6 +198,14 @@ const highlight = (text) => {
 .bg-purple-light {
   background-color: rgba(139, 92, 246, 0.2);
   color: inherit;
+}
+
+.bg-purple-extra-light {
+  background-color: rgba(139, 92, 246, 0.05) !important;
+}
+
+.xx-small {
+  font-size: 0.65rem;
 }
 
 .transition-all {

@@ -4,7 +4,8 @@
     <AdminSidebar />
 
     <!-- Main Content -->
-    <main class="flex-grow-1 p-4 p-lg-5">
+    <main class="admin-main flex-grow-1">
+      <div class="admin-content-wrapper">
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
@@ -15,77 +16,65 @@
 
       <!-- Metrics Section -->
       <div class="row g-4 mb-5">
-        <div class="col-md-3">
-          <div 
-            :class="['metric-card p-4 rounded-4 border bg-white shadow-sm h-100 d-flex justify-content-between align-items-center cursor-pointer transition-all', statusFilter === 'ALL' ? 'active-metric' : '']"
+        <div class="col-md-6 col-lg-3">
+          <StatCard
+            label="Total Projects"
+            :value="totalProjects"
+            description="Active initiatives"
+            descriptionIcon="bi-arrow-up-right"
+            descriptionColorClass="text-success"
+            icon="bi bi-folder"
+            iconBgClass="bg-purple-light"
+            iconColorClass="text-purple"
+            :active="statusFilter === 'ALL'"
+            class="cursor-pointer"
             @click="statusFilter = 'ALL'"
-          >
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Total Projects</p>
-              <h2 class="fw-bold mb-1">{{ totalProjects }}</h2>
-              <div class="d-flex align-items-center text-success small">
-                <i class="bi bi-arrow-up-right me-1"></i>
-                <span class="fw-bold">Active initiatives</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-purple p-3">
-              <i class="bi bi-folder text-purple fs-4"></i>
-            </div>
-          </div>
+          />
         </div>
-        <div class="col-md-3">
-          <div 
-            :class="['metric-card p-4 rounded-4 border bg-white shadow-sm h-100 d-flex justify-content-between align-items-center cursor-pointer transition-all', statusFilter === 'PENDING REVIEW' ? 'active-metric' : '']"
+        <div class="col-md-6 col-lg-3">
+          <StatCard
+            label="Pending"
+            :value="pendingProjects"
+            description="Awaiting approval"
+            descriptionIcon="bi-clock"
+            descriptionColorClass="text-warning"
+            icon="bi bi-clock"
+            iconBgClass="bg-orange-light"
+            iconColorClass="text-orange"
+            :active="statusFilter === 'PENDING REVIEW'"
+            class="cursor-pointer"
             @click="statusFilter = 'PENDING REVIEW'"
-          >
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Pending</p>
-              <h2 class="fw-bold mb-1">{{ pendingProjects }}</h2>
-              <div class="d-flex align-items-center text-warning small">
-                <i class="bi bi-clock-history me-1"></i>
-                <span class="fw-bold">Awaiting approval</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-orange p-3">
-              <i class="bi bi-clock-history text-orange fs-4"></i>
-            </div>
-          </div>
+          />
         </div>
-        <div class="col-md-3">
-          <div 
-            :class="['metric-card p-4 rounded-4 border bg-white shadow-sm h-100 d-flex justify-content-between align-items-center cursor-pointer transition-all', statusFilter === 'ACTIVE' ? 'active-metric' : '']"
+        <div class="col-md-6 col-lg-3">
+          <StatCard
+            label="Live"
+            :value="activeProjects"
+            description="In production"
+            descriptionIcon="bi-lightning-charge"
+            descriptionColorClass="text-teal"
+            icon="bi bi-lightning"
+            iconBgClass="bg-teal-light"
+            iconColorClass="text-teal"
+            :active="statusFilter === 'ACTIVE'"
+            class="cursor-pointer"
             @click="statusFilter = 'ACTIVE'"
-          >
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Live</p>
-              <h2 class="fw-bold mb-1">{{ activeProjects }}</h2>
-              <div class="d-flex align-items-center text-green small">
-                <i class="bi bi-lightning-charge me-1"></i>
-                <span class="fw-bold">In production</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-green p-3">
-              <i class="bi bi-lightning-charge text-green fs-4"></i>
-            </div>
-          </div>
+          />
         </div>
-        <div class="col-md-3">
-          <div 
-            :class="['metric-card p-4 rounded-4 border bg-white shadow-sm h-100 d-flex justify-content-between align-items-center cursor-pointer transition-all', statusFilter === 'FLAGGED' ? 'active-metric' : '']"
+        <div class="col-md-6 col-lg-3">
+          <StatCard
+            label="Alerts"
+            :value="flaggedProjects"
+            description="Requires attention"
+            descriptionIcon="bi-exclamation-triangle"
+            descriptionColorClass="text-danger"
+            icon="bi bi-exclamation-triangle"
+            iconBgClass="bg-red-light"
+            iconColorClass="text-red"
+            :active="statusFilter === 'FLAGGED'"
+            class="cursor-pointer"
             @click="statusFilter = 'FLAGGED'"
-          >
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Alerts</p>
-              <h2 class="fw-bold mb-1">{{ projects.filter(p => p.status === 'FLAGGED').length }}</h2>
-              <div class="d-flex align-items-center text-red small">
-                <i class="bi bi-exclamation-triangle me-1"></i>
-                <span class="fw-bold">Requires attention</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-red p-3">
-              <i class="bi bi-exclamation-triangle text-red fs-4"></i>
-            </div>
-          </div>
+          />
         </div>
       </div>
 
@@ -160,6 +149,7 @@
           Clear All Filters
         </button>
       </div>
+      </div>
     </main>
 
     <!-- Project Detail Modal -->
@@ -177,6 +167,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
+import StatCard from '../../components/admin/StatCard.vue';
 import ProjectCard from '../../components/admin/ProjectCard.vue';
 import ProjectDetailModal from '../../components/admin/ProjectDetailModal.vue';
 
@@ -251,6 +242,7 @@ const projects = ref([
 const totalProjects = computed(() => projects.value.length);
 const pendingProjects = computed(() => projects.value.filter(p => p.status === 'PENDING REVIEW').length);
 const activeProjects = computed(() => projects.value.filter(p => p.status === 'ACTIVE').length);
+const flaggedProjects = computed(() => projects.value.filter(p => p.status === 'FLAGGED').length);
 
 // Filtering and Sorting
 const filteredProjects = computed(() => {
