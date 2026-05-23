@@ -4,154 +4,157 @@
     <AdminSidebar />
 
     <!-- Main Content -->
-    <main class="flex-grow-1 p-4 p-lg-5">
-      <header class="dashboard-header mb-5">
-        <h2 class="fw-bold mb-1">Platform Overview</h2>
-        <p class="text-muted mb-0">Real-time metrics and system health monitoring</p>
-      </header>
+    <main class="admin-main flex-grow-1">
+      <div class="admin-content-wrapper">
+        <header class="dashboard-header mb-5">
+          <h2 class="fw-bold mb-1">Platform Overview</h2>
+          <p class="text-muted mb-0">Real-time metrics and system health monitoring</p>
+        </header>
 
-      <div class="row g-4">
-        <!-- Center Column -->
-        <div class="col-xl-8">
-          <!-- Metrics Row -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-6 col-lg-3">
-              <MetricCard 
-                label="Total Developers" 
-                value="42.5k" 
-                trend="12.4" 
-                trendType="up"
-                icon="bi bi-people-fill"
-              />
-            </div>
-            <div class="col-md-6 col-lg-3">
-              <MetricCard 
-                label="Active Repositories" 
-                value="12.8k" 
-                trend="8.1" 
-                trendType="up"
-                icon="bi bi-journal-bookmark-fill"
-              />
-            </div>
-            <div class="col-md-6 col-lg-3">
-              <MetricCard 
-                label="Community Contributions" 
-                value="8.2k" 
-                trend="24.5" 
-                trendType="up"
-                icon="bi bi-heart-fill"
-              />
-            </div>
-            <div class="col-md-6 col-lg-3">
-              <MetricCard 
-                label="Expert Blogs" 
-                value="3.4k" 
-                trend="1.2" 
-                trendType="down"
-                icon="bi bi-rss-fill"
-              />
-            </div>
-          </div>
-
-          <!-- Platform Engagement Chart -->
-          <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 engagement-card">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <div>
-                <h6 class="fw-bold mb-1">Platform Engagement</h6>
-                <div class="d-flex align-items-center gap-3">
-                  <p class="text-muted small mb-0 d-flex align-items-center">
-                    <span class="live-dot me-2"></span>
-                    Real-time Activity
-                  </p>
-                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill x-small fw-bold">
-                    <i class="bi bi-arrow-up-short"></i> +12.5%
-                  </span>
-                </div>
+        <div class="row g-4">
+          <!-- Center Column -->
+          <div class="col-xl-8">
+            <!-- Metrics Row -->
+            <div class="row g-4 mb-4">
+              <div class="col-md-6 col-lg-4">
+                <StatCard 
+                  label="Total Projects" 
+                  value="4" 
+                  description="Active initiatives"
+                  descriptionIcon="bi-arrow-up-right"
+                  descriptionColorClass="text-success"
+                  icon="bi bi-folder"
+                  iconBgClass="bg-purple-light"
+                  iconColorClass="text-purple"
+                  active
+                />
               </div>
-              <div class="d-flex gap-2">
-                <div class="btn-group btn-group-sm rounded-pill p-1 bg-light">
-                  <button 
-                    v-for="t in ['Year', 'Month', 'Week']" 
-                    :key="t"
-                    @click="activeTimeframe = t"
-                    :class="['btn rounded-pill px-3 transition-all', activeTimeframe === t ? 'btn-white shadow-sm active' : 'btn-transparent text-muted']"
-                  >
-                    {{ t }}
-                  </button>
-                </div>
+              <div class="col-md-6 col-lg-4">
+                <StatCard 
+                  label="Pending" 
+                  value="1" 
+                  description="Awaiting approval"
+                  descriptionIcon="bi-clock"
+                  descriptionColorClass="text-warning"
+                  icon="bi bi-clock"
+                  iconBgClass="bg-orange-light"
+                  iconColorClass="text-orange"
+                />
+              </div>
+              <div class="col-md-6 col-lg-4">
+                <StatCard 
+                  label="Live" 
+                  value="2" 
+                  description="In production"
+                  descriptionIcon="bi-lightning-charge"
+                  descriptionColorClass="text-teal"
+                  icon="bi bi-lightning"
+                  iconBgClass="bg-teal-light"
+                  iconColorClass="text-teal"
+                />
               </div>
             </div>
-            <div class="chart-container rounded-4 bg-dark position-relative" style="height: 300px; overflow: hidden;">
-              <!-- Interactive Chart -->
-              <div class="w-100 h-100 position-relative p-4">
-                <div class="engagement-grid w-100 h-100 position-absolute top-0 start-0"></div>
-                
-                <!-- Data Tooltip (Dynamic) -->
-                <div class="chart-info-overlay position-absolute top-0 start-0 m-4 z-index-5">
-                  <div class="d-flex flex-column">
-                    <span class="text-white-50 xx-small fw-bold text-uppercase">Peak Interaction</span>
-                    <span class="text-white fw-bold h4 mb-0">{{ activeTimeframe === 'Year' ? '12.8k' : activeTimeframe === 'Month' ? '1.2k' : '342' }}</span>
+
+            <!-- Platform Engagement Chart -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 engagement-card">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h6 class="fw-bold mb-1">Platform Engagement</h6>
+                  <div class="d-flex align-items-center gap-3">
+                    <p class="text-muted small mb-0 d-flex align-items-center">
+                      <span class="live-dot me-2"></span>
+                      Real-time Activity
+                    </p>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill x-small fw-bold">
+                      <i class="bi bi-arrow-up-short"></i> +12.5%
+                    </span>
                   </div>
                 </div>
-
-                <svg class="chart-svg w-100 h-100" viewBox="0 0 1000 300" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" style="stop-color:rgba(139, 92, 246, 0.4)" />
-                      <stop offset="100%" style="stop-color:rgba(139, 92, 246, 0)" />
-                    </linearGradient>
-                    <filter id="glow">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                      <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                      </feMerge>
-                    </filter>
-                  </defs>
+                <div class="d-flex gap-2">
+                  <div class="btn-group btn-group-sm rounded-pill p-1 bg-light">
+                    <button 
+                      v-for="t in ['Year', 'Month', 'Week']" 
+                      :key="t"
+                      @click="activeTimeframe = t"
+                      :class="['btn rounded-pill px-3 transition-all', activeTimeframe === t ? 'btn-white shadow-sm active' : 'btn-transparent text-muted']"
+                    >
+                      {{ t }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-container rounded-4 bg-dark position-relative" style="height: 300px; overflow: hidden;">
+                <!-- Interactive Chart -->
+                <div class="w-100 h-100 position-relative p-4">
+                  <div class="engagement-grid w-100 h-100 position-absolute top-0 start-0"></div>
                   
-                  <!-- Background Area -->
-                  <path 
-                    :key="'area-' + activeTimeframe"
-                    class="chart-line-anim" 
-                    :d="chartPaths[activeTimeframe].area" 
-                    fill="url(#chartGradient)"
-                  />
-                  
-                  <!-- Glowing Line -->
-                  <path 
-                    :key="'line-' + activeTimeframe"
-                    class="chart-stroke-anim" 
-                    :d="chartPaths[activeTimeframe].line" 
-                    fill="none" 
-                    stroke="#a78bfa" 
-                    stroke-width="3"
-                    filter="url(#glow)"
-                  />
+                  <!-- Data Tooltip (Dynamic) -->
+                  <div class="chart-info-overlay position-absolute top-0 start-0 m-4 z-index-5">
+                    <div class="d-flex flex-column">
+                      <span class="text-white-50 xx-small fw-bold text-uppercase">Peak Interaction</span>
+                      <span class="text-white fw-bold h4 mb-0">{{ activeTimeframe === 'Year' ? '12.8k' : activeTimeframe === 'Month' ? '1.2k' : '342' }}</span>
+                    </div>
+                  </div>
 
-                  <!-- Interactive Hover Points -->
-                  <g class="chart-points">
-                    <circle 
-                      v-for="(p, i) in chartPaths[activeTimeframe].points" 
-                      :key="i"
-                      :cx="p.x" :cy="p.y" r="4" 
-                      fill="#fff" 
-                      class="pulsing-point-white" 
+                  <svg class="chart-svg w-100 h-100" viewBox="0 0 1000 300" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:rgba(139, 92, 246, 0.4)" />
+                        <stop offset="100%" style="stop-color:rgba(139, 92, 246, 0)" />
+                      </linearGradient>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    
+                    <!-- Background Area -->
+                    <path 
+                      :key="'area-' + activeTimeframe"
+                      class="chart-line-anim" 
+                      :d="chartPaths[activeTimeframe].area" 
+                      fill="url(#chartGradient)"
                     />
-                  </g>
-                </svg>
-                
-                <!-- X-Axis Labels -->
-                <div class="d-flex justify-content-between text-white-50 xx-small fw-bold mt-2 px-2">
-                  <span v-for="label in chartPaths[activeTimeframe].labels" :key="label">{{ label }}</span>
+                    
+                    <!-- Glowing Line -->
+                    <path 
+                      :key="'line-' + activeTimeframe"
+                      class="chart-stroke-anim" 
+                      :d="chartPaths[activeTimeframe].line" 
+                      fill="none" 
+                      stroke="#a78bfa" 
+                      stroke-width="3"
+                      filter="url(#glow)"
+                    />
+
+                    <!-- Interactive Hover Points -->
+                    <g class="chart-points">
+                      <circle 
+                        v-for="(p, i) in chartPaths[activeTimeframe].points" 
+                        :key="i"
+                        :cx="p.x" :cy="p.y" r="4" 
+                        fill="#fff" 
+                        class="pulsing-point-white" 
+                      />
+                    </g>
+                  </svg>
+                  
+                  <!-- X-Axis Labels -->
+                  <div class="d-flex justify-content-between text-white-50 xx-small fw-bold mt-2 px-2">
+                    <span v-for="label in chartPaths[activeTimeframe].labels" :key="label">{{ label }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Right Column -->
-        <div class="col-xl-4">
-          <ActiveSessions />
+          <!-- Right Column -->
+          <div class="col-xl-4">
+            <ActiveSessions />
+          </div>
         </div>
       </div>
     </main>
@@ -161,7 +164,7 @@
 <script setup>
 import { ref } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
-import MetricCard from '../../components/admin/MetricCard.vue';
+import StatCard from '../../components/admin/StatCard.vue';
 import ActiveSessions from '../../components/admin/ActiveSessions.vue';
 
 const activeTimeframe = ref('Year');

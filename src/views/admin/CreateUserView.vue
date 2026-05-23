@@ -4,7 +4,8 @@
     <AdminSidebar />
 
     <!-- Main Content -->
-    <main class="flex-grow-1 p-4 p-lg-5">
+    <main class="admin-main flex-grow-1">
+      <div class="admin-content-wrapper">
       <!-- Header -->
       <header class="mb-4 d-flex justify-content-between align-items-end">
         <div>
@@ -297,6 +298,7 @@
             </div>
           </div>
         </div>
+      </div>
       </div>
     </main>
 

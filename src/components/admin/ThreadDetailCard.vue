@@ -14,12 +14,12 @@
       <h5 class="fw-bold mb-3 lh-base">{{ thread.title }}</h5>
       <div class="author-meta d-flex align-items-center mb-3">
         <div class="position-relative">
-          <img :src="thread.author.avatar" :alt="thread.author.name" class="rounded-circle border border-2 border-white shadow-sm" width="44" height="44">
+          <img :src="thread.author?.avatar || 'https://i.pravatar.cc/150'" :alt="thread.author?.name" class="rounded-circle border border-2 border-white shadow-sm" width="44" height="44" onerror="this.src='https://i.pravatar.cc/150'">
           <span class="status-dot bg-success"></span>
         </div>
         <div class="ms-2">
-          <div class="fw-bold small">{{ thread.author.name }}</div>
-          <div class="text-muted" style="font-size: 0.7rem;">Posted on platform</div>
+          <div class="fw-bold small">{{ thread.author?.name || 'Anonymous' }}</div>
+          <div class="text-muted" style="font-size: 0.7rem;">Posted on {{ thread.created_at ? new Date(thread.created_at).toLocaleDateString() : 'platform' }}</div>
         </div>
       </div>
       <div class="thread-content-preview p-3 rounded-4 bg-light border-start border-4 border-purple text-muted small lh-lg">
