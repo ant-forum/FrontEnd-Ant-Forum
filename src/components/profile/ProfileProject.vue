@@ -9,17 +9,17 @@ const props = defineProps({
 <template>
   <div>
     <div class="dashboard-card-modern p-4 mb-4">
-      <h4 class="fw-bold mb-2">My Projects</h4>
-      <p class="text-muted mb-0">Showcase of web, system design, and API architectures.</p>
+      <h4 class="fw-bold mb-2 header-title">My Projects</h4>
+      <p class="text-muted mb-0 subtitle-text">Showcase of web application architectures, system designs, and microservices.</p>
     </div>
     
     <div class="row g-4">
       <div v-for="project in projects" :key="project.title" class="col-md-6 col-lg-4">
-        <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between shadow-sm">
+        <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
           <div>
             <div class="d-flex justify-content-between align-items-start mb-2">
               <h6 class="fw-bold mb-0 text-dark project-title-v2">{{ project.title }}</h6>
-              <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star"></i> {{ project.stars }}</span>
+              <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
             </div>
             <p class="text-muted small mb-4 line-clamp-3">
               {{ project.desc }}
@@ -39,26 +39,39 @@ const props = defineProps({
 
 <style scoped>
 .dashboard-card-modern {
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+}
+
+.header-title {
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.subtitle-text {
+  font-size: 0.92rem;
 }
 
 .project-card-modern-v2 {
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--radius-xl);
   transition: all var(--transition-base);
+  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.02);
 }
 
 .project-card-modern-v2:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md) !important;
-  border-color: #ddd6fe;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(124, 58, 237, 0.3);
 }
 
 .project-title-v2 {
+  font-size: 0.95rem;
   transition: color var(--transition-base);
 }
 
