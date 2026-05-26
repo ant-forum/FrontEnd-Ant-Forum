@@ -368,7 +368,7 @@ const closePromo = () => {
   font-family: inherit;
   user-select: none;
   padding-right: 12px;
-  border-right: 1px solid rgba(0, 0, 0, 0.04);
+  border-right: 1px solid var(--color-border);
 }
 
 .sidebar-nav-section {
@@ -384,7 +384,7 @@ const closePromo = () => {
   padding: 10px 16px;
   background: transparent;
   border: none;
-  color: #5b6270;
+  color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 600;
   border-radius: 12px;
@@ -401,8 +401,8 @@ const closePromo = () => {
 }
 
 .sidebar-item:hover {
-  background: rgba(99, 102, 241, 0.05);
-  color: #4f46e5;
+  background: var(--color-surface-hover);
+  color: var(--color-primary);
 }
 
 .sidebar-item:hover i {
@@ -410,10 +410,10 @@ const closePromo = () => {
 }
 
 .sidebar-item.active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.06) 100%);
-  color: #6366f1;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
   font-weight: 700;
-  box-shadow: inset 3px 0 0 #6366f1;
+  box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
 /* AI Assist glowing button styling */
@@ -427,7 +427,7 @@ const closePromo = () => {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 60%);
+  background: radial-gradient(circle, var(--color-primary-light) 0%, transparent 60%);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -440,30 +440,30 @@ const closePromo = () => {
 .badge-ai-live {
   font-size: 9px;
   font-weight: 800;
-  background: linear-gradient(135deg, #a855f7, #6366f1);
+  background: linear-gradient(135deg, var(--color-purple), var(--color-primary));
   color: white;
   padding: 1px 5px;
   border-radius: 4px;
   margin-left: auto;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 6px rgba(168, 85, 247, 0.2);
+  box-shadow: 0 2px 6px var(--color-primary-light);
 }
 
 .status-dot {
   width: 6px;
   height: 6px;
-  background: #10b981;
+  background: var(--color-success);
   border-radius: 50%;
   margin-left: auto;
-  box-shadow: 0 0 8px #10b981;
+  box-shadow: 0 0 8px var(--color-success);
 }
 
 /* Section headers */
 .sidebar-section-header {
   font-size: 11px;
   font-weight: 800;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   letter-spacing: 1px;
   padding: 8px 16px 4px 16px;
   margin-top: 10px;
@@ -472,15 +472,15 @@ const closePromo = () => {
 .plus-btn {
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 2px;
   border-radius: 4px;
 }
 
 .plus-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: #4b5563;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 /* Collectives */
@@ -502,7 +502,7 @@ const closePromo = () => {
 }
 
 .collective-item:hover {
-  background: rgba(0,0,0,0.02);
+  background: var(--color-surface-hover);
 }
 
 .collective-item i {
@@ -517,29 +517,30 @@ const closePromo = () => {
 .collective-meta .name {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text);
 }
 
 .collective-meta .sub {
   font-size: 10px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 /* Ant colors */
-.text-green { color: #10b981; }
-.text-blue { color: #3b82f6; }
-.text-amber { color: #f59e0b; }
-.text-indigo { color: #6366f1; }
-.text-emerald { color: #059669; }
-.text-purple { color: #8b5cf6; }
+.text-green { color: var(--color-success); }
+.text-blue { color: var(--color-info); }
+.text-amber { color: var(--color-warning); }
+.text-indigo { color: var(--color-primary); }
+.text-emerald { color: var(--color-success); }
+.text-purple { color: var(--color-purple); }
 
 /* Promotional Banner SO-like */
 .sidebar-promo-banner {
   margin-top: 20px;
   padding: 16px;
-  background: linear-gradient(145deg, #1e1b4b 0%, #0f172a 100%);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
-  color: white;
+  color: var(--color-text);
   position: relative;
   overflow: hidden;
 }
@@ -550,27 +551,27 @@ const closePromo = () => {
   right: 8px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-muted);
   cursor: pointer;
   font-size: 18px;
 }
 
 .close-promo-btn:hover {
-  color: white;
+  color: var(--color-text);
 }
 
 .promo-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #c084fc;
+  color: var(--color-purple);
   font-size: 12px;
   margin-bottom: 8px;
 }
 
 .promo-text {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-text-muted);
   line-height: 1.5;
   margin-bottom: 12px;
 }
@@ -578,18 +579,18 @@ const closePromo = () => {
 .btn-promo-cta {
   width: 100%;
   padding: 8px;
-  background: white;
+  background: var(--color-primary);
   border: none;
-  color: #0f172a;
+  color: white;
   font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-promo-cta:hover {
-  background: #f1f5f9;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
@@ -613,9 +614,9 @@ const closePromo = () => {
   position: relative;
   width: 420px;
   height: 100%;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-surface);
   backdrop-filter: blur(16px);
-  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  border-left: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   animation: slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -658,7 +659,7 @@ const closePromo = () => {
 .pulse-dot {
   width: 6px;
   height: 6px;
-  background: #10b981;
+  background: var(--color-success);
   border-radius: 50%;
   display: inline-block;
   animation: pulse-ring 1.5s infinite;
@@ -714,22 +715,22 @@ const closePromo = () => {
 }
 
 .bot .chat-bubble {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
   border-bottom-left-radius: 4px;
 }
 
 .user .chat-bubble {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
   color: white;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  box-shadow: var(--shadow-sm);
 }
 
 .bubble-time {
   display: block;
   font-size: 9.5px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   margin-top: 4px;
   text-align: right;
 }
@@ -749,7 +750,7 @@ const closePromo = () => {
 .typing-indicator span {
   width: 6px;
   height: 6px;
-  background: #9ca3af;
+  background: var(--color-text-muted);
   border-radius: 50%;
   animation: typing-bounce 1s infinite ease-in-out;
 }
@@ -765,15 +766,15 @@ const closePromo = () => {
 /* Quick FAQ section */
 .ai-chat-quick-prompts {
   padding: 16px 24px;
-  background: #fdfbf7;
-  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
 }
 
 .prompts-title {
   display: block;
   font-size: 12px;
   font-weight: 700;
-  color: #8b5cf6;
+  color: var(--color-purple);
   margin-bottom: 10px;
 }
 
@@ -787,30 +788,30 @@ const closePromo = () => {
   padding: 6px 12px;
   font-size: 11.5px;
   font-weight: 600;
-  color: #4b5563;
-  background: white;
-  border: 1px solid rgba(229, 231, 235, 0.8);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 100px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .prompt-pill-btn:hover {
-  background: #faf5ff;
-  border-color: #d8b4fe;
-  color: #7c3aed;
+  background: var(--color-purple-light);
+  border-color: var(--color-purple);
+  color: var(--color-purple);
 }
 
 /* Chat bottom input */
 .ai-chat-footer {
   padding: 16px 24px 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--color-border);
 }
 
 .chat-input-wrapper {
   display: flex;
   align-items: center;
-  background: #f3f4f6;
+  background: var(--color-surface-hover);
   border-radius: 14px;
   padding: 4px 6px;
   border: 1px solid transparent;
@@ -818,9 +819,9 @@ const closePromo = () => {
 }
 
 .chat-input-wrapper:focus-within {
-  border-color: #6366f1;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: var(--focus-ring);
 }
 
 .chat-input {
@@ -829,7 +830,7 @@ const closePromo = () => {
   background: transparent;
   padding: 10px 12px;
   font-size: 13.5px;
-  color: #1f2937;
+  color: var(--color-text);
 }
 
 .chat-input:focus {

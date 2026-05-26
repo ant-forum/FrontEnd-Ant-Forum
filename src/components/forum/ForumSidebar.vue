@@ -29,9 +29,10 @@ import TopContributors from './TopContributors.vue';
 }
 
 .sidebar-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 18px;
   padding: 18px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 </style>

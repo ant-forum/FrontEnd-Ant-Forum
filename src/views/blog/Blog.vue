@@ -118,15 +118,15 @@ const featuredPost = allPosts.value[0];
                 <span class="dot"></span>
                 <span class="badge-text text-uppercase">Developer Blog</span>
               </div>
-              <h2 class="display-5 fw-bold text-dark-blue mb-3">Technical Insights & Engineering Patterns</h2>
-              <p class="soft-description mb-4">
+              <h2 class="display-5 fw-bold text-adaptive mb-3">Technical Insights & Engineering Patterns</h2>
+              <p class="soft-description mb-4 text-muted">
                 Deep dives into architecture, performance optimization, and modern development workflows from our engineering community.
               </p>
               
               <div class="d-flex align-items-center gap-3 flex-wrap">
                 <div class="search-box-soft position-relative flex-grow-1" style="max-width: 400px;">
                   <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                  <input v-model="searchQuery" type="text" class="form-control rounded-pill ps-5 py-2 border-0 shadow-sm" placeholder="Search articles...">
+                  <input v-model="searchQuery" type="text" class="form-control rounded-pill ps-5 py-2 border-0 shadow-sm bg-surface" placeholder="Search articles...">
                 </div>
               </div>
             </div>
@@ -136,7 +136,7 @@ const featuredPost = allPosts.value[0];
 
       <!-- Featured Article Hero Section -->
       <div v-if="featuredPost && selectedCategory === 'All' && !searchQuery" class="mb-5 featured-section">
-        <h4 class="fw-bold text-dark-blue mb-4 d-flex align-items-center gap-2">
+        <h4 class="fw-bold text-adaptive mb-4 d-flex align-items-center gap-2">
           <i class="bi bi-lightning-charge-fill text-warning"></i> Featured Article
         </h4>
         <router-link :to="'/blog/' + featuredPost.id" class="text-decoration-none">
@@ -146,20 +146,20 @@ const featuredPost = allPosts.value[0];
                 <img :src="featuredPost.image" class="featured-hero-img" alt="Featured article">
                 <div class="featured-overlay-gradient"></div>
               </div>
-              <div class="col-lg-5 d-flex flex-column justify-content-center p-4 p-lg-5 bg-white">
+              <div class="col-lg-5 d-flex flex-column justify-content-center p-4 p-lg-5 bg-surface">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                  <span class="badge bg-purple-subtle text-purple rounded-pill px-3 py-1 font-xs fw-bold text-uppercase">
+                  <span class="badge bg-purple-light text-purple rounded-pill px-3 py-1 font-xs fw-bold text-uppercase">
                     {{ featuredPost.category }}
                   </span>
                   <span class="text-muted font-xs fw-medium">{{ featuredPost.date }}</span>
                 </div>
-                <h2 class="display-6 fw-bold text-dark mb-3 featured-title">{{ featuredPost.title }}</h2>
+                <h2 class="display-6 fw-bold text-adaptive mb-3 featured-title">{{ featuredPost.title }}</h2>
                 <p class="text-muted mb-4 featured-desc">{{ featuredPost.description }}</p>
-                <div class="d-flex align-items-center justify-content-between mt-auto pt-4 border-top">
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-4 border-top-theme">
                   <div class="author-info d-flex align-items-center gap-2">
-                    <img :src="featuredPost.author_avatar" class="rounded-circle border" width="32" height="32">
+                    <img :src="featuredPost.author_avatar" class="rounded-circle border border-theme" width="32" height="32">
                     <div>
-                      <div class="font-sm text-dark fw-bold">{{ featuredPost.author }}</div>
+                      <div class="font-sm text-adaptive fw-bold">{{ featuredPost.author }}</div>
                       <div class="font-xs text-muted">{{ featuredPost.readTime }} read</div>
                     </div>
                   </div>
@@ -188,7 +188,7 @@ const featuredPost = allPosts.value[0];
           </div>
           
           <div class="filter-dropdown">
-            <select v-model="sortBy" class="form-select rounded-pill px-4 py-2 border-0 shadow-sm text-muted fw-medium" style="width: 180px; background-color: #f8fafc;">
+            <select v-model="sortBy" class="form-select rounded-pill px-4 py-2 border-0 shadow-sm text-muted fw-medium bg-surface-hover" style="width: 180px;">
               <option value="latest">Latest First</option>
               <option value="popular">Most Viewed</option>
             </select>
@@ -208,7 +208,7 @@ const featuredPost = allPosts.value[0];
             v-for="tag in allTags" 
             :key="tag"
             @click="selectedTag = tag"
-            :class="['btn btn-xs rounded-pill px-3 py-1 transition-all', selectedTag === tag ? 'btn-purple-subtle text-purple' : 'btn-outline-secondary border-0 opacity-75']"
+            :class="['btn btn-xs rounded-pill px-3 py-1 transition-all', selectedTag === tag ? 'btn-purple-light text-purple' : 'btn-outline-secondary border-0 opacity-75']"
           >
             #{{ tag }}
           </button>
@@ -217,7 +217,7 @@ const featuredPost = allPosts.value[0];
 
       <!-- Blog Grid Section Title -->
       <div class="mb-4 d-flex align-items-center justify-content-between">
-        <h4 class="fw-bold text-dark-blue mb-0">
+        <h4 class="fw-bold text-adaptive mb-0">
           {{ selectedCategory === 'All' ? 'Latest Publications' : selectedCategory + ' Articles' }}
         </h4>
         <div class="text-muted font-sm">{{ filteredPosts.length }} Articles found</div>
@@ -234,10 +234,10 @@ const featuredPost = allPosts.value[0];
         
         <div v-for="post in filteredPosts" :key="post.id" class="col-md-6 col-xl-4">
           <router-link :to="'/blog/' + post.id" class="text-decoration-none h-100 d-block">
-            <article class="card border-0 shadow-sm rounded-4 h-100 blog-card-soft transition-up overflow-hidden bg-white">
+            <article class="card border-0 shadow-sm rounded-4 h-100 blog-card-soft transition-up overflow-hidden bg-surface">
               <div class="post-image-container position-relative overflow-hidden">
                 <img :src="post.image" class="card-img-top object-fit-cover post-img-zoom" height="240">
-                <div class="post-category-tag position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill bg-white/90 backdrop-blur-sm shadow-sm">
+                <div class="post-category-tag position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill bg-surface-blur backdrop-blur-sm shadow-sm">
                   <span class="font-xs fw-bold text-purple text-uppercase">{{ post.category }}</span>
                 </div>
               </div>
@@ -250,7 +250,7 @@ const featuredPost = allPosts.value[0];
                   <span class="mx-1">•</span>
                   <i class="bi bi-heart"></i> {{ post.likes }}
                 </div>
-                <h5 class="fw-bold mb-2 text-dark blog-title-soft line-clamp-2">{{ post.title }}</h5>
+                <h5 class="fw-bold mb-2 text-adaptive blog-title-soft line-clamp-2">{{ post.title }}</h5>
                 
                 <!-- Card Tags -->
                 <div class="d-flex flex-wrap gap-1 mb-3">
@@ -259,10 +259,10 @@ const featuredPost = allPosts.value[0];
                 
                 <p class="text-muted small mb-4 line-clamp-2">{{ post.description }}</p>
                 
-                <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
+                <div class="d-flex align-items-center justify-content-between pt-3 border-top-theme mt-auto">
                   <div class="author-info d-flex align-items-center gap-2">
-                    <img :src="post.author_avatar" class="rounded-circle" width="28" height="28">
-                    <span class="font-sm text-dark fw-bold">{{ post.author }}</span>
+                    <img :src="post.author_avatar" class="rounded-circle border-theme" width="28" height="28">
+                    <span class="font-sm text-adaptive fw-bold">{{ post.author }}</span>
                   </div>
                   <div class="read-more-link text-purple font-sm fw-bold">
                     Read <i class="bi bi-arrow-right ms-1"></i>
@@ -276,15 +276,15 @@ const featuredPost = allPosts.value[0];
 
       <!-- Newsletter Soft Section -->
       <div class="mt-5 pt-5">
-        <div class="newsletter-card-soft rounded-5 p-4 p-lg-5 text-center position-relative overflow-hidden">
+        <div class="newsletter-card-soft rounded-5 p-4 p-lg-5 text-center position-relative overflow-hidden border">
           <div class="position-relative z-2">
-            <h3 class="fw-bold text-dark-blue mb-2">Engineering Weekly</h3>
+            <h3 class="fw-bold text-adaptive mb-2">Engineering Weekly</h3>
             <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
               Subscribe to get the latest technical patterns and community highlights delivered to your inbox.
             </p>
             <div class="d-flex justify-content-center mx-auto" style="max-width: 450px;">
-              <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white">
-                <input type="email" class="form-control border-0 ps-4 py-3" placeholder="your@email.com">
+              <div class="input-group shadow-sm rounded-pill overflow-hidden bg-surface border">
+                <input type="email" class="form-control border-0 ps-4 py-3 bg-transparent" placeholder="your@email.com">
                 <button class="btn btn-purple px-4 fw-bold" type="button">Subscribe</button>
               </div>
             </div>
@@ -300,9 +300,9 @@ const featuredPost = allPosts.value[0];
 <style scoped>
 .blog-layout {
   min-height: 100vh;
-  background: #fdfcff;
+  background: var(--color-bg);
   font-family: 'Sora', sans-serif;
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 .blog-wrapper {
@@ -314,8 +314,8 @@ const featuredPost = allPosts.value[0];
 /* Featured Card Styles */
 .featured-card-premium {
   min-height: 400px;
-  background: white;
-  border: 1px solid #f1f5f9;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border) !important;
 }
 
 .featured-hero-img {
@@ -335,7 +335,7 @@ const featuredPost = allPosts.value[0];
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--color-shadow) 100%);
   pointer-events: none;
 }
 
@@ -359,9 +359,9 @@ const featuredPost = allPosts.value[0];
 
 /* Soft Banner Styles */
 .blog-banner-soft {
-  background-color: #f8f7ff;
+  background-color: var(--color-surface-hover);
   min-height: 300px;
-  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+  border: 1px solid var(--color-border) !important;
 }
 
 .soft-blob {
@@ -374,7 +374,7 @@ const featuredPost = allPosts.value[0];
 .blob-left {
   width: 300px;
   height: 300px;
-  background: rgba(139, 92, 246, 0.08);
+  background: var(--glow-purple);
   top: -100px;
   left: -50px;
 }
@@ -382,7 +382,7 @@ const featuredPost = allPosts.value[0];
 .blob-right {
   width: 400px;
   height: 400px;
-  background: rgba(168, 85, 247, 0.12);
+  background: var(--glow-pink);
   bottom: -150px;
   right: -100px;
 }
@@ -391,7 +391,7 @@ const featuredPost = allPosts.value[0];
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #ede9ff;
+  background: var(--color-purple-light);
   padding: 6px 16px;
   border-radius: 100px;
 }
@@ -399,41 +399,42 @@ const featuredPost = allPosts.value[0];
 .soft-badge .dot {
   width: 6px;
   height: 6px;
-  background-color: #7c3aed;
+  background-color: var(--color-purple);
   border-radius: 50%;
 }
 
 .soft-badge .badge-text {
-  color: #7c3aed;
+  color: var(--color-purple);
   font-weight: 700;
   font-size: 0.7rem;
   letter-spacing: 0.05em;
 }
 
-.text-dark-blue {
-  color: #1e1b4b;
+.text-adaptive {
+  color: var(--color-text) !important;
 }
 
 .soft-description {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 1rem;
   line-height: 1.6;
   max-width: 600px;
 }
 
 .search-box-soft input {
-  background: white;
+  background: var(--color-surface);
+  color: var(--color-text);
   transition: all 0.3s ease;
 }
 
 /* Pills & Filters */
 .btn-purple {
-  background-color: #7c3aed;
+  background-color: var(--color-purple);
   color: white;
 }
 
 .btn-purple:hover {
-  background-color: #6d28d9;
+  background-color: var(--color-purple-hover, #6d28d9);
 }
 
 .transition-all {
@@ -442,14 +443,14 @@ const featuredPost = allPosts.value[0];
 
 /* Blog Cards */
 .blog-card-soft {
-  background: white;
-  border: 1px solid #f1f5f9 !important;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border) !important;
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .blog-card-soft:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
 .post-image-container {
@@ -471,17 +472,47 @@ const featuredPost = allPosts.value[0];
 }
 
 .blog-card-soft:hover .blog-title-soft {
-  color: #7c3aed;
+  color: var(--color-purple);
 }
 
 .text-purple {
-  color: #7c3aed;
+  color: var(--color-purple);
 }
 
 /* Newsletter */
 .newsletter-card-soft {
-  background-color: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+}
+
+.bg-surface-blur {
+  background-color: var(--color-surface);
+  opacity: 0.9;
+}
+
+.border-top-theme {
+  border-top: 1px solid var(--color-border) !important;
+}
+
+.border-theme {
+  border-color: var(--color-border) !important;
+}
+
+.font-xs { font-size: 0.75rem; }
+.font-xxs { font-size: 0.65rem; }
+.font-sm { font-size: 0.875rem; }
+
+.btn-xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+}
+
+.bg-surface {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-surface-hover {
+  background-color: var(--color-surface-hover) !important;
 }
 
 .font-xs { font-size: 0.75rem; }

@@ -213,7 +213,7 @@ const recentThreads = [
       <div class="container py-lg-5">
         <div class="row g-4">
           <div v-for="feature in features" :key="feature.title" class="col-lg-4">
-            <div class="feature-card p-4 rounded-4 bg-white border h-100 transition-up">
+            <div class="feature-card p-4 rounded-4 bg-surface border h-100 transition-up">
               <div class="icon-box mb-4" :style="{ color: feature.color, background: feature.color + '15' }">
                 <i :class="['bi', feature.icon]"></i>
               </div>
@@ -225,7 +225,7 @@ const recentThreads = [
       </div>
     </section>
 
-    <section class="showcase-preview-section py-5 bg-light-subtle">
+    <section class="showcase-preview-section py-5 bg-surface-alt">
       <div class="container py-lg-5">
         <div class="d-flex justify-content-between align-items-end mb-5">
           <div>
@@ -239,7 +239,7 @@ const recentThreads = [
 
         <div class="row g-4">
           <div v-for="project in latestProjects" :key="project.title" class="col-lg-4">
-            <div class="project-card rounded-4 overflow-hidden bg-white border-0 h-100 shadow-sm transition-up">
+            <div class="project-card rounded-4 overflow-hidden bg-surface border-0 h-100 shadow-sm transition-up">
               <!-- Project Image with Hover Overlay -->
               <div class="project-image position-relative">
                 <img :src="project.image" :alt="project.title" class="img-fluid w-100 object-fit-cover" style="height: 240px;">
@@ -265,9 +265,9 @@ const recentThreads = [
                 </div>
                 <p class="text-muted small mb-4 line-clamp-2">{{ project.desc }}</p>
                 
-                <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+                <div class="d-flex align-items-center justify-content-between pt-3 border-top theme-border">
                   <div class="d-flex align-items-center gap-2">
-                    <img :src="project.avatar" :alt="project.author" class="rounded-circle border border-2 border-white shadow-sm" width="32" height="32">
+                    <img :src="project.avatar" :alt="project.author" class="rounded-circle border border-2 border-surface shadow-sm" width="32" height="32">
                     <span class="fw-semibold small">{{ project.author }}</span>
                   </div>
                   <div class="text-muted small">
@@ -294,7 +294,7 @@ const recentThreads = [
         </div>
 
         <div class="forum-container">
-          <div v-for="thread in recentThreads" :key="thread.title" class="forum-thread-row p-3 p-md-4 mb-3 transition-up">
+          <div v-for="thread in recentThreads" :key="thread.title" class="forum-thread-row p-3 p-md-4 mb-3 transition-up border theme-border">
             <div class="row align-items-center">
               <!-- Solved Status Column -->
               <div class="col-auto d-none d-md-block">
@@ -315,7 +315,7 @@ const recentThreads = [
               </div>
 
               <!-- Author & Stats Column -->
-              <div class="col-lg-3 col-md-4 mt-3 mt-md-0 border-start-md ps-md-4">
+              <div class="col-lg-3 col-md-4 mt-3 mt-md-0 border-start-md ps-md-4 theme-border-start">
                 <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-4">
                   <div class="d-flex align-items-center gap-2">
                     <img :src="thread.avatar" :alt="thread.author" class="author-thumb" width="28" height="28">
@@ -343,11 +343,11 @@ const recentThreads = [
 
     <section class="cta-section py-5 my-5">
       <div class="container">
-        <div class="cta-card p-5 rounded-5 bg-dark text-white text-center position-relative overflow-hidden">
+        <div class="cta-card p-5 rounded-5 text-center position-relative overflow-hidden">
           <div class="glow-bg glow-purple opacity-25" style="top: -50%; left: -20%;"></div>
           <div class="position-relative z-3">
-            <h2 class="display-5 fw-black mb-3">Ready to contribute?</h2>
-            <p class="lead opacity-75 mb-4">Join 2,000+ developers building the future of open software.</p>
+            <h2 class="display-5 fw-black mb-3 text-white">Ready to contribute?</h2>
+            <p class="lead opacity-75 mb-4 text-white">Join 2,000+ developers building the future of open software.</p>
             <div class="d-flex justify-content-center gap-3">
               <button class="btn btn-primary rounded-pill px-5 py-3 fw-bold">Join Community</button>
               <button class="btn btn-outline-light rounded-pill px-5 py-3 fw-bold">Browse Forum</button>
@@ -377,7 +377,32 @@ const recentThreads = [
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  color: #0f172a;
+  color: var(--color-text);
+  background: var(--color-bg);
+  transition: background-color var(--transition-slow), color var(--transition-slow);
+}
+
+.glow-bg {
+  position: absolute;
+  width: 40vw;
+  height: 40vw;
+  filter: blur(120px);
+  border-radius: 50%;
+  opacity: 0.1;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.glow-pink {
+  background: var(--color-purple);
+  top: -10%;
+  left: -10%;
+}
+
+.glow-purple {
+  background: var(--color-primary);
+  bottom: 20%;
+  right: -10%;
 }
 
 /* Hero Section */
@@ -388,6 +413,7 @@ const recentThreads = [
   justify-content: center;
   padding-top: 120px;
   min-height: 85vh;
+  background: var(--color-bg);
 }
 
 .hero-content {
@@ -400,14 +426,14 @@ const recentThreads = [
   font-size: clamp(2.5rem, 8vw, 5.5rem);
   font-weight: 900;
   line-height: 1.05;
-  color: #0f172a;
+  color: var(--color-text);
   letter-spacing: -0.04em;
   margin-bottom: 1.5rem;
 }
 
 .hero-subtitle {
   font-size: 1.15rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   line-height: 1.6;
   margin-bottom: 2.5rem;
   max-width: 800px;
@@ -415,14 +441,14 @@ const recentThreads = [
 
 /* Action Buttons */
 .btn-white-pill {
-  background: white !important;
-  color: #0f172a !important;
-  border: none !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
 }
 
 .btn-dark-pill {
-  background: #0f172a !important;
-  color: white !important;
+  background: var(--color-text) !important;
+  color: var(--color-bg) !important;
   border: none !important;
 }
 
@@ -438,17 +464,19 @@ const recentThreads = [
 
 .floating-card {
   position: absolute;
-  background: white;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 14px 20px;
   pointer-events: auto;
   z-index: 10;
+  box-shadow: var(--shadow-md);
 }
 
 .floating-pill {
   position: absolute;
-  background: #0f172a;
-  color: white;
+  background: var(--color-text);
+  color: var(--color-bg);
   border-radius: 50px;
   padding: 10px 20px;
   font-size: 0.9rem;
@@ -458,6 +486,7 @@ const recentThreads = [
   gap: 12px;
   pointer-events: auto;
   z-index: 10;
+  box-shadow: var(--shadow-md);
 }
 
 /* Positions matching the image */
@@ -476,8 +505,9 @@ const recentThreads = [
 .tech-lead-card {
   top: 38%;
   right: 15%;
-  background: #8b5cf6;
+  background: var(--color-purple);
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 28px;
   padding: 24px;
   width: 250px;
@@ -493,28 +523,36 @@ const recentThreads = [
 .contributor-pill {
   bottom: 40%;
   right: 18%;
+  background: var(--color-purple);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: float 8s ease-in-out infinite 1.5s;
+}
+
+.contributor-pill {
+  bottom: 40%;
+  right: 18%;
   background: #8b5cf6;
   animation: float 8s ease-in-out infinite 1.5s;
 }
 
 /* Card Details */
 .avatar-img { width: 44px; height: 44px; border-radius: 50%; }
-.sarah-card .name { font-weight: 800; font-size: 0.95rem; color: #1e293b; }
-.sarah-card .date { font-size: 0.75rem; color: #94a3b8; }
-.accent-line { width: 24px; height: 3px; background: #8b5cf6; margin-top: 5px; border-radius: 2px; }
+.sarah-card .name { font-weight: 800; font-size: 0.95rem; color: var(--color-text); }
+.sarah-card .date { font-size: 0.75rem; color: var(--color-text-muted); }
+.accent-line { width: 24px; height: 3px; background: var(--color-purple); margin-top: 5px; border-radius: 2px; }
 
 .icon-circle { 
   width: 36px; height: 36px; 
-  background: #eff6ff; 
+  background: var(--color-primary-light); 
   border-radius: 50%; 
   display: flex; 
   align-items: center; 
   justify-content: center;
-  color: #3b82f6;
+  color: var(--color-primary);
 }
-.alex-card .name { font-weight: 800; font-size: 0.95rem; color: #1e293b; }
-.alex-card .status { font-size: 0.75rem; color: #94a3b8; }
-.accent-line-green { width: 34px; height: 3px; background: #22c55e; margin-top: 5px; border-radius: 2px; }
+.alex-card .name { font-weight: 800; font-size: 0.95rem; color: var(--color-text); }
+.alex-card .status { font-size: 0.75rem; color: var(--color-text-muted); }
+.accent-line-green { width: 34px; height: 3px; background: var(--color-success); margin-top: 5px; border-radius: 2px; }
 
 .pill-avatar { width: 26px; height: 26px; border-radius: 50%; }
 .check-icon { color: white; font-size: 1.2rem; display: flex; align-items: center; }
@@ -522,7 +560,7 @@ const recentThreads = [
 .tech-lead-card .small-text { font-size: 0.8rem; opacity: 0.9; font-weight: 500; }
 .tech-lead-card .title { font-size: 1.35rem; font-weight: 800; margin-top: 4px; }
 .tags-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.tag { background: rgba(255,255,255,0.15); padding: 5px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
+.tag { background: rgba(255,255,255,0.2); padding: 5px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
 .time-row { background: rgba(0,0,0,0.15); padding: 10px 14px; border-radius: 14px; font-size: 0.85rem; display: flex; align-items: center; font-weight: 500; }
 
 /* Sponsors */
@@ -530,22 +568,27 @@ const recentThreads = [
   height: 28px;
   max-width: 150px;
   object-fit: contain;
-  filter: grayscale(100%) contrast(0.5);
+  filter: grayscale(100%) brightness(0.8) contrast(0.5);
+  transition: filter var(--transition-base);
+}
+
+[data-theme='dark'] .sponsor-logo {
+  filter: grayscale(100%) invert(1) brightness(0.9);
 }
 
 /* Footer */
 .custom-footer {
-  border-color: #f1f0f5 !important;
+  border-color: var(--color-border) !important;
 }
 
 .footer-link {
-  color: #1e293b;
+  color: var(--color-text-muted);
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: color 0.2s;
 }
 
 .footer-link:hover {
-  opacity: 0.7;
+  color: var(--color-primary);
 }
 
 @keyframes float {
@@ -554,13 +597,32 @@ const recentThreads = [
 }
 
 /* New Section Styles */
+.bg-surface {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-surface-alt {
+  background-color: var(--color-bg) !important;
+}
+
+.theme-border {
+  border-color: var(--color-border) !important;
+}
+
+.theme-border-start {
+  border-left: 1px solid var(--color-border) !important;
+}
+
 .feature-card {
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border) !important;
 }
 
 .feature-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary) !important;
 }
 
 .icon-box {
@@ -575,11 +637,13 @@ const recentThreads = [
 
 .project-card {
   transition: all 0.3s ease;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border) !important;
 }
 
 .project-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-lg);
 }
 
 .project-image {
@@ -600,7 +664,7 @@ const recentThreads = [
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6));
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8));
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -610,9 +674,9 @@ const recentThreads = [
 }
 
 .btn-glass-blur {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   color: white !important;
 }
 
@@ -630,10 +694,11 @@ const recentThreads = [
 .project-title-link {
   cursor: pointer;
   transition: color 0.2s;
+  color: var(--color-text);
 }
 
 .project-card:hover .project-title-link {
-  color: #8b5cf6;
+  color: var(--color-primary);
 }
 
 .line-clamp-2 {
@@ -644,48 +709,53 @@ const recentThreads = [
 }
 
 .btn-view-all {
-  border: 2px solid #0f172a !important;
-  color: #0f172a !important;
+  border: 2px solid var(--color-text) !important;
+  color: var(--color-text) !important;
   transition: all 0.3s ease;
+  background: transparent !important;
 }
 
 .btn-view-all:hover {
-  background: #0f172a !important;
-  color: white !important;
+  background: var(--color-text) !important;
+  color: var(--color-bg) !important;
 }
 
 .cta-card {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%) !important;
+}
+
+[data-theme='dark'] .cta-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%) !important;
 }
 
 .forum-thread-card {
   cursor: pointer;
-  border-color: #f1f0f5 !important;
+  border-color: var(--color-border) !important;
 }
 
 .forum-thread-card:hover {
-  border-color: #8b5cf6 !important;
+  border-color: var(--color-primary) !important;
 }
 
 .forum-thread-row {
-  background: white;
-  border: 1px solid #f1f0f5;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .forum-thread-row:hover {
-  border-color: #8b5cf6;
-  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.08);
+  border-color: var(--color-primary);
+  box-shadow: 0 10px 30px var(--color-primary-light);
 }
 
 .status-indicator {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: #f8fafc;
-  color: #64748b;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -693,13 +763,13 @@ const recentThreads = [
 }
 
 .status-indicator.solved {
-  background: #f0fdf4;
-  color: #22c55e;
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
 .category-tag {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
   padding: 2px 10px;
   border-radius: 6px;
   font-size: 0.7rem;
@@ -709,8 +779,8 @@ const recentThreads = [
 }
 
 .badge-hot {
-  background: #fff7ed;
-  color: #ea580c;
+  background: var(--color-warning-light);
+  color: var(--color-warning);
   padding: 2px 10px;
   border-radius: 6px;
   font-size: 0.7rem;
@@ -721,18 +791,18 @@ const recentThreads = [
 .thread-title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-text);
   transition: color 0.2s;
 }
 
 .forum-thread-row:hover .thread-title {
-  color: #8b5cf6;
+  color: var(--color-primary);
 }
 
 .author-thumb {
   border-radius: 50%;
-  border: 2px solid white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border: 2px solid var(--color-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .stats-group {
@@ -747,7 +817,7 @@ const recentThreads = [
 
 .stat-item .count {
   font-weight: 800;
-  color: #1e293b;
+  color: var(--color-text);
   font-size: 0.9rem;
 }
 
@@ -755,11 +825,11 @@ const recentThreads = [
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .border-start-md {
-  border-left: 1px solid #f1f0f5;
+  border-left: 1px solid var(--color-border);
 }
 
 .line-clamp-1 {
@@ -775,6 +845,10 @@ const recentThreads = [
 
 .transition-up:hover {
   transform: translateY(-5px);
+}
+
+.section-title {
+  color: var(--color-text);
 }
 
 .fw-black { font-weight: 900; }

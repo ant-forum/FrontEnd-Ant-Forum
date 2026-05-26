@@ -147,19 +147,19 @@ const props = defineProps({
 
 <style scoped>
 .dashboard-card-modern {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-surface);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
 }
 
 .profile-hero-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+  background: var(--color-surface);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
 }
@@ -171,18 +171,18 @@ const props = defineProps({
   left: 0;
   width: 100%;
   height: 4px;
-  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
+  background: linear-gradient(90deg, var(--color-purple) 0%, var(--color-primary) 100%);
 }
 
 .profile-avatar-wrapper img {
-  border: 3px solid #ffffff;
-  box-shadow: 0 8px 20px -6px rgba(124, 58, 237, 0.25);
+  border: 3px solid var(--color-surface);
+  box-shadow: 0 8px 20px -6px var(--color-purple-light);
   transition: all var(--transition-base);
 }
 
 .profile-avatar-wrapper:hover img {
   transform: scale(1.02);
-  box-shadow: 0 12px 24px -4px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 12px 24px -4px var(--color-purple-light);
 }
 
 .status-indicator-dot {
@@ -191,69 +191,70 @@ const props = defineProps({
   right: 4px;
   width: 16px;
   height: 16px;
-  background-color: #10b981;
-  border: 3px solid #ffffff;
+  background-color: var(--color-success);
+  border: 3px solid var(--color-surface);
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 0 3px var(--color-success-light);
 }
 
 .profile-name {
-  color: #0f172a;
+  color: var(--color-text);
   letter-spacing: -0.5px;
   font-weight: 800;
 }
 
 .role-badge-overview {
   display: inline-block;
-  background: rgba(124, 58, 237, 0.08);
-  color: #7c3aed;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   padding: 0.3rem 0.8rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(124, 58, 237, 0.15);
+  border: 1px solid var(--color-purple-light);
 }
 
 .text-primary-purple {
-  color: #7c3aed;
+  color: var(--color-purple);
 }
 
 .bio-text {
   font-size: 0.92rem;
   line-height: 1.6;
-  color: #475569 !important;
+  color: var(--color-text-muted) !important;
 }
 
 .header-title {
-  color: #0f172a;
+  color: var(--color-text);
   letter-spacing: -0.3px;
 }
 
 /* Projects Section */
 .project-card-modern-v2 {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-surface);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   transition: all var(--transition-base);
-  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-sm);
 }
 
 .project-card-modern-v2:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08) !important;
-  border-color: rgba(124, 58, 237, 0.3);
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--color-purple-light);
 }
 
 .project-title-v2 {
   font-size: 0.95rem;
   transition: color var(--transition-base);
+  color: var(--color-text);
 }
 
 .project-card-modern-v2:hover .project-title-v2 {
-  color: #7c3aed !important;
+  color: var(--color-purple) !important;
 }
 
 .tag-badge-v2 {
@@ -265,32 +266,32 @@ const props = defineProps({
   letter-spacing: 0.5px;
 }
 
-.tag-badge-v2.react { background: #e0f2fe; color: #0369a1; }
-.tag-badge-v2.webgpu { background: #fdf2f8; color: #be185d; }
-.tag-badge-v2.typescript { background: #eff6ff; color: #1d4ed8; }
-.tag-badge-v2.go { background: #ecfeff; color: #0891b2; }
-.tag-badge-v2.redis { background: #fef2f2; color: #dc2626; }
-.tag-badge-v2.grpc { background: #f5f3ff; color: #6d28d9; }
+.tag-badge-v2.react { background: var(--color-tag-blue-bg); color: var(--color-tag-blue-text); }
+.tag-badge-v2.webgpu { background: var(--color-tag-pink-bg); color: var(--color-tag-pink-text); }
+.tag-badge-v2.typescript { background: var(--color-tag-indigo-bg); color: var(--color-tag-indigo-text); }
+.tag-badge-v2.go { background: var(--color-tag-cyan-bg); color: var(--color-tag-cyan-text); }
+.tag-badge-v2.redis { background: var(--color-tag-red-bg); color: var(--color-tag-red-text); }
+.tag-badge-v2.grpc { background: var(--color-tag-purple-bg); color: var(--color-tag-purple-text); }
 
 /* Timeline Activity */
 .activity-row-modern {
-  background: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.7);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   transition: all var(--transition-base);
-  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.01);
+  box-shadow: var(--shadow-sm);
 }
 
 .activity-row-modern:hover {
-  border-color: rgba(124, 58, 237, 0.3);
+  border-color: var(--color-purple-light);
   transform: translateX(4px);
-  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-md);
 }
 
 .activity-icon-container {
   width: 38px;
   height: 38px;
-  background: rgba(124, 58, 237, 0.08);
+  background: var(--color-purple-light);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -306,32 +307,32 @@ const props = defineProps({
 .proficiency-label {
   font-size: 0.75rem;
   font-weight: 800;
-  color: #475569;
+  color: var(--color-text-muted);
 }
 
 .proficiency-percentage {
   font-size: 0.75rem;
   font-weight: 800;
-  color: #7c3aed;
+  color: var(--color-purple);
 }
 
 .proficiency-progress {
   height: 6px;
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
 .proficiency-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
+  background: linear-gradient(90deg, var(--color-purple) 0%, var(--color-primary) 100%);
   border-radius: var(--radius-pill);
-  box-shadow: 0 0 8px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 0 8px var(--color-purple-light);
 }
 
 .language-badge {
-  background: #eff6ff;
-  color: #1e40af;
+  background: var(--color-tag-indigo-bg);
+  color: var(--color-tag-indigo-text);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 4px 12px;
@@ -340,12 +341,13 @@ const props = defineProps({
 }
 
 .language-badge:hover {
-  background: #dbeafe;
+  background: var(--color-tag-indigo-bg);
+  filter: brightness(0.9);
   transform: scale(1.05);
 }
 
 .border-slate {
-  border-color: #f1f5f9;
+  border-color: var(--color-border-soft);
 }
 
 .line-clamp-3 {

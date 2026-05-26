@@ -57,7 +57,7 @@ onMounted(() => {
 
     <main class="flex-grow-1">
       <section
-        class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden text-white"
+        class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden"
       >
         <div class="position-absolute top-0 start-0 w-100 h-100 dark-bg"></div>
         <div class="position-absolute glow-spot glow-blue"></div>
@@ -66,20 +66,20 @@ onMounted(() => {
         <div class="container position-relative z-3 py-5">
           <div class="text-center">
             <h1
-              class="display-1 fw-black mb-4 tracking-tight hero-title text-uppercase"
+              class="display-1 fw-black mb-4 tracking-tight hero-title text-uppercase hero-text-color"
             >
               Engineering <span class="text-glow-pink">Clarity</span> in a
               <br />
               <span class="text-glow-blue">Complex Ecosystem</span>
             </h1>
 
-            <p class="lead mx-auto mb-5 opacity-75" style="max-width: 800px">
+            <p class="lead mx-auto mb-5 opacity-75 hero-text-color" style="max-width: 800px">
               Deep dives into systems architecture, frontend performance, and
               the operational patterns that scale modern applications.
             </p>
 
             <div
-              class="d-flex justify-content-center gap-4 mb-5 align-items-center"
+              class="d-flex justify-content-center gap-4 mb-5 align-items-center hero-text-color"
             >
               <div class="text-start">
                 <div
@@ -244,11 +244,16 @@ onMounted(() => {
 /* THEME CORE */
 .hero-section {
   min-height: 75vh;
-  background: #050a14;
+  background: var(--hero-bg-2);
   position: relative;
+  transition: background-color var(--transition-slow);
 }
 .dark-bg {
-  background: radial-gradient(circle at center, #0a192f 0%, #050a14 100%);
+  background: radial-gradient(circle at center, var(--hero-bg-1) 0%, var(--hero-bg-2) 100%);
+  transition: background var(--transition-slow);
+}
+.hero-text-color {
+  color: var(--hero-text);
 }
 .fw-black {
   font-weight: 900;
@@ -281,9 +286,9 @@ onMounted(() => {
 }
 
 .modern-input {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(0, 242, 255, 0.2) !important;
-  color: white !important;
+  background: var(--color-input-bg) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
   font-size: 0.9rem;
   letter-spacing: 0;
   transition:
@@ -293,15 +298,14 @@ onMounted(() => {
 }
 
 .modern-input:focus {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: #00f2ff !important;
-  box-shadow:
-    0 0 0 3px rgba(0, 242, 255, 0.2),
-    0 0 15px rgba(0, 242, 255, 0.3) !important;
+  background: var(--color-surface) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--focus-ring) !important;
 }
 
 .modern-input::placeholder {
-  color: rgba(0, 242, 255, 0.4);
+  color: var(--color-text-muted);
+  opacity: 0.6;
 }
 
 /* Fixed Typing Cursor */
@@ -312,8 +316,8 @@ onMounted(() => {
   transform: translateY(-50%);
   width: 2px;
   height: 1.2rem;
-  background: #00f2ff;
-  box-shadow: 0 0 8px #00f2ff;
+  background: var(--color-info);
+  box-shadow: 0 0 8px var(--color-info-light);
   animation: blink 1s infinite;
   pointer-events: none;
 }
@@ -332,12 +336,12 @@ onMounted(() => {
 
 /* GLOW EFFECTS */
 .text-glow-pink {
-  color: #ff5e95;
-  text-shadow: 0 0 15px rgba(255, 94, 149, 0.4);
+  color: var(--color-purple);
+  text-shadow: 0 0 15px var(--color-purple-light);
 }
 .text-glow-blue {
-  color: #00f2ff;
-  text-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+  color: var(--color-info);
+  text-shadow: 0 0 15px var(--color-info-light);
 }
 
 .glow-spot {
@@ -350,19 +354,19 @@ onMounted(() => {
   z-index: 1;
 }
 .glow-blue {
-  background: #00d2ff;
+  background: var(--color-info);
   top: -10%;
   left: -10%;
 }
 .glow-pink {
-  background: #ff0080;
+  background: var(--color-purple);
   bottom: -10%;
   right: -10%;
 }
 
 .btn-glow {
-  border: 1px solid #00f2ff;
-  color: #00f2ff;
+  border: 1px solid var(--color-info);
+  color: var(--color-info);
   transition:
     background-color var(--transition-base),
     color var(--transition-base),
@@ -372,15 +376,15 @@ onMounted(() => {
 .btn-glow:focus-visible {
   outline: none;
   box-shadow:
-    0 0 0 3px rgba(0, 242, 255, 0.2),
-    0 0 20px rgba(0, 242, 255, 0.55);
+    0 0 0 3px var(--color-info-light),
+    0 0 20px var(--color-info);
 }
 
 @media (hover: hover) {
   .btn-glow:hover {
-    background: #00f2ff;
-    color: #050a14 !important;
-    box-shadow: 0 0 20px #00f2ff;
+    background: var(--color-info);
+    color: var(--color-bg) !important;
+    box-shadow: 0 0 20px var(--color-info);
     transform: translateY(-1px);
   }
 }
@@ -389,11 +393,16 @@ onMounted(() => {
 .metric-divider {
   width: 1px;
   height: 35px;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--color-glass-border);
 }
 .glass-panel {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-glass-bg);
   backdrop-filter: blur(10px);
+  border: 1px solid var(--color-glass-border) !important;
+  transition: background var(--transition-base), border-color var(--transition-base);
+}
+.border-bottom {
+  border-bottom-color: var(--color-border) !important;
 }
 .mt-n5 {
   margin-top: -60px !important;

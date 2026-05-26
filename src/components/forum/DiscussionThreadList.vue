@@ -9,14 +9,14 @@ defineProps({
 const forumStore = useForumStore();
 
 const tagColorMap = {
-  blue:   { bg: '#dbeafe', color: '#1d4ed8' },
-  orange: { bg: '#ffedd5', color: '#c2410c' },
-  green:  { bg: '#dcfce7', color: '#15803d' },
-  purple: { bg: '#ede9fe', color: '#7c3aed' },
-  pink:   { bg: '#fce7f3', color: '#be185d' },
-  teal:   { bg: '#ccfbf1', color: '#0f766e' },
-  red:    { bg: '#fee2e2', color: '#dc2626' },
-  gray:   { bg: '#f3f4f6', color: '#374151' },
+  blue:   { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
+  orange: { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' }, // mapping orange to pink for now or adding more variables
+  green:  { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  purple: { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
+  pink:   { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
+  teal:   { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  red:    { bg: 'var(--color-tag-red-bg)', color: 'var(--color-tag-red-text)' },
+  gray:   { bg: 'var(--color-surface-hover)', color: 'var(--color-text-muted)' },
 };
 
 const categoryMap = {
@@ -160,19 +160,19 @@ function handleVote(id, direction) {
 
 .thread-card {
   display: flex;
-  background: white;
+  background: var(--color-surface);
   border-radius: 18px;
+  border: 1px solid var(--color-border);
   overflow: hidden;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(229, 231, 235, 0.6);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
 }
 
 .thread-card:hover {
-  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.08);
-  border-color: rgba(168, 85, 247, 0.25);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-purple-light);
 }
 
 /* Vote Column styling */
@@ -184,8 +184,8 @@ function handleVote(id, direction) {
   padding: 22px 10px;
   gap: 3px;
   min-width: 52px;
-  background: rgba(250, 249, 255, 0.7);
-  border-right: 1px solid rgba(229, 231, 235, 0.5);
+  background: var(--color-bg);
+  border-right: 1px solid var(--color-border);
   transition: all 0.25s ease;
   cursor: default;
 }
@@ -206,31 +206,31 @@ function handleVote(id, direction) {
   justify-content: center;
   border: none;
   background: transparent;
-  color: #a78bfa;
+  color: var(--color-purple);
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .vote-btn:hover {
-  background: rgba(124, 58, 237, 0.08);
-  color: #7c3aed;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
 }
 
 .vote-btn.up.active {
-  background: rgba(37, 99, 235, 0.1);
-  color: #2563eb;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .vote-btn.down.active {
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
 }
 
 .vote-num {
   font-size: 15px;
   font-weight: 800;
-  color: #1f1030;
+  color: var(--color-text);
   text-align: center;
   padding: 2px 0;
   line-height: 1;
@@ -238,11 +238,11 @@ function handleVote(id, direction) {
 }
 
 .vote-num.voted-up {
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .vote-num.voted-down {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 /* Content */
@@ -292,12 +292,12 @@ function handleVote(id, direction) {
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  background: rgba(124, 58, 237, 0.08);
-  color: #7c3aed;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
   font-size: 11px;
   font-weight: 700;
   border-radius: 100px;
-  border: 1px solid rgba(168, 85, 247, 0.15);
+  border: 1px solid var(--color-purple-light);
 }
 
 .tag-chip {
@@ -310,36 +310,36 @@ function handleVote(id, direction) {
 
 .thread-time {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
 .thread-time em {
   font-style: normal;
-  color: #7c3aed;
+  color: var(--color-purple);
   font-weight: 700;
 }
 
 /* Title */
 .thread-title {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 800;
-  color: #111827;
+  margin: 0 0 6px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
   line-height: 1.4;
-  transition: color 0.18s ease;
+  transition: color 0.2s;
 }
 
 .thread-card:hover .thread-title {
-  color: #7c3aed;
+  color: var(--color-purple);
 }
 
 /* Excerpt */
 .thread-excerpt {
-  margin: 0;
-  font-size: 13.5px;
-  color: #6b7280;
-  line-height: 1.65;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 18px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

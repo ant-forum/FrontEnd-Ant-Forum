@@ -95,11 +95,11 @@ const handleSubmit = () => {
         <!-- Review Content Section -->
         <div class="col-lg-8">
           <!-- Project Summary Card -->
-          <div class="review-section-card p-4 rounded-4 border mb-4 bg-white shadow-sm transition-up">
-            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+          <div class="review-section-card p-4 rounded-4 border mb-4 bg-surface border shadow-sm transition-up">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom-theme">
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-info-circle text-primary"></i>
-                <h6 class="fw-bold mb-0">Project Identity</h6>
+                <h6 class="fw-bold mb-0 text-adaptive">Project Identity</h6>
               </div>
               <button @click="router.push('/showcase/create')" class="btn btn-link-custom text-decoration-none small fw-bold p-0">
                 <i class="bi bi-pencil-square me-1"></i> Edit
@@ -111,7 +111,7 @@ const handleSubmit = () => {
                 <img :src="projectData.assets.logo" class="w-100 h-100 object-fit-cover" alt="Logo">
               </div>
               <div class="flex-grow-1">
-                <h4 class="fw-bold mb-1 text-dark">{{ projectData.projectName }}</h4>
+                <h4 class="fw-bold mb-1 text-adaptive">{{ projectData.projectName }}</h4>
                 <p class="text-primary fw-semibold mb-3">{{ projectData.tagline }}</p>
                 <div class="d-flex flex-wrap gap-3">
                   <div class="info-badge-modern">
@@ -126,18 +126,18 @@ const handleSubmit = () => {
               </div>
             </div>
 
-            <div class="description-review-modern p-3 rounded-3 bg-light-subtle border">
+            <div class="description-review-modern p-3 rounded-3 bg-surface-hover border">
               <label class="xx-small text-uppercase fw-bold text-muted mb-2 d-block tracking-wider">Project Description</label>
               <p class="text-muted small mb-0 lh-lg">{{ projectData.description }}</p>
             </div>
           </div>
 
           <!-- Visual Assets Review -->
-          <div class="review-section-card p-4 rounded-4 border mb-4 bg-white shadow-sm transition-up">
-            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+          <div class="review-section-card p-4 rounded-4 border mb-4 bg-surface border shadow-sm transition-up">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom-theme">
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-images text-primary"></i>
-                <h6 class="fw-bold mb-0">Visual Presence</h6>
+                <h6 class="fw-bold mb-0 text-adaptive">Visual Presence</h6>
               </div>
               <button @click="router.push('/showcase/create/assets')" class="btn btn-link-custom text-decoration-none small fw-bold p-0">
                 <i class="bi bi-pencil-square me-1"></i> Edit
@@ -181,7 +181,7 @@ const handleSubmit = () => {
           </div>
 
           <!-- Navigation Buttons -->
-          <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+          <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top-theme">
             <button @click="handleBack" class="btn btn-link-custom text-decoration-none fw-bold p-0">
               <i class="bi bi-chevron-left me-1"></i> Back to Assets
             </button>
@@ -195,10 +195,10 @@ const handleSubmit = () => {
 
         <!-- Sidebar Checklist -->
         <aside class="col-lg-4">
-          <div class="card border-0 shadow-sm rounded-5 p-4 bg-white sticky-top" style="top: 100px;">
+          <div class="card border-0 shadow-sm rounded-5 p-4 bg-surface border sticky-top" style="top: 100px;">
             <div class="d-flex align-items-center gap-2 mb-4 text-success">
               <i class="bi bi-shield-check"></i>
-              <h6 class="fw-bold mb-0 text-dark">Ready to Submit?</h6>
+              <h6 class="fw-bold mb-0 text-adaptive">Ready to Submit?</h6>
             </div>
 
             <div class="checklist-items d-flex flex-column gap-4">
@@ -207,13 +207,13 @@ const handleSubmit = () => {
                   <i class="bi bi-check2"></i>
                 </div>
                 <div>
-                  <div class="fw-bold small mb-1">{{ item.label }}</div>
+                  <div class="fw-bold small mb-1 text-adaptive">{{ item.label }}</div>
                   <p class="text-muted xx-small mb-0">{{ item.desc }}</p>
                 </div>
               </div>
             </div>
 
-            <div class="mt-5 pt-4 border-top">
+            <div class="mt-5 pt-4 border-top-theme">
               <div class="d-flex align-items-center gap-2 text-muted x-small">
                 <i class="bi bi-clock-history"></i>
                 <span>Review typically takes 2-3 days</span>
@@ -225,7 +225,7 @@ const handleSubmit = () => {
     </main>
 
     <!-- Footer -->
-    <footer class="container-fluid py-4 px-lg-5 border-top bg-white">
+    <footer class="container-fluid py-4 px-lg-5 border-top-theme bg-surface">
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
         <div class="text-muted small fw-bold">© 2024 ANT-Forum Ecosystem. Built for developers.</div>
         <div class="footer-links d-flex gap-4">
@@ -242,16 +242,17 @@ const handleSubmit = () => {
 
 <style scoped>
 .review-project-page {
-  background-color: #f8fafc;
-  color: #1e293b;
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
 /* Stepper Modern (Shared with Steps 1 & 2) */
 .stepper-modern {
-  background: white;
+  background: var(--color-surface);
   padding: 24px;
   border-radius: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
 }
 
 .step-modern-item {
@@ -266,27 +267,28 @@ const handleSubmit = () => {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 1rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid transparent;
+  border: 2px solid var(--color-border);
 }
 
 .step-modern-item.active .step-modern-circle {
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
-  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+  border-color: var(--color-primary);
+  box-shadow: 0 10px 15px -3px var(--color-primary-light);
 }
 
 .step-modern-item.current .step-modern-circle {
-  border-color: #6366f1;
-  background: white;
-  color: #6366f1;
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-primary);
 }
 
 .step-modern-content {
@@ -299,39 +301,39 @@ const handleSubmit = () => {
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .step-modern-name {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .step-modern-item.active .step-modern-name {
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 .step-modern-line {
   flex-grow: 1;
   height: 2px;
-  background: #f1f5f9;
+  background: var(--color-border);
   margin: 0 20px;
 }
 
 .step-modern-item.active .step-modern-line {
-  background: #e2e8f0;
+  background: var(--color-primary-light);
 }
 
 /* Review Cards Modern */
 .review-section-card {
-  background: white;
+  background: var(--color-surface);
 }
 
 .review-logo-preview-modern {
   width: 100px;
   height: 100px;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-hover);
 }
 
 .info-badge-modern {
@@ -339,26 +341,26 @@ const handleSubmit = () => {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   border-radius: 8px;
   font-size: 0.85rem;
-  color: #475569;
+  color: var(--color-text-muted);
   font-weight: 600;
 }
 
 .description-review-modern {
-  background-color: #f8fafc;
+  background-color: var(--color-surface-hover);
 }
 
 .asset-preview-rect-modern {
   aspect-ratio: 16 / 9;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-hover);
 }
 
 .screenshot-preview-modern {
   width: 180px;
   aspect-ratio: 16 / 10;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-hover);
 }
 
 .screenshot-scroll-modern::-webkit-scrollbar {
@@ -366,30 +368,30 @@ const handleSubmit = () => {
 }
 
 .screenshot-scroll-modern::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   border-radius: 10px;
 }
 
 .screenshot-scroll-modern::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--color-border);
   border-radius: 10px;
 }
 
 /* Agreement Card */
 .agreement-card-modern {
-  background: #f8fafc;
+  background: var(--color-surface-hover);
   transition: all 0.3s ease;
 }
 
 .agreement-card-modern.agreed {
-  background: #f0f9ff;
-  border-color: #0ea5e9 !important;
+  background: var(--color-primary-light);
+  border-color: var(--color-primary) !important;
 }
 
 .custom-checkbox {
   width: 20px;
   height: 20px;
-  border: 2px solid #cbd5e1;
+  border: 2px solid var(--color-border);
   border-radius: 6px;
 }
 
@@ -405,39 +407,39 @@ const handleSubmit = () => {
 }
 
 .bg-success-light {
-  background-color: #ecfdf5;
+  background-color: var(--color-success-light);
 }
 
 /* Buttons */
 .btn-submit-modern {
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
   border: none;
-  box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 14px 0 var(--color-primary-light);
   transition: all 0.3s ease;
 }
 
 .btn-submit-modern:hover:not(:disabled) {
-  background: #4f46e5;
+  background: var(--color-primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 6px 20px var(--color-primary-light);
 }
 
 .btn-submit-modern:disabled {
-  background-color: #e2e8f0;
-  color: #94a3b8;
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
   cursor: not-allowed;
   box-shadow: none;
 }
 
 .btn-link-custom {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   transition: color 0.2s;
 }
 
 .btn-link-custom:hover {
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
 .transition-up {
@@ -446,16 +448,11 @@ const handleSubmit = () => {
 
 .transition-up:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
-/* Utility */
-.x-small { font-size: 0.85rem; }
-.xx-small { font-size: 0.75rem; }
-.tracking-wider { letter-spacing: 0.05em; }
-
-@media (max-width: 991px) {
-  .step-modern-line { display: none; }
-  .step-modern-name { display: none; }
-}
+.bg-surface { background-color: var(--color-surface) !important; }
+.border-bottom-theme { border-bottom: 1px solid var(--color-border) !important; }
+.border-top-theme { border-top: 1px solid var(--color-border) !important; }
+.text-adaptive { color: var(--color-text) !important; }
 </style>

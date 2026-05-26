@@ -341,7 +341,7 @@ const setupCopyButtons = () => {
 <style scoped>
 .thread-replies-page {
   min-height: 100vh;
-  background: #fdfcff;
+  background: var(--color-bg);
 }
 
 .replies-page-grid-layout {
@@ -374,8 +374,8 @@ const setupCopyButtons = () => {
   align-items: center;
   gap: 8px;
   background: transparent;
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  color: #4b5563;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
   font-weight: 600;
   font-size: 13.5px;
   cursor: pointer;
@@ -383,13 +383,13 @@ const setupCopyButtons = () => {
   padding: 8px 16px;
   border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+  box-shadow: var(--shadow-sm);
 }
 
 .back-btn:hover {
-  background: #faf5ff;
-  border-color: #d8b4fe;
-  color: #7c3aed;
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
   transform: translateX(-2px);
 }
 
@@ -400,11 +400,11 @@ const setupCopyButtons = () => {
 }
 
 .main-thread {
-  background: white;
+  background: var(--color-surface);
   border-radius: 20px;
   padding: 36px;
-  border: 1px solid rgba(229, 231, 235, 0.7);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   position: relative;
 }
 
@@ -432,18 +432,18 @@ const setupCopyButtons = () => {
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  background: rgba(124, 58, 237, 0.08);
-  color: #7c3aed;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
   font-size: 11px;
   font-weight: 700;
   border-radius: 100px;
-  border: 1px solid rgba(168, 85, 247, 0.15);
+  border: 1px solid var(--color-purple-light);
 }
 
 .thread-title {
   font-size: 28px;
   font-weight: 800;
-  color: #111827;
+  color: var(--color-text);
   margin: 0 0 20px;
   line-height: 1.35;
   letter-spacing: -0.5px;
@@ -458,7 +458,7 @@ const setupCopyButtons = () => {
   align-items: center;
   gap: 14px;
   padding-bottom: 20px;
-  border-bottom: 1px solid rgba(243, 244, 246, 0.8);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .thread-avatar {
@@ -472,7 +472,7 @@ const setupCopyButtons = () => {
   font-weight: bold;
   font-size: 18px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  border: 2px solid white;
+  border: 2px solid var(--color-surface);
 }
 
 .thread-user-info {
@@ -483,18 +483,18 @@ const setupCopyButtons = () => {
 
 .thread-meta .author {
   font-weight: 700;
-  color: #111827;
+  color: var(--color-text);
   font-size: 15px;
 }
 
 .thread-meta .time {
   font-size: 12.5px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 .thread-body {
   font-size: 16px;
-  color: #374151;
+  color: var(--color-text);
   line-height: 1.75;
   margin-bottom: 24px;
 }
@@ -506,13 +506,13 @@ const setupCopyButtons = () => {
 .reply-body :deep(font[face="monospace"]),
 .thread-body :deep(span[style*="monospace"]),
 .reply-body :deep(span[style*="monospace"]) {
-  background-color: #f3f4f6 !important;
+  background-color: var(--color-surface-hover) !important;
   padding: 3px 6px !important;
   border-radius: 6px !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   font-size: 13.5px !important;
-  color: #dc2626 !important;
-  border: 1px solid #e5e7eb !important;
+  color: var(--color-danger) !important;
+  border: 1px solid var(--color-border) !important;
 }
 
 .thread-body :deep(pre),
@@ -540,7 +540,7 @@ const setupCopyButtons = () => {
 /* Floating copy code buttons inside pre blocks */
 :deep(pre .copy-code-btn) {
   position: absolute;
-  top: 10px;
+  top: 10px; 
   right: 10px;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
@@ -568,12 +568,12 @@ const setupCopyButtons = () => {
 
 .thread-body :deep(blockquote),
 .reply-body :deep(blockquote) {
-  border-left: 4px solid #c084fc !important;
-  background: rgba(192, 132, 252, 0.03);
+  border-left: 4px solid var(--color-purple) !important;
+  background: var(--color-purple-light);
   margin: 18px 0 !important;
   padding: 10px 18px !important;
   border-radius: 0 10px 10px 0;
-  color: #4b5563 !important;
+  color: var(--color-text-muted) !important;
 }
 
 /* Premium embedded table styling */
@@ -584,22 +584,23 @@ const setupCopyButtons = () => {
   margin: 18px 0;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
 }
 
 .thread-body :deep(th), .thread-body :deep(td),
 .reply-body :deep(th), .reply-body :deep(td) {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
   padding: 12px 16px;
   text-align: left;
+  color: var(--color-text);
 }
 
 .thread-body :deep(th),
 .reply-body :deep(th) {
-  background-color: #faf9ff;
+  background-color: var(--color-surface-hover);
   font-weight: 700;
-  color: #1f2937;
+  color: var(--color-text);
 }
 
 .thread-code-block {
@@ -634,8 +635,8 @@ const setupCopyButtons = () => {
 .tag-badge {
   font-size: 12.5px;
   font-weight: 700;
-  color: #7c3aed;
-  background: rgba(124, 58, 237, 0.05);
+  color: var(--color-purple);
+  background: var(--color-purple-light);
   padding: 4px 12px;
   border-radius: 8px;
 }
@@ -645,7 +646,7 @@ const setupCopyButtons = () => {
   align-items: center;
   justify-content: space-between;
   padding-top: 20px;
-  border-top: 1px dashed rgba(229, 231, 235, 0.8);
+  border-top: 1px dashed var(--color-border);
 }
 
 .vote-actions {
@@ -660,161 +661,160 @@ const setupCopyButtons = () => {
   gap: 6px;
   padding: 8px 16px;
   border-radius: 10px;
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  background: white;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .vote-action-btn i {
   font-size: 14px;
-  color: #d1d5db;
+  color: var(--color-border);
   transition: color 0.2s ease;
 }
 
 .vote-action-btn:hover {
-  background: #f9fafb;
-  color: #1f2937;
-  border-color: #cbd5e1;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border-color: var(--color-primary);
 }
 
 .vote-action-btn.up.active {
-  background: rgba(37, 99, 235, 0.05);
-  color: #2563eb;
-  border-color: rgba(37, 99, 235, 0.2);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .vote-action-btn.up.active i {
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .vote-action-btn.down.active {
-  background: rgba(220, 38, 38, 0.05);
-  color: #dc2626;
-  border-color: rgba(220, 38, 38, 0.2);
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .vote-action-btn.down.active i {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 .vote-count-num {
   font-size: 15px;
   font-weight: 800;
-  color: #1f2937;
+  color: var(--color-text);
   min-width: 24px;
   text-align: center;
 }
 
 .vote-count-num.voted-up {
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .vote-count-num.voted-down {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 .action-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(124, 58, 237, 0.05);
-  border: 1px solid rgba(168, 85, 247, 0.15);
-  color: #7c3aed;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 8px 16px;
+  padding: 8px 18px;
   border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .action-btn:hover {
-  background: rgba(124, 58, 237, 0.1);
-  transform: translateY(-1px);
+  background: var(--color-surface-hover);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
-/* Replies Section styling */
+/* Replies section */
 .replies-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 10px;
+  margin-top: 24px;
 }
 
 .replies-section h2 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
-  color: #111827;
-  margin: 10px 0 0;
-  padding-left: 2px;
+  color: var(--color-text);
+  margin-bottom: 20px;
+  letter-spacing: -0.3px;
 }
 
 .reply-list-container {
   position: relative;
+  padding-left: 20px;
 }
 
-/* Sleek connector timeline thread lines */
 .timeline-line {
   position: absolute;
-  left: 20px;
-  top: 10px;
-  bottom: 20px;
+  left: 0;
+  top: 0;
+  bottom: 0;
   width: 2px;
-  background: rgba(124, 58, 237, 0.08);
-  pointer-events: none;
+  background: var(--color-border-soft);
 }
 
 .reply-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+}
+
+.no-replies {
+  padding: 32px;
+  background: var(--color-surface);
+  border-radius: 16px;
+  color: var(--color-text-muted);
+  text-align: center;
+  font-size: 14px;
+  border: 1px dashed var(--color-border);
 }
 
 .reply-card {
-  background: white;
-  border-radius: 18px;
-  padding: 24px 28px;
-  border: 1px solid rgba(229, 231, 235, 0.6);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.01);
-  position: relative;
-  z-index: 1;
+  background: var(--color-surface);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
-  animation: slide-up-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slide-up-in {
-  0% { transform: translateY(12px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
 }
 
 .reply-card:hover {
-  border-color: rgba(168, 85, 247, 0.2);
-  box-shadow: 0 4px 20px rgba(124,58,237,0.03);
+  border-color: var(--color-primary-light);
+  transform: translateX(4px);
 }
 
 .reply-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .reply-avatar {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 15px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-  border: 2px solid white;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1.5px solid var(--color-surface);
 }
 
 .reply-user-info {
@@ -824,27 +824,26 @@ const setupCopyButtons = () => {
 
 .reply-author {
   font-weight: 700;
-  font-size: 14.5px;
-  color: #1f2937;
+  color: var(--color-text);
+  font-size: 14px;
 }
 
 .reply-time {
-  font-size: 12px;
-  color: #9ca3af;
+  font-size: 11.5px;
+  color: var(--color-text-muted);
 }
 
 .reply-body {
-  font-size: 15px;
-  color: #4b5563;
-  line-height: 1.65;
-  margin-bottom: 16px;
+  font-size: 14.5px;
+  color: var(--color-text);
+  line-height: 1.6;
+  margin-bottom: 14px;
 }
 
 .reply-actions {
   display: flex;
-  gap: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(243, 244, 246, 0.6);
+  align-items: center;
+  gap: 14px;
 }
 
 .like-btn {
@@ -852,52 +851,41 @@ const setupCopyButtons = () => {
   align-items: center;
   gap: 6px;
   background: transparent;
-  border: 1px solid transparent;
-  color: #9ca3af;
+  border: none;
+  color: var(--color-text-muted);
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.like-btn i {
-  font-size: 13.5px;
+  transition: all 0.2s;
 }
 
 .like-btn:hover {
-  background: rgba(239, 68, 68, 0.05);
-  color: #ef4444;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
 }
 
 .like-btn.active {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
-  border-color: rgba(239, 68, 68, 0.15);
-  animation: heart-pop 0.3s ease;
+  color: var(--color-danger);
 }
 
-@keyframes heart-pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+.like-btn i {
+  font-size: 14px;
 }
 
-/* Reply Input Box Overhaul */
+.scroll-anchor {
+  height: 20px;
+}
+
+/* New Reply input styling */
 .reply-input-wrapper {
-  background: white;
+  margin-top: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
-  padding: 28px;
-  margin-top: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  transition: all 0.3s ease;
-}
-
-.reply-input-wrapper:focus-within {
-  border-color: #c084fc;
-  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.08), 0 0 0 3px rgba(168, 85, 247, 0.15);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
 }
 
 .input-header {
@@ -907,78 +895,66 @@ const setupCopyButtons = () => {
   margin-bottom: 16px;
 }
 
-.current-user {
-  width: 32px;
-  height: 32px;
-  font-size: 13px;
+.reply-avatar.current-user {
+  width: 36px;
+  height: 36px;
 }
 
 .input-prompt {
   font-weight: 700;
-  color: #1f2937;
-  font-size: 15px;
+  color: var(--color-text);
+  font-size: 14.5px;
 }
 
 .reply-textarea {
   width: 100%;
-  min-height: 110px;
-  border: none;
+  min-height: 120px;
+  background: var(--color-surface-hover);
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 14.5px;
+  color: var(--color-text);
   resize: vertical;
+  transition: all 0.2s;
   font-family: inherit;
-  font-size: 15px;
-  outline: none;
-  color: #1f2937;
-  padding: 4px;
+  margin-bottom: 16px;
 }
 
-.reply-textarea::placeholder {
-  color: #9ca3af;
+.reply-textarea:focus {
+  outline: none;
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .reply-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(243, 244, 246, 0.8);
 }
 
 .post-btn {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 10px 24px;
   border-radius: 10px;
-  font-weight: 600;
-  font-size: 14.5px;
+  font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2);
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
 }
 
 .post-btn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .post-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
-}
-
-.no-replies {
-  text-align: center;
-  padding: 48px 20px;
-  color: #6b7280;
-  background: #fdfcff;
-  border-radius: 16px;
-  border: 1px dashed rgba(168, 85, 247, 0.2);
-  font-weight: 600;
-}
-
-.scroll-anchor {
-  height: 1px;
 }
 
 /* Loading & Error States */

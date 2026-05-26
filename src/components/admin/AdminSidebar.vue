@@ -33,12 +33,19 @@
           <small class="text-muted text-truncate d-block" style="font-size: 0.75rem;">Lead Architect</small>
         </div>
       </div>
+      <button class="theme-toggle-btn mt-3 w-100 d-flex align-items-center justify-content-between px-3 py-2 rounded-3" type="button" @click="toggleTheme">
+        <span class="d-flex align-items-center gap-2">
+          <i :class="['bi', isDark ? 'bi-moon-stars-fill' : 'bi-sun-fill']"></i>
+          <span class="fw-bold small">Theme</span>
+        </span>
+        <span class="small fw-bold text-muted">{{ isDark ? 'Dark' : 'Light' }}</span>
+      </button>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
 const navItems = ref([
   { label: 'Overview', icon: 'bi bi-grid-1x2', path: '/admin' },
@@ -48,13 +55,41 @@ const navItems = ref([
   { label: 'Analytics', icon: 'bi bi-bar-chart', path: '/admin/analytics' },
   { label: 'Settings', icon: 'bi bi-gear', path: '/admin/settings' },
 ]);
+
+const isDark = ref(false);
+
+const applyTheme = () => {
+  if (isDark.value) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('admin_theme', 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('admin_theme', 'light');
+  }
+};
+
+const toggleTheme = () => {
+  isDark.value = !isDark.value;
+  applyTheme();
+};
+
+onMounted(() => {
+  const saved = localStorage.getItem('admin_theme');
+  if (saved) {
+    isDark.value = saved === 'dark';
+  } else {
+    isDark.value =
+      window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  applyTheme();
+});
 </script>
 
 <style scoped>
 .admin-sidebar {
   width: 280px;
-  background: #ffffff;
-  border-right: 1px solid #f0f0f0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   height: 100vh;
   position: sticky;
   top: 0;
@@ -63,7 +98,7 @@ const navItems = ref([
 
 .brand-title {
   letter-spacing: -0.5px;
-  color: #1a1a1a;
+  color: var(--color-text);
 }
 
 .tracking-widest {
@@ -71,7 +106,7 @@ const navItems = ref([
 }
 
 .nav-link {
-  color: #666666;
+  color: var(--color-text-muted);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.95rem;
@@ -79,13 +114,13 @@ const navItems = ref([
 }
 
 .nav-link:hover {
-  background-color: #f5f5f7;
-  color: #000000;
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .nav-link.active {
-  background-color: #f5f5f7;
-  color: #000000;
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .nav-link i {
@@ -98,18 +133,30 @@ const navItems = ref([
 }
 
 .btn-primary {
-  background-color: #8b5cf6;
+  background-color: var(--color-purple);
   border: none;
   font-size: 0.9rem;
+  color: white;
 }
 
 .btn-primary:hover {
-  background-color: #7c3aed;
+  background-color: var(--color-purple);
+  filter: brightness(0.9);
   transform: translateY(-1px);
 }
 
 .user-profile {
   padding-top: 1rem;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--color-border);
+}
+
+.theme-toggle-btn {
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--color-surface);
 }
 </style>

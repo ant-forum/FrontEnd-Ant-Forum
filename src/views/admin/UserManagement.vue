@@ -1,5 +1,5 @@
 <template>
-  <div class="user-management-layout d-flex bg-light min-vh-100">
+  <div class="user-management-layout d-flex min-vh-100">
     <!-- Sidebar -->
     <AdminSidebar />
 
@@ -9,7 +9,7 @@
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-          <h2 class="fw-bold mb-1">User Directory</h2>
+          <h2 class="fw-bold mb-1 text-adaptive">User Directory</h2>
           <p class="text-muted small mb-0">Manage platform members and their access levels</p>
         </div>
         <router-link to="/admin/users/create" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-brand d-flex align-items-center gap-2">
@@ -82,11 +82,11 @@
         </div>
         <div class="col-xl-4">
           <UserDetailsCard v-if="selectedUser" :user="selectedUser" @suspend="handleSuspend(selectedUser.id)" />
-          <div v-else class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white h-100 d-flex flex-column align-items-center justify-content-center">
-            <div class="icon-circle-large mb-4 bg-light-purple-soft d-flex align-items-center justify-content-center rounded-circle mx-auto" style="width: 80px; height: 80px;">
+          <div v-else class="card border-0 shadow-sm rounded-4 p-5 text-center bg-surface border h-100 d-flex flex-column align-items-center justify-content-center">
+            <div class="icon-circle-large mb-4 bg-purple-light d-flex align-items-center justify-content-center rounded-circle mx-auto" style="width: 80px; height: 80px;">
               <i class="bi bi-person-bounding-box fs-1 text-purple"></i>
             </div>
-            <h5 class="fw-bold mb-2 text-dark">Select a User</h5>
+            <h5 class="fw-bold mb-2 text-adaptive">Select a User</h5>
             <p class="text-muted small mb-0 px-3">Choose a member from the directory to view their full profile and manage permissions.</p>
           </div>
         </div>
@@ -209,7 +209,12 @@ const handleBulkDelete = (ids) => {
 
 <style scoped>
 .user-management-layout {
+  background-color: var(--color-bg);
   font-family: var(--font-family-base);
+}
+
+.admin-main {
+  background-color: var(--color-bg);
 }
 
 .icon-circle-large {
@@ -218,37 +223,33 @@ const handleBulkDelete = (ids) => {
   border-radius: 50%;
 }
 
-.bg-light-purple-soft {
-  background-color: rgba(139, 92, 246, 0.05);
-}
-
-.text-purple { color: #8b5cf6; }
+.text-purple { color: var(--color-purple); }
 
 .mini-chart .bar {
   width: 3px;
-  background-color: #cbd5e1;
+  background-color: var(--color-border);
   border-radius: 1px;
 }
 
 .mini-chart .bar.active {
-  background-color: #8b5cf6;
-}
-
-.bg-light {
-  background-color: #f8fafc !important;
+  background-color: var(--color-purple);
 }
 
 .shadow-brand {
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2);
+  box-shadow: 0 4px 12px var(--color-primary-light);
 }
 
 .btn-primary {
-  background-color: #8b5cf6;
-  border-color: #8b5cf6;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .btn-primary:hover {
-  background-color: #7c3aed;
-  border-color: #7c3aed;
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
+
+.bg-surface { background-color: var(--color-surface) !important; }
+.text-adaptive { color: var(--color-text) !important; }
+.bg-purple-light { background-color: var(--color-purple-light) !important; }
 </style>

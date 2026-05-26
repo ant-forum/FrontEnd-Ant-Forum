@@ -297,7 +297,7 @@ const clearFilters = () => {
 <style scoped>
 .forum-page {
   min-height: 100vh;
-  background: #fdfcff;
+  background: var(--color-bg);
 }
 
 .forum-global-grid {
@@ -333,40 +333,40 @@ const clearFilters = () => {
 .search-icon {
   position: absolute;
   left: 20px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   pointer-events: none;
 }
 
 .search-bar {
   width: 100%;
   padding: 16px 52px 16px 52px;
-  background: white;
-  border: 1px solid rgba(229, 231, 235, 0.8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   font-size: 15px;
-  color: #1f2937;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
   transition: all 0.25s ease;
   font-family: inherit;
 }
 
 .search-bar::placeholder {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 .search-bar:focus {
-  border-color: #c084fc;
-  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.08), 0 0 0 3px rgba(168, 85, 247, 0.15);
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
   outline: none;
-  background: #fff;
+  background: var(--color-surface);
 }
 
 .clear-search-btn {
   position: absolute;
   right: 20px;
-  background: #f3f4f6;
+  background: var(--color-surface-hover);
   border: none;
-  color: #6b7280;
+  color: var(--color-text-muted);
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -378,22 +378,22 @@ const clearFilters = () => {
 }
 
 .clear-search-btn:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: var(--color-border);
+  color: var(--color-text);
 }
 
 .kbd-indicator {
   position: absolute;
   right: 20px;
   padding: 3px 8px;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   font-family: monospace;
   pointer-events: none;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .filter-actions-bar {
@@ -406,10 +406,10 @@ const clearFilters = () => {
 .tabs-group {
   display: flex;
   gap: 6px;
-  background: rgba(243, 244, 246, 0.8);
+  background: var(--color-surface-hover);
   padding: 4px;
   border-radius: 12px;
-  border: 1px solid rgba(229, 231, 235, 0.5);
+  border: 1px solid var(--color-border);
   width: fit-content;
 }
 
@@ -417,7 +417,7 @@ const clearFilters = () => {
   padding: 8px 18px;
   border: none;
   background: transparent;
-  color: #4b5563;
+  color: var(--color-text-muted);
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
@@ -427,15 +427,15 @@ const clearFilters = () => {
 }
 
 .tab-btn:hover {
-  color: #111827;
-  background: rgba(255, 255, 255, 0.7);
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 
 .tab-btn.active {
-  background: white;
-  color: #7c3aed;
+  background: var(--color-surface);
+  color: var(--color-primary);
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.12);
+  box-shadow: var(--shadow-sm);
 }
 
 .create-btn {
@@ -480,17 +480,19 @@ const clearFilters = () => {
   align-items: center;
   gap: 10px;
   padding: 8px 16px 8px 8px;
-  background: white;
-  border: 1px solid rgba(229, 231, 235, 0.8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 100px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
   font-weight: 600;
   font-size: 13px;
-  color: #4b5563;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+  color: var(--color-text-muted);
+  box-shadow: var(--shadow-sm);
   white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .cat-pill-icon-wrap {
@@ -507,49 +509,49 @@ const clearFilters = () => {
 }
 
 .category-pill-btn:hover {
-  border-color: #d8b4fe;
-  background: #fdfaff;
-  color: #1f2937;
+  border-color: var(--color-primary);
+  background: var(--color-surface-hover);
+  color: var(--color-text);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.05);
+  box-shadow: var(--shadow-md);
 }
 
 /* Category Pill Active styles */
 .category-pill-btn.active.purple {
-  border-color: #c084fc;
-  background: #faf5ff;
-  color: #7c3aed;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12);
+  border-color: var(--color-purple);
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  box-shadow: 0 4px 14px var(--color-purple-light);
 }
 .category-pill-btn.active.blue {
-  border-color: #93c5fd;
-  background: #eff6ff;
-  color: #2563eb;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.1);
+  border-color: var(--color-info);
+  background: var(--color-info-light);
+  color: var(--color-info);
+  box-shadow: 0 4px 14px var(--color-info-light);
 }
 .category-pill-btn.active.green {
-  border-color: #6ee7b7;
-  background: #ecfdf5;
-  color: #059669;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.1);
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+  color: var(--color-success);
+  box-shadow: 0 4px 14px var(--color-success-light);
 }
 .category-pill-btn.active.fuchsia {
-  border-color: #f0abfc;
-  background: #fdf4ff;
-  color: #c084fc;
-  box-shadow: 0 4px 14px rgba(192, 132, 252, 0.1);
+  border-color: var(--color-purple);
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  box-shadow: 0 4px 14px var(--color-purple-light);
 }
 .category-pill-btn.active.amber {
-  border-color: #fde047;
-  background: #fffbeb;
-  color: #d97706;
-  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.1);
+  border-color: var(--color-warning);
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+  box-shadow: 0 4px 14px var(--color-warning-light);
 }
 .category-pill-btn.active.teal {
-  border-color: #99f6e4;
-  background: #f0fdfa;
-  color: #0d9488;
-  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.1);
+  border-color: var(--color-info);
+  background: var(--color-info-light);
+  color: var(--color-info);
+  box-shadow: 0 4px 14px var(--color-info-light);
 }
 
 .forum-feed-content {
@@ -574,9 +576,9 @@ const clearFilters = () => {
 
 .skeleton-card {
   display: flex;
-  background: white;
+  background: var(--color-surface);
   border-radius: 18px;
-  border: 1px solid rgba(229, 231, 235, 0.6);
+  border: 1px solid var(--color-border);
   padding: 20px 22px;
   gap: 16px;
   overflow: hidden;
@@ -594,7 +596,7 @@ const clearFilters = () => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -621,7 +623,7 @@ const clearFilters = () => {
   width: 60px;
   height: 20px;
   border-radius: 100px;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -630,7 +632,7 @@ const clearFilters = () => {
   width: 100px;
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -643,7 +645,7 @@ const clearFilters = () => {
   width: 80%;
   height: 18px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }

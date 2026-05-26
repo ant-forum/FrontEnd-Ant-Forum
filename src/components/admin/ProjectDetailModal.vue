@@ -1,14 +1,14 @@
 <template>
   <div v-if="show" class="modal-overlay d-flex align-items-center justify-content-center" @click.self="$emit('close')">
-    <div class="modal-container bg-white rounded-4 shadow-lg overflow-hidden animate__animated animate__fadeInUp animate__faster">
+    <div class="modal-container bg-surface rounded-4 shadow-lg overflow-hidden animate__animated animate__fadeInUp animate__faster">
       <!-- Header -->
-      <div class="modal-header-custom p-4 d-flex justify-content-between align-items-center border-bottom">
+      <div class="modal-header-custom p-4 d-flex justify-content-between align-items-center border-bottom border-color">
         <div class="d-flex align-items-center gap-3">
           <div :class="['icon-box rounded-3 d-flex align-items-center justify-content-center shadow-sm', project.iconBgClass]">
             <i :class="[project.icon, 'fs-4']"></i>
           </div>
           <div>
-            <h4 class="fw-bold mb-0">{{ project.title }}</h4>
+            <h4 class="fw-bold mb-0 text-color">{{ project.title }}</h4>
             <span :class="['status-badge px-2 py-0 rounded-pill fw-bold text-uppercase small', getStatusClass(project.status)]">
               {{ project.status }}
             </span>
@@ -25,20 +25,20 @@
           <!-- Left Column: Basic Info -->
           <div class="col-md-7">
             <div class="mb-4">
-              <label class="form-label text-muted small fw-bold text-uppercase">Description</label>
+              <label class="form-label text-muted-color small fw-bold text-uppercase">Description</label>
               <textarea 
                 v-model="editedProject.description" 
-                class="form-control border-0 bg-light p-3 rounded-3" 
+                class="form-control border-0 bg-bg p-3 rounded-3 text-color" 
                 rows="4"
               ></textarea>
             </div>
 
             <div class="mb-4">
-              <label class="form-label text-muted small fw-bold text-uppercase">Tech Stack (comma separated)</label>
+              <label class="form-label text-muted-color small fw-bold text-uppercase">Tech Stack (comma separated)</label>
               <input 
                 v-model="techStackString" 
                 type="text" 
-                class="form-control border-0 bg-light p-3 rounded-3"
+                class="form-control border-0 bg-bg p-3 rounded-3 text-color"
               >
               <div class="d-flex flex-wrap gap-2 mt-2">
                 <span v-for="tech in editedProject.techStack" :key="tech" class="tech-tag px-2 py-1 rounded-pill border small">
@@ -50,12 +50,12 @@
 
           <!-- Right Column: Management -->
           <div class="col-md-5">
-            <div class="management-section p-4 rounded-4 bg-light h-100">
-              <h6 class="fw-bold mb-4">Project Management</h6>
+            <div class="management-section p-4 rounded-4 bg-bg h-100">
+              <h6 class="fw-bold mb-4 text-color">Project Management</h6>
               
               <div class="mb-4">
-                <label class="form-label text-muted small fw-bold text-uppercase">Change Status</label>
-                <select v-model="editedProject.status" class="form-select border-0 shadow-sm p-3 rounded-3">
+                <label class="form-label text-muted-color small fw-bold text-uppercase">Change Status</label>
+                <select v-model="editedProject.status" class="form-select border-0 shadow-sm p-3 rounded-3 bg-surface text-color">
                   <option value="ACTIVE">Active</option>
                   <option value="PENDING REVIEW">Pending Review</option>
                   <option value="FLAGGED">Flagged</option>
@@ -63,12 +63,12 @@
               </div>
 
               <div class="mb-4">
-                <label class="form-label text-muted small fw-bold text-uppercase">Project Lead</label>
-                <div class="d-flex align-items-center p-3 bg-white rounded-3 shadow-sm">
+                <label class="form-label text-muted-color small fw-bold text-uppercase">Project Lead</label>
+                <div class="d-flex align-items-center p-3 bg-surface rounded-3 shadow-sm border border-color">
                   <img :src="project.member.avatar" class="rounded-circle me-3" width="40" height="40">
                   <div>
-                    <div class="fw-bold small">{{ project.member.name }}</div>
-                    <div class="text-muted xx-small text-uppercase">{{ project.member.role }}</div>
+                    <div class="fw-bold small text-color">{{ project.member.name }}</div>
+                    <div class="text-muted-color xx-small text-uppercase">{{ project.member.role }}</div>
                   </div>
                 </div>
               </div>
@@ -163,7 +163,14 @@ const handleSave = () => {
   max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
+  background-color: var(--color-surface);
 }
+
+.bg-surface { background-color: var(--color-surface) !important; }
+.bg-bg { background-color: var(--color-bg) !important; }
+.text-color { color: var(--color-text) !important; }
+.text-muted-color { color: var(--color-text-muted) !important; }
+.border-color { border-color: var(--color-border) !important; }
 
 .icon-box {
   width: 48px;
@@ -174,12 +181,12 @@ const handleSave = () => {
   background: none;
   border: none;
   font-size: 1.2rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   transition: all 0.2s ease;
 }
 
 .btn-close-custom:hover {
-  color: #1e293b;
+  color: var(--color-text);
   transform: rotate(90deg);
 }
 
@@ -193,8 +200,9 @@ const handleSave = () => {
 .status-flagged { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
 .tech-tag {
-  background: white;
-  color: #64748b;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border-color: var(--color-border) !important;
 }
 
 .xx-small {
@@ -202,13 +210,13 @@ const handleSave = () => {
 }
 
 .management-section {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
 }
 
 textarea:focus, input:focus, select:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-  background-color: white !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  background-color: var(--color-surface) !important;
 }
 
 .btn-primary {

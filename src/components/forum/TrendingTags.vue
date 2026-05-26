@@ -42,7 +42,7 @@ const tags = [
   gap: 8px;
   font-size: 13px;
   font-weight: 700;
-  color: #111827;
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -52,9 +52,9 @@ const tags = [
   justify-content: center;
   width: 26px;
   height: 26px;
-  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  background: var(--color-purple-light);
   border-radius: 8px;
-  color: #7c3aed;
+  color: var(--color-purple);
   flex-shrink: 0;
 }
 
@@ -66,9 +66,9 @@ const tags = [
 
 .tag-btn {
   padding: 6px 14px;
-  background: #f3f0ff;
+  background: var(--color-purple-light);
   border: none;
-  color: #6d28d9;
+  color: var(--color-purple);
   font-size: 12px;
   font-weight: 600;
   border-radius: 100px;
@@ -79,9 +79,9 @@ const tags = [
 }
 
 .tag-btn:hover {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  background: var(--color-purple);
   color: white;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3);
+  box-shadow: 0 4px 12px var(--color-purple-light);
 }
 </style>

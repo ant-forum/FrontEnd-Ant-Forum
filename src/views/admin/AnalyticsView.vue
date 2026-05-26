@@ -153,7 +153,7 @@ const recentEvents = [
 </script>
 
 <template>
-  <div class="analytics-layout d-flex min-vh-100 bg-light">
+  <div class="analytics-layout d-flex min-vh-100">
     <AdminSidebar activePage="analytics" />
     
     <main class="admin-main flex-grow-1">
@@ -162,7 +162,7 @@ const recentEvents = [
         <header class="analytics-header mb-5">
           <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div>
-              <h2 class="fw-bold mb-1">Advanced Analytics</h2>
+              <h2 class="fw-bold mb-1 text-adaptive">Advanced Analytics</h2>
               <p class="text-muted small mb-0 d-flex align-items-center gap-2">
                 <span class="live-dot-sm"></span>
                 Real-time platform performance and user behavior insights
@@ -182,11 +182,11 @@ const recentEvents = [
                 <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-brand dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
                   <i class="bi bi-calendar3"></i> Last 30 Days
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-2 mt-2">
-                  <li><a class="dropdown-item rounded-3 small py-2" href="#"><i class="bi bi-clock-history me-2"></i> Last 7 Days</a></li>
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-2 mt-2 bg-surface">
+                  <li><a class="dropdown-item rounded-3 small py-2 text-adaptive" href="#"><i class="bi bi-clock-history me-2"></i> Last 7 Days</a></li>
                   <li><a class="dropdown-item rounded-3 small py-2 active bg-purple" href="#"><i class="bi bi-calendar-check me-2"></i> Last 30 Days</a></li>
-                  <li><a class="dropdown-item rounded-3 small py-2" href="#"><i class="bi bi-calendar-range me-2"></i> Last 90 Days</a></li>
-                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item rounded-3 small py-2 text-adaptive" href="#"><i class="bi bi-calendar-range me-2"></i> Last 90 Days</a></li>
+                  <li><hr class="dropdown-divider border-theme"></li>
                   <li><a class="dropdown-item rounded-3 small py-2 text-purple fw-bold" href="#"><i class="bi bi-plus-circle me-2"></i> Custom Range</a></li>
                 </ul>
               </div>
@@ -218,15 +218,15 @@ const recentEvents = [
         <div class="row g-4 mb-5">
           <!-- User Activity Chart -->
           <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-5 p-4 h-100 chart-card-modern position-relative overflow-hidden bg-white">
+            <div class="card border-0 shadow-sm rounded-5 p-4 h-100 chart-card-modern position-relative overflow-hidden bg-surface border">
               <div class="d-flex justify-content-between align-items-center mb-4 position-relative z-1">
                 <div>
-                  <h5 class="fw-bold mb-1">User Engagement</h5>
+                  <h5 class="fw-bold mb-1 text-adaptive">User Engagement</h5>
                   <p class="text-muted xx-small mb-0">Active sessions and interaction volume</p>
                 </div>
                 <div class="d-flex gap-2">
-                  <button class="btn btn-light btn-sm rounded-pill px-3 active">Daily</button>
-                  <button class="btn btn-light btn-sm rounded-pill px-3">Weekly</button>
+                  <button class="btn btn-light-theme btn-sm rounded-pill px-3 active">Daily</button>
+                  <button class="btn btn-light-theme btn-sm rounded-pill px-3">Weekly</button>
                 </div>
               </div>
               <div class="chart-container" style="height: 320px;">
@@ -238,24 +238,24 @@ const recentEvents = [
           
           <!-- Distribution Chart -->
           <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-5 p-4 h-100 chart-card-modern bg-white">
-              <h5 class="fw-bold mb-1">Traffic Sources</h5>
+            <div class="card border-0 shadow-sm rounded-5 p-4 h-100 chart-card-modern bg-surface border">
+              <h5 class="fw-bold mb-1 text-adaptive">Traffic Sources</h5>
               <p class="text-muted xx-small mb-4">Device and channel distribution</p>
               <div class="chart-container d-flex align-items-center justify-content-center" style="height: 280px;">
                 <canvas ref="sourceChartRef"></canvas>
               </div>
-              <div class="mt-4 pt-3 border-top">
+              <div class="mt-4 pt-3 border-top border-theme">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="font-xs text-muted d-flex align-items-center gap-2"><span class="dot bg-purple"></span> Direct</span>
-                  <span class="font-xs fw-bold">45%</span>
+                  <span class="font-xs fw-bold text-adaptive">45%</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="font-xs text-muted d-flex align-items-center gap-2"><span class="dot bg-info"></span> Social</span>
-                  <span class="font-xs fw-bold">30%</span>
+                  <span class="font-xs fw-bold text-adaptive">30%</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <span class="font-xs text-muted d-flex align-items-center gap-2"><span class="dot bg-warning"></span> Search</span>
-                  <span class="font-xs fw-bold">25%</span>
+                  <span class="font-xs fw-bold text-adaptive">25%</span>
                 </div>
               </div>
             </div>
@@ -263,18 +263,18 @@ const recentEvents = [
         </div>
 
         <!-- Real-time Activity Table -->
-        <div class="card border-0 shadow-sm rounded-5 p-4 bg-white">
+        <div class="card border-0 shadow-sm rounded-5 p-4 bg-surface border">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h5 class="fw-bold mb-1">Live Events Feed</h5>
+              <h5 class="fw-bold mb-1 text-adaptive">Live Events Feed</h5>
               <p class="text-muted xx-small mb-0">Recent interactions and system activities</p>
             </div>
-            <button class="btn btn-light-purple btn-sm rounded-pill px-3 fw-bold font-xs text-purple">View All Events</button>
+            <button class="btn btn-purple-light btn-sm rounded-pill px-3 fw-bold font-xs text-purple">View All Events</button>
           </div>
           
           <div class="table-responsive">
             <table class="table table-hover align-middle border-0">
-              <thead class="bg-light-purple">
+              <thead class="bg-surface-hover">
                 <tr>
                   <th class="border-0 rounded-start-4 py-3 font-xs text-muted text-uppercase tracking-wider">Event Type</th>
                   <th class="border-0 py-3 font-xs text-muted text-uppercase tracking-wider">Initiated By</th>
@@ -284,14 +284,14 @@ const recentEvents = [
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="event in recentEvents" :key="event.id" class="transition-all hover-bg-light">
+                <tr v-for="event in recentEvents" :key="event.id" class="transition-all hover-bg-surface">
                   <td class="py-4 border-0">
                     <div class="d-flex align-items-center gap-3">
                       <div :class="['icon-box-sm rounded-circle d-flex align-items-center justify-content-center', event.bgClass]">
                         <i :class="['bi', event.icon, event.textClass]"></i>
                       </div>
                       <div>
-                        <div class="fw-bold small">{{ event.title }}</div>
+                        <div class="fw-bold small text-adaptive">{{ event.title }}</div>
                         <div class="xx-small text-muted">{{ event.description }}</div>
                       </div>
                     </div>
@@ -299,7 +299,7 @@ const recentEvents = [
                   <td class="py-4 border-0">
                     <div class="d-flex align-items-center gap-2">
                       <img :src="event.userAvatar" class="rounded-circle" width="24" height="24">
-                      <span class="small fw-medium">{{ event.user }}</span>
+                      <span class="small fw-medium text-adaptive">{{ event.user }}</span>
                     </div>
                   </td>
                   <td class="py-4 border-0">
@@ -309,8 +309,8 @@ const recentEvents = [
                   </td>
                   <td class="py-4 border-0 font-xs text-muted">{{ event.time }}</td>
                   <td class="py-4 border-0 text-end">
-                    <button class="btn btn-icon-sm rounded-circle bg-light transition-all hover-bg-purple hover-text-white">
-                      <i class="bi bi-chevron-right"></i>
+                    <button class="btn btn-icon-sm rounded-circle bg-surface-hover border transition-all hover-bg-purple hover-text-white">
+                      <i class="bi bi-chevron-right text-adaptive"></i>
                     </button>
                   </td>
                 </tr>
@@ -324,6 +324,17 @@ const recentEvents = [
 </template>
 
 <style scoped>
+.analytics-layout {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  font-family: var(--font-family-base);
+  color: var(--color-text);
+}
+
+.admin-main {
+  background-color: var(--color-bg);
+}
+
 .live-dot-sm {
   width: 8px;
   height: 8px;
@@ -340,23 +351,10 @@ const recentEvents = [
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
-.hover-bg-light:hover { background-color: #f8fafc !important; }
-
-.fw-black { font-weight: 900; }
-
-.transition-up {
-  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.transition-up:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1) !important;
-}
-
-.m-n3 { margin: -1rem !important; }
+.hover-bg-surface:hover { background-color: var(--color-surface-hover) !important; }
 
 .chart-card-modern {
-  border: 1px solid #f1f5f9 !important;
+  border: 1px solid var(--color-border) !important;
 }
 
 .chart-abstract-pattern {
@@ -365,7 +363,7 @@ const recentEvents = [
   right: -20px;
   width: 150px;
   height: 150px;
-  background-image: radial-gradient(#7c3aed 0.5px, transparent 0.5px);
+  background-image: radial-gradient(var(--color-purple) 0.5px, transparent 0.5px);
   background-size: 15px 15px;
   opacity: 0.05;
   pointer-events: none;
@@ -378,66 +376,64 @@ const recentEvents = [
   display: inline-block;
 }
 
-.bg-purple { background-color: #7c3aed; }
-.bg-info { background-color: #0ea5e9; }
-.bg-warning { background-color: #f59e0b; }
+.bg-purple { background-color: var(--color-purple) !important; }
+.bg-info { background-color: var(--color-info) !important; }
+.bg-warning { background-color: var(--color-warning) !important; }
 
-.font-xxs { font-size: 0.65rem; }
+.bg-purple-light { background-color: var(--color-purple-light) !important; }
 
-.analytics-layout {
-  font-family: var(--font-family-base);
+.btn-white {
+  background-color: var(--color-surface);
   color: var(--color-text);
+  border-color: var(--color-border) !important;
 }
 
-.icon-box {
-  width: 48px;
-  height: 48px;
+.btn-white:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.btn-light-theme {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-muted);
+  border: none;
+}
+
+.btn-light-theme.active {
+  background-color: var(--color-purple);
+  color: white;
+}
+
+.bg-surface { background-color: var(--color-surface) !important; }
+.bg-surface-hover { background-color: var(--color-surface-hover) !important; }
+.text-adaptive { color: var(--color-text) !important; }
+.border-theme { border-color: var(--color-border) !important; }
+
+.btn-icon-sm {
+  width: 28px;
+  height: 28px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.font-xs { font-size: 0.75rem; }
+.font-xxs { font-size: 0.65rem; }
+.xx-small { font-size: 0.65rem; }
+
+.shadow-brand {
+  box-shadow: 0 4px 12px var(--color-primary-light);
+}
+
+.transition-all {
+  transition: all 0.2s ease;
 }
 
 .icon-box-sm {
   width: 32px;
   height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bg-purple-subtle { background-color: #f5f3ff; }
-.bg-success-subtle { background-color: #f0fdf4; }
-.bg-info-subtle { background-color: #f0f9ff; }
-.bg-warning-subtle { background-color: #fffbeb; }
-.bg-danger-subtle { background-color: #fef2f2; }
-
-.text-purple { color: #7c3aed; }
-.text-success { color: #10b981; }
-.text-info { color: #0ea5e9; }
-.text-warning { color: #f59e0b; }
-.text-danger { color: #ef4444; }
-
-.bg-light-purple { background-color: #f8f7ff; }
-
-.btn-white {
-  background-color: white;
-  color: #1e293b;
-}
-
-.shadow-brand {
-  box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3);
-}
-
-.x-small { font-size: 0.7rem; }
-.xx-small { font-size: 0.65rem; }
-.font-xs { font-size: 0.75rem; }
-
-.last-child-border-0:last-child {
-  border-bottom: 0 !important;
-}
-
-.hover-text-white:hover i {
-  color: white !important;
 }
 
 .rounded-start-4 { border-top-left-radius: 1rem !important; border-bottom-left-radius: 1rem !important; }

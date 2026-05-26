@@ -55,7 +55,7 @@ const contributors = [
   gap: 8px;
   font-size: 13px;
   font-weight: 700;
-  color: #111827;
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -65,9 +65,9 @@ const contributors = [
   justify-content: center;
   width: 26px;
   height: 26px;
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  background: var(--color-warning-light);
   border-radius: 8px;
-  color: #d97706;
+  color: var(--color-warning);
   flex-shrink: 0;
 }
 
@@ -83,13 +83,13 @@ const contributors = [
   gap: 11px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #faf9ff;
+  background: var(--color-surface-hover);
   transition: all 0.22s ease;
   cursor: pointer;
 }
 
 .contributor-row:hover {
-  background: #f3f0ff;
+  background: var(--color-border-soft);
   transform: translateX(3px);
 }
 
