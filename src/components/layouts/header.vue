@@ -30,7 +30,7 @@ const navLinks = [
             :key="link.name" 
             :to="link.path" 
             class="nav-link-modern" 
-            :class="{ 'active': route.path.startsWith(link.path) || (link.path === '/forum' && route.path === '/') }"
+            :class="{ 'active': route.path.startsWith(link.path) }"
           >
             {{ link.name }}
           </router-link>
@@ -44,10 +44,10 @@ const navLinks = [
           <!-- Settings icon removed as per user request -->
         </div>
 
-        <router-link to="/profile" class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 bg-white border rounded-pill shadow-sm cursor-pointer text-decoration-none text-dark">
+        <div class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 bg-white border rounded-pill shadow-sm cursor-pointer">
           <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle border border-2 border-primary-subtle" width="32" height="32" alt="User">
           <span class="small fw-bold d-none d-xl-block">Alex Chen</span>
-        </router-link>
+        </div>
       </div>
     </div>
   </header>
