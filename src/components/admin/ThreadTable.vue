@@ -211,6 +211,14 @@ const highlight = (text) => {
   border-color: var(--color-primary);
 }
 
+.search-group {
+  max-width: 250px;
+}
+
+.search-group input:focus {
+  box-shadow: none;
+}
+
 .btn-icon {
   width: 32px;
   height: 32px;

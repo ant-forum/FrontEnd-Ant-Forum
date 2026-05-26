@@ -100,6 +100,7 @@ const statusClass = computed(() => {
   background: var(--color-surface);
   border: 1px solid var(--color-border) !important;
   cursor: pointer;
+  border: 1px solid transparent !important;
 }
 
 .text-color {
@@ -147,6 +148,24 @@ const statusClass = computed(() => {
   background-color: #8b5cf6;
   color: white;
   border-color: #8b5cf6 !important;
+}
+
+.btn-light-green {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.btn-light-green:hover {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-light-red {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.btn-light-red:hover {
+  background-color: #ef4444;
+  color: white;
 }
 
 .text-truncate-2 {

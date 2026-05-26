@@ -21,6 +21,7 @@ import AdminDashboard from '../views/admin/adminDashboard.vue';
 import UserManagement from '../views/admin/UserManagement.vue';
 import CreateUserView from '../views/admin/CreateUserView.vue';
 import ProjectManagement from '../views/admin/ProjectManagement.vue';
+import CreateProjectView from '../views/admin/CreateProjectView.vue';
 import ThreadManagement from '../views/admin/ThreadManagement.vue';
 // import AnalyticsView from '../views/admin/AnalyticsView.vue';
 import SettingsView from '../views/admin/SettingsView.vue';
@@ -167,6 +168,12 @@ const routes = [
     name: "ProjectManagement",
     meta: { requiresAuth: true },
     component: ProjectManagement,
+  },
+  {
+    path: "/admin/projects/create",
+    name: "CreateProjectAdmin",
+    meta: { requiresAuth: true },
+    component: CreateProjectView,
   },
   {
     path: "/admin/threads",
