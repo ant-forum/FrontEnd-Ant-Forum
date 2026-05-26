@@ -1,5 +1,5 @@
 <template>
-  <div class="project-management-layout d-flex bg-light min-vh-100">
+  <div class="project-management-layout d-flex min-vh-100">
     <!-- Sidebar -->
     <AdminSidebar />
 
@@ -9,7 +9,7 @@
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-          <h2 class="fw-bold mb-1">Project Ecosystem</h2>
+          <h2 class="fw-bold mb-1 text-adaptive">Project Ecosystem</h2>
           <p class="text-muted small mb-0">Monitor, approve, and manage platform initiatives</p>
         </div>
       </div>
@@ -81,7 +81,7 @@
       <!-- Controls Row -->
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-4">
         <!-- Tabs -->
-        <ul class="nav nav-pills custom-pills bg-white p-1 rounded-pill shadow-sm">
+        <ul class="nav nav-pills custom-pills bg-surface p-1 rounded-pill shadow-sm border">
           <li class="nav-item">
             <button 
               :class="['nav-link rounded-pill px-4 fw-bold', currentTab === 'all' ? 'active' : '']"
@@ -104,19 +104,19 @@
 
         <!-- Search & Filters -->
         <div class="d-flex gap-3 flex-grow-1 justify-content-md-end">
-          <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border bg-white">
+          <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border bg-surface">
             <span class="input-group-text bg-transparent border-0 ps-3">
               <i class="bi bi-search text-muted"></i>
             </span>
             <input 
               v-model="searchQuery" 
               type="text" 
-              class="form-control border-0 py-2 small" 
+              class="form-control border-0 py-2 small bg-transparent" 
               placeholder="Search projects..."
               style="font-size: 0.9rem;"
             >
           </div>
-          <select v-model="statusFilter" class="form-select rounded-pill border-0 shadow-sm px-4 bg-white fw-bold small" style="width: auto; font-size: 0.85rem;">
+          <select v-model="statusFilter" class="form-select rounded-pill border-0 shadow-sm px-4 bg-surface fw-bold small text-adaptive" style="width: auto; font-size: 0.85rem;">
             <option value="ALL">Status: All</option>
             <option value="ACTIVE">Active</option>
             <option value="PENDING REVIEW">Review</option>
@@ -334,7 +334,14 @@ const resetFilters = () => {
 
 <style scoped>
 .project-management-layout {
+  min-height: 100vh;
+  background-color: var(--color-bg);
   font-family: var(--font-family-base);
+  color: var(--color-text);
+}
+
+.admin-main {
+  background-color: var(--color-bg);
 }
 
 .icon-box {
@@ -345,20 +352,20 @@ const resetFilters = () => {
   justify-content: center;
 }
 
-.bg-light-purple { background-color: rgba(139, 92, 246, 0.1); }
-.text-purple { color: #8b5cf6; }
+.bg-light-purple { background-color: var(--color-purple-light); }
+.text-purple { color: var(--color-purple); }
 
-.bg-light-orange { background-color: rgba(245, 158, 11, 0.1); }
-.text-orange { color: #f59e0b; }
+.bg-light-orange { background-color: var(--color-warning-light); }
+.text-orange { color: var(--color-warning); }
 
-.bg-light-red { background-color: rgba(239, 68, 68, 0.1); }
-.text-red { color: #ef4444; }
+.bg-light-red { background-color: var(--color-danger-light); }
+.text-red { color: var(--color-danger); }
 
-.bg-light-green { background-color: rgba(16, 185, 129, 0.1); }
-.text-green { color: #10b981; }
+.bg-light-green { background-color: var(--color-success-light); }
+.text-green { color: var(--color-success); }
 
-.bg-light-blue { background-color: rgba(59, 130, 246, 0.1); }
-.text-blue { color: #3b82f6; }
+.bg-light-blue { background-color: var(--color-info-light); }
+.text-blue { color: var(--color-info); }
 
 .cursor-pointer {
   cursor: pointer;
@@ -370,30 +377,30 @@ const resetFilters = () => {
 
 .metric-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-  border-color: #8b5cf6 !important;
+  box-shadow: var(--shadow-lg) !important;
+  border-color: var(--color-purple) !important;
 }
 
 .active-metric {
-  border-color: #8b5cf6 !important;
-  background-color: rgba(139, 92, 246, 0.02) !important;
-  box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.1) !important;
+  border-color: var(--color-purple) !important;
+  background-color: var(--color-purple-light) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 .custom-pills {
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--color-border);
 }
 
 .custom-pills .nav-link {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   transition: all 0.2s ease;
 }
 
 .custom-pills .nav-link.active {
-  background-color: #8b5cf6;
+  background-color: var(--color-purple);
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 4px 6px -1px var(--color-purple-light);
 }
 
 .search-group {
@@ -401,17 +408,17 @@ const resetFilters = () => {
 }
 
 .submit-proposal-card {
-  border: 2px dashed #cbd5e1;
-  background-color: white;
+  border: 2px dashed var(--color-border);
+  background-color: var(--color-surface);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
 
 .submit-proposal-card:hover {
-  border-color: #8b5cf6;
-  background-color: rgba(139, 92, 246, 0.02);
+  border-color: var(--color-purple);
+  background-color: var(--color-surface-hover);
   transform: translateY(-8px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
 .icon-circle-large {
@@ -423,11 +430,11 @@ const resetFilters = () => {
 
 .submit-proposal-card:hover .icon-circle-large {
   transform: scale(1.1) rotate(90deg);
-  background-color: rgba(139, 92, 246, 0.1);
+  background-color: var(--color-purple-light);
 }
 
 .bg-light-purple-soft {
-  background-color: #f8faff;
+  background-color: var(--color-bg);
 }
 
 .fab-btn {
@@ -438,11 +445,10 @@ const resetFilters = () => {
   height: 56px;
   font-size: 1.5rem;
   z-index: 1000;
-  background-color: #8b5cf6;
+  background-color: var(--color-purple);
   border: none;
 }
 
-.bg-light {
-  background-color: #f8fafc !important;
-}
+.bg-surface { background-color: var(--color-surface) !important; }
+.text-adaptive { color: var(--color-text) !important; }
 </style>

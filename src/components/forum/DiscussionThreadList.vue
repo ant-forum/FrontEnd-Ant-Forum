@@ -9,14 +9,14 @@ defineProps({
 const forumStore = useForumStore();
 
 const tagColorMap = {
-  blue:   { bg: '#eff6ff', color: '#3b82f6' }, // React, etc.
-  yellow: { bg: '#fef9c3', color: '#ca8a04' },
-  green:  { bg: '#f0fdf4', color: '#16a34a' },
-  purple: { bg: '#f5f3ff', color: '#7c3aed' },
-  pink:   { bg: '#fdf2f8', color: '#db2777' },
-  teal:   { bg: '#f0fdfa', color: '#0d9488' },
-  red:    { bg: '#fef2f2', color: '#dc2626' },
-  gray:   { bg: '#f8fafc', color: '#64748b' },
+  blue:   { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
+  orange: { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' }, // mapping orange to pink for now or adding more variables
+  green:  { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  purple: { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
+  pink:   { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
+  teal:   { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  red:    { bg: 'var(--color-tag-red-bg)', color: 'var(--color-tag-red-text)' },
+  gray:   { bg: 'var(--color-surface-hover)', color: 'var(--color-text-muted)' },
 };
 
 // Add standard categories as fallback colors
@@ -152,11 +152,12 @@ function handleVote(id, direction) {
 
 .thread-card {
   display: flex;
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border-radius: 18px;
+  border: 1px solid var(--color-border);
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
 }
 
@@ -212,11 +213,11 @@ function handleVote(id, direction) {
 }
 
 .vote-num.voted-up {
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .vote-num.voted-down {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 /* Thread Content Column */
@@ -273,7 +274,7 @@ function handleVote(id, direction) {
 }
 
 .thread-card:hover .thread-title {
-  color: #7c3aed;
+  color: var(--color-purple);
 }
 
 .thread-excerpt {

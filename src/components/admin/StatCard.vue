@@ -1,9 +1,9 @@
 <template>
-  <div :class="['metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center h-100 transition-all', active ? 'border-purple active-card' : '']">
+  <div :class="['metric-card p-4 rounded-4 border bg-surface shadow-sm d-flex justify-content-between align-items-center h-100 transition-all', active ? 'border-purple active-card' : '']">
     <div class="d-flex flex-column justify-content-between h-100">
       <div>
-        <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">{{ label }}</p>
-        <h2 class="fw-bold mb-1 value-text">{{ displayValue }}</h2>
+        <p class="text-muted-color text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">{{ label }}</p>
+        <h2 class="fw-bold mb-1 value-text text-color">{{ displayValue }}</h2>
       </div>
       <div class="d-flex align-items-center small mt-2" :class="footerClass || descriptionColorClass">
         <slot name="footer">
@@ -95,21 +95,37 @@ watch(() => props.value, animateValue);
 .metric-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   min-height: 140px;
+  background-color: var(--color-surface);
+  border-color: var(--color-border) !important;
+}
+
+.bg-surface {
+  background-color: var(--color-surface) !important;
+}
+
+.text-color {
+  color: var(--color-text) !important;
+}
+
+.text-muted-color {
+  color: var(--color-muted) !important;
 }
 
 .metric-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 .active-card {
-  background-color: #fdfcff !important;
-  border-color: #e9e3ff !important;
+  background-color: var(--admin-active-card-bg) !important;
+  border-color: var(--admin-active-card-border) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 .value-text {
   font-size: 2rem;
   letter-spacing: -1px;
+  color: var(--color-text);
 }
 
 .icon-box {
@@ -122,33 +138,34 @@ watch(() => props.value, animateValue);
 }
 
 /* Shared utility classes for the stat cards */
-:deep(.bg-light-purple), :deep(.bg-purple-light) { background-color: rgba(139, 92, 246, 0.1); }
-:deep(.text-purple) { color: #8b5cf6; }
+:deep(.bg-light-purple), :deep(.bg-purple-light) { background-color: var(--color-purple-light); }
+:deep(.text-purple) { color: var(--color-purple); }
 
-:deep(.bg-light-orange), :deep(.bg-orange-light) { background-color: rgba(245, 158, 11, 0.1); }
-:deep(.text-orange) { color: #f59e0b; }
+:deep(.bg-light-orange), :deep(.bg-orange-light) { background-color: var(--color-warning-light); }
+:deep(.text-orange) { color: var(--color-warning); }
 
-:deep(.bg-light-green), :deep(.bg-teal-light) { background-color: rgba(16, 185, 129, 0.1); }
-:deep(.text-green), :deep(.text-teal) { color: #10b981; }
+:deep(.bg-light-green), :deep(.bg-teal-light) { background-color: var(--color-success-light); }
+:deep(.text-green), :deep(.text-teal) { color: var(--color-success); }
 
-:deep(.bg-red-light) { background-color: rgba(239, 68, 68, 0.1); }
-:deep(.text-red) { color: #ef4444; }
+:deep(.bg-red-light) { background-color: var(--color-danger-light); }
+:deep(.text-red) { color: var(--color-danger); }
 
 :deep(.mini-chart .bar) {
   width: 3px;
-  background-color: #cbd5e1;
+  background-color: var(--color-border);
   border-radius: 1px;
 }
 
 :deep(.mini-chart .bar.active) {
-  background-color: #8b5cf6;
+  background-color: var(--color-purple);
 }
 
 :deep(.text-purple-light) {
-  color: #a78bfa;
+  color: var(--color-purple);
+  opacity: 0.8;
 }
 
-:deep(.text-success) { color: #10b981 !important; }
-:deep(.text-warning) { color: #f59e0b !important; }
-:deep(.text-danger) { color: #ef4444 !important; }
+:deep(.text-success) { color: var(--color-success) !important; }
+:deep(.text-warning) { color: var(--color-warning) !important; }
+:deep(.text-danger) { color: var(--color-danger) !important; }
 </style>

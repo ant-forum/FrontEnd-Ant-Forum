@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-dashboard-layout d-flex bg-light min-vh-100">
+  <div class="admin-dashboard-layout d-flex min-vh-100">
     <!-- Sidebar -->
     <AdminSidebar />
 
@@ -7,7 +7,7 @@
     <main class="admin-main flex-grow-1">
       <div class="admin-content-wrapper">
         <header class="dashboard-header mb-5">
-          <h2 class="fw-bold mb-1">Platform Overview</h2>
+          <h2 class="fw-bold mb-1 text-adaptive">Platform Overview</h2>
           <p class="text-muted mb-0">Real-time metrics and system health monitoring</p>
         </header>
 
@@ -56,10 +56,10 @@
             </div>
 
             <!-- Platform Engagement Chart -->
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 engagement-card">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 engagement-card bg-surface border">
               <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                  <h6 class="fw-bold mb-1">Platform Engagement</h6>
+                  <h6 class="fw-bold mb-1 text-adaptive">Platform Engagement</h6>
                   <div class="d-flex align-items-center gap-3">
                     <p class="text-muted small mb-0 d-flex align-items-center">
                       <span class="live-dot me-2"></span>
@@ -71,7 +71,7 @@
                   </div>
                 </div>
                 <div class="d-flex gap-2">
-                  <div class="btn-group btn-group-sm rounded-pill p-1 bg-light">
+                  <div class="btn-group btn-group-sm rounded-pill p-1 bg-surface-hover border">
                     <button 
                       v-for="t in ['Year', 'Month', 'Week']" 
                       :key="t"
@@ -193,12 +193,22 @@ const chartPaths = {
 
 <style scoped>
 .admin-dashboard-layout {
+  min-height: 100vh;
+  background-color: var(--color-bg);
   font-family: var(--font-family-base);
   color: var(--color-text);
 }
 
+.admin-main {
+  background-color: var(--color-bg);
+}
+
 .chart-container {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+}
+
+[data-theme='dark'] .chart-container {
+  background: linear-gradient(135deg, #030712 0%, #111827 100%) !important;
 }
 
 .live-dot {
@@ -265,13 +275,19 @@ const chartPaths = {
   color: #6366f1 !important;
 }
 
+[data-theme='dark'] .btn-white.active {
+  background-color: var(--color-surface-elevated) !important;
+  color: var(--color-primary) !important;
+}
+
 .bg-success-subtle { background-color: rgba(16, 185, 129, 0.1); }
 .border-success-subtle { border-color: rgba(16, 185, 129, 0.2) !important; }
 
 /* Utilities */
 .fw-black { font-weight: 900; }
 .x-small { font-size: 0.7rem; }
-.bg-light {
-  background-color: #f8fafc !important;
-}
+.xx-small { font-size: 0.65rem; }
+.text-adaptive { color: var(--color-text) !important; }
+.bg-surface { background-color: var(--color-surface) !important; }
+.bg-surface-hover { background-color: var(--color-surface-hover) !important; }
 </style>

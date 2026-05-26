@@ -63,17 +63,19 @@ defineEmits(["action"]);
   justify-content: center;
   width: 100%;
   min-height: 300px;
-  background-color: var(--bg-grid, #f8f9fa);
+  background-color: var(--color-surface-hover);
   border-radius: var(--radius-lg);
-  border: 1px dashed var(--input-border, #ced4da);
+  border: 1px dashed var(--color-border);
+  transition: background-color var(--transition-base), border-color var(--transition-base);
 }
 
 .empty-icon {
-  color: #adb5bd;
+  color: var(--color-text-muted);
+  opacity: 0.5;
 }
 
 .empty-title {
-  color: var(--text-dark, #212529);
+  color: var(--color-text);
   font-weight: 600;
 }
 

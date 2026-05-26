@@ -894,25 +894,25 @@ const handleBlur = () => {
 <style scoped>
 /* Color variables fallback if not loaded */
 :root {
-  --brand: #7c3aed;
-  --brand-light: #a78bfa;
-  --brand-hover: #6d28d9;
-  --text-dark: #1f2937;
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --brand: var(--color-purple);
+  --brand-light: var(--color-purple-light);
+  --brand-hover: var(--color-purple);
+  --text-dark: var(--color-text);
+  --shadow-lg: var(--shadow-lg);
 }
 
 .editor-container {
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
-  background: white;
+  background: var(--color-surface);
 }
 
 .editor-container.focused {
-  border-color: #a78bfa;
-  box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.1);
+  border-color: var(--color-purple);
+  box-shadow: var(--focus-ring);
 }
 
 .editor-toolbar {
@@ -921,8 +921,8 @@ const handleBlur = () => {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 16px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--color-surface-hover);
+  border-bottom: 1px solid var(--color-border);
   flex-wrap: wrap;
 }
 
@@ -936,7 +936,7 @@ const handleBlur = () => {
 .toolbar-divider {
   width: 1.5px;
   height: 20px;
-  background: #cbd5e1;
+  background: var(--color-border);
   margin: 0 6px;
 }
 
@@ -954,14 +954,14 @@ const handleBlur = () => {
   justify-content: center;
   background: transparent;
   border: none;
-  color: #475569;
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .toolbar-btn:hover {
-  background: #e2e8f0;
-  color: #1f2937;
+  background: var(--color-border-soft);
+  color: var(--color-text);
 }
 
 .toolbar-btn.text-icon {
@@ -985,10 +985,10 @@ const handleBlur = () => {
   top: 38px;
   left: 0;
   min-width: 170px;
-  background: white;
-  border: 1px solid #cbd5e1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   padding: 6px;
   z-index: 100;
 }
@@ -1003,14 +1003,14 @@ const handleBlur = () => {
   gap: 8px;
   text-align: left;
   font-size: 13px;
-  color: #475569;
+  color: var(--color-text-muted);
   border-radius: 8px;
   cursor: pointer;
 }
 
 .toolbar-dropdown button:hover {
-  background: #f1f5f9;
-  color: #1f2937;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .toolbar-right {
@@ -1021,7 +1021,7 @@ const handleBlur = () => {
 /* Tabs modes in Editor */
 .editor-tabs-group {
   display: flex;
-  background: #e2e8f0;
+  background: var(--color-border);
   padding: 3px;
   border-radius: 10px;
   gap: 2px;
@@ -1034,7 +1034,7 @@ const handleBlur = () => {
   padding: 6px 12px;
   font-size: 12.5px;
   font-weight: 700;
-  color: #475569;
+  color: var(--color-text-muted);
   background: transparent;
   border: none;
   border-radius: 8px;
@@ -1043,19 +1043,19 @@ const handleBlur = () => {
 }
 
 .editor-tabs-group .tab-btn:hover {
-  color: #1f2937;
+  color: var(--color-text);
 }
 
 .editor-tabs-group .tab-btn.active {
-  background: white;
-  color: #7c3aed;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background: var(--color-surface);
+  color: var(--color-purple);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Editor Link popup styling */
 .link-popup-panel {
-  background: #fdfdfd;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   padding: 16px 20px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
@@ -1063,7 +1063,7 @@ const handleBlur = () => {
 .popup-title {
   font-size: 13px;
   font-weight: 700;
-  color: #7c3aed;
+  color: var(--color-purple);
   margin-bottom: 12px;
 }
 
@@ -1083,85 +1083,90 @@ const handleBlur = () => {
 .popup-field label {
   font-size: 12px;
   font-weight: 700;
-  color: #475569;
+  color: var(--color-text-muted);
 }
 
 .popup-input {
-  width: 100%;
-  padding: 9px 12px;
-  border: 1.5px solid #cbd5e1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
+  padding: 8px 12px;
   font-size: 13px;
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.2s ease;
 }
 
 .popup-input:focus {
-  outline: none;
-  border-color: #a78bfa;
-  box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.1);
+  border-color: var(--color-purple);
 }
 
 .popup-actions {
   display: flex;
-  gap: 10px;
   justify-content: flex-end;
+  gap: 12px;
 }
 
 .btn-save {
-  background: #7c3aed;
+  padding: 8px 16px;
+  background: var(--color-purple);
   color: white;
   border: none;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 8px 16px;
   border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(109, 40, 217, 0.15);
+  transition: all 0.2s ease;
 }
 
 .btn-save:hover {
-  background: #6d28d9;
+  filter: brightness(0.9);
 }
 
 .btn-cancel-link {
-  background: transparent;
-  color: #64748b;
-  border: none;
-  font-size: 13px;
-  font-weight: 700;
   padding: 8px 16px;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .btn-cancel-link:hover {
-  color: #1f2937;
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
-/* Core Editor Workspace styling */
+/* Workspace panes */
 .editor-workspace {
-  min-height: 380px;
   display: flex;
-  background: white;
+  height: 500px;
+  background: var(--color-surface);
 }
 
 .editor-pane {
   flex: 1;
-  min-width: 0;
+  overflow-y: auto;
+}
+
+.split-layout .editor-pane:first-child {
+  border-right: 1.5px solid var(--color-border);
 }
 
 .editor-textarea {
   width: 100%;
   height: 100%;
-  min-height: 380px;
   border: none;
-  outline: none;
-  resize: vertical;
+  resize: none;
   padding: 20px;
-  font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
-  font-size: 14px;
-  line-height: 1.65;
-  color: #1f2937;
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-text);
+  background: transparent;
+  outline: none;
 }
 
 /* Live Preview Panel */
@@ -1310,22 +1315,22 @@ const handleBlur = () => {
   max-height: none;
 }
 
-/* Bottom Editor status bar */
+/* Status Bar */
 .editor-status-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 8px 16px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: var(--color-surface-hover);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
   font-size: 12px;
-  color: #64748b;
 }
 
 .status-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .status-counter i {
@@ -1334,27 +1339,23 @@ const handleBlur = () => {
 
 .status-divider {
   width: 1px;
-  height: 12px;
-  background: #cbd5e1;
-}
-
-.status-counter strong {
-  color: #1f2937;
+  height: 14px;
+  background: var(--color-border);
 }
 
 .autosave-status {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-weight: 600;
 }
 
 .autosave-status.saved {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .autosave-status.saving {
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 /* Animations */

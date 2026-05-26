@@ -52,7 +52,7 @@ onUnmounted(() => {
         <!-- Sticky Sidebar (Table of Contents & Share) -->
         <aside class="col-lg-3 d-none d-lg-block">
           <div class="sticky-sidebar-container">
-            <div class="sticky-toc p-4 rounded-4 bg-light-purple mb-4">
+            <div class="sticky-toc p-4 rounded-4 bg-surface-hover mb-4 border">
               <h6 class="text-muted fw-bold mb-4 font-xs text-uppercase tracking-wide">Table of Contents</h6>
               <nav class="toc-nav d-flex flex-column gap-3">
                 <a href="#evolution" 
@@ -79,7 +79,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Social Share -->
-            <div class="p-4 rounded-4 border share-card bg-white">
+            <div class="p-4 rounded-4 border share-card bg-surface">
               <h6 class="text-muted fw-bold mb-3 font-xs text-uppercase tracking-wide">Share this Story</h6>
               <div class="d-flex gap-2">
                 <button class="btn btn-light rounded-circle share-btn" title="Share on Twitter"><i class="bi bi-twitter-x"></i></button>
@@ -94,18 +94,18 @@ onUnmounted(() => {
         <article class="col-lg-8 offset-lg-1">
           <!-- Metadata -->
           <div class="mb-4">
-            <span class="badge bg-purple-subtle text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3 me-2">VUE.JS</span>
-            <span class="badge bg-purple-subtle text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3">ARCHITECTURE</span>
+            <span class="badge bg-purple-light text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3 me-2">VUE.JS</span>
+            <span class="badge bg-purple-light text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3">ARCHITECTURE</span>
           </div>
 
-          <h1 class="display-4 fw-bold text-dark mb-4 article-title">
+          <h1 class="display-4 fw-bold text-adaptive mb-4 article-title">
             Mastering State Management in Vue 3: Beyond the Basics
           </h1>
 
           <div class="d-flex align-items-center mb-5">
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA96xxWrXvoQpLKogis081FV20yF3_cAn54nojVxz-rxfG_DP6qVC4XHvbaFme-NmhsPRY07BDvVUzVOPsu96Dp-Sp88IVNgvqAwKv2AWL63ksuHfPnzZa0sFcrfXkdYaKFeKkGNzXH47pI1Ko7gHknT04_osktGO5MG-d0illH3HtNGMwBF22XZ5TN4fuhUPlUpKaMYZ9AZMWPOBzt8y6SxvOXwHxzTGTj5K4VR0r6jp2GxsocKEcwnUgm7PeF9zJGt3s5WYqgFrw" class="rounded-circle me-3 border" width="48" height="48" alt="Author">
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA96xxWrXvoQpLKogis081FV20yF3_cAn54nojVxz-rxfG_DP6qVC4XHvbaFme-NmhsPRY07BDvVUzVOPsu96Dp-Sp88IVNgvqAwKv2AWL63ksuHfPnzZa0sFcrfXkdYaKFeKkGNzXH47pI1Ko7gHknT04_osktGO5MG-d0illH3HtNGMwBF22XZ5TN4fuhUPlUpKaMYZ9AZMWPOBzt8y6SxvOXwHxzTGTj5K4VR0r6jp2GxsocKEcwnUgm7PeF9zJGt3s5WYqgFrw" class="rounded-circle me-3 border border-theme" width="48" height="48" alt="Author">
             <div>
-              <h6 class="mb-0 fw-bold text-dark">Elena Rodriguez</h6>
+              <h6 class="mb-0 fw-bold text-adaptive">Elena Rodriguez</h6>
               <div class="text-muted font-sm d-flex align-items-center mt-1">
                 Oct 26, 2023 &nbsp;&bull;&nbsp; 8 min read
               </div>
@@ -113,10 +113,10 @@ onUnmounted(() => {
           </div>
 
           <!-- Hero Image -->
-          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzsfO0Uy0oSqfPbYpwmNxuQ05SnXwi8FJutwX2Sg773d1iTzrF2c__8LgV7MhesTylLgVxk1X-RkYmHOqk5hTmArCDph5M26rngNWKAQmRhC7E7izqP4TfcgCF8Wp1ATmlqKrXzG3aru1yOD_Ee1vuEPCC7qY9egtngBiy2rACeypgUs0sv7y1XQI2zEKOcquIsLXxEb2-qidSvDKlu2edpFMin-fOFqrsG3YQEQH620HNsjO47Wxb2ZBuQs3bXw1laV3kcOywFCg" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover" style="max-height: 400px;" alt="Hero Image">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzsfO0Uy0oSqfPbYpwmNxuQ05SnXwi8FJutwX2Sg773d1iTzrF2c__8LgV7MhesTylLgVxk1X-RkYmHOqk5hTmArCDph5M26rngNWKAQmRhC7E7izqP4TfcgCF8Wp1ATmlqKrXzG3aru1yOD_Ee1vuEPCC7qY9egtngBiy2rACeypgUs0sv7y1XQI2zEKOcquIsLXxEb2-qidSvDKlu2edpFMin-fOFqrsG3YQEQH620HNsjO47Wxb2ZBuQs3bXw1laV3kcOywFCg" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme" style="max-height: 400px;" alt="Hero Image">
 
           <!-- Article Body -->
-          <div class="article-body text-dark lh-lg">
+          <div class="article-body text-adaptive lh-lg">
             <p class="lead mb-4 text-muted">
               State management is often the most challenging aspect of building robust Vue applications. While passing props down and emitting events up works for small components, it quickly becomes unmanageable as your app grows. This is where centralized state management comes into play.
             </p>
@@ -144,7 +144,7 @@ onUnmounted(() => {
             </p>
 
             <!-- Code Block -->
-            <div class="code-block-wrapper my-5 rounded-4 overflow-hidden shadow-sm">
+            <div class="code-block-wrapper my-5 rounded-4 overflow-hidden shadow-sm border">
               <div class="code-header d-flex align-items-center px-4 py-3 bg-dark">
                 <span class="dot text-danger">&bull;</span>
                 <span class="dot text-warning">&bull;</span>
@@ -181,19 +181,19 @@ onUnmounted(() => {
 
             <!-- Inline Image -->
             <figure class="my-5 text-center">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu_Rf69uYa8hP1M0Qx_hpMYmnbw_Nm8e5JkE1-fRHhTDN0lLWPT5WdoEDwnxYVgnNJUJC27Y73upk0OeQOXcirdQua1ILTJh9FrHiQcPgfWF2kFlVtRplg2bDfn_CrIqwNfGx8oLjapldTiEKuZIhdUAjMFz9tpcMMcdHpJaqfXrQkau6B3kz-0KcyfW3M3TuGU2nAalmx92x6mNsQVwMilvxWHSJpqIZGkXZp2oFlVt_DeVtE_6m1GwQ5APQjhhj6d8z1rUzuV_7M" class="img-fluid rounded-4 shadow-sm" alt="Pinia Devtools">
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu_Rf69uYa8hP1M0Qx_hpMYmnbw_Nm8e5JkE1-fRHhTDN0lLWPT5WdoEDwnxYVgnNJUJC27Y73upk0OeQOXcirdQua1ILTJh9FrHiQcPgfWF2kFlVtRplg2bDfn_CrIqwNfGx8oLjapldTiEKuZIhdUAjMFz9tpcMMcdHpJaqfXrQkau6B3kz-0KcyfW3M3TuGU2nAalmx92x6mNsQVwMilvxWHSJpqIZGkXZp2oFlVt_DeVtE_6m1GwQ5APQjhhj6d8z1rUzuV_7M" class="img-fluid rounded-4 shadow-sm border border-theme" alt="Pinia Devtools">
               <figcaption class="mt-3 text-muted font-sm font-italic">Figure 1: Pinia provides excellent Devtools integration out of the box.</figcaption>
             </figure>
 
             <!-- Key Takeaways -->
-            <div id="key-takeaways" class="takeaways-box p-4 rounded-4 my-5 position-relative bg-light-purple">
+            <div id="key-takeaways" class="takeaways-box p-4 rounded-4 my-5 position-relative bg-surface-hover border">
               <div class="takeaways-icon bg-purple text-white d-flex align-items-center justify-content-center rounded-circle position-absolute">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-lightbulb-fill" viewBox="0 0 16 16">
                   <path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13h-5a.5.5 0 0 1-.46-.302l-.761-1.77a1.964 1.964 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm3 8.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1l-.224.447a1 1 0 0 1-.894.553H6.618a1 1 0 0 1-.894-.553L5.5 15a.5.5 0 0 1-.5-.5z"/>
                 </svg>
               </div>
-              <h4 class="fw-bold text-dark mb-3 ps-4 ms-2">Key Takeaways</h4>
-              <ul class="mb-0 text-dark ps-5 pe-3 lh-lg">
+              <h4 class="fw-bold text-adaptive mb-3 ps-4 ms-2">Key Takeaways</h4>
+              <ul class="mb-0 text-adaptive ps-5 pe-3 lh-lg">
                 <li class="mb-2"><strong>Ditch the Mutations:</strong> Pinia actions combine the responsibilities of Vuex actions and mutations, streamlining your state update logic.</li>
                 <li class="mb-2"><strong>Embrace Reactivity:</strong> Use standard `ref` and `computed` within store definitions, allowing for easy extraction from existing components.</li>
                 <li><strong>Type Safety:</strong> Pinia is built with TypeScript in mind, providing excellent auto-completion and type inference without complex wrappers.</li>
@@ -202,11 +202,11 @@ onUnmounted(() => {
           </div>
 
           <!-- Newsletter -->
-          <div class="newsletter-section mt-5 p-5 rounded-4 text-center position-relative overflow-hidden">
+          <div class="newsletter-section mt-5 p-5 rounded-4 text-center position-relative overflow-hidden border">
             <div class="newsletter-gradient position-absolute top-0 start-0 w-100 h-100"></div>
             <div class="position-relative z-3">
               <div class="d-flex justify-content-center mb-3">
-                <div class="bg-white rounded-3 p-2 shadow-sm text-purple">
+                <div class="bg-surface rounded-3 p-2 shadow-sm text-purple border">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-envelope-paper-heart-fill" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="Mm8 3a1 1 0 0 1 1 1v1h-2V4a1 1 0 0 1 1-1zm1 3v2h2v-2h-2zm-3 0v2H4v-2h2z"/>
                     <path d="M4 8.5v4.5A1.5 1.5 0 0 0 5.5 14.5h5a1.5 1.5 0 0 0 1.5-1.5v-4.5h-9z"/>
@@ -215,30 +215,30 @@ onUnmounted(() => {
                   </svg>
                 </div>
               </div>
-              <h3 class="fw-bold mb-3 text-dark">Join the DevEcosystem Weekly</h3>
+              <h3 class="fw-bold mb-3 text-adaptive">Join the DevEcosystem Weekly</h3>
               <p class="text-muted mb-4 mx-auto" style="max-width: 400px;">
                 Get deep-dive tutorials and architecture patterns sent straight to your inbox every Wednesday.
               </p>
               <form class="d-flex justify-content-center mx-auto" style="max-width: 450px;">
-                <input type="email" class="form-control form-control-lg rounded-pill-start border-end-0 shadow-sm" placeholder="Enter your email address">
+                <input type="email" class="form-control form-control-lg rounded-pill-start border-end-0 shadow-sm bg-surface" placeholder="Enter your email address">
                 <button class="btn btn-dark btn-lg rounded-pill-end px-4 shadow-sm" type="button">Subscribe</button>
               </form>
             </div>
           </div>
 
-          <hr class="my-5 border-light">
+          <hr class="my-5 border-theme">
 
           <!-- Related Publications -->
           <div>
-            <h5 class="fw-bold mb-4 text-dark text-uppercase tracking-wide font-sm">Related Publications</h5>
+            <h5 class="fw-bold mb-4 text-adaptive text-uppercase tracking-wide font-sm">Related Publications</h5>
             <div class="row g-4">
               <div class="col-md-6">
                 <router-link to="/blog/2" class="text-decoration-none">
-                  <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden related-card bg-white">
+                  <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden related-card bg-surface">
                     <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCB2sdCEKnAG-jYy3YmOU73Fq4gq-1chXqB2y_e2cLyj5-UnCQEl7nsC79vtaQAVoq84zsNfB8Hiln0ea736Wm5QtMilvYWwbnkp3oXZWjtn-7tlO-MI2sqBQXqoyst1iby1ZJZasMsyRNj19nwD1dE_4HpFsUNjgDJQx9zXkP_yUck03_ixdbEPA5v7BGSyU7-YCtyUbM0LixImwF2sXxtNqA2hjc84nmFSSpB_jGGFMPHBG6GOmRWRUqGcPVg9FGCIO5_s0ROoP8" class="card-img-top object-fit-cover" height="140" alt="Related post">
                     <div class="card-body p-3">
                       <div class="text-purple fw-semibold font-xs mb-1">ARCHITECTURE</div>
-                      <h6 class="fw-bold text-dark mb-1 lh-base">Scaling Frontend Architecture for Enterprise Applications</h6>
+                      <h6 class="fw-bold text-adaptive mb-1 lh-base">Scaling Frontend Architecture for Enterprise Applications</h6>
                       <div class="text-muted font-xs">12 min read</div>
                     </div>
                   </div>
@@ -246,11 +246,11 @@ onUnmounted(() => {
               </div>
               <div class="col-md-6">
                 <router-link to="/blog/3" class="text-decoration-none">
-                  <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden related-card bg-white">
+                  <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden related-card bg-surface">
                     <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuArlYEHQrTu4obaqv3ymp3jjXYE6wEApFKkGDTrcAYFfgWabzMxSzoW0SQ3IBRhlCmiUT5nbLyKT3YUjWmrYfAlfmLGNt1g-9Fog1rqEM-M76IBeDES4AlZlSoK8VWKNAL8TDyc4y1fqeYB7pIY77xpjvu37IqhVyBDXdQI0k6RlYWCHFyGgRYzHevS2T57TcMSCCnu0nQ0B0ZB9unbJRfl5LQs7UQ3d8P9i0v6_WwbP46RdPUTz6H5JudN847OuvBy7zQURXS627g" class="card-img-top object-fit-cover" height="140" alt="Related post">
                     <div class="card-body p-3">
                       <div class="text-purple fw-semibold font-xs mb-1">CONCEPTS</div>
-                      <h6 class="fw-bold text-dark mb-1 lh-base">Advanced Generics: Building Reusable State Composables</h6>
+                      <h6 class="fw-bold text-adaptive mb-1 lh-base">Advanced Generics: Building Reusable State Composables</h6>
                       <div class="text-muted font-xs">10 min read</div>
                     </div>
                   </div>
@@ -268,11 +268,11 @@ onUnmounted(() => {
 
 <style scoped>
 /* Typography & Colors */
-.text-purple { color: #9333ea; }
-.bg-purple { background-color: #9333ea; }
-.bg-purple-subtle { background-color: #f3e8ff; }
-.bg-light-purple { background-color: #faf5ff; }
-.bg-darker { background-color: #111827; }
+.text-purple { color: var(--color-purple); }
+.bg-purple { background-color: var(--color-purple); }
+.bg-purple-light { background-color: var(--color-purple-light); }
+.bg-surface-hover { background-color: var(--color-surface-hover); }
+.bg-darker { background-color: #0a0e17; }
 .text-pink { color: #ec4899; }
 .text-green { color: #10b981; }
 .text-blue { color: #60a5fa; }
@@ -281,6 +281,18 @@ onUnmounted(() => {
 .font-sm { font-size: 0.875rem; }
 .tracking-wide { letter-spacing: 0.05em; }
 .lh-lg { line-height: 1.8; }
+
+.text-adaptive {
+  color: var(--color-text) !important;
+}
+
+.border-theme {
+  border-color: var(--color-border) !important;
+}
+
+.bg-surface {
+  background-color: var(--color-surface) !important;
+}
 
 /* Reading Progress */
 .reading-progress-container {
@@ -295,20 +307,20 @@ onUnmounted(() => {
 
 .reading-progress-bar {
   height: 100%;
-  background: #7c3aed;
+  background: var(--color-purple);
   transition: width 0.1s ease-out;
 }
 
 /* Back Button */
 .btn-back-soft {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.2s ease;
 }
 
 .btn-back-soft:hover {
-  color: #7c3aed;
+  color: var(--color-purple);
   transform: translateX(-3px);
 }
 
@@ -319,8 +331,9 @@ onUnmounted(() => {
 }
 
 .blog-detail-layout {
-  background: #fdfcff;
+  background: var(--color-bg);
   font-family: 'Sora', sans-serif;
+  color: var(--color-text);
 }
 
 /* Typography Overrides */
@@ -336,13 +349,13 @@ onUnmounted(() => {
 }
 
 .toc-nav {
-  border-left: 2px solid #e5e7eb;
+  border-left: 2px solid var(--color-border);
   padding-left: 1rem;
 }
 
 /* Share Buttons */
 .share-card {
-  border: 1px solid #f1f5f9 !important;
+  border: 1px solid var(--color-border) !important;
 }
 
 .share-btn {
@@ -351,13 +364,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface-hover);
   transition: all 0.2s ease;
+  border: 1px solid var(--color-border);
 }
 
 .share-btn:hover {
-  background-color: #f3e8ff;
-  color: #7c3aed;
+  background-color: var(--color-purple-light);
+  color: var(--color-purple);
+  border-color: var(--color-purple);
 }
 
 .toc-link {
@@ -373,7 +389,7 @@ onUnmounted(() => {
   transform: translateY(-50%);
   width: 4px;
   height: 0;
-  background-color: #9333ea;
+  background-color: var(--color-purple);
   transition: height 0.2s ease;
   border-radius: 4px;
 }
@@ -383,12 +399,12 @@ onUnmounted(() => {
 }
 
 .toc-link:hover {
-  color: #9333ea !important;
+  color: var(--color-purple) !important;
 }
 
 /* Code Block */
 .code-block-wrapper {
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid var(--color-border);
 }
 
 .code-header {
@@ -403,7 +419,7 @@ onUnmounted(() => {
 
 /* Takeaways */
 .takeaways-box {
-  border-left: 4px solid #9333ea;
+  border-left: 4px solid var(--color-purple);
 }
 
 .takeaways-icon {
@@ -411,16 +427,16 @@ onUnmounted(() => {
   height: 32px;
   top: -16px;
   left: 32px;
-  box-shadow: 0 4px 6px rgba(147, 51, 234, 0.3);
+  box-shadow: 0 4px 6px var(--color-shadow);
 }
 
 /* Newsletter */
 .newsletter-section {
-  border: 1px solid #f3e8ff;
+  border: 1px solid var(--color-border);
 }
 
 .newsletter-gradient {
-  background: linear-gradient(135deg, rgba(243,232,255,1) 0%, rgba(255,255,255,1) 100%);
+  background: linear-gradient(135deg, var(--color-surface-hover) 0%, var(--color-surface) 100%);
   z-index: 1;
 }
 
@@ -438,12 +454,12 @@ onUnmounted(() => {
 /* Related Cards */
 .related-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid #f3f4f6 !important;
+  border: 1px solid var(--color-border) !important;
 }
 
 .related-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 15px rgba(0,0,0,0.05) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 @media (max-width: 991px) {

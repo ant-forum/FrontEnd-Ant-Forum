@@ -441,9 +441,9 @@ const clearFilters = () => {
 
 .skeleton-card {
   display: flex;
-  background: white;
+  background: var(--color-surface);
   border-radius: 18px;
-  border: 1px solid rgba(229, 231, 235, 0.6);
+  border: 1px solid var(--color-border);
   padding: 20px 22px;
   gap: 16px;
   overflow: hidden;
@@ -461,7 +461,7 @@ const clearFilters = () => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -488,7 +488,7 @@ const clearFilters = () => {
   width: 60px;
   height: 20px;
   border-radius: 100px;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -497,7 +497,7 @@ const clearFilters = () => {
   width: 100px;
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -510,7 +510,7 @@ const clearFilters = () => {
   width: 80%;
   height: 18px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }

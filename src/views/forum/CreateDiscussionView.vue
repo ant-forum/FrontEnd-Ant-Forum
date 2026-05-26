@@ -65,15 +65,15 @@ const getTagColor = (tag) => {
 };
 
 const tagColorMap = {
-  blue: { bg: "#dbeafe", color: "#1d4ed8" },
-  orange: { bg: "#ffedd5", color: "#c2410c" },
-  green: { bg: "#dcfce7", color: "#15803d" },
-  purple: { bg: "#ede9fe", color: "#7c3aed" },
-  pink: { bg: "#fce7f3", color: "#be185d" },
-  teal: { bg: "#ccfbf1", color: "#0f766e" },
-  red: { bg: "#fee2e2", color: "#dc2626" },
-  gray: { bg: "#f3f4f6", color: "#374151" },
-  yellow: { bg: "#fef9c3", color: "#854d0e" },
+  blue:   { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
+  orange: { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
+  green:  { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  purple: { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
+  pink:   { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
+  teal:   { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  red:    { bg: 'var(--color-tag-red-bg)', color: 'var(--color-tag-red-text)' },
+  gray:   { bg: 'var(--color-surface-hover)', color: 'var(--color-text-muted)' },
+  yellow: { bg: 'var(--color-warning-light)', color: 'var(--color-warning)' },
 };
 
 const getTagChipStyle = (color) => {
@@ -715,7 +715,7 @@ const handleSubmit = async () => {
 <style scoped>
 .create-page {
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--color-bg);
   padding-bottom: 80px;
 }
 
@@ -755,7 +755,7 @@ const handleSubmit = async () => {
   gap: 8px;
   background: transparent;
   border: none;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -766,8 +766,8 @@ const handleSubmit = async () => {
 }
 
 .back-btn:hover {
-  color: var(--brand);
-  background: #f1f5f9;
+  color: var(--color-primary);
+  background: var(--color-surface-hover);
 }
 
 .header-content-wrapper {
@@ -775,7 +775,7 @@ const handleSubmit = async () => {
   justify-content: space-between;
   align-items: center;
   gap: 24px;
-  background: white;
+  background: var(--color-surface);
   border-radius: 20px;
   padding: 24px 32px;
   box-shadow: var(--shadow-sm);
@@ -785,13 +785,13 @@ const handleSubmit = async () => {
 .header-main h1 {
   font-size: 26px;
   font-weight: 800;
-  color: var(--text-dark);
+  color: var(--color-text);
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
 .header-main p {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 15px;
   margin: 0;
   line-height: 1.5;
@@ -803,22 +803,18 @@ const handleSubmit = async () => {
   justify-content: center;
   width: 56px;
   height: 56px;
-  background: linear-gradient(
-    135deg,
-    rgba(109, 40, 217, 0.1),
-    rgba(124, 58, 237, 0.2)
-  );
-  color: var(--brand-light);
+  background: var(--color-purple-light);
+  color: var(--color-purple);
   border-radius: 16px;
   font-size: 24px;
 }
 
 /* Draft banner recovery card */
 .draft-banner {
-  background: rgba(253, 244, 255, 0.8);
+  background: var(--color-purple-light);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(240, 171, 252, 0.6);
-  border-left: 5px solid #d946ef;
+  border: 1px solid var(--color-purple);
+  border-left: 5px solid var(--color-purple);
   border-radius: 16px;
   padding: 16px 24px;
   display: flex;
@@ -826,7 +822,7 @@ const handleSubmit = async () => {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 18px rgba(217, 70, 239, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .draft-banner-content {
@@ -839,8 +835,8 @@ const handleSubmit = async () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #fdf2ff;
-  color: #d946ef;
+  background: var(--color-surface);
+  color: var(--color-purple);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -850,13 +846,13 @@ const handleSubmit = async () => {
 .draft-text strong {
   display: block;
   font-size: 14px;
-  color: #701a75;
+  color: var(--color-text);
 }
 
 .draft-text p {
   margin: 2px 0 0;
   font-size: 13px;
-  color: #86198f;
+  color: var(--color-text-muted);
 }
 
 .draft-banner-actions {
@@ -866,7 +862,7 @@ const handleSubmit = async () => {
 }
 
 .btn-restore {
-  background: #d946ef;
+  background: var(--color-purple);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -874,16 +870,16 @@ const handleSubmit = async () => {
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(217, 70, 239, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-restore:hover {
-  background: #c084fc;
+  filter: brightness(0.9);
 }
 
 .btn-discard {
   background: transparent;
-  color: #701a75;
+  color: var(--color-text-muted);
   border: none;
   padding: 8px 12px;
   font-size: 13px;
@@ -893,7 +889,7 @@ const handleSubmit = async () => {
 }
 
 .btn-discard:hover {
-  background: rgba(240, 171, 252, 0.2);
+  background: var(--color-surface-hover);
 }
 
 /* 2-Column Grid Layout */
@@ -909,7 +905,7 @@ const handleSubmit = async () => {
 }
 
 .form-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 24px;
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
@@ -925,7 +921,7 @@ const handleSubmit = async () => {
   left: 0;
   right: 0;
   height: 5px;
-  background: linear-gradient(90deg, var(--brand-light), #10b981, #3b82f6);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-success), var(--color-info));
 }
 
 .create-form {
@@ -941,7 +937,7 @@ const handleSubmit = async () => {
   gap: 10px;
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--color-text);
 }
 
 .num-badge {
@@ -951,7 +947,7 @@ const handleSubmit = async () => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--brand-light), var(--brand));
+  background: var(--color-primary);
   color: white;
   font-size: 12px;
   font-weight: 700;
@@ -960,12 +956,12 @@ const handleSubmit = async () => {
 .section-desc {
   margin: 4px 0 12px 34px;
   font-size: 13.5px;
-  color: #64748b;
+  color: var(--color-text-muted);
   line-height: 1.4;
 }
 
 .required {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 /* Input Fields styling */
@@ -978,16 +974,16 @@ const handleSubmit = async () => {
   width: 100%;
   padding: 14px 18px;
   padding-right: 110px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--color-border);
   border-radius: 12px;
   font-size: 14.5px;
-  background: #f8fafc;
-  color: var(--text-dark);
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .form-input:focus {
-  background: white;
-  border-color: var(--brand-light);
+  background: var(--color-surface);
+  border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
   outline: none;
 }
@@ -998,18 +994,18 @@ const handleSubmit = async () => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 11.5px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   font-weight: 600;
   pointer-events: none;
-  background: white;
+  background: var(--color-surface);
   padding: 2px 6px;
   border-radius: 6px;
   transition: all 0.2s ease;
 }
 
 .char-indicator.valid {
-  color: #10b981;
-  background: #ecfdf5;
+  color: var(--color-success);
+  background: var(--color-success-light);
 }
 
 /* Category grid selector styling */
@@ -1021,8 +1017,8 @@ const handleSubmit = async () => {
 }
 
 .category-card {
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-hover);
   border-radius: 16px;
   padding: 16px 12px;
   text-align: center;
@@ -1035,8 +1031,8 @@ const handleSubmit = async () => {
 }
 
 .category-card:hover {
-  background: white;
-  border-color: #cbd5e1;
+  background: var(--color-surface);
+  border-color: var(--color-primary);
   transform: translateY(-2px);
 }
 
@@ -1048,15 +1044,15 @@ const handleSubmit = async () => {
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  background: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
 }
 
 .category-meta strong {
   display: block;
   font-size: 13px;
-  color: var(--text-dark);
+  color: var(--color-text);
   font-weight: 700;
   margin-bottom: 2px;
 }
@@ -1064,21 +1060,19 @@ const handleSubmit = async () => {
 .category-meta span {
   display: block;
   font-size: 10.5px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   line-height: 1.25;
 }
 
 /* Category specific colors and active states */
 .category-card.active {
-  background: white;
+  background: var(--color-surface);
   transform: translateY(-2px);
 }
 
 .category-card.active.question {
-  border-color: #3b82f6;
-  box-shadow:
-    0 0 0 3px rgba(59, 130, 246, 0.12),
-    0 4px 12px rgba(59, 130, 246, 0.08);
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
 }
 .category-card.active.question .category-icon-wrapper {
   background: #eff6ff;

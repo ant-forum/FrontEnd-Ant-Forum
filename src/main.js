@@ -12,6 +12,22 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./assets/styles/global.css";
 
+if (typeof window !== "undefined") {
+  const isAdminRoute = window.location.pathname.startsWith("/admin");
+  if (isAdminRoute) {
+    const saved = localStorage.getItem("admin_theme");
+    const prefersDark =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme = saved ? saved : prefersDark ? "dark" : "light";
+    if (theme === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  }
+}
+
 const app = createApp(App);
 
 app.use(createPinia());

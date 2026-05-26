@@ -1,7 +1,7 @@
 <template>
-  <div class="settings-layout d-flex bg-light min-vh-100">
+  <div class="settings-layout d-flex min-vh-100">
     <!-- Sidebar -->
-    <AdminSidebar />
+    <AdminSidebar activePage="settings" />
 
     <!-- Main Content -->
     <main class="admin-main flex-grow-1">
@@ -9,11 +9,11 @@
         <!-- Header -->
       <header class="settings-header mb-5 d-flex justify-content-between align-items-end">
         <div>
-          <h2 class="fw-bold mb-1">System Settings</h2>
+          <h2 class="fw-bold mb-1 text-adaptive">System Settings</h2>
           <p class="text-muted small mb-0">Manage platform configurations and administrative preferences</p>
         </div>
         <div class="d-flex gap-2">
-          <div class="badge bg-white text-dark border shadow-sm rounded-pill px-3 py-2 d-flex align-items-center gap-2 font-xs fw-bold">
+          <div class="badge bg-surface text-adaptive border shadow-sm rounded-pill px-3 py-2 d-flex align-items-center gap-2 font-xs fw-bold">
             <span class="live-dot-sm"></span> System Status: Operational
           </div>
         </div>
@@ -22,13 +22,13 @@
       <div class="row g-4">
         <!-- Settings Navigation -->
         <div class="col-lg-3">
-          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-surface border">
             <div class="list-group list-group-flush settings-nav">
               <button 
                 v-for="tab in tabs" 
                 :key="tab.id"
                 @click="activeTab = tab.id"
-                :class="['list-group-item list-group-item-action border-0 p-3 d-flex align-items-center gap-3 transition-all', activeTab === tab.id ? 'active' : '']"
+                :class="['list-group-item list-group-item-action border-0 p-3 d-flex align-items-center gap-3 transition-all bg-transparent text-adaptive', activeTab === tab.id ? 'active' : '']"
               >
                 <i :class="[tab.icon, 'fs-5']"></i>
                 <span class="fw-bold small">{{ tab.label }}</span>
@@ -39,22 +39,22 @@
 
         <!-- Settings Content -->
         <div class="col-lg-9">
-          <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white h-100">
+          <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-surface border h-100">
             <!-- Profile Settings -->
             <div v-if="activeTab === 'profile'" class="animate__animated animate__fadeIn">
               <div class="d-flex justify-content-between align-items-start mb-4">
-                <h5 class="fw-bold mb-0">Administrator Profile</h5>
-                <span class="badge bg-purple-subtle text-purple rounded-pill px-3 py-1 font-xs fw-bold">Admin Level 1</span>
+                <h5 class="fw-bold mb-0 text-adaptive">Administrator Profile</h5>
+                <span class="badge bg-purple-light text-purple rounded-pill px-3 py-1 font-xs fw-bold">Admin Level 1</span>
               </div>
-              <div class="d-flex align-items-center mb-5 gap-4 p-4 rounded-4 bg-light-purple border border-white">
+              <div class="d-flex align-items-center mb-5 gap-4 p-4 rounded-4 bg-surface-hover border border-theme">
                 <div class="position-relative">
-                  <img src="https://i.pravatar.cc/150?u=alex" alt="Profile" class="rounded-circle shadow-md border border-4 border-white" width="100" height="100">
-                  <button class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 shadow-sm p-2 border border-2 border-white">
+                  <img src="https://i.pravatar.cc/150?u=alex" alt="Profile" class="rounded-circle shadow-md border border-4 border-theme" width="100" height="100">
+                  <button class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 shadow-sm p-2 border border-2 border-theme">
                     <i class="bi bi-camera-fill"></i>
                   </button>
                 </div>
                 <div>
-                  <h6 class="fw-bold mb-1 fs-5">Alex Rivera</h6>
+                  <h6 class="fw-bold mb-1 fs-5 text-adaptive">Alex Rivera</h6>
                   <p class="text-muted small mb-0 d-flex align-items-center gap-2">
                     <i class="bi bi-briefcase"></i> Lead Architect 
                     <span class="text-silver">•</span> 
@@ -66,19 +66,19 @@
               <div class="row g-4">
                 <div class="col-md-6">
                   <div class="form-floating mb-0">
-                    <input type="text" class="form-control border-0 bg-light p-3 h-auto rounded-4" id="fullName" value="Alex Rivera" placeholder="Full Name">
+                    <input type="text" class="form-control border-0 bg-surface-hover text-adaptive p-3 h-auto rounded-4" id="fullName" value="Alex Rivera" placeholder="Full Name">
                     <label for="fullName" class="text-muted small fw-bold text-uppercase px-4">Full Name</label>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-floating mb-0">
-                    <input type="email" class="form-control border-0 bg-light p-3 h-auto rounded-4" id="emailAddr" value="alex.rivera@ant.dev" placeholder="Email Address">
+                    <input type="email" class="form-control border-0 bg-surface-hover text-adaptive p-3 h-auto rounded-4" id="emailAddr" value="alex.rivera@ant.dev" placeholder="Email Address">
                     <label for="emailAddr" class="text-muted small fw-bold text-uppercase px-4">Email Address</label>
                   </div>
                 </div>
                 <div class="col-12">
                   <div class="form-floating mb-0">
-                    <textarea class="form-control border-0 bg-light p-3 h-auto rounded-4" id="bio" rows="3" placeholder="Bio" style="min-height: 100px;">Managing the technical operations and system architecture for the ANT ecosystem.</textarea>
+                    <textarea class="form-control border-0 bg-surface-hover text-adaptive p-3 h-auto rounded-4" id="bio" rows="3" placeholder="Bio" style="min-height: 100px;">Managing the technical operations and system architecture for the ANT ecosystem.</textarea>
                     <label for="bio" class="text-muted small fw-bold text-uppercase px-4">Bio</label>
                   </div>
                 </div>
@@ -87,13 +87,13 @@
               <div class="row g-4 mt-2">
                 <div class="col-md-6">
                   <label class="form-label text-muted small fw-bold text-uppercase mb-2 ms-2">Language</label>
-                  <select v-model="selectedLanguage" class="form-select border-0 bg-light p-3 rounded-4">
+                  <select v-model="selectedLanguage" class="form-select border-0 bg-surface-hover text-adaptive p-3 rounded-4">
                     <option v-for="lang in languages" :key="lang.code" :value="lang.code">{{ lang.name }}</option>
                   </select>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label text-muted small fw-bold text-uppercase mb-2 ms-2">Timezone</label>
-                  <select v-model="selectedTimezone" class="form-select border-0 bg-light p-3 rounded-4">
+                  <select v-model="selectedTimezone" class="form-select border-0 bg-surface-hover text-adaptive p-3 rounded-4">
                     <option value="UTC-8">Pacific Time (US & Canada)</option>
                     <option value="UTC+0">Western European Time (London)</option>
                     <option value="UTC+7">Indochina Time (Bangkok)</option>
@@ -102,24 +102,24 @@
               </div>
 
               <!-- Account Status -->
-              <div class="mt-5 p-4 rounded-4 bg-light border d-flex justify-content-between align-items-center">
+              <div class="mt-5 p-4 rounded-4 bg-surface-hover border border-theme d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
-                  <div class="icon-box-sm rounded-circle bg-success-subtle d-flex align-items-center justify-content-center">
+                  <div class="icon-box-sm rounded-circle bg-success-light d-flex align-items-center justify-content-center">
                     <i class="bi bi-patch-check-fill text-success"></i>
                   </div>
                   <div>
-                    <h6 class="fw-bold mb-0 small">Verified Administrator</h6>
+                    <h6 class="fw-bold mb-0 small text-adaptive">Verified Administrator</h6>
                     <p class="text-muted xx-small mb-0">Your account has full system permissions.</p>
                   </div>
                 </div>
-                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 fw-bold text-uppercase xx-small">Active</span>
+                <span class="badge bg-success-light text-success rounded-pill px-3 py-2 fw-bold text-uppercase xx-small">Active</span>
               </div>
             </div>
 
             <!-- Appearance Settings -->
             <div v-if="activeTab === 'appearance'" class="animate__animated animate__fadeIn">
               <div class="d-flex justify-content-between align-items-start mb-4">
-                <h5 class="fw-bold mb-0">Dashboard Appearance</h5>
+                <h5 class="fw-bold mb-0 text-adaptive">Dashboard Appearance</h5>
                 <button class="btn btn-link text-purple p-0 small fw-bold text-decoration-none">Reset to Defaults</button>
               </div>
               
@@ -133,13 +133,13 @@
                     >
                       <div :class="['theme-swatch position-relative', theme.class]">
                         <div v-if="selectedTheme === theme.id" class="position-absolute top-50 start-50 translate-middle">
-                          <div class="bg-white rounded-circle p-2 shadow-sm">
+                          <div class="bg-surface rounded-circle p-2 shadow-sm border">
                             <i class="bi bi-check-lg text-purple fs-4"></i>
                           </div>
                         </div>
                       </div>
-                      <div class="p-3 bg-white border-top">
-                        <div class="fw-bold small">{{ theme.label }}</div>
+                      <div class="p-3 bg-surface border-top border-theme">
+                        <div class="fw-bold small text-adaptive">{{ theme.label }}</div>
                         <div class="text-muted xx-small">Optimized for accessibility</div>
                       </div>
                     </div>
@@ -151,19 +151,19 @@
                 <label class="form-label text-muted small fw-bold text-uppercase mb-3 ms-2">Sidebar Layout</label>
                 <div class="row g-3">
                   <div class="col-md-6">
-                    <div class="p-4 rounded-4 bg-light border border-2 d-flex align-items-center gap-3 cursor-pointer hover-bg-white transition-all">
+                    <div class="p-4 rounded-4 bg-surface-hover border border-2 d-flex align-items-center gap-3 cursor-pointer hover-bg-surface transition-all border-theme">
                       <div class="form-check mb-0">
                         <input class="form-check-input" type="radio" name="sidebarLayout" id="layoutFull" checked>
-                        <label class="form-check-label fw-bold small ms-2" for="layoutFull">Full Navigation</label>
+                        <label class="form-check-label fw-bold small ms-2 text-adaptive" for="layoutFull">Full Navigation</label>
                       </div>
                       <i class="bi bi-layout-sidebar-inset ms-auto text-muted fs-5"></i>
                     </div>
                   </div>
                   <div class="col-md-6">
-                    <div class="p-4 rounded-4 bg-light border border-2 d-flex align-items-center gap-3 cursor-pointer hover-bg-white transition-all">
+                    <div class="p-4 rounded-4 bg-surface-hover border border-2 d-flex align-items-center gap-3 cursor-pointer hover-bg-surface transition-all border-theme">
                       <div class="form-check mb-0">
                         <input class="form-check-input" type="radio" name="sidebarLayout" id="layoutCompact">
-                        <label class="form-check-label fw-bold small ms-2" for="layoutCompact">Compact Mode</label>
+                        <label class="form-check-label fw-bold small ms-2 text-adaptive" for="layoutCompact">Compact Mode</label>
                       </div>
                       <i class="bi bi-layout-sidebar ms-auto text-muted fs-5"></i>
                     </div>
@@ -171,13 +171,13 @@
                 </div>
               </div>
 
-              <div class="p-4 rounded-4 bg-light-purple border border-white d-flex justify-content-between align-items-center">
+              <div class="p-4 rounded-4 bg-purple-light border border-theme d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
-                  <div class="icon-box-sm rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm">
+                  <div class="icon-box-sm rounded-circle bg-surface d-flex align-items-center justify-content-center shadow-sm border">
                     <i class="bi bi-moon-stars-fill text-purple"></i>
                   </div>
                   <div>
-                    <h6 class="fw-bold mb-1 small">Automatic Theme Switching</h6>
+                    <h6 class="fw-bold mb-1 small text-adaptive">Automatic Theme Switching</h6>
                     <p class="text-muted xx-small mb-0">Sync dashboard theme with your system light/dark mode.</p>
                   </div>
                 </div>
@@ -190,18 +190,18 @@
             <!-- Security Settings -->
             <div v-if="activeTab === 'security'" class="animate__animated animate__fadeIn">
               <div class="d-flex justify-content-between align-items-start mb-4">
-                <h5 class="fw-bold mb-0">Security & Authentication</h5>
-                <div class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1 font-xs fw-bold">Security Level: High</div>
+                <h5 class="fw-bold mb-0 text-adaptive">Security & Authentication</h5>
+                <div class="badge bg-danger-light text-danger rounded-pill px-3 py-1 font-xs fw-bold">Security Level: High</div>
               </div>
               
               <div class="d-grid gap-4 mb-5">
-                <div class="security-item p-4 rounded-4 bg-white border border-2 d-flex justify-content-between align-items-center hover-shadow-sm transition-all">
+                <div class="security-item p-4 rounded-4 bg-surface border border-2 d-flex justify-content-between align-items-center hover-shadow-sm transition-all border-theme">
                   <div class="d-flex align-items-center gap-3">
-                    <div class="icon-box rounded-4 bg-purple-subtle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    <div class="icon-box rounded-4 bg-purple-light d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                       <i class="bi bi-shield-lock-fill text-purple fs-5"></i>
                     </div>
                     <div>
-                      <h6 class="fw-bold mb-1">Two-Factor Authentication</h6>
+                      <h6 class="fw-bold mb-1 text-adaptive">Two-Factor Authentication</h6>
                       <p class="text-muted small mb-0">Secure your account with a secondary verification code.</p>
                     </div>
                   </div>
@@ -210,17 +210,17 @@
                   </div>
                 </div>
                 
-                <div class="security-item p-4 rounded-4 bg-white border border-2 d-flex justify-content-between align-items-center hover-shadow-sm transition-all">
+                <div class="security-item p-4 rounded-4 bg-surface border border-2 d-flex justify-content-between align-items-center hover-shadow-sm transition-all border-theme">
                   <div class="d-flex align-items-center gap-3">
-                    <div class="icon-box rounded-4 bg-light d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    <div class="icon-box rounded-4 bg-surface-hover d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                       <i class="bi bi-key-fill text-muted fs-5"></i>
                     </div>
                     <div>
-                      <h6 class="fw-bold mb-1">Update Master Password</h6>
+                      <h6 class="fw-bold mb-1 text-adaptive">Update Master Password</h6>
                       <p class="text-muted small mb-0">Regularly updating your password enhances security.</p>
                     </div>
                   </div>
-                  <button class="btn btn-white border-2 shadow-sm rounded-pill px-4 py-2 small fw-bold hover-bg-light transition-all">Change Password</button>
+                  <button class="btn btn-white border-2 shadow-sm rounded-pill px-4 py-2 small fw-bold hover-bg-surface-hover transition-all">Change Password</button>
                 </div>
               </div>
 
@@ -229,15 +229,15 @@
                 <button class="btn btn-link text-danger p-0 xx-small fw-bold text-decoration-none">Logout all other sessions</button>
               </div>
               
-              <div class="list-group list-group-flush rounded-4 overflow-hidden border border-2">
-                <div v-for="session in activeSessions" :key="session.device" class="list-group-item p-4 d-flex justify-content-between align-items-center border-bottom bg-white">
+              <div class="list-group list-group-flush rounded-4 overflow-hidden border border-2 border-theme">
+                <div v-for="session in activeSessions" :key="session.device" class="list-group-item p-4 d-flex justify-content-between align-items-center border-bottom bg-surface border-theme">
                   <div class="d-flex align-items-center gap-4">
-                    <div class="icon-box-sm rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <div class="icon-box-sm rounded-circle bg-surface-hover d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                       <i :class="['bi', session.icon, 'text-muted fs-5']"></i>
                     </div>
                     <div>
                       <div class="d-flex align-items-center gap-2">
-                        <span class="fw-bold small">{{ session.device }}</span>
+                        <span class="fw-bold small text-adaptive">{{ session.device }}</span>
                         <span v-if="session.current" class="badge bg-purple text-white rounded-pill" style="font-size: 0.5rem; padding: 2px 6px;">CURRENT</span>
                       </div>
                       <div class="text-muted xx-small mt-1">
@@ -258,18 +258,18 @@
             <!-- Notification Settings -->
             <div v-if="activeTab === 'notifications'" class="animate__animated animate__fadeIn">
               <div class="d-flex justify-content-between align-items-start mb-4">
-                <h5 class="fw-bold mb-0">Notification Preferences</h5>
+                <h5 class="fw-bold mb-0 text-adaptive">Notification Preferences</h5>
                 <button class="btn btn-link text-purple p-0 small fw-bold text-decoration-none">Mark all as read</button>
               </div>
               
               <div class="list-group list-group-flush mb-5">
-                <div v-for="pref in notifications" :key="pref.label" class="list-group-item border-0 py-4 px-3 mb-2 rounded-4 bg-white hover-bg-light transition-all d-flex justify-content-between align-items-center border">
+                <div v-for="pref in notifications" :key="pref.label" class="list-group-item border-0 py-4 px-3 mb-2 rounded-4 bg-surface hover-bg-surface-hover transition-all d-flex justify-content-between align-items-center border border-theme">
                   <div class="d-flex align-items-center gap-3">
-                    <div class="icon-box-sm rounded-circle bg-light d-flex align-items-center justify-content-center">
+                    <div class="icon-box-sm rounded-circle bg-surface-hover d-flex align-items-center justify-content-center">
                       <i class="bi bi-bell-fill text-muted"></i>
                     </div>
                     <div>
-                      <h6 class="fw-bold mb-1 small">{{ pref.label }}</h6>
+                      <h6 class="fw-bold mb-1 small text-adaptive">{{ pref.label }}</h6>
                       <p class="text-muted xx-small mb-0">{{ pref.desc }}</p>
                     </div>
                   </div>
@@ -290,27 +290,27 @@
                 </div>
               </div>
 
-              <div class="p-4 rounded-4 bg-light-purple border border-white">
+              <div class="p-4 rounded-4 bg-purple-light border border-theme">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                   <h6 class="fw-bold mb-0 small text-uppercase tracking-wider text-muted">System Audit Logs</h6>
-                  <span class="badge bg-white text-muted border rounded-pill px-3 py-1 xx-small fw-bold">Last 24 Hours</span>
+                  <span class="badge bg-surface text-muted border rounded-pill px-3 py-1 xx-small fw-bold">Last 24 Hours</span>
                 </div>
                 
                 <div class="audit-logs px-2">
-                  <div v-for="(log, index) in auditLogs" :key="index" class="audit-item d-flex align-items-center justify-content-between py-3 border-bottom last-child-border-0">
+                  <div v-for="(log, index) in auditLogs" :key="index" class="audit-item d-flex align-items-center justify-content-between py-3 border-bottom border-theme last-child-border-0">
                     <div class="d-flex align-items-center gap-3">
-                      <div class="icon-box-sm rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center">
+                      <div class="icon-box-sm rounded-circle bg-surface shadow-sm d-flex align-items-center justify-content-center border">
                         <i :class="['bi', log.icon, log.color]"></i>
                       </div>
                       <div>
-                        <div class="fw-bold xx-small text-dark">{{ log.action }}</div>
+                        <div class="fw-bold xx-small text-adaptive">{{ log.action }}</div>
                         <div class="text-muted" style="font-size: 0.6rem;">By <span class="text-purple fw-bold">{{ log.user }}</span></div>
                       </div>
                     </div>
                     <div class="text-muted" style="font-size: 0.6rem; font-weight: bold;">{{ log.time }}</div>
                   </div>
                 </div>
-                <button class="btn btn-white border shadow-sm w-100 mt-4 py-2 rounded-pill xx-small fw-bold text-purple transition-all hover-bg-purple hover-text-white">
+                <button class="btn btn-surface border shadow-sm w-100 mt-4 py-2 rounded-pill xx-small fw-bold text-purple transition-all hover-bg-purple hover-text-white">
                   Download Full Audit Trail (CSV)
                 </button>
               </div>
@@ -319,19 +319,19 @@
             <!-- System Configuration -->
             <div v-if="activeTab === 'system'" class="animate__animated animate__fadeIn">
               <div class="d-flex justify-content-between align-items-start mb-4">
-                <h5 class="fw-bold mb-0">System Configuration</h5>
+                <h5 class="fw-bold mb-0 text-adaptive">System Configuration</h5>
                 <span class="badge bg-dark text-white rounded-pill px-3 py-1 font-xs fw-bold">v2.4.0-stable</span>
               </div>
               
               <div class="d-grid gap-4">
-                <div class="p-4 rounded-4 bg-white border border-2 hover-shadow-sm transition-all">
+                <div class="p-4 rounded-4 bg-surface border border-2 hover-shadow-sm transition-all border-theme">
                   <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="d-flex align-items-center gap-3">
-                      <div class="icon-box rounded-4 bg-danger-subtle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                      <div class="icon-box rounded-4 bg-danger-light d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                         <i class="bi bi-wrench-adjustable text-danger fs-5"></i>
                       </div>
                       <div>
-                        <h6 class="fw-bold mb-1">Maintenance Mode</h6>
+                        <h6 class="fw-bold mb-1 text-adaptive">Maintenance Mode</h6>
                         <p class="text-muted small mb-0">Restrict public access for scheduled maintenance.</p>
                       </div>
                     </div>
@@ -350,10 +350,10 @@
 
                 <div class="row g-4">
                   <div class="col-md-6">
-                    <div class="p-4 rounded-4 bg-white border border-2 h-100">
+                    <div class="p-4 rounded-4 bg-surface border border-2 h-100 border-theme">
                       <h6 class="fw-bold mb-3 small text-uppercase tracking-wider text-muted">API Rate Limits</h6>
                       <div class="form-floating mb-3">
-                        <input type="number" class="form-control border-0 bg-light p-3 h-auto rounded-4" id="rateLimit" value="100" placeholder="100">
+                        <input type="number" class="form-control border-0 bg-surface-hover text-adaptive p-3 h-auto rounded-4" id="rateLimit" value="100" placeholder="100">
                         <label for="rateLimit" class="text-muted small fw-bold px-4">REQUESTS PER MINUTE</label>
                       </div>
                       <div class="progress rounded-pill" style="height: 6px;">
@@ -363,15 +363,15 @@
                     </div>
                   </div>
                   <div class="col-md-6">
-                    <div class="p-4 rounded-4 bg-white border border-2 h-100">
+                    <div class="p-4 rounded-4 bg-surface border border-2 h-100 border-theme">
                       <h6 class="fw-bold mb-3 small text-uppercase tracking-wider text-muted">Storage Limits</h6>
                       <div class="form-floating mb-3">
-                        <input type="number" class="form-control border-0 bg-light p-3 h-auto rounded-4" id="uploadSize" value="10" placeholder="10">
+                        <input type="number" class="form-control border-0 bg-surface-hover text-adaptive p-3 h-auto rounded-4" id="uploadSize" value="10" placeholder="10">
                         <label for="uploadSize" class="text-muted small fw-bold px-4">MAX UPLOAD SIZE (MB)</label>
                       </div>
                       <div class="d-flex justify-content-between align-items-center">
                         <span class="xx-small text-muted">Cloud Storage Usage</span>
-                        <span class="xx-small fw-bold">4.2 / 10 GB</span>
+                        <span class="xx-small fw-bold text-adaptive">4.2 / 10 GB</span>
                       </div>
                     </div>
                   </div>
@@ -395,31 +395,31 @@
                   </div>
                 </div>
 
-                <div class="p-4 rounded-4 bg-white border border-2">
+                <div class="p-4 rounded-4 bg-surface border border-2 border-theme">
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                      <h6 class="fw-bold mb-1">API Integrations</h6>
+                      <h6 class="fw-bold mb-1 text-adaptive">API Integrations</h6>
                       <p class="text-muted small mb-0">Manage secure keys for third-party service access.</p>
                     </div>
                     <button class="btn btn-purple btn-sm rounded-pill px-4 fw-bold shadow-sm">+ Create New Key</button>
                   </div>
                   <div class="api-keys-list">
-                    <div v-for="key in apiKeys" :key="key.id" class="api-key-item p-4 bg-light rounded-4 mb-3 border d-flex justify-content-between align-items-center hover-bg-white transition-all">
+                    <div v-for="key in apiKeys" :key="key.id" class="api-key-item p-4 bg-surface-hover rounded-4 mb-3 border d-flex justify-content-between align-items-center hover-bg-surface transition-all border-theme">
                       <div class="d-flex align-items-center gap-4">
-                        <div class="icon-box-sm rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center">
+                        <div class="icon-box-sm rounded-circle bg-surface shadow-sm d-flex align-items-center justify-content-center border">
                           <i class="bi bi-key-fill text-purple"></i>
                         </div>
                         <div>
-                          <div class="fw-bold small">{{ key.name }}</div>
+                          <div class="fw-bold small text-adaptive">{{ key.name }}</div>
                           <div class="d-flex align-items-center gap-2 mt-1">
-                            <code class="text-muted xx-small bg-white px-2 py-1 rounded border">{{ key.prefix }}••••••••••••••••</code>
+                            <code class="text-muted xx-small bg-surface px-2 py-1 rounded border border-theme">{{ key.prefix }}••••••••••••••••</code>
                             <button class="btn btn-link text-muted p-0"><i class="bi bi-eye-slash xx-small"></i></button>
                           </div>
                         </div>
                       </div>
                       <div class="d-flex gap-2">
-                        <button class="btn btn-white btn-sm rounded-circle shadow-sm border" title="Copy Key"><i class="bi bi-copy"></i></button>
-                        <button class="btn btn-white btn-sm rounded-circle shadow-sm border text-danger" title="Revoke Key"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-surface btn-sm rounded-circle shadow-sm border" title="Copy Key"><i class="bi bi-copy text-adaptive"></i></button>
+                        <button class="btn btn-surface btn-sm rounded-circle shadow-sm border text-danger" title="Revoke Key"><i class="bi bi-trash"></i></button>
                       </div>
                     </div>
                   </div>
@@ -428,14 +428,14 @@
             </div>
 
             <!-- Footer Actions -->
-            <div class="mt-5 pt-5 border-top d-flex justify-content-between align-items-center">
+            <div class="mt-5 pt-5 border-top border-theme d-flex justify-content-between align-items-center">
               <div v-if="saveStatus" :class="['animate__animated animate__fadeIn xx-small fw-bold text-uppercase', saveStatus === 'success' ? 'text-success' : 'text-danger']">
                 <i :class="['bi me-1', saveStatus === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill']"></i>
                 {{ saveStatus === 'success' ? 'Changes saved successfully' : 'Error saving changes' }}
               </div>
               <div v-else></div>
               <div class="d-flex gap-3">
-                <button class="btn btn-light rounded-pill px-4 py-2 fw-bold" :disabled="isSaving">Discard</button>
+                <button class="btn btn-surface-hover border rounded-pill px-4 py-2 fw-bold text-adaptive" :disabled="isSaving">Discard</button>
                 <button 
                   class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-brand d-flex align-items-center gap-2" 
                   @click="saveChanges"
@@ -529,24 +529,31 @@ const notifications = [
 
 <style scoped>
 .settings-layout {
+  min-height: 100vh;
+  background-color: var(--color-bg);
   font-family: var(--font-family-base);
   color: var(--color-text);
 }
 
+.admin-main {
+  background-color: var(--color-bg);
+}
+
 .settings-nav .list-group-item {
-  color: #64748b;
+  color: var(--color-text-muted);
   border-left: 3px solid transparent !important;
+  transition: all 0.2s ease;
 }
 
 .settings-nav .list-group-item.active {
-  background-color: #8b5cf6;
-  color: white;
-  border-left-color: #7c3aed !important;
+  background-color: var(--color-purple) !important;
+  color: white !important;
+  border-left-color: var(--color-purple-hover) !important;
 }
 
 .settings-nav .list-group-item:hover:not(.active) {
-  background-color: #f1f5f9;
-  color: #1e293b;
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .live-dot-sm {
@@ -570,15 +577,16 @@ const notifications = [
 .text-silver { color: #cbd5e1; }
 
 .hover-opacity-100:hover { opacity: 1 !important; }
-.hover-bg-white:hover { background-color: white !important; }
-.hover-bg-light:hover { background-color: #f8fafc !important; }
+.hover-bg-surface:hover { background-color: var(--color-surface) !important; }
+.hover-bg-surface-hover:hover { background-color: var(--color-surface-hover) !important; }
 .hover-shadow-sm:hover { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important; }
 .hover-scale:hover { transform: scale(1.02); }
-.hover-bg-purple:hover { background-color: #8b5cf6 !important; }
+.hover-bg-purple:hover { background-color: var(--color-purple) !important; }
 .hover-text-white:hover { color: white !important; }
 
-.bg-danger-subtle { background-color: rgba(239, 68, 68, 0.1); }
-.bg-light-purple { background-color: #f5f3ff; }
+.bg-danger-light { background-color: var(--color-danger-light); }
+.bg-success-light { background-color: var(--color-success-light); }
+.bg-purple-light { background-color: var(--color-purple-light); }
 .bg-white\/20 { background-color: rgba(255, 255, 255, 0.2); }
 
 .fw-black { font-weight: 900; }
@@ -591,8 +599,8 @@ const notifications = [
 }
 
 .custom-switch:checked {
-  background-color: #8b5cf6;
-  border-color: #8b5cf6;
+  background-color: var(--color-purple);
+  border-color: var(--color-purple);
 }
 
 .custom-switch-sm {
@@ -602,12 +610,12 @@ const notifications = [
 }
 
 .custom-switch-sm:checked {
-  background-color: #8b5cf6;
-  border-color: #8b5cf6;
+  background-color: var(--color-purple);
+  border-color: var(--color-purple);
 }
 
 .shadow-brand {
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 4px 12px var(--color-primary-light);
 }
 
 .xx-small { font-size: 0.65rem; }
@@ -629,20 +637,16 @@ const notifications = [
 }
 
 .btn-icon-sm:hover {
-  background-color: #e2e8f0 !important;
-}
-
-.bg-success-subtle {
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: var(--color-surface-hover) !important;
 }
 
 .theme-preview-card {
-  border: 2px solid #f1f5f9;
+  border: 2px solid var(--color-border);
 }
 
 .theme-preview-card.active {
-  border-color: #8b5cf6;
-  background-color: rgba(139, 92, 246, 0.02);
+  border-color: var(--color-purple);
+  background-color: var(--color-purple-light);
 }
 
 .theme-swatch {
@@ -651,15 +655,11 @@ const notifications = [
 }
 
 .bg-purple {
-  background-color: #8b5cf6 !important;
-}
-
-.bg-purple-subtle {
-  background-color: rgba(139, 92, 246, 0.1);
+  background-color: var(--color-purple) !important;
 }
 
 .text-purple {
-  color: #8b5cf6 !important;
+  color: var(--color-purple) !important;
 }
 
 .last-child-border-0:last-child {
@@ -670,9 +670,29 @@ const notifications = [
   transition: all 0.2s ease;
 }
 
-textarea:focus, input:focus {
+textarea:focus, input:focus, select:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-  background-color: white !important;
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+  background-color: var(--color-surface) !important;
+}
+
+.bg-surface { background-color: var(--color-surface) !important; }
+.bg-surface-hover { background-color: var(--color-surface-hover) !important; }
+.text-adaptive { color: var(--color-text) !important; }
+.border-theme { border-color: var(--color-border) !important; }
+
+.btn-surface {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-surface:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.btn-surface-hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
 }
 </style>

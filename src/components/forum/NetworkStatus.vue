@@ -89,7 +89,7 @@ const networkStatus = [
 .live-dot {
   width: 7px;
   height: 7px;
-  background: #22c55e;
+  background: var(--color-success);
   border-radius: 50%;
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
   display: inline-block;

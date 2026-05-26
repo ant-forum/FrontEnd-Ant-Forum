@@ -1,15 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 :root {
-  --brand: #6d28d9;
-  --brand-light: #7c3aed;
-  --brand-hover: #5b21b6;
-  --accent: #10b981;
-  --bg-grid: #ede9f6;
-  --card-bg: #ffffff;
-  --input-border: #d1d5db;
-  --text-muted: #6b7280;
-  --text-dark: #111827;
+  --brand: var(--color-primary);
+  --brand-light: var(--color-primary-light);
+  --brand-hover: var(--color-primary-hover);
+  --accent: var(--color-success);
+  --bg-grid: var(--color-border);
+  --card-bg: var(--color-surface);
+  --input-border: var(--color-border);
+  --text-muted: var(--color-text-muted);
+  --text-dark: var(--color-text);
   --code-bg: #1e1e2e;
 }
 

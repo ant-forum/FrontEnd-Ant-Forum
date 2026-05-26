@@ -1,5 +1,5 @@
 <template>
-  <div class="thread-management-layout d-flex bg-light min-vh-100">
+  <div class="thread-management-layout d-flex min-vh-100">
     <!-- Sidebar -->
     <AdminSidebar />
 
@@ -9,7 +9,7 @@
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-          <h2 class="fw-bold mb-1">Discussion Moderation</h2>
+          <h2 class="fw-bold mb-1 text-adaptive">Discussion Moderation</h2>
           <p class="text-muted small mb-0">Monitor and manage community conversations</p>
         </div>
       </div>
@@ -66,7 +66,7 @@
       <!-- Main Directory and Details -->
       <div v-if="loading" class="row g-4">
         <div class="col-xl-8">
-          <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+          <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-surface border">
             <div class="spinner-border text-primary mb-3" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
@@ -74,7 +74,7 @@
           </div>
         </div>
         <div class="col-xl-4">
-          <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white h-100">
+          <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-surface border h-100">
              <div class="spinner-border text-primary opacity-25" role="status"></div>
           </div>
         </div>
@@ -241,8 +241,14 @@ const handleDeleteThread = async (id) => {
 
 <style scoped>
 .thread-management-layout {
+  min-height: 100vh;
+  background-color: var(--color-bg);
   font-family: var(--font-family-base);
   color: var(--color-text);
+}
+
+.admin-main {
+  background-color: var(--color-bg);
 }
 
 .cursor-pointer {
@@ -250,14 +256,17 @@ const handleDeleteThread = async (id) => {
 }
 
 .text-purple {
-  color: #8b5cf6;
+  color: var(--color-purple);
 }
 
 .text-blue {
-  color: #3b82f6;
+  color: var(--color-info);
 }
 
 .text-red {
-  color: #ef4444;
+  color: var(--color-danger);
 }
+
+.bg-surface { background-color: var(--color-surface) !important; }
+.text-adaptive { color: var(--color-text) !important; }
 </style>

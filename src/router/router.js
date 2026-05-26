@@ -210,4 +210,23 @@ const router = createRouter({
   },
 });
 
+router.afterEach((to) => {
+  if (typeof window === "undefined") return;
+  const isAdminRoute = to.path.startsWith("/admin");
+  if (!isAdminRoute) {
+    document.documentElement.removeAttribute("data-theme");
+    return;
+  }
+
+  const saved = localStorage.getItem("admin_theme");
+  const prefersDark =
+    window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved ? saved : prefersDark ? "dark" : "light";
+  if (theme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+});
+
 export default router;
