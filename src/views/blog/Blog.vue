@@ -300,7 +300,6 @@ const featuredPost = allPosts.value[0];
 <style scoped>
 .blog-layout {
   min-height: 100vh;
-  background: var(--color-bg);
   font-family: 'Sora', sans-serif;
   color: var(--color-text);
 }

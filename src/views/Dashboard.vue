@@ -8,6 +8,5 @@ import Dashboard from "../layouts/Dashborad.vue";
 </script>
 <style scoped>
 .main-layout {
-  background-color: #f8f9fa;
 }
 </style>

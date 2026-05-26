@@ -47,7 +47,7 @@ const props = defineProps({
       <div class="featured-projects-section">
         <div class="d-flex align-items-center gap-2 mb-3">
           <i class="bi bi-rocket-takeoff text-primary-purple fs-4"></i>
-          <h5 class="mb-0 fw-bold header-title">Featured Projects</h5>
+          <h5 class="mb-0 fw-bold header-title themed-text">Featured Projects</h5>
         </div>
         
         <div class="row g-3">
@@ -55,7 +55,7 @@ const props = defineProps({
             <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
               <div>
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                  <h6 class="fw-bold mb-0 text-dark project-title-v2">{{ project.title }}</h6>
+                  <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
                   <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
                 </div>
                 <p class="text-muted small mb-4 line-clamp-3">
@@ -77,7 +77,7 @@ const props = defineProps({
       <div class="recent-activity-section">
         <div class="d-flex align-items-center gap-2 mb-3">
           <i class="bi bi-clock-history text-primary-purple fs-4"></i>
-          <h5 class="mb-0 fw-bold header-title">Recent Activity</h5>
+          <h5 class="mb-0 fw-bold header-title themed-text">Recent Activity</h5>
         </div>
         
         <div class="d-flex flex-column gap-3">
@@ -86,7 +86,7 @@ const props = defineProps({
               <i :class="['bi', activity.icon, 'text-primary-purple']"></i>
             </div>
             <div class="overflow-hidden">
-              <h6 class="mb-1 fw-bold text-dark text-truncate small-title">{{ activity.title }}</h6>
+              <h6 class="mb-1 fw-bold themed-text text-truncate small-title">{{ activity.title }}</h6>
               <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ activity.meta }}</small>
             </div>
           </div>
@@ -99,7 +99,7 @@ const props = defineProps({
     <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
       <!-- Stack Proficiency -->
       <div class="dashboard-card-modern p-4">
-        <h6 class="text-dark fw-bold mb-4" style="font-size: 0.9rem; letter-spacing: 0.3px;">Stack Proficiency</h6>
+        <h6 class="themed-text fw-bold mb-4" style="font-size: 0.9rem; letter-spacing: 0.3px;">Stack Proficiency</h6>
         
         <div class="d-flex flex-column gap-3 mb-4">
           <div class="proficiency-item">
@@ -147,21 +147,23 @@ const props = defineProps({
 
 <style scoped>
 .dashboard-card-modern {
-  background: var(--color-surface);
+  background: var(--color-surface) !important;
   backdrop-filter: blur(10px);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
+  color: var(--color-text);
 }
 
 .profile-hero-card {
-  background: var(--color-surface);
+  background: var(--color-surface) !important;
   backdrop-filter: blur(10px);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+  color: var(--color-text);
 }
 
 .profile-hero-card::before {
@@ -175,7 +177,7 @@ const props = defineProps({
 }
 
 .profile-avatar-wrapper img {
-  border: 3px solid var(--color-surface);
+  border: 3px solid var(--color-surface) !important;
   box-shadow: 0 8px 20px -6px var(--color-purple-light);
   transition: all var(--transition-base);
 }
@@ -192,32 +194,32 @@ const props = defineProps({
   width: 16px;
   height: 16px;
   background-color: var(--color-success);
-  border: 3px solid var(--color-surface);
+  border: 3px solid var(--color-surface) !important;
   border-radius: 50%;
   box-shadow: 0 0 0 3px var(--color-success-light);
 }
 
 .profile-name {
-  color: var(--color-text);
+  color: var(--color-text) !important;
   letter-spacing: -0.5px;
   font-weight: 800;
 }
 
 .role-badge-overview {
   display: inline-block;
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-purple-light) !important;
+  color: var(--color-purple) !important;
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   padding: 0.3rem 0.8rem;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--color-purple-light);
+  border: 1px solid var(--color-purple-light) !important;
 }
 
 .text-primary-purple {
-  color: var(--color-purple);
+  color: var(--color-purple) !important;
 }
 
 .bio-text {
@@ -227,30 +229,31 @@ const props = defineProps({
 }
 
 .header-title {
-  color: var(--color-text);
+  color: var(--color-text) !important;
   letter-spacing: -0.3px;
 }
 
 /* Projects Section */
 .project-card-modern-v2 {
-  background: var(--color-surface);
+  background: var(--color-surface) !important;
   backdrop-filter: blur(8px);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-xl);
   transition: all var(--transition-base);
   box-shadow: var(--shadow-sm);
+  color: var(--color-text);
 }
 
 .project-card-modern-v2:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md) !important;
-  border-color: var(--color-purple-light);
+  border-color: var(--color-purple-light) !important;
 }
 
 .project-title-v2 {
   font-size: 0.95rem;
   transition: color var(--transition-base);
-  color: var(--color-text);
+  color: var(--color-text) !important;
 }
 
 .project-card-modern-v2:hover .project-title-v2 {
@@ -266,24 +269,25 @@ const props = defineProps({
   letter-spacing: 0.5px;
 }
 
-.tag-badge-v2.react { background: var(--color-tag-blue-bg); color: var(--color-tag-blue-text); }
-.tag-badge-v2.webgpu { background: var(--color-tag-pink-bg); color: var(--color-tag-pink-text); }
-.tag-badge-v2.typescript { background: var(--color-tag-indigo-bg); color: var(--color-tag-indigo-text); }
-.tag-badge-v2.go { background: var(--color-tag-cyan-bg); color: var(--color-tag-cyan-text); }
-.tag-badge-v2.redis { background: var(--color-tag-red-bg); color: var(--color-tag-red-text); }
-.tag-badge-v2.grpc { background: var(--color-tag-purple-bg); color: var(--color-tag-purple-text); }
+.tag-badge-v2.react { background: var(--color-tag-blue-bg) !important; color: var(--color-tag-blue-text) !important; }
+.tag-badge-v2.webgpu { background: var(--color-tag-pink-bg) !important; color: var(--color-tag-pink-text) !important; }
+.tag-badge-v2.typescript { background: var(--color-tag-indigo-bg) !important; color: var(--color-tag-indigo-text) !important; }
+.tag-badge-v2.go { background: var(--color-tag-cyan-bg) !important; color: var(--color-tag-cyan-text) !important; }
+.tag-badge-v2.redis { background: var(--color-tag-red-bg) !important; color: var(--color-tag-red-text) !important; }
+.tag-badge-v2.grpc { background: var(--color-tag-purple-bg) !important; color: var(--color-tag-purple-text) !important; }
 
 /* Timeline Activity */
 .activity-row-modern {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-lg);
   transition: all var(--transition-base);
   box-shadow: var(--shadow-sm);
+  color: var(--color-text);
 }
 
 .activity-row-modern:hover {
-  border-color: var(--color-purple-light);
+  border-color: var(--color-purple-light) !important;
   transform: translateX(4px);
   box-shadow: var(--shadow-md);
 }
@@ -291,7 +295,7 @@ const props = defineProps({
 .activity-icon-container {
   width: 38px;
   height: 38px;
-  background: var(--color-purple-light);
+  background: var(--color-purple-light) !important;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -301,6 +305,7 @@ const props = defineProps({
 
 .small-title {
   font-size: 0.9rem;
+  color: var(--color-text) !important;
 }
 
 /* Side Info Section */

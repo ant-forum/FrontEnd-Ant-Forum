@@ -8,6 +8,5 @@ import Profile from "../layouts/Profile.vue";
 </script>
 <style scoped>
 .main-layout {
-  background-color: #f8f9fa;
 }
 </style>

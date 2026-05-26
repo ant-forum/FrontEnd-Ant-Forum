@@ -274,11 +274,6 @@ const clearFilters = () => {
 <style scoped>
 .forum-page {
   min-height: 100vh;
-  background-color: #ffffff;
-  background-image: 
-    linear-gradient(rgba(124, 58, 237, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124, 58, 237, 0.02) 1px, transparent 1px);
-  background-size: 20px 20px;
 }
 
 .forum-global-grid {
@@ -307,16 +302,16 @@ const clearFilters = () => {
   display: flex;
   align-items: center;
   width: 100%;
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
   border-radius: 99px;
   transition: all 0.2s ease;
   overflow: hidden;
 }
 
 .search-input-wrapper:focus-within {
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .search-bar {
@@ -325,13 +320,13 @@ const clearFilters = () => {
   background: transparent;
   border: none;
   font-size: 14.5px;
-  color: #0f172a;
+  color: var(--color-text);
   outline: none;
   font-family: inherit;
 }
 
 .search-bar::placeholder {
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .search-btn {
@@ -354,7 +349,7 @@ const clearFilters = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1.5px solid #e2e8f0;
+  border-bottom: 1.5px solid var(--color-border);
   margin-top: 24px;
   padding-bottom: 0px;
 }
@@ -368,7 +363,7 @@ const clearFilters = () => {
   padding: 12px 4px;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 14.5px;
   font-weight: 500;
   cursor: pointer;
@@ -378,11 +373,11 @@ const clearFilters = () => {
 }
 
 .tab-btn:hover {
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .tab-btn.active {
-  color: #7c3aed;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -393,7 +388,7 @@ const clearFilters = () => {
   left: 0;
   right: 0;
   height: 2.5px;
-  background-color: #7c3aed;
+  background-color: var(--color-primary);
   border-radius: 99px;
 }
 
@@ -402,21 +397,21 @@ const clearFilters = () => {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text);
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
 }
 
 .create-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #7c3aed;
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .forum-feed-content {
@@ -540,12 +535,12 @@ const clearFilters = () => {
 
 /* Empty State Card styling */
 .empty-state-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 20px;
-  border: 1px dashed rgba(168, 85, 247, 0.3);
+  border: 1px dashed var(--color-primary);
   padding: 56px 40px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -554,26 +549,26 @@ const clearFilters = () => {
 .empty-icon-wrap {
   width: 68px;
   height: 68px;
-  background: rgba(168, 85, 247, 0.08);
-  color: #7c3aed;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.05);
+  box-shadow: 0 4px 12px var(--color-primary-light);
 }
 
 .empty-state-card h2 {
   font-size: 22px;
   font-weight: 800;
-  color: #1f2937;
+  color: var(--color-text);
   margin-bottom: 12px;
 }
 
 .empty-state-card p {
-  color: #6b7280;
+  color: var(--color-text-muted);
   max-width: 460px;
   line-height: 1.6;
   font-size: 14.5px;
@@ -587,24 +582,24 @@ const clearFilters = () => {
 
 .reset-btn {
   padding: 10px 20px;
-  background: #f3f4f6;
+  background: var(--color-surface-hover);
   border: none;
   border-radius: 10px;
   font-weight: 600;
   font-size: 13.5px;
-  color: #4b5563;
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .reset-btn:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: var(--color-border);
+  color: var(--color-text);
 }
 
 .create-secondary {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
   border: none;
   border-radius: 10px;
   font-weight: 600;
@@ -612,12 +607,12 @@ const clearFilters = () => {
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 10px rgba(109,40,217,0.15);
+  box-shadow: 0 4px 10px var(--color-primary-light);
 }
 
 .create-secondary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(109,40,217,0.25);
+  box-shadow: 0 6px 14px var(--color-primary-light);
 }
 
 /* Load More */
@@ -632,9 +627,9 @@ const clearFilters = () => {
   align-items: center;
   gap: 8px;
   padding: 10px 24px;
-  background: #ffffff;
-  color: #0f172a;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   font-size: 13.5px;
   font-weight: 500;
   border-radius: 99px;
@@ -644,8 +639,8 @@ const clearFilters = () => {
 }
 
 .load-more-btn:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
 }
 
 .load-more-btn:disabled {

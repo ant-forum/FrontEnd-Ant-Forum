@@ -76,7 +76,7 @@ const teacherSteps = [
         <div class="hero-overlay"></div>
         <div class="position-relative z-1">
           <span class="badge bg-purple-subtle text-purple mb-2 px-3 py-2 rounded-pill fw-bold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Support Guide</span>
-          <h1 id="help-page-title" class="fw-black mb-3 text-dark text-gradient-title">ANTFORUM Help Center</h1>
+          <h1 id="help-page-title" class="fw-black mb-3 text-gradient-title">ANTFORUM Help Center</h1>
           <p class="text-muted fs-5 mb-0 mx-auto" style="max-width: 600px;">
             Learn how to write high-quality, engaging, and well-formatted posts on our platform. Choose your guide below.
           </p>
@@ -85,7 +85,7 @@ const teacherSteps = [
 
       <!-- Role Selector Toggle -->
       <div class="d-flex justify-content-center mb-5">
-        <div class="role-toggle-container p-1 rounded-pill bg-white shadow-sm border">
+        <div class="role-toggle-container p-1 rounded-pill shadow-sm border">
           <button 
             id="toggle-student-btn"
             @click="activeRole = 'student'" 
@@ -117,7 +117,7 @@ const teacherSteps = [
                 <i class="bi bi-mortarboard fs-3"></i>
               </div>
               <div>
-                <h3 class="fw-bold mb-1 text-dark">Student's Posting Guide</h3>
+                <h3 class="fw-bold mb-1 themed-text">Student's Posting Guide</h3>
                 <p class="text-muted small mb-0">How to request technical help and share projects successfully.</p>
               </div>
             </div>
@@ -131,7 +131,7 @@ const teacherSteps = [
                       <i :class="['bi', step.icon]"></i>
                     </div>
                     <div>
-                      <h5 class="fw-bold mb-2 text-dark">{{ step.title }}</h5>
+                      <h5 class="fw-bold mb-2 themed-text">{{ step.title }}</h5>
                       <p class="text-muted small mb-0" v-html="step.desc"></p>
                     </div>
                   </div>
@@ -171,7 +171,7 @@ app.mount('#app');
                 <i class="bi bi-person-workspace fs-3"></i>
               </div>
               <div>
-                <h3 class="fw-bold mb-1 text-dark">Teacher & Mentor Guide</h3>
+                <h3 class="fw-bold mb-1 themed-text">Teacher & Mentor Guide</h3>
                 <p class="text-muted small mb-0">Best practices for posting announcements and structuring course assignments.</p>
               </div>
             </div>
@@ -185,7 +185,7 @@ app.mount('#app');
                       <i :class="['bi', step.icon]"></i>
                     </div>
                     <div>
-                      <h5 class="fw-bold mb-2 text-dark">{{ step.title }}</h5>
+                      <h5 class="fw-bold mb-2 themed-text">{{ step.title }}</h5>
                       <p class="text-muted small mb-0" v-html="step.desc"></p>
                     </div>
                   </div>
@@ -194,10 +194,10 @@ app.mount('#app');
             </div>
 
             <!-- Classroom Engagement Tips -->
-            <div class="card teachers-tip-card border-0 shadow-sm rounded-4 p-4 text-dark" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);">
+            <div class="card teachers-tip-card border-0 shadow-sm rounded-4 p-4 themed-text">
               <div class="d-flex align-items-center gap-2 mb-3">
                 <i class="bi bi-stars text-indigo fs-4"></i>
-                <h5 class="fw-bold mb-0 text-dark">Classroom Engagement Tip</h5>
+                <h5 class="fw-bold mb-0 themed-text">Classroom Engagement Tip</h5>
               </div>
               <p class="text-muted small mb-0">
                 Students are <strong>3x more likely</strong> to reply if a teacher includes a specific, approachable prompt in the post (e.g. <em>"What challenges did you face when implementing this hook?"</em>). Using formatted outlines and links to GitHub repositories for starter files also yields much higher project completion rates.
@@ -208,8 +208,8 @@ app.mount('#app');
       </div>
 
       <!-- Call to Action -->
-      <section class="cta-section text-center mt-5 p-4 rounded-4 border bg-white shadow-sm">
-        <h5 class="fw-bold mb-2 text-dark">Ready to write your post?</h5>
+      <section class="cta-section text-center mt-5 p-4 rounded-4 border shadow-sm">
+        <h5 class="fw-bold mb-2 themed-text">Ready to write your post?</h5>
         <p class="text-muted small mb-4">Put these tips into practice now on the main forum page.</p>
         <router-link id="cta-create-post-btn" to="/forum/create" class="btn btn-primary-gradient px-4 py-2 fw-bold shadow-sm text-decoration-none">
           <i class="bi bi-plus-lg me-1"></i> Create Discussion
@@ -223,18 +223,23 @@ app.mount('#app');
 
 <style scoped>
 .help-center-layout {
-  background-color: #f8fafc;
   font-family: var(--font-family-base, 'Inter', sans-serif);
+  transition: background-color var(--transition-slow);
 }
 
 .max-w-4xl {
   max-width: 900px;
 }
 
+.themed-text {
+  color: var(--color-text);
+}
+
 /* Hero Section */
 .help-hero {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: background-color var(--transition-slow), border-color var(--transition-slow);
 }
 
 .text-gradient-title {
@@ -247,6 +252,8 @@ app.mount('#app');
 .role-toggle-container {
   display: flex;
   gap: 0.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .btn-toggle {
@@ -256,7 +263,7 @@ app.mount('#app');
   border-radius: 50px;
   font-weight: 700;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -264,14 +271,14 @@ app.mount('#app');
 }
 
 .btn-toggle:hover {
-  color: #334155;
-  background-color: #f1f5f9;
+  color: var(--color-text);
+  background-color: var(--color-surface-hover);
 }
 
 .btn-toggle.active {
-  background: #7c3aed;
+  background: var(--color-primary);
   color: white;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+  box-shadow: 0 4px 12px var(--color-primary-light);
 }
 
 /* Header Info Icon box */
@@ -285,15 +292,15 @@ app.mount('#app');
 
 /* Step Card Styles */
 .step-card {
-  background: white;
+  background: var(--color-surface);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid #f1f5f9 !important;
+  border: 1px solid var(--color-border) !important;
 }
 
 .step-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05) !important;
-  border-color: #e2e8f0 !important;
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--color-primary) !important;
 }
 
 .step-icon-box {
@@ -303,6 +310,15 @@ app.mount('#app');
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
+}
+
+/* Teachers Tip Card */
+.teachers-tip-card {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+}
+
+[data-theme='dark'] .teachers-tip-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
 }
 
 /* Markdown Card styling */
@@ -321,6 +337,11 @@ app.mount('#app');
 }
 
 /* CTA */
+.cta-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
 .btn-primary-gradient {
   background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
   color: white;
@@ -359,6 +380,16 @@ app.mount('#app');
 
 .bg-teal-subtle { background-color: #ccfbf1; }
 .text-teal { color: #0d9488; }
+
+/* Dark Mode Overrides for Subtles */
+[data-theme='dark'] .bg-purple-subtle { background-color: rgba(124, 58, 237, 0.15); }
+[data-theme='dark'] .bg-blue-subtle { background-color: rgba(37, 99, 235, 0.15); }
+[data-theme='dark'] .bg-emerald-subtle { background-color: rgba(5, 150, 105, 0.15); }
+[data-theme='dark'] .bg-amber-subtle { background-color: rgba(217, 119, 6, 0.15); }
+[data-theme='dark'] .bg-rose-subtle { background-color: rgba(225, 29, 72, 0.15); }
+[data-theme='dark'] .bg-indigo-subtle { background-color: rgba(79, 70, 229, 0.15); }
+[data-theme='dark'] .bg-cyan-subtle { background-color: rgba(8, 145, 178, 0.15); }
+[data-theme='dark'] .bg-teal-subtle { background-color: rgba(13, 148, 136, 0.15); }
 
 /* Transitions */
 .fade-slide-enter-active,

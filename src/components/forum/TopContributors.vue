@@ -53,7 +53,7 @@ const contributors = [
   gap: 8px;
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin: 0 0 8px 0;
 }
 
@@ -63,9 +63,9 @@ const contributors = [
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: #fffbeb;
+  background: var(--color-warning-light);
   border-radius: 6px;
-  color: #d97706;
+  color: var(--color-warning);
   flex-shrink: 0;
 }
 
@@ -107,7 +107,7 @@ const contributors = [
 .c-name {
   font-size: 13.5px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin-bottom: 2px;
 }
 
@@ -116,7 +116,7 @@ const contributors = [
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .c-rep {
@@ -128,11 +128,11 @@ const contributors = [
 }
 
 .c-dot {
-  color: #cbd5e1;
+  color: var(--color-border);
 }
 
 .c-star {
-  color: #ca8a04;
+  color: var(--color-warning);
   font-size: 14px;
   display: flex;
   align-items: center;

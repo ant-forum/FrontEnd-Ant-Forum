@@ -13,6 +13,10 @@ body {
   margin: 0;
   font-family: var(--font-family-base);
   background-color: var(--color-bg);
+  background-image: 
+    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
+  background-size: 20px 20px;
   color: var(--color-text);
   overflow-x: hidden;
   position: relative;

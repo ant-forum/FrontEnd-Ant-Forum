@@ -208,7 +208,6 @@ const formatNumber = (num) => {
 <style scoped>
 .showcase-page {
   min-height: 100vh;
-  background: var(--color-bg);
   color: var(--color-text);
   font-family: 'Sora', sans-serif;
 }

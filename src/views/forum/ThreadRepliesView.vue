@@ -366,11 +366,6 @@ const setupCopyButtons = () => {
 <style scoped>
 .thread-replies-page {
   min-height: 100vh;
-  background-color: #ffffff;
-  background-image: 
-    linear-gradient(rgba(124, 58, 237, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124, 58, 237, 0.02) 1px, transparent 1px);
-  background-size: 20px 20px;
 }
 
 .replies-page-grid-layout {
@@ -420,9 +415,9 @@ const setupCopyButtons = () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #0f172a;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   font-weight: 600;
   font-size: 13.5px;
   cursor: pointer;
@@ -434,8 +429,8 @@ const setupCopyButtons = () => {
 }
 
 .back-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
   transform: translateX(-2px);
 }
 
@@ -446,11 +441,11 @@ const setupCopyButtons = () => {
 }
 
 .main-thread {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 12px;
   padding: 32px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   position: relative;
 }
 
@@ -707,11 +702,11 @@ const setupCopyButtons = () => {
   gap: 6px;
   padding: 8px 16px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   font-size: 13.5px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
@@ -723,15 +718,15 @@ const setupCopyButtons = () => {
 }
 
 .vote-action-btn:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border-color: var(--color-primary);
 }
 
 .vote-action-btn.up.active {
-  background: #eff6ff;
-  color: #2563eb;
-  border-color: #e2e8f0;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .vote-action-btn.up.active i {
@@ -739,9 +734,9 @@ const setupCopyButtons = () => {
 }
 
 .vote-action-btn.down.active {
-  background: #fef2f2;
-  color: #dc2626;
-  border-color: #e2e8f0;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .vote-action-btn.down.active i {
@@ -819,29 +814,20 @@ const setupCopyButtons = () => {
 }
 
 .reply-card {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 12px;
   padding: 24px 28px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   position: relative;
   z-index: 1;
   transition: all 0.2s ease;
   animation: slide-up-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.reply-card {
-  background: var(--color-surface);
-  border-radius: 16px;
-  padding: 20px;
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
-}
-
 .reply-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
 }
 
 .reply-header {
@@ -924,23 +910,24 @@ const setupCopyButtons = () => {
 
 /* Reply Input Box */
 .reply-input-wrapper {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 12px;
   padding: 28px;
   margin-top: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   transition: all 0.2s ease;
 }
 
 .reply-input-wrapper:focus-within {
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
 }
 
 .reply-input-wrapper :deep(.editor-container) {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   box-shadow: none;
   border-radius: 12px;
+  background: var(--color-bg);
 }
 
 .reply-input-wrapper :deep(.editor-workspace) {
@@ -949,10 +936,14 @@ const setupCopyButtons = () => {
 
 .reply-input-wrapper :deep(.editor-textarea) {
   min-height: 180px;
+  background: transparent;
+  color: var(--color-text);
 }
 
 .reply-input-wrapper :deep(.preview-pane) {
   max-height: 250px;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .input-header {
@@ -969,7 +960,7 @@ const setupCopyButtons = () => {
 
 .input-prompt {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   font-size: 15px;
 }
 
@@ -978,12 +969,12 @@ const setupCopyButtons = () => {
   justify-content: flex-end;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-border);
 }
 
 .post-btn {
-  background: #0f172a;
-  color: white;
+  background: var(--color-text);
+  color: var(--color-bg);
   border: none;
   padding: 10px 24px;
   border-radius: 8px;
@@ -994,7 +985,8 @@ const setupCopyButtons = () => {
 }
 
 .post-btn:hover:not(:disabled) {
-  background: #1e293b;
+  background: var(--color-primary);
+  color: white;
 }
 
 .post-btn:disabled {
@@ -1003,13 +995,13 @@ const setupCopyButtons = () => {
 }
 
 .no-replies {
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  padding: 40px;
+  border-radius: 12px;
   text-align: center;
-  padding: 48px 20px;
-  color: #6b7280;
-  background: #fdfcff;
-  border-radius: 16px;
-  border: 1px dashed rgba(168, 85, 247, 0.2);
-  font-weight: 600;
+  color: var(--color-text-muted);
+  font-weight: 500;
 }
 
 .scroll-anchor {
@@ -1017,25 +1009,28 @@ const setupCopyButtons = () => {
 }
 
 /* Loading & Error States */
-.loading-state, .error-state {
+.loading-state,
+.error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 0;
-  color: #6b7280;
-  font-size: 16px;
+  padding: 80px 40px;
+  background: var(--color-surface);
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
   font-weight: 600;
+  gap: 16px;
 }
 
 .spinner {
-  width: 36px;
-  height: 36px;
-  border: 3.5px solid rgba(124, 58, 237, 0.08);
-  border-top-color: #7c3aed;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-surface-hover);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {

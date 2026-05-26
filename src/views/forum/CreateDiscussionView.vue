@@ -1075,8 +1075,8 @@ const handleSubmit = async () => {
   box-shadow: var(--focus-ring);
 }
 .category-card.active.question .category-icon-wrapper {
-  background: #eff6ff;
-  color: #3b82f6;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .category-card.active.discussion {
@@ -1086,8 +1086,8 @@ const handleSubmit = async () => {
     0 4px 12px rgba(139, 92, 246, 0.08);
 }
 .category-card.active.discussion .category-icon-wrapper {
-  background: #f5f3ff;
-  color: #8b5cf6;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
 }
 
 .category-card.active.showcase {
@@ -1097,8 +1097,8 @@ const handleSubmit = async () => {
     0 4px 12px rgba(16, 185, 129, 0.08);
 }
 .category-card.active.showcase .category-icon-wrapper {
-  background: #ecfdf5;
-  color: #10b981;
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
 .category-card.active.tutorial {
@@ -1108,8 +1108,8 @@ const handleSubmit = async () => {
     0 4px 12px rgba(249, 115, 22, 0.08);
 }
 .category-card.active.tutorial .category-icon-wrapper {
-  background: #fff7ed;
-  color: #f97316;
+  background: var(--color-warning-light);
+  color: var(--color-warning);
 }
 
 .category-card.active.idea {
@@ -1119,16 +1119,16 @@ const handleSubmit = async () => {
     0 4px 12px rgba(236, 72, 153, 0.08);
 }
 .category-card.active.idea .category-icon-wrapper {
-  background: #fdf2f8;
-  color: #ec4899;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
 }
 
 /* Tag input section */
 .tags-input-container {
   margin-left: 34px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--color-border);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--color-surface-hover);
   padding: 8px 12px;
   min-height: 52px;
   display: flex;
@@ -1137,8 +1137,8 @@ const handleSubmit = async () => {
 }
 
 .tags-input-container.focused {
-  background: white;
-  border-color: var(--brand-light);
+  background: var(--color-surface);
+  border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
 }
 
@@ -1183,7 +1183,7 @@ const handleSubmit = async () => {
   background: transparent;
   outline: none;
   font-size: 13.5px;
-  color: var(--text-dark);
+  color: var(--color-text);
   min-width: 100px;
   padding: 4px 0;
 }
@@ -1205,21 +1205,21 @@ const handleSubmit = async () => {
 }
 
 .suggestion-pill {
-  border: 1px solid #cbd5e1;
-  background: white;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   padding: 3px 10px;
   font-size: 11.5px;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-muted);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .suggestion-pill:hover {
-  background: #f1f5f9;
-  color: var(--brand);
-  border-color: var(--brand-light);
+  background: var(--color-surface-hover);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 /* Editor container alignment styling */
@@ -1235,11 +1235,12 @@ const handleSubmit = async () => {
 }
 
 .sidebar-card {
-  background: white;
-  border: 1px solid var(--color-border);
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 20px;
   padding: 24px;
   box-shadow: var(--shadow-sm);
+  color: var(--color-text) !important;
 }
 
 .checklist-card {
@@ -1291,7 +1292,7 @@ const handleSubmit = async () => {
 .tips-header h3 {
   font-size: 15px;
   font-weight: 800;
-  color: var(--text-dark);
+  color: var(--color-text);
   margin: 0;
 }
 

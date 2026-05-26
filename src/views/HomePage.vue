@@ -378,7 +378,6 @@ const recentThreads = [
   display: flex;
   flex-direction: column;
   color: var(--color-text);
-  background: var(--color-bg);
   transition: background-color var(--transition-slow), color var(--transition-slow);
 }
 
@@ -413,7 +412,6 @@ const recentThreads = [
   justify-content: center;
   padding-top: 120px;
   min-height: 85vh;
-  background: var(--color-bg);
 }
 
 .hero-content {

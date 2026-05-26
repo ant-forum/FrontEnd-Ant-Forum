@@ -42,7 +42,7 @@ const tags = [
   gap: 8px;
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin: 0 0 8px 0;
 }
 
@@ -52,9 +52,9 @@ const tags = [
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: #f5f3ff;
+  background: var(--color-purple-light);
   border-radius: 6px;
-  color: #7c3aed;
+  color: var(--color-purple);
   flex-shrink: 0;
 }
 
@@ -66,9 +66,9 @@ const tags = [
 
 .tag-btn {
   padding: 6px 12px;
-  background: #f1f5f9;
-  border: none;
-  color: #64748b;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
   font-size: 12.5px;
   font-weight: 600;
   border-radius: 6px;
@@ -78,7 +78,8 @@ const tags = [
 }
 
 .tag-btn:hover {
-  background: #ede9fe;
-  color: #7c3aed;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  border-color: var(--color-purple);
 }
 </style>
