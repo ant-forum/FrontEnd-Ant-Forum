@@ -1,85 +1,128 @@
 <template>
-  <div class="project-management-layout d-flex bg-light min-vh-100">
+  <div class="project-management-layout d-flex min-vh-100">
     <!-- Sidebar -->
     <AdminSidebar />
 
     <!-- Main Content -->
-    <main class="flex-grow-1 p-4 p-lg-5">
-      <header class="d-flex justify-content-between align-items-start mb-5">
+    <main class="admin-main flex-grow-1">
+      <div class="admin-content-wrapper">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-          <h1 class="fw-bold mb-1">Projects</h1>
-          <p class="text-muted mb-0">Manage and monitor ecosystem initiatives.</p>
+          <h2 class="fw-bold mb-1 text-adaptive">Project Ecosystem</h2>
+          <p class="text-muted small mb-0">Monitor, approve, and manage platform initiatives</p>
         </div>
-        <div class="d-flex gap-3">
-          <div class="metric-mini p-3 bg-white rounded-4 border shadow-sm text-center" style="min-width: 140px;">
-            <p class="text-muted small text-uppercase fw-bold mb-1">Total Projects</p>
-            <h4 class="fw-bold mb-0">{{ totalProjects }}</h4>
-          </div>
-          <div class="metric-mini p-3 bg-white rounded-4 border shadow-sm text-center" style="min-width: 140px;">
-            <p class="text-muted small text-uppercase fw-bold mb-1">Pending Approval</p>
-            <h4 class="fw-bold mb-0">{{ pendingProjects }}</h4>
-          </div>
-          <div class="metric-mini p-3 bg-white rounded-4 border shadow-sm text-center" style="min-width: 140px;">
-            <p class="text-muted small text-uppercase fw-bold mb-1">Active</p>
-            <h4 class="fw-bold mb-0">{{ activeProjects }}</h4>
-          </div>
-        </div>
-      </header>
+      </div>
 
-      <!-- Search and Filters -->
-      <div class="row g-3 mb-4">
-        <div class="col-md-6">
-          <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border">
-            <span class="input-group-text bg-white border-0 ps-3">
+      <!-- Metrics Section -->
+      <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+          <StatCard
+            label="Total Projects"
+            :value="totalProjects"
+            description="Active initiatives"
+            descriptionIcon="bi-arrow-up-right"
+            descriptionColorClass="text-success"
+            icon="bi bi-folder"
+            iconBgClass="bg-purple-light"
+            iconColorClass="text-purple"
+            :active="statusFilter === 'ALL'"
+            class="cursor-pointer"
+            @click="statusFilter = 'ALL'"
+          />
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <StatCard
+            label="Pending"
+            :value="pendingProjects"
+            description="Awaiting approval"
+            descriptionIcon="bi-clock"
+            descriptionColorClass="text-warning"
+            icon="bi bi-clock"
+            iconBgClass="bg-orange-light"
+            iconColorClass="text-orange"
+            :active="statusFilter === 'PENDING REVIEW'"
+            class="cursor-pointer"
+            @click="statusFilter = 'PENDING REVIEW'"
+          />
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <StatCard
+            label="Live"
+            :value="activeProjects"
+            description="In production"
+            descriptionIcon="bi-lightning-charge"
+            descriptionColorClass="text-teal"
+            icon="bi bi-lightning"
+            iconBgClass="bg-teal-light"
+            iconColorClass="text-teal"
+            :active="statusFilter === 'ACTIVE'"
+            class="cursor-pointer"
+            @click="statusFilter = 'ACTIVE'"
+          />
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <StatCard
+            label="Alerts"
+            :value="flaggedProjects"
+            description="Requires attention"
+            descriptionIcon="bi-exclamation-triangle"
+            descriptionColorClass="text-danger"
+            icon="bi bi-exclamation-triangle"
+            iconBgClass="bg-red-light"
+            iconColorClass="text-red"
+            :active="statusFilter === 'FLAGGED'"
+            class="cursor-pointer"
+            @click="statusFilter = 'FLAGGED'"
+          />
+        </div>
+      </div>
+
+      <!-- Controls Row -->
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-4">
+        <!-- Tabs -->
+        <ul class="nav nav-pills custom-pills bg-surface p-1 rounded-pill shadow-sm border">
+          <li class="nav-item">
+            <button 
+              :class="['nav-link rounded-pill px-4 fw-bold', currentTab === 'all' ? 'active' : '']"
+              @click="currentTab = 'all'"
+            >All</button>
+          </li>
+          <li class="nav-item">
+            <button 
+              :class="['nav-link rounded-pill px-4 fw-bold', currentTab === 'assignments' ? 'active' : '']"
+              @click="currentTab = 'assignments'"
+            >Assignments</button>
+          </li>
+          <li class="nav-item">
+            <button 
+              :class="['nav-link rounded-pill px-4 fw-bold', currentTab === 'archived' ? 'active' : '']"
+              @click="currentTab = 'archived'"
+            >Archived</button>
+          </li>
+        </ul>
+
+        <!-- Search & Filters -->
+        <div class="d-flex gap-3 flex-grow-1 justify-content-md-end">
+          <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border bg-surface">
+            <span class="input-group-text bg-transparent border-0 ps-3">
               <i class="bi bi-search text-muted"></i>
             </span>
             <input 
               v-model="searchQuery" 
               type="text" 
-              class="form-control border-0 py-2" 
-              placeholder="Search projects, stack, or leads..."
+              class="form-control border-0 py-2 small bg-transparent" 
+              placeholder="Search projects..."
+              style="font-size: 0.9rem;"
             >
           </div>
-        </div>
-        <div class="col-md-6 d-flex justify-content-md-end gap-2">
-          <select v-model="statusFilter" class="form-select rounded-pill border shadow-sm px-4" style="width: auto;">
-            <option value="ALL">All Status</option>
+          <select v-model="statusFilter" class="form-select rounded-pill border-0 shadow-sm px-4 bg-surface fw-bold small text-adaptive" style="width: auto; font-size: 0.85rem;">
+            <option value="ALL">Status: All</option>
             <option value="ACTIVE">Active</option>
-            <option value="PENDING REVIEW">Pending Review</option>
+            <option value="PENDING REVIEW">Review</option>
             <option value="FLAGGED">Flagged</option>
           </select>
-          <select v-model="sortBy" class="form-select rounded-pill border shadow-sm px-4" style="width: auto;">
-            <option value="newest">Newest First</option>
-            <option value="title">Title A-Z</option>
-          </select>
         </div>
-      </div>
-
-      <!-- Tabs and Filter -->
-      <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-        <ul class="nav nav-tabs border-0">
-          <li class="nav-item">
-            <button 
-              class="nav-link fw-bold border-0 px-0 me-4" 
-              :class="{ active: currentTab === 'all' }"
-              @click="currentTab = 'all'"
-            >ALL PROJECTS</button>
-          </li>
-          <li class="nav-item">
-            <button 
-              class="nav-link text-muted fw-bold border-0 px-0 me-4" 
-              :class="{ active: currentTab === 'assignments' }"
-              @click="currentTab = 'assignments'"
-            >MY ASSIGNMENTS</button>
-          </li>
-          <li class="nav-item">
-            <button 
-              class="nav-link text-muted fw-bold border-0 px-0" 
-              :class="{ active: currentTab === 'archived' }"
-              @click="currentTab = 'archived'"
-            >ARCHIVED</button>
-          </li>
-        </ul>
       </div>
 
       <!-- Project Grid -->
@@ -90,20 +133,8 @@
             @approve="handleApprove"
             @reject="handleReject"
             @delete="handleDelete"
+            @view="handleViewProject"
           />
-        </div>
-
-        <!-- Submit New Proposal Placeholder -->
-        <div class="col-md-6 col-lg-4">
-          <router-link to="/admin/projects/create" class="text-decoration-none">
-            <div class="submit-proposal-card h-100 rounded-4 d-flex flex-column align-items-center justify-content-center p-4">
-              <div class="icon-circle mb-3">
-                <i class="bi bi-plus fs-2 text-muted"></i>
-              </div>
-              <h6 class="fw-bold mb-1 text-dark">Submit New Proposal</h6>
-              <p class="text-muted small text-center mb-0">Connect your repository to begin the vetting process.</p>
-            </div>
-          </router-link>
         </div>
       </div>
 
@@ -118,19 +149,35 @@
           Clear All Filters
         </button>
       </div>
-
-      <!-- Floating Action Button -->
-      <router-link to="/admin/projects/create" class="fab-btn btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center">
-        <i class="bi bi-plus-lg"></i>
-      </router-link>
+      </div>
     </main>
+
+    <!-- Project Detail Modal -->
+    <ProjectDetailModal 
+      v-if="selectedProject"
+      :show="showDetailModal"
+      :project="selectedProject"
+      @close="closeDetailModal"
+      @save="handleSaveProject"
+      @delete="handleDeleteProjectFromModal"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
+import StatCard from '../../components/admin/StatCard.vue';
 import ProjectCard from '../../components/admin/ProjectCard.vue';
+import ProjectDetailModal from '../../components/admin/ProjectDetailModal.vue';
+
+const searchQuery = ref('');
+const statusFilter = ref('ALL');
+const sortBy = ref('newest');
+const currentTab = ref('all');
+
+const showDetailModal = ref(false);
+const selectedProject = ref(null);
 
 const searchQuery = ref('');
 const statusFilter = ref('ALL');
@@ -200,6 +247,7 @@ const projects = ref([
 const totalProjects = computed(() => projects.value.length);
 const pendingProjects = computed(() => projects.value.filter(p => p.status === 'PENDING REVIEW').length);
 const activeProjects = computed(() => projects.value.filter(p => p.status === 'ACTIVE').length);
+const flaggedProjects = computed(() => projects.value.filter(p => p.status === 'FLAGGED').length);
 
 // Filtering and Sorting
 const filteredProjects = computed(() => {
@@ -253,6 +301,34 @@ const handleDelete = (id) => {
   projects.value = projects.value.filter(p => p.id !== id);
 };
 
+const handleViewProject = (id) => {
+  const project = projects.value.find(p => p.id === id);
+  if (project) {
+    selectedProject.value = project;
+    showDetailModal.value = true;
+  }
+};
+
+const closeDetailModal = () => {
+  showDetailModal.value = false;
+  setTimeout(() => {
+    selectedProject.value = null;
+  }, 200);
+};
+
+const handleSaveProject = (updatedProject) => {
+  const index = projects.value.findIndex(p => p.id === updatedProject.id);
+  if (index !== -1) {
+    projects.value[index] = updatedProject;
+  }
+  closeDetailModal();
+};
+
+const handleDeleteProjectFromModal = (id) => {
+  handleDelete(id);
+  closeDetailModal();
+};
+
 const resetFilters = () => {
   searchQuery.value = '';
   statusFilter.value = 'ALL';
@@ -263,65 +339,107 @@ const resetFilters = () => {
 
 <style scoped>
 .project-management-layout {
+  min-height: 100vh;
+  background-color: var(--color-bg);
   font-family: var(--font-family-base);
+  color: var(--color-text);
 }
 
-.text-purple { color: #8b5cf6; }
-.bg-light-purple { background-color: rgba(139, 92, 246, 0.1); }
-
-.text-orange { color: #f59e0b; }
-.bg-light-orange { background-color: rgba(245, 158, 11, 0.1); }
-
-.text-red { color: #ef4444; }
-.bg-light-red { background-color: rgba(239, 68, 68, 0.1); }
-
-.text-blue { color: #3b82f6; }
-.bg-light-blue { background-color: rgba(59, 130, 246, 0.1); }
-
-.nav-tabs .nav-link {
-  font-size: 0.75rem;
-  letter-spacing: 0.5px;
-  background: transparent;
+.admin-main {
+  background-color: var(--color-bg);
 }
 
-.nav-tabs .nav-link.active {
-  color: #1e293b !important;
-  border-bottom: 2px solid #8b5cf6 !important;
+.icon-box {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.search-group input:focus {
-  box-shadow: none;
+.bg-light-purple { background-color: var(--color-purple-light); }
+.text-purple { color: var(--color-purple); }
+
+.bg-light-orange { background-color: var(--color-warning-light); }
+.text-orange { color: var(--color-warning); }
+
+.bg-light-red { background-color: var(--color-danger-light); }
+.text-red { color: var(--color-danger); }
+
+.bg-light-green { background-color: var(--color-success-light); }
+.text-green { color: var(--color-success); }
+
+.bg-light-blue { background-color: var(--color-info-light); }
+.text-blue { color: var(--color-info); }
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
-.search-group:focus-within {
-  border-color: #8b5cf6 !important;
+.transition-all {
+  transition: all 0.2s ease;
 }
 
-.form-select:focus {
-  box-shadow: none;
-  border-color: #8b5cf6;
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg) !important;
+  border-color: var(--color-purple) !important;
+}
+
+.active-metric {
+  border-color: var(--color-purple) !important;
+  background-color: var(--color-purple-light) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.custom-pills {
+  border: 1px solid var(--color-border);
+}
+
+.custom-pills .nav-link {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.custom-pills .nav-link.active {
+  background-color: var(--color-purple);
+  color: white;
+  box-shadow: 0 4px 6px -1px var(--color-purple-light);
+}
+
+.search-group {
+  max-width: 300px;
 }
 
 .submit-proposal-card {
-  border: 2px dashed #e2e8f0;
-  background-color: white;
-  transition: all 0.2s ease;
+  border: 2px dashed var(--color-border);
+  background-color: var(--color-surface);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
 
 .submit-proposal-card:hover {
-  border-color: #8b5cf6;
-  background-color: rgba(139, 92, 246, 0.02);
+  border-color: var(--color-purple);
+  background-color: var(--color-surface-hover);
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg) !important;
 }
 
-.icon-circle {
-  width: 40px;
-  height: 40px;
+.icon-circle-large {
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.submit-proposal-card:hover .icon-circle-large {
+  transform: scale(1.1) rotate(90deg);
+  background-color: var(--color-purple-light);
+}
+
+.bg-light-purple-soft {
+  background-color: var(--color-bg);
 }
 
 .fab-btn {
@@ -332,11 +450,10 @@ const resetFilters = () => {
   height: 56px;
   font-size: 1.5rem;
   z-index: 1000;
-  background-color: #8b5cf6;
+  background-color: var(--color-purple);
   border: none;
 }
 
-.bg-light {
-  background-color: #f8fafc !important;
-}
+.bg-surface { background-color: var(--color-surface) !important; }
+.text-adaptive { color: var(--color-text) !important; }
 </style>

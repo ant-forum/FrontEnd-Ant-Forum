@@ -1,69 +1,99 @@
 <template>
-  <div class="thread-management-layout d-flex bg-light min-vh-100">
+  <div class="thread-management-layout d-flex min-vh-100">
     <!-- Sidebar -->
     <AdminSidebar />
 
     <!-- Main Content -->
-    <main class="flex-grow-1 p-4 p-lg-5">
+    <main class="admin-main flex-grow-1">
+      <div class="admin-content-wrapper">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+          <h2 class="fw-bold mb-1 text-adaptive">Discussion Moderation</h2>
+          <p class="text-muted small mb-0">Monitor and manage community conversations</p>
+        </div>
+      </div>
+
       <!-- Metrics Section -->
       <div class="row g-4 mb-5">
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Total Threads</p>
-              <h2 class="fw-bold mb-1">{{ totalThreads }}</h2>
-              <div class="d-flex align-items-center text-success small">
-                <i class="bi bi-graph-up me-1"></i>
-                <span class="fw-bold">+5.2% this week</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-purple p-3">
-              <i class="bi bi-chat-dots text-purple fs-4"></i>
-            </div>
-          </div>
+          <StatCard 
+            label="Total Threads" 
+            :value="totalThreads" 
+            description="Active community discussions"
+            descriptionIcon="bi-chat-left-dots"
+            descriptionColorClass="text-success"
+            icon="bi bi-chat-dots"
+            iconBgClass="bg-purple-light"
+            iconColorClass="text-purple"
+            :active="currentFilter === 'ALL'"
+            @click="currentFilter = 'ALL'"
+            class="cursor-pointer"
+          />
         </div>
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Pinned</p>
-              <h2 class="fw-bold mb-1">{{ pinnedThreads }}</h2>
-              <div class="d-flex align-items-center text-primary small">
-                <i class="bi bi-pin-angle-fill me-1"></i>
-                <span class="fw-bold">Important topics</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-blue p-3">
-              <i class="bi bi-pin text-blue fs-4"></i>
-            </div>
-          </div>
+          <StatCard 
+            label="Pinned" 
+            :value="pinnedThreads" 
+            description="Important featured topics"
+            descriptionIcon="bi-pin-angle"
+            descriptionColorClass="text-teal"
+            icon="bi bi-pin-angle"
+            iconBgClass="bg-teal-light"
+            iconColorClass="text-teal"
+            :active="currentFilter === 'PINNED'"
+            @click="currentFilter = 'PINNED'"
+            class="cursor-pointer"
+          />
         </div>
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Flagged Content</p>
-              <h2 class="fw-bold mb-1">{{ flaggedThreads }}</h2>
-              <div class="d-flex align-items-center text-danger small">
-                <i class="bi bi-exclamation-circle-fill me-1"></i>
-                <span class="fw-bold">Needs attention</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-red p-3">
-              <i class="bi bi-flag text-red fs-4"></i>
-            </div>
-          </div>
+          <StatCard 
+            label="Flagged" 
+            :value="flaggedThreads" 
+            description="Requires moderator review"
+            descriptionIcon="bi-exclamation-triangle"
+            descriptionColorClass="text-danger"
+            icon="bi bi-flag"
+            iconBgClass="bg-red-light"
+            iconColorClass="text-red"
+            :active="currentFilter === 'FLAGGED'"
+            @click="currentFilter = 'FLAGGED'"
+            class="cursor-pointer"
+          />
         </div>
       </div>
 
       <!-- Main Directory and Details -->
-      <div class="row g-4">
+      <div v-if="loading" class="row g-4">
+        <div class="col-xl-8">
+          <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-surface border">
+            <div class="spinner-border text-primary mb-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mb-0">Fetching community discussions...</p>
+          </div>
+        </div>
+        <div class="col-xl-4">
+          <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-surface border h-100">
+             <div class="spinner-border text-primary opacity-25" role="status"></div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="row g-4">
         <div class="col-xl-8">
           <ThreadTable 
-            :threads="filteredThreads" 
+            :threads="paginatedThreads" 
+            :totalThreads="filteredThreads.length"
+            :currentPage="currentPage"
+            :totalPages="totalPages"
             v-model:searchQuery="searchQuery"
             v-model:categoryFilter="categoryFilter"
             :categories="categories"
+            :selectedId="selectedThread?.id"
             @select-thread="selectedThread = $event"
             @delete-thread="handleDeleteThread"
+            @page-change="handlePageChange"
           />
         </div>
         <div class="col-xl-4">
@@ -75,74 +105,59 @@
           />
         </div>
       </div>
+      </div>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
 import ThreadTable from '../../components/admin/ThreadTable.vue';
 import ThreadDetailCard from '../../components/admin/ThreadDetailCard.vue';
+import StatCard from '../../components/admin/StatCard.vue';
+import { useForumStore } from '../../stores/ForumStore';
+import { useToast } from 'vue-toastification';
+
+const forumStore = useForumStore();
+const toast = useToast();
 
 const searchQuery = ref('');
 const categoryFilter = ref('ALL');
+const currentFilter = ref('ALL');
+const loading = ref(true);
+const selectedThread = ref(null);
 
-const threads = ref([
-  {
-    id: 1,
-    title: 'How to optimize Docker images for Node.js?',
-    category: 'Development / DevOps',
-    author: { name: 'David Smith', avatar: 'https://i.pravatar.cc/150?u=david' },
-    replies: 24,
-    views: '1.2k',
-    status: 'ACTIVE',
-    statusClass: 'status-active',
-    reports: 0
-  },
-  {
-    id: 2,
-    title: 'Best practices for Vue 3 Composition API in large scale apps',
-    category: 'Frontend / Vue',
-    author: { name: 'Sarah Chen', avatar: 'https://i.pravatar.cc/150?u=sarahc' },
-    replies: 45,
-    views: '3.5k',
-    status: 'PINNED',
-    statusClass: 'status-pinned',
-    reports: 2
-  },
-  {
-    id: 3,
-    title: 'Is it worth moving from REST to GraphQL in 2024?',
-    category: 'Backend / API',
-    author: { name: 'Marcus Wright', avatar: 'https://i.pravatar.cc/150?u=marcus' },
-    replies: 12,
-    views: '840',
-    status: 'FLAGGED',
-    statusClass: 'status-flagged',
-    reports: 5
-  },
-  {
-    id: 4,
-    title: 'New security vulnerability found in popular npm package',
-    category: 'Security / Announcements',
-    author: { name: 'Elena Vance', avatar: 'https://i.pravatar.cc/150?u=elena' },
-    replies: 8,
-    views: '2.1k',
-    status: 'LOCKED',
-    statusClass: 'status-locked',
-    reports: 0
+onMounted(async () => {
+  await loadThreads();
+});
+
+const loadThreads = async () => {
+  loading.value = true;
+  try {
+    // Simulate a brief network delay for the "loading" experience
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await forumStore.fetchDiscussions();
+    if (forumStore.discussions.length > 0) {
+      selectedThread.value = forumStore.discussions[0];
+    }
+  } catch (error) {
+    toast.error('Failed to load discussions');
+  } finally {
+    loading.value = false;
   }
-]);
+};
 
-const selectedThread = ref(threads.value[0]);
+const threads = computed(() => forumStore.discussions);
 
 const categories = computed(() => {
   const cats = new Set(threads.value.map(t => t.category));
-  return Array.from(cats);
+  return Array.from(cats).filter(Boolean);
 });
 
-// Metrics
+const currentPage = ref(1);
+const itemsPerPage = 8;
+
 const totalThreads = computed(() => threads.value.length);
 const pinnedThreads = computed(() => threads.value.filter(t => t.status === 'PINNED').length);
 const flaggedThreads = computed(() => threads.value.filter(t => t.status === 'FLAGGED').length);
@@ -151,6 +166,10 @@ const flaggedThreads = computed(() => threads.value.filter(t => t.status === 'FL
 const filteredThreads = computed(() => {
   let result = [...threads.value];
 
+  if (currentFilter.value !== 'ALL') {
+    result = result.filter(t => t.status === currentFilter.value);
+  }
+
   if (categoryFilter.value !== 'ALL') {
     result = result.filter(t => t.category === categoryFilter.value);
   }
@@ -158,46 +177,63 @@ const filteredThreads = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     result = result.filter(t => 
-      t.title.toLowerCase().includes(query) || 
-      t.author.name.toLowerCase().includes(query)
+      (t.title && t.title.toLowerCase().includes(query)) || 
+      (t.author?.name && t.author.name.toLowerCase().includes(query)) ||
+      (t.category && t.category.toLowerCase().includes(query)) ||
+      (t.id && t.id.toString().includes(query))
     );
   }
 
   return result;
 });
 
+const paginatedThreads = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredThreads.value.slice(start, end);
+});
+
+const totalPages = computed(() => Math.ceil(filteredThreads.value.length / itemsPerPage));
+
+const handlePageChange = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+
+watch([searchQuery, categoryFilter, currentFilter], () => {
+  currentPage.value = 1;
+});
+
 // Handlers
-const handleTogglePin = (id) => {
-  const thread = threads.value.find(t => t.id === id);
-  if (thread) {
-    if (thread.status === 'PINNED') {
-      thread.status = 'ACTIVE';
-      thread.statusClass = 'status-active';
-    } else {
-      thread.status = 'PINNED';
-      thread.statusClass = 'status-pinned';
-    }
+const handleTogglePin = async (id) => {
+  await forumStore.togglePin(id);
+  const updated = threads.value.find(t => t.id === id);
+  if (selectedThread.value?.id === id) {
+    selectedThread.value = { ...updated };
   }
+  toast.success(updated.status === 'PINNED' ? 'Thread pinned' : 'Thread unpinned');
 };
 
-const handleToggleLock = (id) => {
-  const thread = threads.value.find(t => t.id === id);
-  if (thread) {
-    if (thread.status === 'LOCKED') {
-      thread.status = 'ACTIVE';
-      thread.statusClass = 'status-active';
-    } else {
-      thread.status = 'LOCKED';
-      thread.statusClass = 'status-locked';
-    }
+const handleToggleLock = async (id) => {
+  await forumStore.toggleLock(id);
+  const updated = threads.value.find(t => t.id === id);
+  if (selectedThread.value?.id === id) {
+    selectedThread.value = { ...updated };
   }
+  toast.success(updated.status === 'LOCKED' ? 'Thread locked' : 'Thread unlocked');
 };
 
-const handleDeleteThread = (id) => {
-  if (confirm('Are you sure you want to delete this discussion?')) {
-    threads.value = threads.value.filter(t => t.id !== id);
-    if (selectedThread.value?.id === id) {
-      selectedThread.value = threads.value[0] || null;
+const handleDeleteThread = async (id) => {
+  if (confirm('Are you sure you want to delete this discussion? This action cannot be undone.')) {
+    try {
+      await forumStore.deleteDiscussion(id);
+      if (selectedThread.value?.id === id) {
+        selectedThread.value = threads.value[0] || null;
+      }
+      toast.success('Discussion deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete discussion');
     }
   }
 };
@@ -205,27 +241,32 @@ const handleDeleteThread = (id) => {
 
 <style scoped>
 .thread-management-layout {
+  min-height: 100vh;
+  background-color: var(--color-bg);
   font-family: var(--font-family-base);
+  color: var(--color-text);
 }
 
-.icon-box {
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.admin-main {
+  background-color: var(--color-bg);
 }
 
-.bg-light-purple { background-color: rgba(139, 92, 246, 0.1); }
-.text-purple { color: #8b5cf6; }
-
-.bg-light-blue { background-color: rgba(59, 130, 246, 0.1); }
-.text-blue { color: #3b82f6; }
-
-.bg-light-red { background-color: rgba(239, 68, 68, 0.1); }
-.text-red { color: #ef4444; }
-
-.bg-light {
-  background-color: #f8fafc !important;
+.cursor-pointer {
+  cursor: pointer;
 }
+
+.text-purple {
+  color: var(--color-purple);
+}
+
+.text-blue {
+  color: var(--color-info);
+}
+
+.text-red {
+  color: var(--color-danger);
+}
+
+.bg-surface { background-color: var(--color-surface) !important; }
+.text-adaptive { color: var(--color-text) !important; }
 </style>

@@ -28,8 +28,8 @@ import PerfCard from "./PerfCard.vue";
 
 <style scoped>
 .right-panel {
-  background: #f8f7fc;
-  border-left: 1px solid #ede9f6;
+  background: var(--color-surface-hover) !important;
+  border-left: 1px solid var(--color-border) !important;
   padding: 3rem 2.5rem;
   display: flex;
   flex-direction: column;
@@ -39,6 +39,12 @@ import PerfCard from "./PerfCard.vue";
   position: relative;
   overflow: visible;
   border-radius: 0 24px 24px 0;
+  transition: background-color var(--transition-base), border-color var(--transition-base);
+}
+
+[data-theme='dark'] .right-panel {
+  background: rgba(31, 41, 55, 0.3) !important;
+  backdrop-filter: blur(10px);
 }
 
 .right-panel::before {
@@ -48,7 +54,7 @@ import PerfCard from "./PerfCard.vue";
   height: 280px;
   background: radial-gradient(
     circle,
-    rgba(109, 40, 217, 0.12) 0%,
+    var(--color-purple-light) 0%,
     transparent 70%
   );
   top: -60px;
@@ -70,23 +76,24 @@ import PerfCard from "./PerfCard.vue";
   top: -14px;
   right: -10px;
   z-index: 10;
-  background: #fff;
+  background: var(--color-surface) !important;
   border-radius: 30px;
   padding: 6px 14px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #111;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.13);
+  color: var(--color-text) !important;
+  box-shadow: 0 4px 14px var(--color-shadow);
   display: flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  border: 1px solid var(--color-border) !important;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
-  background: #10b981;
+  background: var(--color-success);
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
 }
@@ -106,13 +113,13 @@ import PerfCard from "./PerfCard.vue";
 .right-bottom h3 {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--color-text) !important;
   text-align: center;
 }
 
 .right-bottom p {
   font-size: 0.82rem;
-  color: var(--text-muted);
+  color: var(--color-text-muted) !important;
   text-align: center;
   margin-top: 0.3rem;
   line-height: 1.5;

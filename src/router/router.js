@@ -6,6 +6,7 @@ import HomePage from '../views/HomePage.vue';
 import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
+import RegisterView from '../views/auth/RegisterView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
 import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
 
@@ -22,10 +23,12 @@ import CreateUserView from '../views/admin/CreateUserView.vue';
 import ProjectManagement from '../views/admin/ProjectManagement.vue';
 import CreateProjectView from '../views/admin/CreateProjectView.vue';
 import ThreadManagement from '../views/admin/ThreadManagement.vue';
+// import AnalyticsView from '../views/admin/AnalyticsView.vue';
+import SettingsView from '../views/admin/SettingsView.vue';
 // import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
 
-
+//this is new
 
 import ForumView from "../views/forum/ForumView.vue";
 
@@ -56,6 +59,12 @@ const routes = [
     meta: { title: "Login" },
   },
   {
+    path: "/register",
+    name: "register",
+    component: RegisterView,
+    meta: { title: "Register" },
+  },
+  {
     path: "/forgot-password",
     name: "forgot-password",
     component: ForgotPasswordView,
@@ -68,13 +77,13 @@ const routes = [
     meta: { title: "Verify Account" },
   },
   {
-    path: "/",
+    path: "/home",
     component: Home,
     name: "HomeLayout",
     meta: { requiresAuth: true },
   },
   {
-    path: "/home",
+    path: "/",
     name: "HomePage",
     component: HomePage,
     meta: { requiresAuth: true },
@@ -100,6 +109,12 @@ const routes = [
     name: "Profile",
     meta: { requiresAuth: true },
     component: Profile,
+  },
+  {
+    path: "/help",
+    name: "Help",
+    meta: { requiresAuth: true },
+    component: () => import("../views/HelpView.vue"),
   },
   {
     path: "/showcase",
@@ -167,6 +182,18 @@ const routes = [
     component: ThreadManagement,
   },
   {
+    path: "/admin/analytics",
+    name: "Analytics",
+    meta: { requiresAuth: true },
+    component: () => import("../views/admin/AnalyticsView.vue"),
+  },
+  {
+    path: "/admin/settings",
+    name: "Settings",
+    meta: { requiresAuth: true },
+    component: SettingsView,
+  },
+  {
     path: "/forum",
     name: "Forum",
     meta: { requiresAuth: true },
@@ -191,6 +218,32 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    // always scroll to top
+    return { top: 0 }
+  },
+});
+
+router.afterEach((to) => {
+  if (typeof window === "undefined") return;
+  
+  // Update page title
+  if (to.meta.title) {
+    document.title = `${to.meta.title} | ANT Forum`;
+  }
+
+  // Ensure theme is applied based on localStorage or system preference
+  const saved = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved ? saved : (prefersDark ? "dark" : "light");
+  
+  if (theme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+    document.body.classList.add('dark-mode');
+  } else {
+    document.documentElement.setAttribute("data-theme", "light");
+    document.body.classList.remove('dark-mode');
+  }
 });
 
 export default router;

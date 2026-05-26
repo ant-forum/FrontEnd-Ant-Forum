@@ -1,8 +1,8 @@
 <script setup>
 const contributors = [
-  { id: 1, name: 'Elena Rostova', badge: 'Core Team', rep: '14.2k', initials: 'ER', color: '#a78bfa', isTop: true },
-  { id: 2, name: 'David Chen',    badge: 'Mentor',    rep: '8.9k',  initials: 'DC', color: '#60a5fa', isTop: false },
-  { id: 3, name: 'Samira Al-Fayed', badge: 'Pro',     rep: '6.1k',  initials: 'SA', color: '#f472b6', isTop: false },
+  { id: 1, name: 'Elena Rostova', badge: 'Core Team', rep: '14.2k', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=120', isTop: true },
+  { id: 2, name: 'David Chen',    badge: 'Mentor',    rep: '8.5k',  avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=120', isTop: false },
+  { id: 3, name: 'Samira Al-Fayed', badge: 'Pro',     rep: '8.1k',  avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120', isTop: false },
 ];
 </script>
 
@@ -19,23 +19,21 @@ const contributors = [
 
     <div class="contributors-list">
       <div v-for="c in contributors" :key="c.id" class="contributor-row">
-        <div class="c-avatar" :style="{ background: `${c.color}22` }">
-          <span :style="{ color: c.color }">{{ c.initials }}</span>
+        <div class="c-avatar">
+          <img :src="c.avatar" :alt="c.name">
         </div>
 
         <div class="c-info">
           <div class="c-name">{{ c.name }}</div>
           <div class="c-sub">
             <span class="c-rep">{{ c.rep }} Rep</span>
-            <span class="c-dot">·</span>
+            <span class="c-dot">•</span>
             <span class="c-badge">{{ c.badge }}</span>
           </div>
         </div>
 
         <div v-if="c.isTop" class="c-star">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
+          <i class="bi bi-star"></i>
         </div>
       </div>
     </div>
@@ -53,60 +51,52 @@ const contributors = [
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  color: #111827;
-  margin: 0;
+  color: var(--color-text);
+  margin: 0 0 8px 0;
 }
 
 .title-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border-radius: 8px;
-  color: #d97706;
+  width: 24px;
+  height: 24px;
+  background: var(--color-warning-light);
+  border-radius: 6px;
+  color: var(--color-warning);
   flex-shrink: 0;
 }
 
 .contributors-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
 }
 
 .contributor-row {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: #faf9ff;
-  transition: all 0.22s ease;
-  cursor: pointer;
-}
-
-.contributor-row:hover {
-  background: #f3f0ff;
-  transform: translateX(3px);
+  gap: 12px;
+  padding: 4px 0;
 }
 
 .c-avatar {
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: 50%;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.c-avatar span {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.3px;
+.c-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .c-info {
@@ -115,43 +105,35 @@ const contributors = [
 }
 
 .c-name {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
-  color: #111827;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--color-text);
+  margin-bottom: 2px;
 }
 
 .c-sub {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 1px;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 .c-rep {
-  font-size: 11.5px;
-  color: #9ca3af;
+  font-weight: 500;
+}
+
+.c-badge {
   font-weight: 500;
 }
 
 .c-dot {
-  color: #d1d5db;
-  font-size: 12px;
-}
-
-.c-badge {
-  font-size: 11.5px;
-  color: #9ca3af;
-  font-weight: 500;
+  color: var(--color-border);
 }
 
 .c-star {
-  width: 26px;
-  height: 26px;
-  background: #fef3c7;
-  border-radius: 8px;
+  color: var(--color-warning);
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;

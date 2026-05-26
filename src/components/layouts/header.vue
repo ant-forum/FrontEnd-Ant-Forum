@@ -1,175 +1,230 @@
+<script setup>
+import { ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useDarkMode } from '../../composables/useDarkMode';
+
+const route = useRoute();
+const { isDark, toggleDarkMode } = useDarkMode();
+const activeLink = ref(route.name || 'Forum');
+const isMobileMenuOpen = ref(false);
+
+const navLinks = [
+  { name: 'Forum', path: '/forum' },
+  { name: 'Showcase', path: '/showcase' },
+  { name: 'Blog', path: '/blog' }
+];
+</script>
+
 <template>
-  <nav class="navbar-custom">
-    <!-- Logo -->
-    <div class="logo">
-      ANT-Forum
-    </div>
-
-    <!-- Center Navigation -->
-    <div class="nav-center">
-      <ul class="nav-links">
-        <li><router-link to="/" class="nav-link" active-class="active" exact-active-class="active">Forum</router-link></li>
-        <li><router-link to="/showcase" class="nav-link" active-class="active">Showcase</router-link></li>
-        <li><router-link to="/blog" class="nav-link" active-class="active">Blog</router-link></li>
-      </ul>
-    </div>
-
-    <!-- Right Actions -->
-    <div class="nav-actions">
-      <div class="search-container">
-        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" placeholder="Search..." class="search-input" />
+  <header class="global-header sticky-top">
+    <div class="container py-3 d-flex align-items-center justify-content-between">
+      <!-- Logo Section -->
+      <div class="header-left d-flex align-items-center flex-1">
+        <router-link to="/" class="text-decoration-none d-flex align-items-center">
+          <span class="logo-text fw-black fs-3 text-gradient">ANTFORUM</span>
+        </router-link>
       </div>
-      
-      <button class="notification-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-      </button>
 
-      <div class="avatar-container">
-        <img src="/avatar.png" alt="User Avatar" class="avatar-image" />
+      <!-- Center Navigation -->
+      <div class="header-center d-none d-md-block">
+        <div class="nav-pills-modern d-flex gap-1 p-1 border rounded-pill shadow-sm">
+          <router-link 
+            v-for="link in navLinks" 
+            :key="link.name" 
+            :to="link.path" 
+            class="nav-link-modern" 
+            :class="{ 'active': route.path.startsWith(link.path) }"
+          >
+            {{ link.name }}
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Right Actions -->
+      <div class="header-right d-flex align-items-center justify-content-end gap-3 flex-1">
+        <div class="d-flex gap-2">
+          <button @click="toggleDarkMode" class="btn btn-icon-modern" :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+            <i :class="isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill'"></i>
+          </button>
+          <button class="btn btn-icon-modern"><i class="bi bi-bell"></i></button>
+          <!-- Settings icon removed as per user request -->
+        </div>
+
+        <router-link to="/profile" class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 border rounded-pill shadow-sm cursor-pointer text-decoration-none">
+          <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle border border-2 border-primary-subtle" width="32" height="32" alt="User">
+          <span class="small fw-bold d-none d-xl-block">Alex Chen</span>
+        </router-link>
+
+        <button class="btn btn-icon-modern d-md-none ms-2" @click="isMobileMenuOpen = !isMobileMenuOpen">
+          <i :class="['bi', isMobileMenuOpen ? 'bi-x-lg' : 'bi-list']"></i>
+        </button>
       </div>
     </div>
-  </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <transition name="slide-fade-menu">
+      <div v-if="isMobileMenuOpen" class="mobile-menu-overlay d-md-none">
+        <div class="mobile-nav-links p-4 d-flex flex-column gap-2">
+          <router-link 
+            v-for="link in navLinks" 
+            :key="link.name" 
+            :to="link.path" 
+            class="mobile-nav-link" 
+            :class="{ 'active': route.path.startsWith(link.path) }"
+            @click="isMobileMenuOpen = false"
+          >
+            {{ link.name }}
+          </router-link>
+        </div>
+      </div>
+    </transition>
+  </header>
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-.navbar-custom {
-  font-family: 'Inter', sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 2rem;
-  background: linear-gradient(90deg, #f0f1f5 0%, #fafafa 50%, #f0f1f5 100%);
-  width: 100%;
-  box-sizing: border-box;
+.global-header {
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  z-index: 1000;
 }
 
-.logo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1a1e29;
+.flex-1 {
+  flex: 1;
 }
 
-.nav-center {
-  background-color: #ffffff;
-  padding: 0.5rem 1.25rem;
-  border-radius: 9999px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+.logo-text {
+  letter-spacing: -1px;
 }
 
-.nav-links {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin: 0;
-  padding: 0;
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.nav-link {
+.nav-pills-modern {
+  transition: all 0.3s ease;
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+.nav-link-modern {
+  padding: 6px 18px;
+  border-radius: 50px;
   text-decoration: none;
-  color: #64748b;
-  font-weight: 500;
-  font-size: 0.95rem;
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: #9333ea;
-}
-
-.nav-link.active {
-  color: #9333ea;
-}
-
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-}
-
-.search-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.8rem;
-  color: #64748b;
-  pointer-events: none;
-}
-
-.search-input {
-  padding: 0.5rem 1rem 0.5rem 2.2rem;
-  border-radius: 9999px;
-  border: 1px solid #e2e8f0;
-  background-color: #f8fafc;
-  outline: none;
+  color: var(--color-text-muted);
+  font-weight: 600;
   font-size: 0.9rem;
-  color: #334155;
-  width: 250px;
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.search-input:focus {
-  border-color: #a855f7;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+.nav-link-modern:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
 }
 
-.search-input::placeholder {
-  color: #94a3b8;
+.nav-link-modern.active {
+  background: var(--color-primary);
+  color: white !important;
+  box-shadow: 0 4px 12px var(--color-primary-light);
 }
 
-.notification-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #0f172a;
-  padding: 0.25rem;
+.btn-icon-modern {
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease, transform 0.2s ease;
-}
-
-.notification-btn:hover {
-  color: #9333ea;
-  transform: scale(1.05);
-}
-
-.avatar-container {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: all 0.2s;
   cursor: pointer;
-  border: 1px solid #e2e8f0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.avatar-container:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.btn-icon-modern:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
-.avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.search-box-modern:focus-within {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-surface) !important;
+  box-shadow: var(--focus-ring);
 }
 
-/* Responsive adjustments if needed */
+.user-profile-pill {
+  transition: all 0.2s ease;
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.user-profile-pill:hover {
+  border-color: var(--color-primary) !important;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md) !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.x-small {
+  font-size: 0.7rem;
+}
+
 @media (max-width: 768px) {
-  .nav-center {
-    display: none;
+  .header-center {
+    display: none !important;
   }
-  .search-input {
-    width: 150px;
-  }
+}
+
+/* Mobile Menu Panel */
+.mobile-menu-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  z-index: 999;
+}
+
+.mobile-nav-link {
+  padding: 12px 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.mobile-nav-link:hover {
+  color: #1e293b;
+  background: #f1f5f9;
+}
+
+.mobile-nav-link.active {
+  background: #6366f1;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* Transition */
+.slide-fade-menu-enter-active, .slide-fade-menu-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-fade-menu-enter-from, .slide-fade-menu-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
 }
 </style>

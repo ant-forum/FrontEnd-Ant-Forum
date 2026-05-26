@@ -8,8 +8,9 @@
         height="20"
         fill="none"
         viewBox="0 0 24 24"
-        stroke="#7c3aed"
+        stroke="currentColor"
         stroke-width="2"
+        class="text-primary"
       >
         <path
           stroke-linecap="round"
@@ -61,12 +62,13 @@ const bars = [
   bottom: 0;
   right: 0;
   width: 72%;
-  background: #fff;
+  background: var(--color-surface) !important;
   border-radius: 14px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 12px 36px var(--color-shadow);
   padding: 1.1rem 1.2rem;
   animation: floatB 6s ease-in-out infinite;
   animation-delay: -3s;
+  border: 1px solid var(--color-border) !important;
 }
 
 @keyframes floatB {
@@ -89,7 +91,11 @@ const bars = [
 .perf-title {
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--color-text) !important;
+}
+
+.text-primary {
+  color: var(--color-primary) !important;
 }
 
 .perf-stats {
@@ -104,23 +110,23 @@ const bars = [
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #9ca3af;
+  color: var(--color-text-muted) !important;
   margin-bottom: 2px;
 }
 
 .stat-value {
   font-size: 1.45rem;
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--color-text) !important;
 }
 .stat-value span {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #9ca3af;
+  color: var(--color-text-muted) !important;
   margin-left: 2px;
 }
 .stat-value.green {
-  color: var(--accent);
+  color: var(--color-success) !important;
 }
 
 .bar-chart {
@@ -133,9 +139,9 @@ const bars = [
 .bar {
   flex: 1;
   border-radius: 4px 4px 0 0;
-  background: #ede9f6;
+  background: var(--color-surface-hover) !important;
 }
 .bar.active {
-  background: var(--brand);
+  background: var(--color-primary) !important;
 }
 </style>

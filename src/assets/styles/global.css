@@ -1,4 +1,7 @@
 @import "./theme.css";
+:root {
+  --color-muted: var(--color-text-muted);
+}
 * {
   margin: 0;
   padding: 0;
@@ -7,10 +10,146 @@
 
 /* Body */
 body {
+  margin: 0;
   font-family: var(--font-family-base);
-  font-size: var(--font-size-base);
   background-color: var(--color-bg);
+  background-image: 
+    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
+  background-size: 20px 20px;
   color: var(--color-text);
+  overflow-x: hidden;
+  position: relative;
+  transition: background-color var(--transition-slow), color var(--transition-slow);
+}
+
+/* Global Bootstrap Overrides */
+.card {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.modal-content {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.dropdown-menu {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.dropdown-item {
+  color: var(--color-text) !important;
+}
+
+.dropdown-item:hover {
+  background-color: var(--color-surface-hover) !important;
+  color: var(--color-primary) !important;
+}
+
+.form-control, .form-select {
+  background-color: var(--color-input-bg) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--focus-ring) !important;
+}
+
+.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+.border {
+  border-color: var(--color-border) !important;
+}
+
+.bg-white {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-light {
+  background-color: var(--color-surface-hover) !important;
+}
+
+.text-dark {
+  color: var(--color-text) !important;
+}
+
+.btn-light {
+  background-color: var(--color-surface-hover) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.btn-light:hover {
+  background-color: var(--color-border) !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-hover);
+}
+
+/* Common Interactive Elements Transition */
+a, button, input, select, textarea, .card, .nav-link {
+  transition: 
+    background-color var(--transition-base), 
+    border-color var(--transition-base), 
+    color var(--transition-base), 
+    box-shadow var(--transition-base),
+    transform var(--transition-fast);
+}
+
+body::before, body::after {
+  content: "";
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  filter: blur(120px);
+  opacity: 0.08;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity var(--transition-base);
+}
+
+[data-theme='dark'] body::before, 
+[data-theme='dark'] body::after {
+  opacity: 0.15;
+}
+
+body::before {
+  background: var(--glow-pink);
+  top: 10%;
+  right: -5%;
+}
+
+body::after {
+  background: var(--glow-purple);
+  bottom: 20%;
+  left: -5%;
 }
 
 button,
@@ -83,7 +222,7 @@ button:disabled {
 }
 
 .text-muted {
-  color: var(--color-muted);
+  color: var(--color-text-muted) !important;
 }
 
 .card {
@@ -102,5 +241,21 @@ button:disabled {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+.admin-main {
+  overflow: auto;
+}
+
+.admin-content-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+@media (min-width: 992px) {
+  .admin-content-wrapper {
+    padding: 40px 32px 72px;
   }
 }
