@@ -16,18 +16,14 @@ const props = defineProps({
 
 <template>
   <div class="row g-4">
-    <!-- Center Column -->
     <div class="col-xl-8 col-lg-7 d-flex flex-column gap-4">
-      <!-- Profile Main Info Card (Hero Banner) -->
       <div class="profile-hero-card p-4">
         <div class="d-flex flex-column flex-sm-row align-items-start gap-4">
-          <!-- Big Avatar with Online Badge -->
           <div class="position-relative flex-shrink-0 profile-avatar-wrapper">
             <img :src="profileAvatar" class="rounded-4 object-fit-cover shadow-sm" width="120" height="120" alt="Developer Avatar">
             <span class="status-indicator-dot"></span>
           </div>
           
-          <!-- Info Block -->
           <div class="flex-grow-1">
             <div class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3 mb-2">
               <div>
@@ -35,7 +31,6 @@ const props = defineProps({
                 <span class="role-badge-overview">{{ profileRole }}</span>
               </div>
             </div>
-            <!-- Description -->
             <p class="bio-text text-muted mb-0">
               {{ profileBio }}
             </p>
@@ -43,7 +38,6 @@ const props = defineProps({
         </div>
       </div>
       
-      <!-- Featured Projects -->
       <div class="featured-projects-section">
         <div class="d-flex align-items-center gap-2 mb-3">
           <i class="bi bi-rocket-takeoff text-primary-purple fs-4"></i>
@@ -73,7 +67,6 @@ const props = defineProps({
         </div>
       </div>
       
-      <!-- Recent Activity -->
       <div class="recent-activity-section">
         <div class="d-flex align-items-center gap-2 mb-3">
           <i class="bi bi-clock-history text-primary-purple fs-4"></i>
@@ -95,9 +88,7 @@ const props = defineProps({
       
     </div>
     
-    <!-- Right Column: Vitals & Skills -->
     <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
-      <!-- Stack Proficiency -->
       <div class="dashboard-card-modern p-4">
         <h6 class="text-dark fw-bold mb-4" style="font-size: 0.9rem; letter-spacing: 0.3px;">Stack Proficiency</h6>
         
@@ -231,7 +222,6 @@ const props = defineProps({
   letter-spacing: -0.3px;
 }
 
-/* Projects Section */
 .project-card-modern-v2 {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(8px);
@@ -272,7 +262,6 @@ const props = defineProps({
 .tag-badge-v2.redis { background: #fef2f2; color: #dc2626; }
 .tag-badge-v2.grpc { background: #f5f3ff; color: #6d28d9; }
 
-/* Timeline Activity */
 .activity-row-modern {
   background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.7);
@@ -302,7 +291,6 @@ const props = defineProps({
   font-size: 0.9rem;
 }
 
-/* Side Info Section */
 .proficiency-label {
   font-size: 0.75rem;
   font-weight: 800;

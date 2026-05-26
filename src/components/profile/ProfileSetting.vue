@@ -8,7 +8,6 @@ const props = defineProps({
 
 const emit = defineEmits(["saved"]);
 
-// Form state
 const form = reactive({
   name: "",
   bio: "",
@@ -20,16 +19,13 @@ const successMessage = ref("");
 const errorMessage = ref("");
 const isSaving = ref(false);
 
-// Avatar
 const avatarFile = ref(null);
 const avatarPreview = ref("");
 const savedAvatarPreview = ref("");
 
-// Skills
 const skillInput = ref("");
 const skills = ref([]);
 
-// Errors
 const errors = reactive({
   name: "",
   bio: "",
@@ -51,15 +47,12 @@ const resetForm = () => {
 
 onMounted(resetForm);
 
-// Watch for prop updates (e.g. if parent finishes loading user asynchronously)
 watch(() => props.user, resetForm, { deep: true });
 
-// URL validation
 const isValidURL = (url) => {
   return /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/.+)?$/.test(url);
 };
 
-// Handle avatar upload
 const handleAvatarChange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -82,7 +75,6 @@ const handleAvatarChange = (e) => {
   avatarPreview.value = URL.createObjectURL(file);
 };
 
-// Skills
 const addSkill = () => {
   const value = skillInput.value.trim();
   if (value && !skills.value.includes(value)) {
@@ -95,7 +87,6 @@ const removeSkill = (index) => {
   skills.value.splice(index, 1);
 };
 
-// Validation
 watch(
   form,
   () => {
@@ -114,7 +105,6 @@ const isValid = computed(() => {
   return !errors.name && !errors.bio && !errors.github && !errors.linkedin;
 });
 
-// Submit
 const handleSubmit = async () => {
   if (!isValid.value || isSaving.value) return;
 
@@ -146,7 +136,6 @@ const handleSubmit = async () => {
     successMessage.value = "Profile saved successfully.";
     emit("saved", {
       ...updatedUser,
-      // fallback in case backend only responds with partial updates
       name: updatedUser.name ?? form.name,
       bio: updatedUser.bio ?? form.bio,
       github: updatedUser.github ?? form.github,
@@ -208,7 +197,6 @@ const handleSubmit = async () => {
     </div>
 
     <div class="row g-4 mt-2">
-      <!-- Avatar Upload -->
       <div class="col-md-4 text-center border-end border-slate-subtle">
         <div class="mb-3 d-inline-block position-relative avatar-preview-container">
           <img
@@ -239,9 +227,7 @@ const handleSubmit = async () => {
         </div>
       </div>
 
-      <!-- Main Details Form -->
       <div class="col-md-8">
-        <!-- Name -->
         <div class="mb-3">
           <label class="form-label fw-bold small text-dark">Full Name *</label>
           <input
@@ -253,7 +239,6 @@ const handleSubmit = async () => {
           <div class="invalid-feedback">{{ errors.name }}</div>
         </div>
 
-        <!-- Bio -->
         <div class="mb-3">
           <div class="d-flex justify-content-between">
             <label class="form-label fw-bold small text-dark">Biography</label>
@@ -269,7 +254,6 @@ const handleSubmit = async () => {
           <div class="invalid-feedback">{{ errors.bio }}</div>
         </div>
 
-        <!-- Skills -->
         <div class="mb-4">
           <label class="form-label fw-bold small text-dark">Languages & Skills</label>
           <div class="d-flex mb-2">
@@ -295,9 +279,7 @@ const handleSubmit = async () => {
           </div>
         </div>
 
-        <!-- Social Links Row -->
         <div class="row g-3">
-          <!-- GitHub -->
           <div class="col-sm-6">
             <label class="form-label fw-bold small text-dark">GitHub URL</label>
             <div class="input-group">
@@ -311,7 +293,6 @@ const handleSubmit = async () => {
               <div class="invalid-feedback">{{ errors.github }}</div>
             </div>
           </div>
-          <!-- LinkedIn -->
           <div class="col-sm-6">
             <label class="form-label fw-bold small text-dark">LinkedIn URL</label>
             <div class="input-group">
@@ -350,7 +331,6 @@ const handleSubmit = async () => {
   border-color: #f1f5f9 !important;
 }
 
-/* Avatar Experience */
 .avatar-preview-container {
   cursor: pointer;
   overflow: hidden;
@@ -391,7 +371,6 @@ const handleSubmit = async () => {
   display: inline-block;
 }
 
-/* Form Styles */
 .form-control {
   border: 1px solid #e2e8f0;
   border-radius: var(--radius-md);
@@ -421,7 +400,6 @@ const handleSubmit = async () => {
   background-color: rgba(124, 58, 237, 0.02);
 }
 
-/* Skills */
 .skill-badge-premium {
   background: rgba(124, 58, 237, 0.08);
   color: #7c3aed;
@@ -453,7 +431,6 @@ const handleSubmit = async () => {
   color: #ef4444;
 }
 
-/* Buttons */
 .btn-primary {
   background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
   color: #ffffff;

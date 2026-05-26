@@ -3,14 +3,12 @@ import { ref, onMounted } from 'vue';
 import Navbar from "../components/layouts/header.vue";
 import BaseFooter from "../components/layouts/footer.vue";
 
-// Active Tab: 'student' | 'teacher'
 const activeRole = ref('student');
 
 onMounted(() => {
   document.title = "Help Center - ANTFORUM";
 });
 
-// Guide Sections Data
 const studentSteps = [
   {
     title: "1. Choose Your Forum Category",
@@ -71,7 +69,6 @@ const teacherSteps = [
 
   <main class="help-center-layout min-vh-100 py-5">
     <div class="container max-w-4xl">
-      <!-- Header Banner -->
       <section class="help-hero text-center mb-5 p-5 rounded-5 shadow-sm position-relative overflow-hidden">
         <div class="hero-overlay"></div>
         <div class="position-relative z-1">
@@ -83,7 +80,6 @@ const teacherSteps = [
         </div>
       </section>
 
-      <!-- Role Selector Toggle -->
       <div class="d-flex justify-content-center mb-5">
         <div class="role-toggle-container p-1 rounded-pill bg-white shadow-sm border">
           <button 
@@ -107,10 +103,8 @@ const teacherSteps = [
         </div>
       </div>
 
-      <!-- Content Area with Transition -->
       <div class="help-content-container">
         <Transition name="fade-slide" mode="out-in">
-          <!-- Student Content -->
           <div v-if="activeRole === 'student'" key="student" class="role-content">
             <div class="d-flex align-items-center gap-3 mb-4">
               <div class="icon-header-box bg-purple-subtle text-purple rounded-4">
@@ -122,7 +116,6 @@ const teacherSteps = [
               </div>
             </div>
 
-            <!-- Steps Grid -->
             <div class="row g-4 mb-5">
               <div v-for="step in studentSteps" :key="step.title" class="col-md-6">
                 <div class="card step-card border-0 shadow-sm rounded-4 p-4 h-100">
@@ -139,7 +132,6 @@ const teacherSteps = [
               </div>
             </div>
 
-            <!-- Editor Formatting Card -->
             <div class="card markdown-tip-card border-0 shadow-sm rounded-4 p-4 bg-dark text-light overflow-hidden position-relative">
               <div class="tip-card-overlay"></div>
               <div class="position-relative z-1">
@@ -164,7 +156,6 @@ app.mount('#app');
             </div>
           </div>
 
-          <!-- Teacher Content -->
           <div v-else key="teacher" class="role-content">
             <div class="d-flex align-items-center gap-3 mb-4">
               <div class="icon-header-box bg-indigo-subtle text-indigo rounded-4">
@@ -176,7 +167,6 @@ app.mount('#app');
               </div>
             </div>
 
-            <!-- Steps Grid -->
             <div class="row g-4 mb-5">
               <div v-for="step in teacherSteps" :key="step.title" class="col-md-6">
                 <div class="card step-card border-0 shadow-sm rounded-4 p-4 h-100">
@@ -193,7 +183,6 @@ app.mount('#app');
               </div>
             </div>
 
-            <!-- Classroom Engagement Tips -->
             <div class="card teachers-tip-card border-0 shadow-sm rounded-4 p-4 text-dark" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);">
               <div class="d-flex align-items-center gap-2 mb-3">
                 <i class="bi bi-stars text-indigo fs-4"></i>
@@ -207,7 +196,6 @@ app.mount('#app');
         </Transition>
       </div>
 
-      <!-- Call to Action -->
       <section class="cta-section text-center mt-5 p-4 rounded-4 border bg-white shadow-sm">
         <h5 class="fw-bold mb-2 text-dark">Ready to write your post?</h5>
         <p class="text-muted small mb-4">Put these tips into practice now on the main forum page.</p>
@@ -231,7 +219,6 @@ app.mount('#app');
   max-width: 900px;
 }
 
-/* Hero Section */
 .help-hero {
   background: white;
   border: 1px solid #e2e8f0;
@@ -243,7 +230,6 @@ app.mount('#app');
   -webkit-text-fill-color: transparent;
 }
 
-/* Toggle Switch Styles */
 .role-toggle-container {
   display: flex;
   gap: 0.25rem;
@@ -274,7 +260,6 @@ app.mount('#app');
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
 }
 
-/* Header Info Icon box */
 .icon-header-box {
   width: 52px;
   height: 52px;
@@ -283,7 +268,6 @@ app.mount('#app');
   justify-content: center;
 }
 
-/* Step Card Styles */
 .step-card {
   background: white;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -305,7 +289,6 @@ app.mount('#app');
   font-size: 1.25rem;
 }
 
-/* Markdown Card styling */
 .markdown-tip-card {
   background: #0f172a !important;
 }
@@ -320,7 +303,6 @@ app.mount('#app');
   color: #34d399;
 }
 
-/* CTA */
 .btn-primary-gradient {
   background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
   color: white;
@@ -335,7 +317,6 @@ app.mount('#app');
   box-shadow: 0 6px 16px rgba(124, 58, 237, 0.2);
 }
 
-/* Color Palette Subtles */
 .bg-purple-subtle { background-color: #f3e8ff; }
 .text-purple { color: #7c3aed; }
 
@@ -360,7 +341,6 @@ app.mount('#app');
 .bg-teal-subtle { background-color: #ccfbf1; }
 .text-teal { color: #0d9488; }
 
-/* Transitions */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition: opacity 0.25s ease, transform 0.25s ease;

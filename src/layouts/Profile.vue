@@ -4,15 +4,12 @@ import Navbar from "../components/layouts/header.vue";
 import Footer from "../components/layouts/footer.vue";
 import { useAuthStore } from "../stores/auth";
 
-// Sub-components
 import ProfileOverview from "../components/profile/ProfileOverview.vue";
 import ProfileProject from "../components/profile/ProfileProject.vue";
 import ProfileSetting from "../components/profile/ProfileSetting.vue";
 
-// Auth Store
 const authStore = useAuthStore();
 
-// Tab state: 'profile' | 'projects' | 'settings'
 const activeTab = ref("profile");
 
 const savedAvatarPreview = ref("");
@@ -44,11 +41,9 @@ const handleProfileSaved = (updatedUser) => {
   savedProfile.skills = Array.isArray(updatedUser.skills) ? [...updatedUser.skills] : [];
   savedAvatarPreview.value = updatedUser.avatar || updatedUser.avatarUrl || "";
   
-  // Switch tab back to profile overview dashboard
   activeTab.value = "profile";
 };
 
-// Profile Dashboard Dynamic Data / Mock Data
 const profileName = computed(() => savedProfile.name || "Alex 'Dev' Rivera");
 const profileRole = computed(() => {
   const role = authStore.user?.role || "Student";
@@ -61,7 +56,6 @@ const profileLinkedin = computed(() => savedProfile.linkedin || "https://linkedi
 const profileSkills = computed(() => savedProfile.skills.length > 0 ? savedProfile.skills : ["Rust", "Go", "TypeScript", "Python"]);
 const profileAvatar = computed(() => savedAvatarPreview.value || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300");
 
-// Default Showcase Projects (matches screenshot)
 const defaultProjects = [
   {
     title: "Nexus UI Engine",
@@ -77,7 +71,6 @@ const defaultProjects = [
   }
 ];
 
-// Additional Projects for Showcase tab
 const additionalProjects = [
   {
     title: "Aether OS Gateway",
@@ -93,7 +86,6 @@ const additionalProjects = [
   }
 ];
 
-// Activity Feed (matches screenshot)
 const activityFeed = [
   {
     type: "discussion",
@@ -116,10 +108,8 @@ const activityFeed = [
   <div class="container profile-dashboard py-4">
     <div class="row g-4">
       
-      <!-- Left Sidebar Column -->
       <aside class="col-lg-3 col-md-4">
         <div class="sidebar-card-modern shadow-sm p-4">
-          <!-- Sidebar Header: User Info -->
           <div class="sidebar-user-info d-flex align-items-center gap-3 mb-4">
             <img :src="profileAvatar" class="rounded-circle border border-2 border-primary-subtle" width="48" height="48" alt="Profile avatar" style="object-fit: cover;">
             <div class="user-meta overflow-hidden">
@@ -128,7 +118,6 @@ const activityFeed = [
             </div>
           </div>
           
-          <!-- Navigation Menu -->
           <nav class="sidebar-nav mb-4">
             <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
               <li>
@@ -166,12 +155,10 @@ const activityFeed = [
           
           <hr class="my-4 border-slate">
           
-          <!-- New Project Button -->
           <router-link to="/showcase/create" class="btn btn-new-project w-100 py-2-5 mb-4 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2">
             <span>New Project</span>
           </router-link>
           
-          <!-- Bottom actions sticking to bottom -->
           <div class="sidebar-bottom d-flex flex-column gap-2">
             <router-link to="/help" class="sidebar-link-btn text-decoration-none">
               <i class="bi bi-question-circle fs-5"></i>
@@ -185,10 +172,8 @@ const activityFeed = [
         </div>
       </aside>
       
-      <!-- Main Content Column -->
       <main class="col-lg-9 col-md-8">
         
-        <!-- Tab 1: Profile Dashboard -->
         <div v-if="activeTab === 'profile'" class="fade-in-content">
           <ProfileOverview
             :profileName="profileName"
@@ -203,14 +188,12 @@ const activityFeed = [
           />
         </div>
         
-        <!-- Tab 2: Projects Showcase -->
         <div v-else-if="activeTab === 'projects'" class="fade-in-content">
           <ProfileProject
             :projects="[...defaultProjects, ...additionalProjects]"
           />
         </div>
         
-        <!-- Tab 3: Settings (Edit Form) -->
         <div v-else-if="activeTab === 'settings'" class="fade-in-content">
           <ProfileSetting
             :user="authStore.user || {}"
@@ -236,7 +219,6 @@ const activityFeed = [
   color: #1e293b;
 }
 
-/* Sidebar */
 .sidebar-card-modern {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
@@ -337,7 +319,6 @@ const activityFeed = [
   padding-bottom: 0.65rem;
 }
 
-/* Fade in animation */
 .fade-in-content {
   animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

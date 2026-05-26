@@ -15,14 +15,12 @@ const navLinks = [
 <template>
   <header class="global-header sticky-top">
     <div class="container py-3 d-flex align-items-center justify-content-between">
-      <!-- Logo Section -->
       <div class="header-left d-flex align-items-center flex-1">
         <router-link to="/" class="text-decoration-none d-flex align-items-center">
           <span class="logo-text fw-black fs-3 text-gradient">ANTFORUM</span>
         </router-link>
       </div>
 
-      <!-- Center Navigation -->
       <div class="header-center d-none d-md-block">
         <div class="nav-pills-modern d-flex gap-1 p-1 border rounded-pill bg-white shadow-sm">
           <router-link 
@@ -37,11 +35,9 @@ const navLinks = [
         </div>
       </div>
 
-      <!-- Right Actions -->
       <div class="header-right d-flex align-items-center justify-content-end gap-3 flex-1">
         <div class="d-flex gap-2">
           <button class="btn btn-icon-modern"><i class="bi bi-bell"></i></button>
-          <!-- Settings icon removed as per user request -->
         </div>
 
         <div class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 bg-white border rounded-pill shadow-sm cursor-pointer">

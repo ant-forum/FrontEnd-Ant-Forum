@@ -23,10 +23,7 @@ import ProjectManagement from '../views/admin/ProjectManagement.vue';
 import ThreadManagement from '../views/admin/ThreadManagement.vue';
 import AnalyticsView from '../views/admin/AnalyticsView.vue';
 import SettingsView from '../views/admin/SettingsView.vue';
-// import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
-
-//this is new
 
 import ForumView from "../views/forum/ForumView.vue";
 
@@ -205,7 +202,6 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    // always scroll to top
     return { top: 0 }
   },
 });
