@@ -1,5 +1,5 @@
 <template>
-  <div class="create-user-layout d-flex bg-light min-vh-100">
+  <div class="create-user-layout d-flex bg-adaptive min-vh-100">
     <!-- Sidebar -->
     <AdminSidebar />
 
@@ -13,7 +13,7 @@
             <i class="bi bi-arrow-left"></i>
             <span>Back to User Directory</span>
           </router-link>
-          <h1 class="fw-bold mb-1">Create New User</h1>
+          <h1 class="fw-bold mb-1 themed-text">Create New User</h1>
           <p class="text-muted small mb-0">Platform registration for new members</p>
         </div>
         <div class="completion-stats text-end d-none d-md-block">
@@ -30,18 +30,18 @@
       <div class="row g-4">
         <div class="col-xl-8">
           <!-- Main Card -->
-          <div class="card create-card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4">
+          <div class="card create-card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4 themed-card">
             <form @submit.prevent="handleSubmit">
               <!-- Avatar Section -->
-              <div class="d-flex align-items-center gap-4 mb-5 pb-4 border-bottom border-light">
+              <div class="d-flex align-items-center gap-4 mb-5 pb-4 border-bottom border-theme">
                 <div class="avatar-wrapper position-relative">
-                  <img :src="avatarUrl" class="rounded-circle shadow-sm border border-4 border-white" width="100" height="100" alt="Avatar Preview">
+                  <img :src="avatarUrl" class="rounded-circle shadow-sm border border-4 border-theme" width="100" height="100" alt="Avatar Preview">
                   <button type="button" @click="refreshAvatar" class="camera-btn position-absolute bottom-0 end-0 rounded-circle border-0 d-flex align-items-center justify-content-center shadow-sm">
                     <i class="bi bi-camera-fill text-white small"></i>
                   </button>
                 </div>
                 <div>
-                  <h5 class="fw-bold mb-1">Profile Photo</h5>
+                  <h5 class="fw-bold mb-1 themed-text">Profile Photo</h5>
                   <p class="text-muted xx-small mb-0">This will be visible to other members across the platform.</p>
                 </div>
               </div>
@@ -54,16 +54,16 @@
                 <div class="row g-4">
                   <div class="col-md-6">
                     <label class="form-label text-muted xx-small fw-bold text-uppercase">Full Name</label>
-                    <input v-model="form.name" type="text" class="form-control custom-input border-0" placeholder="e.g. John Doe" required>
+                    <input v-model="form.name" type="text" class="form-control custom-input border-0 themed-input" placeholder="e.g. John Doe" required>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label text-muted xx-small fw-bold text-uppercase">Email Address</label>
-                    <input v-model="form.email" type="email" class="form-control custom-input border-0" placeholder="john@example.com" required>
+                    <input v-model="form.email" type="email" class="form-control custom-input border-0 themed-input" placeholder="john@example.com" required>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label text-muted xx-small fw-bold text-uppercase">Role</label>
                     <div class="custom-select-wrapper position-relative" v-click-outside="() => showRoleDropdown = false">
-                      <div @click="showRoleDropdown = !showRoleDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer">
+                      <div @click="showRoleDropdown = !showRoleDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer themed-input">
                         <div class="d-flex align-items-center gap-2">
                           <i :class="['bi', getRoleIcon(form.role), 'text-purple']"></i>
                           <span>{{ form.role }}</span>
@@ -71,7 +71,7 @@
                         <i class="bi bi-chevron-down small opacity-50"></i>
                       </div>
                       <Transition name="dropdown">
-                        <div v-if="showRoleDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 bg-white z-3">
+                        <div v-if="showRoleDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 z-3 themed-dropdown">
                           <div v-for="role in roleOptions" :key="role.label" 
                             @click="selectRole(role.label)"
                             class="dropdown-item-custom p-3 rounded-3 d-flex align-items-center gap-3 mb-1 cursor-pointer"
@@ -92,7 +92,7 @@
                   <div class="col-md-6">
                     <label class="form-label text-muted xx-small fw-bold text-uppercase">Department</label>
                     <div class="custom-select-wrapper position-relative" v-click-outside="() => showDeptDropdown = false">
-                      <div @click="showDeptDropdown = !showDeptDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer">
+                      <div @click="showDeptDropdown = !showDeptDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer themed-input">
                         <div class="d-flex align-items-center gap-2">
                           <i :class="['bi', getDeptIcon(form.department), 'text-purple']"></i>
                           <span>{{ form.department }}</span>
@@ -100,13 +100,13 @@
                         <i class="bi bi-chevron-down small opacity-50"></i>
                       </div>
                       <Transition name="dropdown">
-                        <div v-if="showDeptDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 bg-white z-3">
+                        <div v-if="showDeptDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 z-3 themed-dropdown">
                           <div v-for="dept in deptOptions" :key="dept.label" 
                             @click="selectDept(dept.label)"
                             class="dropdown-item-custom p-3 rounded-3 d-flex align-items-center gap-3 mb-1 cursor-pointer"
                             :class="{ 'active': form.department === dept.label }"
                           >
-                            <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center bg-light">
+                            <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center bg-theme-hover">
                               <i :class="['bi', dept.icon, 'text-muted']"></i>
                             </div>
                             <div>
@@ -129,10 +129,10 @@
                 <div class="row g-4">
                   <div class="col-12">
                     <label class="form-label text-muted xx-small fw-bold text-uppercase">Assign to Projects</label>
-                    <div class="d-flex flex-wrap gap-2 p-3 bg-light rounded-4">
+                    <div class="d-flex flex-wrap gap-2 p-3 bg-theme-hover rounded-4">
                       <div v-for="project in availableProjects" :key="project" 
                         class="project-pill px-3 py-1 rounded-pill small fw-bold border"
-                        :class="form.projects.includes(project) ? 'bg-purple text-white border-purple' : 'bg-white text-muted border-light'"
+                        :class="form.projects.includes(project) ? 'bg-purple text-white border-purple' : 'bg-theme text-muted border-theme'"
                         @click="toggleProject(project)"
                         style="cursor: pointer; transition: all 0.2s ease;"
                       >
@@ -144,7 +144,7 @@
                   <div class="col-md-6">
                     <label class="form-label text-muted xx-small fw-bold text-uppercase">Initial Status</label>
                     <div class="custom-select-wrapper position-relative" v-click-outside="() => showStatusDropdown = false">
-                      <div @click="showStatusDropdown = !showStatusDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer">
+                      <div @click="showStatusDropdown = !showStatusDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer themed-input">
                         <div class="d-flex align-items-center gap-2">
                           <i :class="['bi', getStatusIcon(form.status), form.status === 'active' ? 'text-success' : 'text-warning']"></i>
                           <span>{{ form.status.charAt(0).toUpperCase() + form.status.slice(1) }}</span>
@@ -152,7 +152,7 @@
                         <i class="bi bi-chevron-down small opacity-50"></i>
                       </div>
                       <Transition name="dropdown">
-                        <div v-if="showStatusDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 bg-white z-3">
+                        <div v-if="showStatusDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 z-3 themed-dropdown">
                           <div v-for="status in statusOptions" :key="status.value" 
                             @click="selectStatus(status.value)"
                             class="dropdown-item-custom p-3 rounded-3 d-flex align-items-center gap-3 mb-1 cursor-pointer"
@@ -173,7 +173,7 @@
                   <div class="col-md-6">
                     <label class="form-label text-muted xx-small fw-bold text-uppercase">Workspace Location</label>
                     <div class="custom-select-wrapper position-relative" v-click-outside="() => showLocationDropdown = false">
-                      <div @click="showLocationDropdown = !showLocationDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer">
+                      <div @click="showLocationDropdown = !showLocationDropdown" class="form-control custom-input border-0 d-flex align-items-center justify-content-between cursor-pointer themed-input">
                         <div class="d-flex align-items-center gap-2">
                           <i :class="['bi', getLocationIcon(form.location), 'text-purple']"></i>
                           <span>{{ form.location }}</span>
@@ -181,13 +181,13 @@
                         <i class="bi bi-chevron-down small opacity-50"></i>
                       </div>
                       <Transition name="dropdown">
-                        <div v-if="showLocationDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 bg-white z-3">
+                        <div v-if="showLocationDropdown" class="dropdown-menu-custom position-absolute w-100 mt-2 p-2 rounded-4 shadow-lg border-0 z-3 themed-dropdown">
                           <div v-for="loc in locationOptions" :key="loc.label" 
                             @click="selectLocation(loc.label)"
                             class="dropdown-item-custom p-3 rounded-3 d-flex align-items-center gap-3 mb-1 cursor-pointer"
                             :class="{ 'active': form.location === loc.label }"
                           >
-                            <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center bg-light">
+                            <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center bg-theme-hover">
                               <i :class="['bi', loc.icon, 'text-muted']"></i>
                             </div>
                             <div>
@@ -238,7 +238,7 @@
               </div>
 
               <!-- Footer Actions -->
-              <div class="d-flex justify-content-end gap-3 pt-4 border-top border-light mt-5">
+              <div class="d-flex justify-content-end gap-3 pt-4 border-top border-theme mt-5">
                 <router-link to="/admin/users" class="btn btn-cancel rounded-pill px-4 py-2 fw-bold border-0">
                   Cancel
                 </router-link>
@@ -257,15 +257,15 @@
 
         <!-- Right Side: Sidebar Tips -->
         <div class="col-xl-4">
-          <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 2rem; z-index: 10;">
-            <h6 class="fw-bold mb-4 small text-uppercase tracking-wider">Onboarding Checklist</h6>
+          <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top themed-card" style="top: 2rem; z-index: 10;">
+            <h6 class="fw-bold mb-4 small text-uppercase tracking-wider themed-text">Onboarding Checklist</h6>
             
             <div class="checklist-item d-flex gap-3 mb-4">
               <div class="icon-box-sm bg-purple-soft text-purple rounded-circle d-flex align-items-center justify-content-center">
                 <i class="bi bi-envelope small"></i>
               </div>
               <div>
-                <div class="small fw-bold">Email Verification</div>
+                <div class="small fw-bold themed-text">Email Verification</div>
                 <p class="xx-small text-muted mb-0">System will verify email format and domain accessibility.</p>
               </div>
             </div>
@@ -275,7 +275,7 @@
                 <i class="bi bi-shield-check small"></i>
               </div>
               <div>
-                <div class="small fw-bold">Permission Logic</div>
+                <div class="small fw-bold themed-text">Permission Logic</div>
                 <p class="xx-small text-muted mb-0">Role determines initial access to dashboard modules.</p>
               </div>
             </div>
@@ -285,7 +285,7 @@
                 <i class="bi bi-lightning small"></i>
               </div>
               <div>
-                <div class="small fw-bold">Auto-Provisioning</div>
+                <div class="small fw-bold themed-text">Auto-Provisioning</div>
                 <p class="xx-small text-muted mb-0">Projects assigned will be ready for the user immediately.</p>
               </div>
             </div>
@@ -293,7 +293,7 @@
             <div class="alert alert-purple border-0 rounded-4 p-3 mt-2 mb-0">
               <div class="d-flex gap-2">
                 <i class="bi bi-info-circle-fill fs-5"></i>
-                <p class="xx-small mb-0 opacity-75 fw-medium">Need to import multiple users? Use the <strong>Bulk Import</strong> tool on the main directory page.</p>
+                <p class="xx-small mb-0 opacity-75 fw-medium themed-text">Need to import multiple users? Use the <strong>Bulk Import</strong> tool on the main directory page.</p>
               </div>
             </div>
           </div>
@@ -468,24 +468,61 @@ const handleSubmit = () => {
 </script>
 
 <style scoped>
-.create-user-layout {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+.bg-adaptive {
+  background-color: var(--color-bg) !important;
+}
+
+.themed-text {
+  color: var(--color-text) !important;
+}
+
+.themed-card {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+.border-theme {
+  border-color: var(--color-border) !important;
+}
+
+.themed-input {
+  background-color: var(--color-surface-hover) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+.themed-input:focus {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.themed-dropdown {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+.bg-theme-hover {
+  background-color: var(--color-surface-hover) !important;
+}
+
+.bg-theme {
+  background-color: var(--color-surface) !important;
 }
 
 .back-link {
   text-decoration: none;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
 .back-link:hover {
-  color: #1e293b;
+  color: var(--color-primary);
 }
 
 .create-card {
-  background: white;
   width: 100%;
 }
 
@@ -500,14 +537,15 @@ const handleSubmit = () => {
   min-width: 32px;
 }
 
-.bg-success-soft { background-color: rgba(16, 185, 129, 0.1); }
-.bg-warning-soft { background-color: rgba(245, 158, 11, 0.1); }
-.bg-info-soft { background-color: rgba(13, 202, 240, 0.1); }
-.bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+.bg-success-soft { background-color: var(--color-success-light); }
+.bg-warning-soft { background-color: var(--color-warning-light); }
+.bg-info-soft { background-color: var(--color-info-light); }
+.bg-danger-soft { background-color: var(--color-danger-light); }
+.bg-purple-soft { background-color: var(--color-purple-light); }
 
 .project-pill:hover {
-  border-color: #8b5cf6 !important;
-  background-color: rgba(139, 92, 246, 0.05);
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-light) !important;
 }
 
 .cursor-pointer {
@@ -515,10 +553,8 @@ const handleSubmit = () => {
 }
 
 .dropdown-menu-custom {
-  background: white;
-  border: 1px solid rgba(0,0,0,0.05) !important;
   transform-origin: top;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
 .dropdown-item-custom {
@@ -526,12 +562,12 @@ const handleSubmit = () => {
 }
 
 .dropdown-item-custom:hover {
-  background-color: #f8fafc;
+  background-color: var(--color-surface-hover);
 }
 
 .dropdown-item-custom.active {
-  background-color: rgba(139, 92, 246, 0.05);
-  border-left: 3px solid #8b5cf6 !important;
+  background-color: var(--color-primary-light);
+  border-left: 3px solid var(--color-primary) !important;
 }
 
 .dropdown-enter-active {
@@ -555,28 +591,24 @@ const handleSubmit = () => {
 .camera-btn {
   width: 28px;
   height: 28px;
-  background: #8b5cf6;
+  background: var(--color-primary);
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .camera-btn:hover {
   transform: scale(1.1);
-  background: #7c3aed;
+  background: var(--color-primary-hover);
 }
 
 .custom-input {
-  background-color: #f8fafc;
   padding: 0.8rem 1rem;
   font-size: 0.9rem;
   border-radius: 0.75rem;
-  color: #1e293b;
   border: 1px solid transparent !important;
 }
 
 .custom-input:focus {
-  background-color: white;
-  border-color: #8b5cf6 !important;
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+  box-shadow: var(--focus-ring);
 }
 
 .form-label {
@@ -589,13 +621,13 @@ const handleSubmit = () => {
   width: 2.5rem;
   height: 1.25rem;
   cursor: pointer;
-  background-color: #e2e8f0;
+  background-color: var(--color-border);
   border: none;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
 }
 
 .custom-switch .form-check-input:checked {
-  background-color: #8b5cf6;
+  background-color: var(--color-primary);
 }
 
 .custom-switch .form-check-input:focus {

@@ -9,7 +9,7 @@ const props = defineProps({
 <template>
   <div>
     <div class="dashboard-card-modern p-4 mb-4">
-      <h4 class="fw-bold mb-2 header-title">My Projects</h4>
+      <h4 class="fw-bold mb-2 header-title themed-text">My Projects</h4>
       <p class="text-muted mb-0 subtitle-text">Showcase of web application architectures, system designs, and microservices.</p>
     </div>
     
@@ -18,7 +18,7 @@ const props = defineProps({
         <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
           <div>
             <div class="d-flex justify-content-between align-items-start mb-2">
-              <h6 class="fw-bold mb-0 text-dark project-title-v2">{{ project.title }}</h6>
+              <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
               <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
             </div>
             <p class="text-muted small mb-4 line-clamp-3">
@@ -39,44 +39,51 @@ const props = defineProps({
 
 <style scoped>
 .dashboard-card-modern {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-surface) !important;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-xl);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-title {
-  color: #0f172a;
+  color: var(--color-text) !important;
   letter-spacing: -0.5px;
+}
+
+.themed-text {
+  color: var(--color-text) !important;
 }
 
 .subtitle-text {
   font-size: 0.92rem;
+  color: var(--color-text-muted) !important;
 }
 
 .project-card-modern-v2 {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-surface) !important;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-xl);
   transition: all var(--transition-base);
-  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text) !important;
 }
 
 .project-card-modern-v2:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08) !important;
-  border-color: rgba(124, 58, 237, 0.3);
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--color-purple-light) !important;
 }
 
 .project-title-v2 {
   font-size: 0.95rem;
   transition: color var(--transition-base);
+  color: var(--color-text) !important;
 }
 
 .project-card-modern-v2:hover .project-title-v2 {
-  color: #7c3aed !important;
+  color: var(--color-purple) !important;
 }
 
 .tag-badge-v2 {
@@ -88,16 +95,16 @@ const props = defineProps({
   letter-spacing: 0.5px;
 }
 
-.tag-badge-v2.react { background: #e0f2fe; color: #0369a1; }
-.tag-badge-v2.webgpu { background: #fdf2f8; color: #be185d; }
-.tag-badge-v2.typescript { background: #eff6ff; color: #1d4ed8; }
-.tag-badge-v2.go { background: #ecfeff; color: #0891b2; }
-.tag-badge-v2.redis { background: #fef2f2; color: #dc2626; }
-.tag-badge-v2.grpc { background: #f5f3ff; color: #6d28d9; }
-.tag-badge-v2.node\.js { background: #f0fdf4; color: #166534; }
-.tag-badge-v2.graphql { background: #fff1f2; color: #be123c; }
-.tag-badge-v2.tailwind { background: #ecfeff; color: #0369a1; }
-.tag-badge-v2.storybook { background: #fff7ed; color: #c2410c; }
+.tag-badge-v2.react { background: var(--color-tag-blue-bg); color: var(--color-tag-blue-text); }
+.tag-badge-v2.webgpu { background: var(--color-tag-pink-bg); color: var(--color-tag-pink-text); }
+.tag-badge-v2.typescript { background: var(--color-tag-indigo-bg); color: var(--color-tag-indigo-text); }
+.tag-badge-v2.go { background: var(--color-tag-cyan-bg); color: var(--color-tag-cyan-text); }
+.tag-badge-v2.redis { background: var(--color-tag-red-bg); color: var(--color-tag-red-text); }
+.tag-badge-v2.grpc { background: var(--color-tag-purple-bg); color: var(--color-tag-purple-text); }
+.tag-badge-v2.node\.js { background: var(--color-tag-green-bg); color: var(--color-tag-green-text); }
+.tag-badge-v2.graphql { background: var(--color-tag-red-bg); color: var(--color-tag-red-text); }
+.tag-badge-v2.tailwind { background: var(--color-tag-blue-bg); color: var(--color-tag-blue-text); }
+.tag-badge-v2.storybook { background: var(--color-tag-amber-bg); color: var(--color-tag-amber-text); }
 
 .line-clamp-3 {
   display: -webkit-box;

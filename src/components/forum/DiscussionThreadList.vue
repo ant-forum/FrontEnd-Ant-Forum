@@ -21,23 +21,23 @@ const tagColorMap = {
 
 // Add standard categories as fallback colors
 const tagStyles = {
-  'React': { bg: '#e0f2fe', color: '#0284c7' },
-  'Performance': { bg: '#f5f3ff', color: '#7c3aed' },
-  'System Design': { bg: '#fdf2f8', color: '#db2777' },
-  'Architecture': { bg: '#ecfdf5', color: '#059669' },
-  'CSS': { bg: '#fff7ed', color: '#ea580c' },
-  'Tailwind': { bg: '#f0fdfa', color: '#0d9488' },
-  'Docker': { bg: '#e0f2fe', color: '#0284c7' },
-  'Node.js': { bg: '#fef9c3', color: '#ca8a04' },
-  'DevOps': { bg: '#f5f3ff', color: '#7c3aed' },
-  'Vue 3': { bg: '#ecfdf5', color: '#059669' },
-  'Composition API': { bg: '#e0f2fe', color: '#0284c7' },
-  'GraphQL': { bg: '#fdf2f8', color: '#db2777' },
-  'API': { bg: '#f0fdfa', color: '#0d9488' },
-  'Security': { bg: '#fef2f2', color: '#dc2626' },
-  'npm': { bg: '#fff7ed', color: '#ea580c' },
-  'Microservices': { bg: '#f0fdfa', color: '#0d9488' },
-  'Monolith': { bg: '#f8fafc', color: '#64748b' }
+  'React': { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
+  'Performance': { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
+  'System Design': { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
+  'Architecture': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  'CSS': { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
+  'Tailwind': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  'Docker': { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
+  'Node.js': { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
+  'DevOps': { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
+  'Vue 3': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  'Composition API': { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
+  'GraphQL': { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
+  'API': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  'Security': { bg: 'var(--color-tag-red-bg)', color: 'var(--color-tag-red-text)' },
+  'npm': { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
+  'Microservices': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
+  'Monolith': { bg: 'var(--color-surface-hover)', color: 'var(--color-text-muted)' }
 };
 
 function getTagStyle(label, defaultColor) {
@@ -162,8 +162,8 @@ function handleVote(id, direction) {
 }
 
 .thread-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
 }
 
 /* Vote Column (Clean layout matching reference) */
@@ -181,7 +181,7 @@ function handleVote(id, direction) {
 .vote-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -193,22 +193,22 @@ function handleVote(id, direction) {
 }
 
 .vote-btn:hover {
-  color: #7c3aed;
-  background: #f1f5f9;
+  color: var(--color-primary);
+  background: var(--color-surface-hover);
 }
 
 .vote-btn.up.active {
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .vote-btn.down.active {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 .vote-num {
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   line-height: 1;
 }
 
@@ -255,12 +255,12 @@ function handleVote(id, direction) {
 
 .thread-time {
   font-size: 12.5px;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .author-name {
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 /* Title & Excerpt */
@@ -268,19 +268,19 @@ function handleVote(id, direction) {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   line-height: 1.35;
   transition: color 0.2s ease;
 }
 
 .thread-card:hover .thread-title {
-  color: var(--color-purple);
+  color: var(--color-primary);
 }
 
 .thread-excerpt {
   margin: 0;
   font-size: 14px;
-  color: #64748b;
+  color: var(--color-text-muted);
   line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -290,10 +290,10 @@ function handleVote(id, direction) {
 
 /* Code block (Go style dark block inside card) */
 .code-block {
-  background: #0f172a;
+  background: var(--color-bg);
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--color-border);
   margin-top: 4px;
 }
 
@@ -302,14 +302,14 @@ function handleVote(id, direction) {
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: #1e293b;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: var(--color-surface-hover);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .code-lang {
   font-size: 11px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .code-dots {
@@ -321,7 +321,7 @@ function handleVote(id, direction) {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #475569;
+  background: var(--color-border);
 }
 
 .code-block pre {
@@ -334,7 +334,7 @@ function handleVote(id, direction) {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 12px;
   line-height: 1.6;
-  color: #e2e8f0;
+  color: var(--color-text);
 }
 
 /* Footer Action Buttons */
@@ -344,7 +344,7 @@ function handleVote(id, direction) {
   gap: 16px;
   margin-top: 8px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-border);
 }
 
 .foot-btn {
@@ -353,7 +353,7 @@ function handleVote(id, direction) {
   gap: 6px;
   background: transparent;
   border: none;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -367,12 +367,12 @@ function handleVote(id, direction) {
 }
 
 .foot-btn:hover {
-  color: #0f172a;
-  background: #f1f5f9;
+  color: var(--color-text);
+  background: var(--color-surface-hover);
 }
 
 .foot-btn.bookmark.is-saved {
-  color: #7c3aed;
+  color: var(--color-primary);
   font-weight: 600;
 }
 

@@ -186,7 +186,7 @@
 
     <!-- Register -->
     <div class="register-link text-center mt-4">
-      Have any problems signing in? <a href="#">Contact Admin</a>
+      Don't have an account? <router-link to="/register">Create Account</router-link>
     </div>
   </div>
 </template>
@@ -237,20 +237,20 @@ async function handleSignIn() {
   flex-direction: column;
   justify-content: center;
   border-radius: var(--radius-xl) 0 0 var(--radius-xl);
-  background: var(--color-surface);
+  background: var(--color-surface) !important;
 }
 
 h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-text) !important;
   letter-spacing: 0;
   margin-bottom: 0.5rem;
   line-height: var(--line-height-heading);
 }
 
 .subtitle {
-  color: var(--color-text-muted);
+  color: var(--color-text-muted) !important;
   font-size: 0.93rem;
   line-height: 1.55;
   margin-bottom: 2rem;
@@ -265,12 +265,12 @@ h1 {
 .form-control-custom {
   width: 100%;
   padding: 0.75rem var(--spacing-md);
-  border: 1.5px solid var(--color-border);
+  border: 1.5px solid var(--color-border) !important;
   border-radius: var(--radius-md);
   font-family: "Sora", sans-serif;
   font-size: 0.9rem;
-  color: var(--color-text);
-  background: var(--color-input-bg);
+  color: var(--color-text) !important;
+  background: var(--color-input-bg) !important;
   outline: none;
   transition:
     border-color var(--transition-base),
@@ -278,15 +278,16 @@ h1 {
     background-color var(--transition-base);
 }
 .form-control-custom::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-muted) !important;
+  opacity: 0.6;
 }
 .form-control-custom:focus {
-  border-color: var(--brand-light);
-  box-shadow: var(--focus-ring);
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--focus-ring) !important;
 }
 .form-control-custom.error {
-  border-color: var(--color-danger);
-  box-shadow: var(--color-danger-light);
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 3px var(--color-danger-light) !important;
 }
 
 .input-wrap {
@@ -315,7 +316,7 @@ h1 {
 }
 .toggle-eye:hover,
 .toggle-eye:focus-visible {
-  color: var(--brand);
+  color: var(--color-primary);
 }
 .toggle-eye:focus-visible {
   outline: none;
@@ -337,7 +338,7 @@ h1 {
 .custom-check input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: var(--brand);
+  accent-color: var(--color-primary);
   cursor: pointer;
 }
 .custom-check span {
@@ -347,7 +348,7 @@ h1 {
 
 .forgot-link {
   font-size: 0.875rem;
-  color: var(--brand-light);
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
   border-radius: var(--radius-sm);
@@ -357,13 +358,13 @@ h1 {
 }
 .forgot-link:hover,
 .forgot-link:focus-visible {
-  color: var(--brand-hover);
+  color: var(--color-primary-hover);
 }
 
 .btn-signin {
   width: 100%;
   padding: 0.8rem;
-  background: var(--brand);
+  background: var(--color-primary);
   color: var(--color-text-on-primary);
   border: none;
   border-radius: var(--radius-md);
@@ -384,7 +385,7 @@ h1 {
 
 @media (hover: hover) {
   .btn-signin:hover {
-    background: var(--brand-hover);
+    background: var(--color-primary-hover);
     transform: translateY(-1px);
     box-shadow: 0 4px 14px var(--color-primary-light);
   }
@@ -438,8 +439,8 @@ h1 {
 }
 .social-btn:hover,
 .social-btn:focus-visible {
-  background-color: var(--color-bg);
-  border-color: var(--brand-light);
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-primary);
   transform: translateY(-1px);
 }
 .social-btn:focus-visible {
@@ -455,13 +456,13 @@ h1 {
   font-size: 0.875rem;
 }
 .register-link a {
-  color: var(--brand-light);
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
   transition: color var(--transition-base);
 }
 .register-link a:hover {
-  color: var(--brand-hover);
+  color: var(--color-primary-hover);
 }
 
 .spinner {

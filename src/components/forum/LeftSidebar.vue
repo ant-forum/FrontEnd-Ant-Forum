@@ -146,13 +146,13 @@ const handleItemClick = (tabId) => {
 .sidebar-title {
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin: 0 0 2px 0;
 }
 
 .sidebar-subtitle {
   font-size: 12px;
-  color: #64748b;
+  color: var(--color-text-muted);
   display: block;
 }
 
@@ -170,7 +170,7 @@ const handleItemClick = (tabId) => {
   background: transparent;
   border: none;
   border-radius: 10px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 14.5px;
   font-weight: 500;
   cursor: pointer;
@@ -184,13 +184,13 @@ const handleItemClick = (tabId) => {
 }
 
 .sidebar-menu-item:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .sidebar-menu-item.active {
-  background: #f3e8ff;
-  color: #7c3aed;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
   font-weight: 600;
 }
 
@@ -229,7 +229,7 @@ const handleItemClick = (tabId) => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
 }
 
 .footer-link {
@@ -237,14 +237,14 @@ const handleItemClick = (tabId) => {
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 13.5px;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
 .footer-link:hover {
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .footer-link i {
@@ -259,14 +259,14 @@ const handleItemClick = (tabId) => {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #7c3aed;
+  background: var(--color-primary);
   color: white;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  box-shadow: 0 4px 18px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 4px 18px var(--color-primary-light);
   z-index: 9997;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -295,14 +295,13 @@ const handleItemClick = (tabId) => {
     left: 0;
     bottom: 0;
     width: 260px;
-    background: #ffffff;
+    background: var(--color-surface);
     z-index: 9998;
     padding: 32px 24px;
-    box-shadow: 20px 0 40px rgba(0, 0, 0, 0.05);
+    border-right: 1px solid var(--color-border);
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    overflow-y: auto;
-    border-right: 1px solid #e2e8f0;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 15px 0 35px var(--color-shadow);
   }
 
   .left-sidebar-navigation.mobile-open {

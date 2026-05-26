@@ -233,24 +233,26 @@ const activityFeed = [
   background-color: transparent;
   min-height: 90vh;
   font-family: var(--font-family-base);
-  color: #1e293b;
+  color: var(--color-text) !important;
 }
 
 /* Sidebar */
 .sidebar-card-modern {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-surface) !important;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--transition-slow), border-color var(--transition-slow);
+  color: var(--color-text) !important;
 }
 
 .sidebar-user-info {
-  background: rgba(248, 250, 252, 0.6);
+  background: var(--color-surface-hover) !important;
   border-radius: var(--radius-lg);
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--color-border) !important;
   padding: 0.75rem;
 }
 
@@ -266,7 +268,7 @@ const activityFeed = [
   padding: 0.8rem var(--spacing-md);
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--color-text-muted) !important;
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: var(--radius-md);
@@ -275,41 +277,41 @@ const activityFeed = [
 }
 
 .nav-btn-modern:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--color-surface-hover) !important;
+  color: var(--color-text) !important;
   transform: translateX(2px);
 }
 
 .nav-btn-modern.active {
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
   color: #ffffff;
-  box-shadow: 0 8px 20px -6px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 8px 20px -6px var(--color-primary-light);
 }
 
 .border-slate {
-  border-color: #f1f5f9;
+  border-color: var(--color-border);
 }
 
 .btn-new-project {
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
   text-decoration: none;
   font-weight: 700;
-  box-shadow: 0 6px 16px -4px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 6px 16px -4px var(--color-primary-light);
   transition: all var(--transition-base);
 }
 
 .btn-new-project:hover {
-  background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-purple-hover, #6d28d9) 100%);
   color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px -2px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 8px 20px -2px var(--color-primary-light);
 }
 
 .sidebar-bottom {
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-border);
   padding-top: var(--spacing-md);
 }
 
@@ -318,7 +320,7 @@ const activityFeed = [
   align-items: center;
   gap: var(--spacing-md);
   padding: 0.65rem var(--spacing-md);
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 600;
   font-size: 0.9rem;
   border-radius: var(--radius-md);
@@ -327,8 +329,8 @@ const activityFeed = [
 }
 
 .sidebar-link-btn:hover {
-  background: #f8fafc;
-  color: #7c3aed;
+  background: var(--color-surface-hover);
+  color: var(--color-primary);
   transform: translateX(2px);
 }
 

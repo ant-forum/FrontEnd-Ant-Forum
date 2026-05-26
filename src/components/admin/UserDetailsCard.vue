@@ -156,7 +156,24 @@ const activities = ref([
 
 <style scoped>
 .user-details-card {
-  background: white;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+.border-theme {
+  border-color: var(--color-border) !important;
+}
+
+.bg-surface {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-surface-hover {
+  background-color: var(--color-surface-hover) !important;
+}
+
+.text-adaptive {
+  color: var(--color-text) !important;
 }
 
 .profile-main-img {
@@ -209,7 +226,7 @@ const activities = ref([
   top: 32px;
   bottom: 0;
   width: 1px;
-  background-color: #f1f5f9;
+  background-color: var(--color-border-soft);
   z-index: 0;
 }
 
@@ -221,10 +238,10 @@ const activities = ref([
 .xx-small { font-size: 0.6rem; }
 
 .shadow-brand {
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 4px 12px var(--color-primary-light);
 }
 
-.role-mentor { background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-.role-student { background-color: rgba(100, 116, 139, 0.1); color: #64748b; }
-.role-admin { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.role-mentor { background-color: var(--color-purple-light); color: var(--color-purple); }
+.role-student { background-color: var(--color-secondary-light, rgba(100, 116, 139, 0.1)); color: var(--color-secondary); }
+.role-admin { background-color: var(--color-warning-light); color: var(--color-warning); }
 </style>

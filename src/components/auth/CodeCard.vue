@@ -38,11 +38,12 @@
   top: 0;
   left: 0;
   width: 88%;
-  background: var(--code-bg);
+  background: #1e1e2e;
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
   animation: floatA 6s ease-in-out infinite;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @keyframes floatA {

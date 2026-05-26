@@ -115,7 +115,6 @@ const technicalSpecs = [
 <style scoped>
 .minimal-detail-page {
   min-height: 100vh;
-  background: var(--color-bg);
   color: var(--color-text);
 }
 

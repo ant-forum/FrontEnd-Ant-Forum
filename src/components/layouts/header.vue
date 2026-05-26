@@ -33,7 +33,7 @@ const navLinks = [
             :key="link.name" 
             :to="link.path" 
             class="nav-link-modern" 
-            :class="{ 'active': route.path.startsWith(link.path) || (link.path === '/forum' && route.path === '/') }"
+            :class="{ 'active': route.path.startsWith(link.path) }"
           >
             {{ link.name }}
           </router-link>
@@ -70,7 +70,7 @@ const navLinks = [
             :key="link.name" 
             :to="link.path" 
             class="mobile-nav-link" 
-            :class="{ 'active': route.path.startsWith(link.path) || (link.path === '/forum' && route.path === '/') }"
+            :class="{ 'active': route.path.startsWith(link.path) }"
             @click="isMobileMenuOpen = false"
           >
             {{ link.name }}
@@ -189,10 +189,10 @@ const navLinks = [
   top: 100%;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--color-glass-bg);
   backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
   z-index: 999;
 }
 

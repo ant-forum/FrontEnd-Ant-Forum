@@ -42,7 +42,7 @@ const networkStatus = [
   gap: 8px;
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin: 0 0 8px 0;
 }
 
@@ -52,9 +52,9 @@ const networkStatus = [
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: #f5f3ff;
+  background: var(--color-purple-light);
   border-radius: 6px;
-  color: #7c3aed;
+  color: var(--color-purple);
   flex-shrink: 0;
 }
 
@@ -73,7 +73,7 @@ const networkStatus = [
 
 .status-label {
   font-size: 13.5px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -83,7 +83,7 @@ const networkStatus = [
   gap: 6px;
   font-size: 13.5px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .live-dot {

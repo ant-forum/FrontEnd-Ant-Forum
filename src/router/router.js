@@ -6,6 +6,7 @@ import HomePage from '../views/HomePage.vue';
 import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
+import RegisterView from '../views/auth/RegisterView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
 import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
 
@@ -55,6 +56,12 @@ const routes = [
     name: "login",
     component: LoginView,
     meta: { title: "Login" },
+  },
+  {
+    path: "/register",
+    name: "register",
+    component: RegisterView,
+    meta: { title: "Register" },
   },
   {
     path: "/forgot-password",
@@ -212,20 +219,23 @@ const router = createRouter({
 
 router.afterEach((to) => {
   if (typeof window === "undefined") return;
-  const isAdminRoute = to.path.startsWith("/admin");
-  if (!isAdminRoute) {
-    document.documentElement.removeAttribute("data-theme");
-    return;
+  
+  // Update page title
+  if (to.meta.title) {
+    document.title = `${to.meta.title} | ANT Forum`;
   }
 
-  const saved = localStorage.getItem("admin_theme");
-  const prefersDark =
-    window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const theme = saved ? saved : prefersDark ? "dark" : "light";
+  // Ensure theme is applied based on localStorage or system preference
+  const saved = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved ? saved : (prefersDark ? "dark" : "light");
+  
   if (theme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
+    document.body.classList.add('dark-mode');
   } else {
-    document.documentElement.removeAttribute("data-theme");
+    document.documentElement.setAttribute("data-theme", "light");
+    document.body.classList.remove('dark-mode');
   }
 });
 

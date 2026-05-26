@@ -85,11 +85,16 @@ const memberCount = 42;
   display: grid;
   grid-template-columns: 1fr 340px;
   align-items: center;
-  background: linear-gradient(135deg, #fdfbfe 0%, #f9f6ff 60%, #f1ebff 100%);
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-hover) 60%, var(--color-primary-light) 100%);
   border-radius: 20px;
   overflow: hidden;
   min-height: 240px;
-  border: 1px solid #ede9fe;
+  border: 1px solid var(--color-border);
+  transition: all var(--transition-slow);
+}
+
+[data-theme='dark'] .featured-section {
+  background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
 }
 
 .featured-content {
@@ -105,8 +110,8 @@ const memberCount = 42;
   display: inline-flex;
   align-items: center;
   padding: 5px 12px;
-  background: #ede9fe;
-  color: #7c3aed;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
   font-size: 11px;
   font-weight: 700;
   border-radius: 99px;
@@ -118,7 +123,7 @@ const memberCount = 42;
   font-size: 28px;
   font-weight: 800;
   line-height: 1.25;
-  color: #0f172a;
+  color: var(--color-text);
   letter-spacing: -0.5px;
 }
 
@@ -126,7 +131,7 @@ const memberCount = 42;
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #64748b;
+  color: var(--color-text-muted);
   max-width: 520px;
 }
 
@@ -142,8 +147,8 @@ const memberCount = 42;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #0f172a;
-  color: white;
+  background: var(--color-text);
+  color: var(--color-bg);
   border: none;
   border-radius: 8px;
   font-size: 13.5px;
@@ -153,7 +158,8 @@ const memberCount = 42;
 }
 
 .join-btn:hover {
-  background: #1e293b;
+  background: var(--color-primary);
+  color: white;
   transform: translateY(-1px);
 }
 
@@ -173,7 +179,7 @@ const memberCount = 42;
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 2px solid white;
+  border: 2px solid var(--color-surface);
   border-radius: 50%;
   margin-right: -6px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
@@ -187,11 +193,11 @@ const memberCount = 42;
 }
 
 .more-bubble {
-  background: #ede9fe;
-  color: #7c3aed;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
   font-size: 10px;
   font-weight: 700;
-  border: 2px solid white;
+  border: 2px solid var(--color-surface);
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   padding-right: 0;
   margin-left: 0;

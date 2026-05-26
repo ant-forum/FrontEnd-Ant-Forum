@@ -331,7 +331,6 @@ onUnmounted(() => {
 }
 
 .blog-detail-layout {
-  background: var(--color-bg);
   font-family: 'Sora', sans-serif;
   color: var(--color-text);
 }

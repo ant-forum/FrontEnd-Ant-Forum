@@ -1171,16 +1171,16 @@ const handleBlur = () => {
 
 /* Live Preview Panel */
 .preview-pane {
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--color-border);
   padding: 20px 24px;
-  background: #fafafc;
+  background: var(--color-bg);
   overflow-y: auto;
   max-height: 600px;
 }
 
 .preview-body {
   line-height: 1.7;
-  color: #334155;
+  color: var(--color-text);
   font-size: 14.5px;
 }
 
@@ -1188,7 +1188,7 @@ const handleBlur = () => {
 .preview-body :deep(h2),
 .preview-body :deep(h3) {
   font-family: inherit;
-  color: #1f2937;
+  color: var(--color-text);
   font-weight: 800;
   margin: 20px 0 10px;
   letter-spacing: -0.3px;
@@ -1209,18 +1209,18 @@ const handleBlur = () => {
 }
 
 .preview-body :deep(blockquote) {
-  border-left: 4px solid #a78bfa;
+  border-left: 4px solid var(--color-purple);
   padding: 8px 16px;
-  background: #f5f3ff;
-  color: #5b21b6;
+  background: var(--color-purple-light);
+  color: var(--color-text-muted);
   border-radius: 0 8px 8px 0;
   margin: 16px 0;
   font-style: italic;
 }
 
 .preview-body :deep(code) {
-  background: #f1f5f9;
-  color: #b02a37;
+  background: var(--color-surface-hover);
+  color: var(--color-danger);
   padding: 3px 6px;
   border-radius: 6px;
   font-family: "JetBrains Mono", monospace;
@@ -1245,20 +1245,20 @@ const handleBlur = () => {
 }
 
 .preview-body :deep(a) {
-  color: #a78bfa;
+  color: var(--color-purple);
   text-decoration: none;
   font-weight: 600;
-  border-bottom: 1.5px solid rgba(124, 58, 237, 0.2);
+  border-bottom: 1.5px solid var(--color-purple-light);
 }
 
 .preview-body :deep(a:hover) {
-  color: #6d28d9;
-  border-bottom-color: #6d28d9;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 .preview-body :deep(hr) {
   border: none;
-  border-top: 1.5px dashed #cbd5e1;
+  border-top: 1.5px dashed var(--color-border);
   margin: 24px 0;
 }
 
@@ -1266,19 +1266,21 @@ const handleBlur = () => {
   width: 100%;
   border-collapse: collapse;
   margin: 16px 0;
+  border: 1px solid var(--color-border);
 }
 
 .preview-body :deep(th),
 .preview-body :deep(td) {
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
   padding: 10px 12px;
   font-size: 13px;
+  color: var(--color-text);
 }
 
 .preview-body :deep(th) {
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   font-weight: 700;
-  color: #1f2937;
+  color: var(--color-text);
 }
 
 .preview-empty {
@@ -1287,7 +1289,7 @@ const handleBlur = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   text-align: center;
   padding: 40px 0;
 }
