@@ -1,10 +1,10 @@
 <script setup>
 import { ref, computed, nextTick, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useForumStore } from "../../stores/ForumStore";
-import Navbar from "../../components/layouts/header.vue";
-import MarkdownEditor from "../../components/forum/create/MarkdownEditor.vue";
-import LeftSidebar from "../../components/forum/LeftSidebar.vue";
+import { useForumStore } from "@/stores/ForumStore";
+import Navbar from "@/components/layouts/header.vue";
+import MarkdownEditor from "@/components/forum/create/MarkdownEditor.vue";
+import LeftSidebar from "@/components/forum/LeftSidebar.vue";
 import { useToast } from "vue-toastification";
 
 const router = useRouter();
@@ -77,7 +77,7 @@ const tagColorMap = {
 };
 
 const getTagChipStyle = (color) => {
-  const t = tagColorMap[color] || tagColorMap.gray;
+  const t = (color && Object.prototype.hasOwnProperty.call(tagColorMap, color)) ? tagColorMap[color] : tagColorMap.gray;
   return { background: t.bg, color: t.color };
 };
 
@@ -141,13 +141,6 @@ const categories = [
     desc: "Share ideas, ask open questions, or debate",
   },
   {
-    id: "showcase",
-    label: "Show & Tell",
-    icon: "bi-stars",
-    color: "green",
-    desc: "Show off something you built",
-  },
-  {
     id: "tutorial",
     label: "Tutorial",
     icon: "bi-book",
@@ -164,85 +157,25 @@ const categories = [
 ];
 
 const templates = {
-  question: `### Context
-Describe the background of your issue (e.g., what framework you are using, what you were trying to achieve).
+  question: "### Context\nDescribe the background of your issue (e.g., what framework you are using, what you were trying to achieve).\n\n### What I'm Trying to Do\nExplain what you want to happen.\n\n### Error or Unexpected Behavior\n```\nPaste error messages, logs, or describe the unexpected behavior here...\n```\n\n### Code or Steps Taken\nProvide the relevant code snippet or describe the steps to reproduce the issue.",
+  discussion: "### Topic Overview\nIntroduce the subject you want to discuss with the community.\n\n### My Perspective\nShare your thoughts, experiences, or viewpoint on this topic.\n\n### Points for Discussion\n- What do you think about X?\n- How has your team solved Y?\n- What are the trade-offs of Z?",
+  showcase: "### Project Description\nWhat did you build? What problem does it solve, and who is it for?\n\n### Tech Stack\nBriefly list the technologies you used:\n- **Frontend**: e.g., Vue 3, Pinia, TailwindCSS\n- **Backend**: e.g., Node.js, Express\n- **Database**: e.g., PostgreSQL\n\n### Key Features\n- High-level overview of the main features.\n- What was the most challenging part of this build?\n\n### Links & Demos\n[Optional] Link to your live site, GitHub repository, or add screenshots.",
+  tutorial: "### What You'll Learn\nA quick summary of the skills or concepts covered in this guide.\n\n### Prerequisites\nWhat background knowledge or tools are needed before starting?\n\n### Step-by-Step Guide\n\n#### Step 1: Initial Setup\nExplain what needs to be configured or run.\n\n#### Step 2: Implementation\nDetail the core logic with code snippets.\n\n### Summary & Next Steps\nWrap up the tutorial and suggest related concepts to explore.",
+  idea: "### The Core Idea\nExplain your feature request, design concept, or open proposal in a few sentences.\n\n### Problem Solved\nWhat problem does this idea address, and who benefits from it?\n\n### Technical Details & Scope\n[Optional] How could this be implemented? What are the potential challenges or dependencies?\n\n### Request for Feedback\nWhat specific questions do you want to ask the community for review?"
+};
 
-### What I'm Trying to Do
-Explain what you want to happen.
-
-### Error or Unexpected Behavior
-\`\`\`
-Paste error messages, logs, or describe the unexpected behavior here...
-\`\`\`
-
-### Code or Steps Taken
-Provide the relevant code snippet or describe the steps to reproduce the issue.`,
-  discussion: `### Topic Overview
-Introduce the subject you want to discuss with the community.
-
-### My Perspective
-Share your thoughts, experiences, or viewpoint on this topic.
-
-### Points for Discussion
-- What do you think about X?
-- How has your team solved Y?
-- What are the trade-offs of Z?`,
-  showcase: `### Project Description
-What did you build? What problem does it solve, and who is it for?
-
-### Tech Stack
-Briefly list the technologies you used:
-- **Frontend**: e.g., Vue 3, Pinia, TailwindCSS
-- **Backend**: e.g., Node.js, Express
-- **Database**: e.g., PostgreSQL
-
-### Key Features
-- High-level overview of the main features.
-- What was the most challenging part of this build?
-
-### Links & Demos
-[Optional] Link to your live site, GitHub repository, or add screenshots.`,
-  tutorial: `### What You'll Learn
-A quick summary of the skills or concepts covered in this guide.
-
-### Prerequisites
-What background knowledge or tools are needed before starting?
-
-### Step-by-Step Guide
-
-#### Step 1: Initial Setup
-Explain what needs to be configured or run.
-
-#### Step 2: Implementation
-Detail the core logic with code snippets.
-
-### Summary & Next Steps
-Wrap up the tutorial and suggest related concepts to explore.`,
-  idea: `### The Core Idea
-Explain your feature request, design concept, or open proposal in a few sentences.
-
-### Problem Solved
-What problem does this idea address, and who benefits from it?
-
-### Technical Details & Scope
-[Optional] How could this be implemented? What are the potential challenges or dependencies?
-
-### Request for Feedback
-What specific questions do you want to ask the community for review?`,
+const getTemplate = (catId) => {
+  if (catId && Object.prototype.hasOwnProperty.call(templates, catId)) {
+    return templates[catId];
+  }
+  return "";
 };
 
 const selectCategory = (categoryId) => {
   form.value.category = categoryId;
 
   if (!form.value.excerpt.trim()) {
-    form.value.excerpt = templates[categoryId] || "";
-    toast.info(
-      `Loaded template for "${categories.find((c) => c.id === categoryId)?.label}"`,
-    );
-  } else {
-    toast.info(
-      `Category changed to "${categories.find((c) => c.id === categoryId)?.label}"`,
-    );
+    form.value.excerpt = getTemplate(categoryId);
   }
 };
 
@@ -400,19 +333,14 @@ const handleSubmit = async () => {
     code: form.value.hasCode ? form.value.code : null,
     hasCode: form.value.hasCode,
     votes: 0,
-    replies: 0,
-    author: "@current_user",
+    replies: [],
+    author: { name: 'Alex Chen', avatar: 'https://i.pravatar.cc/150?u=alex', username: '@alex' },
     timestamp: "Just now",
     createdAt: new Date().toISOString(),
     saved: false,
   };
 
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  forumStore.discussions.unshift({
-    ...newDiscussion,
-    id: Date.now(),
-  });
+  await forumStore.createDiscussion(newDiscussion);
 
   // Clean Autosaved Draft
   localStorage.removeItem("ant_forum_discussion_draft");

@@ -66,10 +66,12 @@
 import { ref, reactive, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useToast } from "vue-toastification";
-import api from "../../api/api";
+import { useAuthStore } from "@/stores/auth";
+import api from "@/api/api";
 
 const router = useRouter();
 const toast = useToast();
+const authStore = useAuthStore();
 const loading = ref(false);
 const hasError = ref(false);
 
@@ -120,7 +122,7 @@ async function handleVerify() {
 
   loading.value = true;
   try {
-    await api.post("/api/auth/verify", { code });
+    await authStore.verifyAccount(code);
     toast.success("Account verified successfully! 🎉");
     router.push("/login");
   } catch (error) {
