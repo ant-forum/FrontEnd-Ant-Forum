@@ -60,9 +60,10 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import api from "../../api/api";
+import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
+const authStore = useAuthStore();
 const loading = ref(false);
 
 const form = reactive({ email: "" });
@@ -88,7 +89,7 @@ async function handleReset() {
   if (!validate()) return;
   loading.value = true;
   try {
-    await api.post("/api/auth/forgot-password", { email: form.email });
+    await authStore.forgotPassword(form.email);
     router.push("/verify");
   } catch (error) {
     // The global interceptor in src/api/api.js shows the error toast.

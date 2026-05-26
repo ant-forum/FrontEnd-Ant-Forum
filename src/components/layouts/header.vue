@@ -6,6 +6,7 @@ import { useDarkMode } from '../../composables/useDarkMode';
 const route = useRoute();
 const { isDark, toggleDarkMode } = useDarkMode();
 const activeLink = ref(route.name || 'Forum');
+const isMobileMenuOpen = ref(false);
 
 const navLinks = [
   { name: 'Forum', path: '/forum' },
@@ -53,8 +54,30 @@ const navLinks = [
           <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle border border-2 border-primary-subtle" width="32" height="32" alt="User">
           <span class="small fw-bold d-none d-xl-block">Alex Chen</span>
         </router-link>
+
+        <button class="btn btn-icon-modern d-md-none ms-2" @click="isMobileMenuOpen = !isMobileMenuOpen">
+          <i :class="['bi', isMobileMenuOpen ? 'bi-x-lg' : 'bi-list']"></i>
+        </button>
       </div>
     </div>
+
+    <!-- Mobile Menu Overlay -->
+    <transition name="slide-fade-menu">
+      <div v-if="isMobileMenuOpen" class="mobile-menu-overlay d-md-none">
+        <div class="mobile-nav-links p-4 d-flex flex-column gap-2">
+          <router-link 
+            v-for="link in navLinks" 
+            :key="link.name" 
+            :to="link.path" 
+            class="mobile-nav-link" 
+            :class="{ 'active': route.path.startsWith(link.path) || (link.path === '/forum' && route.path === '/') }"
+            @click="isMobileMenuOpen = false"
+          >
+            {{ link.name }}
+          </router-link>
+        </div>
+      </div>
+    </transition>
   </header>
 </template>
 
@@ -158,5 +181,50 @@ const navLinks = [
   .header-center {
     display: none !important;
   }
+}
+
+/* Mobile Menu Panel */
+.mobile-menu-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  z-index: 999;
+}
+
+.mobile-nav-link {
+  padding: 12px 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.mobile-nav-link:hover {
+  color: #1e293b;
+  background: #f1f5f9;
+}
+
+.mobile-nav-link.active {
+  background: #6366f1;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* Transition */
+.slide-fade-menu-enter-active, .slide-fade-menu-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-fade-menu-enter-from, .slide-fade-menu-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
 }
 </style>

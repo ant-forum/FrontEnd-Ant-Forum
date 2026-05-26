@@ -1,13 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import Navbar from '../../components/layouts/header.vue';
-import BaseFooter from '../../components/layouts/footer.vue';
-import FeaturedDiscussion from '../../components/forum/FeaturedDiscussion.vue';
-import DiscussionThreadList from '../../components/forum/DiscussionThreadList.vue';
-import ForumSidebar from '../../components/forum/ForumSidebar.vue';
-import LeftSidebar from '../../components/forum/LeftSidebar.vue';
-import { useForumStore } from '../../stores/ForumStore';
+import Navbar from '@/components/layouts/header.vue';
+import BaseFooter from '@/components/layouts/footer.vue';
+import FeaturedDiscussion from '@/components/forum/FeaturedDiscussion.vue';
+import DiscussionThreadList from '@/components/forum/DiscussionThreadList.vue';
+import ForumSidebar from '@/components/forum/ForumSidebar.vue';
+import LeftSidebar from '@/components/forum/LeftSidebar.vue';
+import { useForumStore } from '@/stores/ForumStore';
 
 const route = useRoute();
 
@@ -169,13 +169,9 @@ const clearFilters = () => {
       <div class="forum-main-container">
         <FeaturedDiscussion />
 
-        <!-- Interactive Search & Filtering Bar -->
-        <div class="search-filter-section">
+        <!-- Clean Local Search Bar with clickable button inside it -->
+        <div class="forum-search-section">
           <div class="search-input-wrapper">
-            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
             <input
               ref="searchInput"
               v-model="searchQuery"
@@ -184,49 +180,30 @@ const clearFilters = () => {
               class="search-bar"
               @input="handleSearchInput"
             />
-            <button v-if="searchQuery" class="clear-search-btn" @click="clearSearch">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-            <span v-else class="kbd-indicator">/</span>
-          </div>
-
-          <div class="filter-actions-bar">
-            <div class="tabs-group">
-              <button
-                v-for="filter in filters"
-                :key="filter"
-                :class="['tab-btn', { active: filterTab === filter.toLowerCase() }]"
-                @click="filterTab = filter.toLowerCase()"
-              >
-                {{ filter }}
-              </button>
-            </div>
-            <button class="create-btn" @click="$router.push('/forum/create')">
+            <button class="search-btn" @click="handleSearchInput" title="Search">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              Create Question
             </button>
           </div>
         </div>
 
-        <!-- Categories Pills Grid Slider -->
-        <div class="categories-grid-bar">
-          <button
-            v-for="cat in categories"
-            :key="cat.id"
-            class="category-pill-btn"
-            :class="[{ active: selectedCategory === cat.id }, cat.color]"
-            @click="handleCategorySelect(cat.id)"
-          >
-            <span class="cat-pill-icon-wrap" :style="{ background: cat.gradient }">
-              <i :class="['bi', cat.icon]"></i>
-            </span>
-            <span class="cat-pill-label">{{ cat.label }}</span>
+        <!-- Elegant Filter Row -->
+        <div class="forum-tabs-section">
+          <div class="tabs-group">
+            <button
+              v-for="filter in filters"
+              :key="filter"
+              :class="['tab-btn', { active: filterTab === filter.toLowerCase() }]"
+              @click="filterTab = filter.toLowerCase()"
+            >
+              {{ filter }}
+            </button>
+          </div>
+          <button class="create-btn" @click="$router.push('/forum/create')">
+            <i class="bi bi-plus-lg"></i>
+            <span>Create Question</span>
           </button>
         </div>
 
@@ -297,12 +274,16 @@ const clearFilters = () => {
 <style scoped>
 .forum-page {
   min-height: 100vh;
-  background: var(--color-bg);
+  background-color: #ffffff;
+  background-image: 
+    linear-gradient(rgba(124, 58, 237, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .forum-global-grid {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 240px 1fr;
   gap: 28px;
   max-width: 1280px;
   margin: 0 auto;
@@ -315,12 +296,10 @@ const clearFilters = () => {
   flex-direction: column;
 }
 
-/* Search and Filter Section */
-.search-filter-section {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 28px;
+/* Local Search Bar Styling */
+.forum-search-section {
+  margin-top: 24px;
+  width: 100%;
 }
 
 .search-input-wrapper {
@@ -328,48 +307,38 @@ const clearFilters = () => {
   display: flex;
   align-items: center;
   width: 100%;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 99px;
+  transition: all 0.2s ease;
+  overflow: hidden;
 }
 
-.search-icon {
-  position: absolute;
-  left: 20px;
-  color: var(--color-text-muted);
-  pointer-events: none;
+.search-input-wrapper:focus-within {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
 .search-bar {
-  width: 100%;
-  padding: 16px 52px 16px 52px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 18px;
-  font-size: 15px;
-  color: var(--color-text);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.25s ease;
+  flex: 1;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  font-size: 14.5px;
+  color: #0f172a;
+  outline: none;
   font-family: inherit;
 }
 
 .search-bar::placeholder {
-  color: var(--color-text-muted);
+  color: #94a3b8;
 }
 
-.search-bar:focus {
-  border-color: var(--color-primary);
-  box-shadow: var(--focus-ring);
-  outline: none;
-  background: var(--color-surface);
-}
-
-.clear-search-btn {
-  position: absolute;
-  right: 20px;
-  background: var(--color-surface-hover);
+.search-btn {
+  background: transparent;
   border: none;
-  color: var(--color-text-muted);
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  color: #94a3b8;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -377,181 +346,77 @@ const clearFilters = () => {
   transition: all 0.2s ease;
 }
 
-.clear-search-btn:hover {
-  background: var(--color-border);
-  color: var(--color-text);
+.search-btn:hover {
+  color: #7c3aed;
 }
 
-.kbd-indicator {
-  position: absolute;
-  right: 20px;
-  padding: 3px 8px;
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: 11px;
-  color: var(--color-text-muted);
-  font-family: monospace;
-  pointer-events: none;
-  box-shadow: var(--shadow-sm);
-}
-
-.filter-actions-bar {
+.forum-tabs-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  border-bottom: 1.5px solid #e2e8f0;
+  margin-top: 24px;
+  padding-bottom: 0px;
 }
 
 .tabs-group {
   display: flex;
-  gap: 6px;
-  background: var(--color-surface-hover);
-  padding: 4px;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
-  width: fit-content;
+  gap: 24px;
 }
 
 .tab-btn {
-  padding: 8px 18px;
+  padding: 12px 4px;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
-  font-size: 13.5px;
-  font-weight: 600;
+  color: #64748b;
+  font-size: 14.5px;
+  font-weight: 500;
   cursor: pointer;
-  border-radius: 9px;
-  transition: all 0.2s ease;
+  position: relative;
+  transition: color 0.2s ease;
   font-family: inherit;
 }
 
 .tab-btn:hover {
-  color: var(--color-text);
-  background: var(--color-surface);
+  color: #0f172a;
 }
 
 .tab-btn.active {
-  background: var(--color-surface);
-  color: var(--color-primary);
-  font-weight: 700;
-  box-shadow: var(--shadow-sm);
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1.5px;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background-color: #7c3aed;
+  border-radius: 99px;
 }
 
 .create-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  border: none;
-  color: white;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   font-size: 13.5px;
   font-weight: 600;
+  color: #0f172a;
   cursor: pointer;
-  border-radius: 12px;
   transition: all 0.2s ease;
   font-family: inherit;
-  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.25);
 }
 
 .create-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(109, 40, 217, 0.35);
-}
-
-/* Category Pills Bar */
-.categories-grid-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 18px;
-  overflow-x: auto;
-  padding: 6px 4px 10px;
-  scrollbar-width: none; /* Firefox */
-}
-
-.categories-grid-bar::-webkit-scrollbar {
-  display: none; /* Safari/Chrome */
-}
-
-.category-pill-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 16px 8px 8px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 100px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--color-text-muted);
-  box-shadow: var(--shadow-sm);
-  white-space: nowrap;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.cat-pill-icon-wrap {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 12px;
-  box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
-  transition: all 0.2s ease;
-}
-
-.category-pill-btn:hover {
-  border-color: var(--color-primary);
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Category Pill Active styles */
-.category-pill-btn.active.purple {
-  border-color: var(--color-purple);
-  background: var(--color-purple-light);
-  color: var(--color-purple);
-  box-shadow: 0 4px 14px var(--color-purple-light);
-}
-.category-pill-btn.active.blue {
-  border-color: var(--color-info);
-  background: var(--color-info-light);
-  color: var(--color-info);
-  box-shadow: 0 4px 14px var(--color-info-light);
-}
-.category-pill-btn.active.green {
-  border-color: var(--color-success);
-  background: var(--color-success-light);
-  color: var(--color-success);
-  box-shadow: 0 4px 14px var(--color-success-light);
-}
-.category-pill-btn.active.fuchsia {
-  border-color: var(--color-purple);
-  background: var(--color-purple-light);
-  color: var(--color-purple);
-  box-shadow: 0 4px 14px var(--color-purple-light);
-}
-.category-pill-btn.active.amber {
-  border-color: var(--color-warning);
-  background: var(--color-warning-light);
-  color: var(--color-warning);
-  box-shadow: 0 4px 14px var(--color-warning-light);
-}
-.category-pill-btn.active.teal {
-  border-color: var(--color-info);
-  background: var(--color-info-light);
-  color: var(--color-info);
-  box-shadow: 0 4px 14px var(--color-info-light);
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #7c3aed;
 }
 
 .forum-feed-content {
@@ -766,29 +631,25 @@ const clearFilters = () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 30px;
-  background: white;
-  color: #374151;
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 14px;
+  padding: 10px 24px;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: 99px;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   font-family: inherit;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.02);
 }
 
 .load-more-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(109, 40, 217, 0.3);
-  border-color: transparent;
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .load-more-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -806,7 +667,6 @@ const clearFilters = () => {
 @media (max-width: 1024px) {
   .forum-global-grid { grid-template-columns: 1fr; }
   .forum-feed-content { grid-template-columns: 1fr; }
-  .left-sidebar-navigation { display: none !important; }
 }
 
 @media (max-width: 640px) {

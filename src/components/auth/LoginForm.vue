@@ -194,9 +194,8 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import api from "../../api/api";
-import { useAuthStore } from "../../stores/auth";
-import { useRequiredValidator } from "../../composables/useRequiredValidator";
+import { useAuthStore } from "@/stores/auth";
+import { useRequiredValidator } from "@/composables/useRequiredValidator";
 
 const showPass = ref(false);
 const loading = ref(false);
@@ -217,9 +216,10 @@ async function handleSignIn() {
   if (!validate()) return;
   loading.value = true;
   try {
-    const response = await api.post("/api/auth/login", form);
-    const { user, token } = response.data;
-    authStore.login(user, token);
+    await authStore.login({
+      email: form.email,
+      password: form.password
+    });
     router.push("/");
   } catch (error) {
     // The global interceptor in src/api/api.js handles showing the error toast.

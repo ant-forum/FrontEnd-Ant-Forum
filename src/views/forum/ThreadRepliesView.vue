@@ -1,9 +1,11 @@
 <script setup>
-import { onMounted, ref, nextTick, watch } from 'vue';
+import { onMounted, ref, nextTick, watch, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import Navbar from '../../components/layouts/header.vue';
-import LeftSidebar from '../../components/forum/LeftSidebar.vue';
-import { useForumStore } from '../../stores/ForumStore';
+import Navbar from '@/components/layouts/header.vue';
+import LeftSidebar from '@/components/forum/LeftSidebar.vue';
+import ForumSidebar from '@/components/forum/ForumSidebar.vue';
+import { useForumStore } from '@/stores/ForumStore';
+import MarkdownEditor from '@/components/forum/create/MarkdownEditor.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -21,12 +23,19 @@ const categoryMap = {
   idea:       { label: 'Idea', icon: 'bi-lightbulb-fill', gradient: 'linear-gradient(135deg, #0d9488, #0f766e)', shadow: 'rgba(13, 148, 136, 0.25)' }
 };
 
+const getCategoryMeta = (cat) => {
+  if (cat && Object.prototype.hasOwnProperty.call(categoryMap, cat)) {
+    return categoryMap[cat];
+  }
+  return null;
+};
+
 // We'll try to fetch the discussion using the ID.
 const mockDiscussion = ref(null);
 
-const discussion = () => {
+const discussion = computed(() => {
   return forumStore.discussion || mockDiscussion.value;
-};
+});
 
 onMounted(async () => {
   const id = route.params.id;
@@ -80,14 +89,14 @@ const goBack = () => {
 };
 
 const handleVote = (direction) => {
-  if (discussion()) {
-    forumStore.toggleVoteDiscussion(discussion().id, direction);
+  if (discussion.value) {
+    forumStore.toggleVoteDiscussion(discussion.value.id, direction);
   }
 };
 
 const handleLikeReply = (replyIndex) => {
-  if (discussion()) {
-    forumStore.toggleLikeReply(discussion().id, replyIndex);
+  if (discussion.value) {
+    forumStore.toggleLikeReply(discussion.value.id, replyIndex);
   }
 };
 
@@ -102,7 +111,7 @@ const postReply = () => {
     likedByUser: false
   };
 
-  forumStore.postReply(discussion().id, replyData);
+  forumStore.postReply(discussion.value.id, replyData);
   newReplyText.value = '';
 
   // Trigger smooth scroll to bottom and reload copy actions
@@ -116,10 +125,25 @@ const scrollToBottom = () => {
   repliesEnd.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 };
 
+function getAvatarName(author) {
+  if (!author) return 'User';
+  if (typeof author === 'object') {
+    return author.name || author.username || 'User';
+  }
+  return author;
+}
+
+function getAvatarInitials(author) {
+  const name = getAvatarName(author);
+  const clean = name.replace('@', '').trim();
+  return clean ? clean.charAt(0).toUpperCase() : 'U';
+}
+
 // Generates sleek deterministically-colored avatars based on username
-function getAvatarStyle(username) {
-  if (!username) return {};
-  const name = username.replace('@', '');
+function getAvatarStyle(author) {
+  if (!author) return {};
+  const name = getAvatarName(author);
+  const clean = name.replace('@', '');
   const gradients = [
     'linear-gradient(135deg, #3b82f6, #2563eb)', // Blue
     'linear-gradient(135deg, #10b981, #059669)', // Emerald
@@ -129,8 +153,8 @@ function getAvatarStyle(username) {
     'linear-gradient(135deg, #06b6d4, #0891b2)', // Cyan
   ];
   let sum = 0;
-  for (let i = 0; i < name.length; i++) {
-    sum += name.charCodeAt(i);
+  for (let i = 0; i < clean.length; i++) {
+    sum += clean.charCodeAt(i);
   }
   const grad = gradients[sum % gradients.length];
   return { background: grad };
@@ -173,7 +197,7 @@ const setupCopyButtons = () => {
     <Navbar />
 
     <div class="replies-page-grid-layout">
-      <LeftSidebar active-tab="questions" />
+      <LeftSidebar active-tab="questions" class="replies-left-sidebar" />
 
       <div class="replies-wrapper">
       <button @click="goBack" class="back-btn">
@@ -189,53 +213,53 @@ const setupCopyButtons = () => {
         Loading thread...
       </div>
       
-      <div v-else-if="discussion()" class="thread-container">
+      <div v-else-if="discussion" class="thread-container">
         <!-- Main Thread Card -->
         <div class="main-thread">
           <div class="thread-header">
             <div class="thread-header-meta">
               <!-- Styled Category badge -->
-              <span v-if="discussion().category && categoryMap[discussion().category]" class="category-badge" :style="{ background: categoryMap[discussion().category].gradient }">
-                <i :class="['bi', categoryMap[discussion().category].icon]"></i>
-                {{ categoryMap[discussion().category].label }}
+              <span v-if="discussion.category && getCategoryMeta(discussion.category)" class="category-badge" :style="{ background: getCategoryMeta(discussion.category).gradient }">
+                <i :class="['bi', getCategoryMeta(discussion.category).icon]"></i>
+                {{ getCategoryMeta(discussion.category).label }}
               </span>
 
               <!-- Code indicator -->
-              <span v-if="discussion().hasCode" class="snippet-badge">
+              <span v-if="discussion.hasCode" class="snippet-badge">
                 <i class="bi bi-code-slash"></i> Snippet
               </span>
             </div>
 
-            <h1 class="thread-title">{{ discussion().title }}</h1>
+            <h1 class="thread-title">{{ discussion.title }}</h1>
             
             <div class="thread-meta">
-              <div class="thread-avatar" :style="getAvatarStyle(discussion().author)">
-                {{ (discussion().author || 'U').charAt(1).toUpperCase() }}
+              <div class="thread-avatar" :style="getAvatarStyle(discussion.author)">
+                {{ getAvatarInitials(discussion.author) }}
               </div>
               <div class="thread-user-info">
-                <span class="author">{{ discussion().author }}</span>
-                <span class="time">{{ discussion().timestamp }}</span>
+                <span class="author">{{ getAvatarName(discussion.author) }}</span>
+                <span class="time">{{ discussion.timestamp }}</span>
               </div>
             </div>
           </div>
 
-          <div class="thread-body" v-html="discussion().excerpt || discussion().body || 'No description provided.'">
+          <div class="thread-body" v-html="discussion.excerpt || discussion.body || 'No description provided.'">
           </div>
 
           <!-- Codeblock if present -->
-          <div v-if="discussion().hasCode && discussion().code" class="thread-code-block">
+          <div v-if="discussion.hasCode && discussion.code" class="thread-code-block">
             <div class="code-header">
               <span class="code-lang">Code Block</span>
               <div class="code-dots">
                 <span></span><span></span><span></span>
               </div>
             </div>
-            <pre><code>{{ discussion().code }}</code></pre>
+            <pre><code>{{ discussion.code }}</code></pre>
           </div>
 
           <!-- Custom tags section -->
-          <div v-if="discussion().tags && discussion().tags.length > 0" class="thread-tags-box">
-            <span v-for="t in discussion().tags" :key="t.label" class="tag-badge">
+          <div v-if="discussion.tags && discussion.tags.length > 0" class="thread-tags-box">
+            <span v-for="t in discussion.tags" :key="t.label" class="tag-badge">
               #{{ t.label }}
             </span>
           </div>
@@ -243,14 +267,14 @@ const setupCopyButtons = () => {
           <div class="thread-actions">
             <!-- Active Votes column in action bar -->
             <div class="vote-actions">
-              <button class="vote-action-btn up" :class="{ active: discussion().voted === 'up' }" @click="handleVote('up')">
+              <button class="vote-action-btn up" :class="{ active: discussion.voted === 'up' }" @click="handleVote('up')">
                 <i class="bi bi-arrow-up-circle-fill"></i>
                 Upvote
               </button>
-              <span class="vote-count-num" :class="{ 'voted-up': discussion().voted === 'up', 'voted-down': discussion().voted === 'down' }">
-                {{ discussion().votes }}
+              <span class="vote-count-num" :class="{ 'voted-up': discussion.voted === 'up', 'voted-down': discussion.voted === 'down' }">
+                {{ discussion.votes }}
               </span>
-              <button class="vote-action-btn down" :class="{ active: discussion().voted === 'down' }" @click="handleVote('down')">
+              <button class="vote-action-btn down" :class="{ active: discussion.voted === 'down' }" @click="handleVote('down')">
                 <i class="bi bi-arrow-down-circle-fill"></i>
                 Downvote
               </button>
@@ -267,24 +291,24 @@ const setupCopyButtons = () => {
 
         <!-- Replies Section -->
         <div class="replies-section">
-          <h2>Discussion Replies ({{ discussion().replies?.length || 0 }})</h2>
+          <h2>Discussion Replies ({{ Array.isArray(discussion.replies) ? discussion.replies.length : 0 }})</h2>
           
           <div class="reply-list-container">
             <!-- Sleek Timeline Connector lines -->
             <div class="timeline-line"></div>
 
             <div class="reply-list">
-              <div class="no-replies" v-if="!discussion().replies?.length">
+              <div class="no-replies" v-if="!Array.isArray(discussion.replies) || discussion.replies.length === 0">
                 No replies yet. Be the first to share your thoughts!
               </div>
               
-              <div v-else v-for="(reply, idx) in discussion().replies" :key="idx" class="reply-card">
+              <div v-else v-for="(reply, idx) in discussion.replies" :key="idx" class="reply-card">
                 <div class="reply-header">
                   <div class="reply-avatar" :style="getAvatarStyle(reply.author)">
-                    {{ (reply.author || 'U').charAt(1).toUpperCase() }}
+                    {{ getAvatarInitials(reply.author) }}
                   </div>
                   <div class="reply-user-info">
-                    <span class="reply-author">{{ reply.author || 'Unknown' }}</span>
+                    <span class="reply-author">{{ getAvatarName(reply.author) }}</span>
                     <span class="reply-time">{{ reply.timestamp || 'Just now' }}</span>
                   </div>
                 </div>
@@ -311,11 +335,10 @@ const setupCopyButtons = () => {
               <span class="input-prompt">Add to the discussion</span>
             </div>
             
-            <textarea
+            <MarkdownEditor
               v-model="newReplyText"
               placeholder="Write a constructive, formatted reply... Markdown is supported."
-              class="reply-textarea"
-            ></textarea>
+            />
             
             <div class="reply-footer">
               <button
@@ -334,6 +357,8 @@ const setupCopyButtons = () => {
         Thread not found or could not be loaded.
       </div>
     </div>
+
+    <ForumSidebar class="replies-right-sidebar" />
     </div>
   </div>
 </template>
@@ -341,55 +366,76 @@ const setupCopyButtons = () => {
 <style scoped>
 .thread-replies-page {
   min-height: 100vh;
-  background: var(--color-bg);
+  background-color: #ffffff;
+  background-image: 
+    linear-gradient(rgba(124, 58, 237, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .replies-page-grid-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  max-width: 1440px;
+  grid-template-columns: 240px 1fr 292px;
+  max-width: 1280px;
   margin: 0 auto;
   gap: 28px;
-  padding: 0 24px;
+  padding: 32px 24px 60px;
+}
+
+.replies-left-sidebar,
+.replies-right-sidebar {
+  padding-top: 0px;
+}
+
+@media (max-width: 1200px) {
+  .replies-page-grid-layout {
+    grid-template-columns: 240px 1fr;
+  }
+  .replies-right-sidebar {
+    display: none;
+  }
 }
 
 @media (max-width: 1024px) {
   .replies-page-grid-layout {
     grid-template-columns: 1fr;
-    padding: 0;
+    padding: 24px;
   }
-  .left-sidebar-navigation {
-    display: none !important;
+  .replies-right-sidebar {
+    display: block;
+    padding: 24px 0;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
   }
 }
 
 .replies-wrapper {
   max-width: 900px;
-  margin: 0 auto;
-  padding: 32px 24px 60px;
+  margin: 0;
+  width: 100%;
 }
 
 .back-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
   font-weight: 600;
   font-size: 13.5px;
   cursor: pointer;
   margin-bottom: 24px;
   padding: 8px 16px;
-  border-radius: 12px;
+  border-radius: 8px;
   transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
+  font-family: inherit;
 }
 
 .back-btn:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  background: #f8fafc;
+  border-color: #cbd5e1;
   transform: translateX(-2px);
 }
 
@@ -400,11 +446,11 @@ const setupCopyButtons = () => {
 }
 
 .main-thread {
-  background: var(--color-surface);
-  border-radius: 20px;
-  padding: 36px;
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.01);
   position: relative;
 }
 
@@ -660,32 +706,32 @@ const setupCopyButtons = () => {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 13.5px;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: #64748b;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-family: inherit;
 }
 
 .vote-action-btn i {
   font-size: 14px;
-  color: var(--color-border);
   transition: color 0.2s ease;
 }
 
 .vote-action-btn:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-  border-color: var(--color-primary);
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
 }
 
 .vote-action-btn.up.active {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #e2e8f0;
 }
 
 .vote-action-btn.up.active i {
@@ -693,9 +739,9 @@ const setupCopyButtons = () => {
 }
 
 .vote-action-btn.down.active {
-  background: var(--color-danger-light);
-  color: var(--color-danger);
-  border-color: var(--color-danger);
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #e2e8f0;
 }
 
 .vote-action-btn.down.active i {
@@ -772,14 +818,16 @@ const setupCopyButtons = () => {
   gap: 16px;
 }
 
-.no-replies {
-  padding: 32px;
-  background: var(--color-surface);
-  border-radius: 16px;
-  color: var(--color-text-muted);
-  text-align: center;
-  font-size: 14px;
-  border: 1px dashed var(--color-border);
+.reply-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px 28px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+  position: relative;
+  z-index: 1;
+  transition: all 0.2s ease;
+  animation: slide-up-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .reply-card {
@@ -792,8 +840,8 @@ const setupCopyButtons = () => {
 }
 
 .reply-card:hover {
-  border-color: var(--color-primary-light);
-  transform: translateX(4px);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
 }
 
 .reply-header {
@@ -874,18 +922,37 @@ const setupCopyButtons = () => {
   font-size: 14px;
 }
 
-.scroll-anchor {
-  height: 20px;
+/* Reply Input Box */
+.reply-input-wrapper {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 28px;
+  margin-top: 10px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
 }
 
-/* New Reply input styling */
-.reply-input-wrapper {
-  margin-top: 12px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
+.reply-input-wrapper:focus-within {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.reply-input-wrapper :deep(.editor-container) {
+  border: 1px solid #e2e8f0;
+  box-shadow: none;
+  border-radius: 12px;
+}
+
+.reply-input-wrapper :deep(.editor-workspace) {
+  min-height: 180px;
+}
+
+.reply-input-wrapper :deep(.editor-textarea) {
+  min-height: 180px;
+}
+
+.reply-input-wrapper :deep(.preview-pane) {
+  max-height: 250px;
 }
 
 .input-header {
@@ -902,59 +969,51 @@ const setupCopyButtons = () => {
 
 .input-prompt {
   font-weight: 700;
-  color: var(--color-text);
-  font-size: 14.5px;
-}
-
-.reply-textarea {
-  width: 100%;
-  min-height: 120px;
-  background: var(--color-surface-hover);
-  border: 1.5px solid var(--color-border);
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 14.5px;
-  color: var(--color-text);
-  resize: vertical;
-  transition: all 0.2s;
-  font-family: inherit;
-  margin-bottom: 16px;
-}
-
-.reply-textarea:focus {
-  outline: none;
-  background: var(--color-surface);
-  border-color: var(--color-primary);
-  box-shadow: var(--focus-ring);
+  color: #0f172a;
+  font-size: 15px;
 }
 
 .reply-footer {
   display: flex;
   justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .post-btn {
-  background: var(--color-primary);
+  background: #0f172a;
   color: white;
   border: none;
   padding: 10px 24px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13.5px;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
 }
 
 .post-btn:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  background: #1e293b;
 }
 
 .post-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.no-replies {
+  text-align: center;
+  padding: 48px 20px;
+  color: #6b7280;
+  background: #fdfcff;
+  border-radius: 16px;
+  border: 1px dashed rgba(168, 85, 247, 0.2);
+  font-weight: 600;
+}
+
+.scroll-anchor {
+  height: 1px;
 }
 
 /* Loading & Error States */
