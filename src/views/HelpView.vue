@@ -183,12 +183,8 @@ app.mount('#app');
               </div>
             </div>
 
-<<<<<<< HEAD
-            <div class="card teachers-tip-card border-0 shadow-sm rounded-4 p-4 text-dark" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);">
-=======
             <!-- Classroom Engagement Tips -->
             <div class="card teachers-tip-card border-0 shadow-sm rounded-4 p-4 themed-text">
->>>>>>> e5c8a9ed75a17d860ad4db6684f5f42a98783395
               <div class="d-flex align-items-center gap-2 mb-3">
                 <i class="bi bi-stars text-indigo fs-4"></i>
                 <h5 class="fw-bold mb-0 themed-text">Classroom Engagement Tip</h5>
@@ -201,14 +197,9 @@ app.mount('#app');
         </Transition>
       </div>
 
-<<<<<<< HEAD
-      <section class="cta-section text-center mt-5 p-4 rounded-4 border bg-white shadow-sm">
-        <h5 class="fw-bold mb-2 text-dark">Ready to write your post?</h5>
-=======
       <!-- Call to Action -->
       <section class="cta-section text-center mt-5 p-4 rounded-4 border shadow-sm">
         <h5 class="fw-bold mb-2 themed-text">Ready to write your post?</h5>
->>>>>>> e5c8a9ed75a17d860ad4db6684f5f42a98783395
         <p class="text-muted small mb-4">Put these tips into practice now on the main forum page.</p>
         <router-link id="cta-create-post-btn" to="/forum/create" class="btn btn-primary-gradient px-4 py-2 fw-bold shadow-sm text-decoration-none">
           <i class="bi bi-plus-lg me-1"></i> Create Discussion
@@ -230,14 +221,11 @@ app.mount('#app');
   max-width: 900px;
 }
 
-<<<<<<< HEAD
-=======
 .themed-text {
   color: var(--color-text);
 }
 
 /* Hero Section */
->>>>>>> e5c8a9ed75a17d860ad4db6684f5f42a98783395
 .help-hero {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -311,8 +299,6 @@ app.mount('#app');
   font-size: 1.25rem;
 }
 
-<<<<<<< HEAD
-=======
 /* Teachers Tip Card */
 .teachers-tip-card {
   background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
@@ -323,7 +309,6 @@ app.mount('#app');
 }
 
 /* Markdown Card styling */
->>>>>>> e5c8a9ed75a17d860ad4db6684f5f42a98783395
 .markdown-tip-card {
   background: #0f172a !important;
 }
@@ -338,15 +323,11 @@ app.mount('#app');
   color: #34d399;
 }
 
-<<<<<<< HEAD
-=======
 /* CTA */
 .cta-section {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
 }
-
->>>>>>> e5c8a9ed75a17d860ad4db6684f5f42a98783395
 .btn-primary-gradient {
   background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
   color: white;
@@ -385,8 +366,6 @@ app.mount('#app');
 .bg-teal-subtle { background-color: #ccfbf1; }
 .text-teal { color: #0d9488; }
 
-<<<<<<< HEAD
-=======
 /* Dark Mode Overrides for Subtles */
 [data-theme='dark'] .bg-purple-subtle { background-color: rgba(124, 58, 237, 0.15); }
 [data-theme='dark'] .bg-blue-subtle { background-color: rgba(37, 99, 235, 0.15); }
@@ -398,7 +377,6 @@ app.mount('#app');
 [data-theme='dark'] .bg-teal-subtle { background-color: rgba(13, 148, 136, 0.15); }
 
 /* Transitions */
->>>>>>> e5c8a9ed75a17d860ad4db6684f5f42a98783395
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition: opacity 0.25s ease, transform 0.25s ease;

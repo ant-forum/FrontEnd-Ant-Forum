@@ -179,11 +179,6 @@ const currentTab = ref('all');
 const showDetailModal = ref(false);
 const selectedProject = ref(null);
 
-const searchQuery = ref('');
-const statusFilter = ref('ALL');
-const sortBy = ref('newest');
-const currentTab = ref('all');
-
 const projects = ref([
   {
     id: 1,

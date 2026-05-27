@@ -46,12 +46,6 @@ const navLinks = [
           <button class="btn btn-icon-modern"><i class="bi bi-bell"></i></button>
         </div>
 
-<<<<<<< HEAD
-        <div class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 bg-white border rounded-pill shadow-sm cursor-pointer">
-          <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle border border-2 border-primary-subtle" width="32" height="32" alt="User">
-          <span class="small fw-bold d-none d-xl-block">Alex Chen</span>
-        </div>
-=======
         <router-link to="/profile" class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 border rounded-pill shadow-sm cursor-pointer text-decoration-none">
           <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle border border-2 border-primary-subtle" width="32" height="32" alt="User">
           <span class="small fw-bold d-none d-xl-block">Alex Chen</span>
@@ -60,7 +54,6 @@ const navLinks = [
         <button class="btn btn-icon-modern d-md-none ms-2" @click="isMobileMenuOpen = !isMobileMenuOpen">
           <i :class="['bi', isMobileMenuOpen ? 'bi-x-lg' : 'bi-list']"></i>
         </button>
->>>>>>> e5c8a9ed75a17d860ad4db6684f5f42a98783395
       </div>
     </div>
 
