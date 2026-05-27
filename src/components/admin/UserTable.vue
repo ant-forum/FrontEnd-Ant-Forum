@@ -1,38 +1,38 @@
 <template>
-  <div class="user-table-card card border-0 shadow-sm rounded-4 overflow-hidden">
-    <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
+  <div class="user-table-card card border-0 shadow-sm rounded-4 overflow-hidden bg-surface border">
+    <div class="card-header bg-surface border-0 p-4 d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center gap-3">
-        <h5 class="fw-bold mb-0">User Directory</h5>
+        <h5 class="fw-bold mb-0 text-adaptive">User Directory</h5>
         <div v-if="selectedIds.length > 0" class="bulk-actions d-flex align-items-center gap-2 animate-fade-in">
-          <span class="badge bg-primary-subtle text-primary rounded-pill px-3">{{ selectedIds.length }} Selected</span>
+          <span class="badge bg-purple-light text-purple rounded-pill px-3">{{ selectedIds.length }} Selected</span>
           <button class="btn btn-sm btn-light-danger rounded-pill px-3 fw-bold" @click="$emit('bulk-delete', selectedIds)">Delete</button>
           <button class="btn btn-sm btn-light-primary rounded-pill px-3 fw-bold" @click="$emit('bulk-suspend', selectedIds)">Suspend</button>
         </div>
       </div>
       <div class="d-flex gap-2">
-        <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border">
-          <span class="input-group-text bg-white border-0 ps-3">
+        <div class="input-group search-group shadow-sm rounded-pill overflow-hidden border bg-surface">
+          <span class="input-group-text bg-transparent border-0 ps-3">
             <i class="bi bi-search text-muted"></i>
           </span>
           <input 
             :value="searchQuery"
             @input="$emit('update:searchQuery', $event.target.value)"
             type="text" 
-            class="form-control border-0 py-1 px-2 small" 
+            class="form-control border-0 py-1 px-2 small bg-transparent text-adaptive" 
             placeholder="Search name or email..."
             style="font-size: 0.85rem; width: 200px;"
           >
         </div>
         <div class="dropdown">
-          <button class="btn btn-light btn-sm rounded-pill px-3 dropdown-toggle d-flex align-items-center fw-bold" type="button" data-bs-toggle="dropdown">
+          <button class="btn btn-surface-hover btn-sm rounded-pill px-3 dropdown-toggle d-flex align-items-center fw-bold text-adaptive border" type="button" data-bs-toggle="dropdown">
             <i class="bi bi-filter-left me-2"></i>
             {{ roleFilter === 'ALL' ? 'All Roles' : roleFilter }}
           </button>
-          <ul class="dropdown-menu border-0 shadow-sm rounded-3">
-            <li><a class="dropdown-item small" href="#" @click.prevent="$emit('update:roleFilter', 'ALL')">All Roles</a></li>
-            <li><a class="dropdown-item small" href="#" @click.prevent="$emit('update:roleFilter', 'Admin')">Admin</a></li>
-            <li><a class="dropdown-item small" href="#" @click.prevent="$emit('update:roleFilter', 'Mentor')">Mentor</a></li>
-            <li><a class="dropdown-item small" href="#" @click.prevent="$emit('update:roleFilter', 'Student')">Student</a></li>
+          <ul class="dropdown-menu border-0 shadow-sm rounded-3 bg-surface">
+            <li><a class="dropdown-item small text-adaptive" href="#" @click.prevent="$emit('update:roleFilter', 'ALL')">All Roles</a></li>
+            <li><a class="dropdown-item small text-adaptive" href="#" @click.prevent="$emit('update:roleFilter', 'Admin')">Admin</a></li>
+            <li><a class="dropdown-item small text-adaptive" href="#" @click.prevent="$emit('update:roleFilter', 'Mentor')">Mentor</a></li>
+            <li><a class="dropdown-item small text-adaptive" href="#" @click.prevent="$emit('update:roleFilter', 'Student')">Student</a></li>
           </ul>
         </div>
       </div>
@@ -40,30 +40,30 @@
 
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
-        <thead class="bg-light">
+        <thead class="bg-surface-hover">
           <tr>
-            <th class="ps-4" style="width: 40px;">
+            <th class="ps-4 bg-transparent" style="width: 40px;">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
+                <input class="form-check-input custom-checkbox" type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
               </div>
             </th>
-            <th class="text-muted text-uppercase small fw-bold cursor-pointer" style="letter-spacing: 0.5px;" @click="toggleSort('name')">
+            <th class="text-muted text-uppercase small fw-bold cursor-pointer bg-transparent" style="letter-spacing: 0.5px;" @click="toggleSort('name')">
               User
               <i v-if="sortKey === 'name'" :class="['bi', sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down', 'ms-1']"></i>
             </th>
-            <th class="text-muted text-uppercase small fw-bold cursor-pointer" style="letter-spacing: 0.5px;" @click="toggleSort('role')">
+            <th class="text-muted text-uppercase small fw-bold cursor-pointer bg-transparent" style="letter-spacing: 0.5px;" @click="toggleSort('role')">
               Role
               <i v-if="sortKey === 'role'" :class="['bi', sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down', 'ms-1']"></i>
             </th>
-            <th class="text-muted text-uppercase small fw-bold cursor-pointer" style="letter-spacing: 0.5px;" @click="toggleSort('status')">
+            <th class="text-muted text-uppercase small fw-bold cursor-pointer bg-transparent" style="letter-spacing: 0.5px;" @click="toggleSort('status')">
               Status
               <i v-if="sortKey === 'status'" :class="['bi', sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down', 'ms-1']"></i>
             </th>
-            <th class="text-muted text-uppercase small fw-bold d-none d-md-table-cell cursor-pointer" style="letter-spacing: 0.5px;" @click="toggleSort('lastActive')">
+            <th class="text-muted text-uppercase small fw-bold d-none d-md-table-cell cursor-pointer bg-transparent" style="letter-spacing: 0.5px;" @click="toggleSort('lastActive')">
               Last Active
               <i v-if="sortKey === 'lastActive'" :class="['bi', sortOrder === 'asc' ? 'bi-sort-up' : 'bi-sort-down', 'ms-1']"></i>
             </th>
-            <th class="text-end pe-4 text-muted text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Actions</th>
+            <th class="text-end pe-4 text-muted text-uppercase small fw-bold bg-transparent" style="letter-spacing: 0.5px;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -76,7 +76,7 @@
             <td class="py-3">
               <div class="d-flex align-items-center">
                 <div class="position-relative">
-                  <img :src="user.avatar" :alt="user.name" class="rounded-circle me-3 border" width="40" height="40">
+                  <img :src="user.avatar" :alt="user.name" class="rounded-circle me-3 border border-theme" width="40" height="40">
                   <span v-if="user.isOnline" class="online-indicator"></span>
                 </div>
                 <div>
@@ -101,20 +101,20 @@
             </td>
             <td class="text-end pe-4">
               <div class="d-flex justify-content-end gap-1">
-                <button class="btn btn-icon btn-light btn-sm rounded-circle" title="Edit">
-                  <i class="bi bi-pencil" style="font-size: 0.8rem;"></i>
+                <button class="btn btn-icon btn-surface-hover btn-sm rounded-circle border" title="Edit">
+                  <i class="bi bi-pencil text-adaptive" style="font-size: 0.8rem;"></i>
                 </button>
-                <button class="btn btn-icon btn-light-danger btn-sm rounded-circle" title="Suspend" @click.stop="$emit('suspend-user', user.id)">
+                <button class="btn btn-icon btn-light-danger btn-sm rounded-circle border" title="Suspend" @click.stop="$emit('suspend-user', user.id)">
                   <i class="bi bi-slash-circle" style="font-size: 0.8rem;"></i>
                 </button>
                 <div class="dropdown" @click.stop>
-                  <button class="btn btn-icon btn-light btn-sm rounded-circle" data-bs-toggle="dropdown">
-                    <i class="bi bi-three-dots-vertical" style="font-size: 0.8rem;"></i>
+                  <button class="btn btn-icon btn-surface-hover btn-sm rounded-circle border" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots-vertical text-adaptive" style="font-size: 0.8rem;"></i>
                   </button>
-                  <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
-                    <li><a class="dropdown-item small py-2" href="#"><i class="bi bi-shield-check me-2"></i>Reset Password</a></li>
-                    <li><a class="dropdown-item small py-2" href="#"><i class="bi bi-envelope me-2"></i>Email User</a></li>
-                    <li><hr class="dropdown-divider"></li>
+                  <ul class="dropdown-menu dropdown-menu-end border border-theme shadow-sm rounded-3 bg-surface">
+                    <li><a class="dropdown-item small py-2 text-adaptive" href="#"><i class="bi bi-shield-check me-2"></i>Reset Password</a></li>
+                    <li><a class="dropdown-item small py-2 text-adaptive" href="#"><i class="bi bi-envelope me-2"></i>Email User</a></li>
+                    <li><hr class="dropdown-divider border-theme"></li>
                     <li><a class="dropdown-item small py-2 text-danger" href="#" @click.prevent="$emit('delete-user', user.id)"><i class="bi bi-trash me-2"></i>Delete</a></li>
                   </ul>
                 </div>
@@ -131,10 +131,10 @@
       </table>
     </div>
 
-    <div class="card-footer bg-white border-0 p-4 d-flex justify-content-between align-items-center border-top">
+    <div class="card-footer bg-surface border-0 p-4 d-flex justify-content-between align-items-center border-top border-theme">
       <small class="text-muted">Showing {{ users.length }} users</small>
       <div class="pagination-buttons d-flex gap-2">
-        <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold">Prev</button>
+        <button class="btn btn-surface-hover btn-sm rounded-pill px-3 fw-bold border text-adaptive">Prev</button>
         <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-brand">Next</button>
       </div>
     </div>
@@ -215,7 +215,8 @@ const toggleSelectAll = () => {
 
 <style scoped>
 .user-table-card {
-  background: white;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .search-group {
@@ -224,12 +225,16 @@ const toggleSelectAll = () => {
 
 .search-group input:focus {
   box-shadow: none;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .table thead th {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border);
   padding-top: 1.25rem;
   padding-bottom: 1.25rem;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
 }
 
 .table tbody tr {
@@ -237,39 +242,41 @@ const toggleSelectAll = () => {
 }
 
 .table tbody td {
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  background-color: var(--color-surface);
 }
 
 .user-row:hover {
-  background-color: #f8fafc;
+  background-color: var(--color-bg) !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .bg-selected {
-  background-color: rgba(139, 92, 246, 0.05) !important;
+  background-color: var(--color-bg) !important;
 }
 
 .name-text {
   font-size: 0.95rem;
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 .custom-checkbox:checked {
-  background-color: #8b5cf6;
-  border-color: #8b5cf6;
+  background-color: var(--color-purple);
+  border-color: var(--color-purple);
 }
 
-.suspended { background-color: #ef4444; }
+.suspended { background-color: var(--color-danger); }
 
 .role-badge {
   font-size: 0.7rem;
   letter-spacing: 0.3px;
 }
 
-.role-mentor { background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-.role-student { background-color: rgba(100, 116, 139, 0.1); color: #64748b; }
-.role-admin { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.role-mentor { background-color: var(--color-purple-light); color: var(--color-purple); }
+.role-student { background-color: var(--color-surface-hover); color: var(--color-text-muted); }
+.role-admin { background-color: var(--color-warning-light); color: var(--color-warning); }
 
 .status-dot {
   width: 8px;
@@ -278,8 +285,8 @@ const toggleSelectAll = () => {
   display: inline-block;
 }
 
-.active { background-color: #10b981; }
-.idle { background-color: #94a3b8; }
+.active { background-color: var(--color-success); }
+.idle { background-color: var(--color-text-muted); }
 
 .online-indicator {
   position: absolute;
@@ -287,8 +294,8 @@ const toggleSelectAll = () => {
   right: 18px;
   width: 10px;
   height: 10px;
-  background-color: #10b981;
-  border: 2px solid #fff;
+  background-color: var(--color-success);
+  border: 2px solid var(--color-surface);
   border-radius: 50%;
 }
 
@@ -299,29 +306,29 @@ const toggleSelectAll = () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #f1f5f9;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .btn-light-danger {
-  background-color: rgba(239, 68, 68, 0.08);
-  color: #ef4444;
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
   border: none;
 }
 
 .btn-light-danger:hover {
-  background-color: #ef4444;
+  background-color: var(--color-danger);
   color: white;
 }
 
 .btn-light-primary {
-  background-color: rgba(99, 102, 241, 0.08);
-  color: #6366f1;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
   border: none;
 }
 
 .btn-light-primary:hover {
-  background-color: #6366f1;
+  background-color: var(--color-primary);
   color: white;
 }
 
@@ -335,10 +342,17 @@ const toggleSelectAll = () => {
 }
 
 .shadow-brand {
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2);
+  box-shadow: 0 4px 12px var(--color-purple-light);
 }
 
 .cursor-pointer {
   cursor: pointer;
 }
+
+.bg-surface { background-color: var(--color-surface) !important; }
+.bg-surface-hover { background-color: var(--color-surface-hover) !important; }
+.text-adaptive { color: var(--color-text) !important; }
+.border-theme { border-color: var(--color-border) !important; }
+.btn-surface-hover { background-color: var(--color-surface-hover); color: var(--color-text); }
+
 </style>

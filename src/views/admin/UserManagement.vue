@@ -1,14 +1,15 @@
 <template>
-  <div class="user-management-layout d-flex bg-light min-vh-100">
+  <div class="user-management-layout d-flex min-vh-100">
     <!-- Sidebar -->
     <AdminSidebar />
 
     <!-- Main Content -->
-    <main class="flex-grow-1 p-4 p-lg-5">
+    <main class="admin-main flex-grow-1">
+      <div class="admin-content-wrapper">
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-          <h2 class="fw-bold mb-1">User Directory</h2>
+          <h2 class="fw-bold mb-1 text-adaptive">User Directory</h2>
           <p class="text-muted small mb-0">Manage platform members and their access levels</p>
         </div>
         <router-link to="/admin/users/create" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-brand d-flex align-items-center gap-2">
@@ -20,54 +21,48 @@
       <!-- Metrics Section -->
       <div class="row g-4 mb-5">
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Total Users</p>
-              <h2 class="fw-bold mb-1">{{ users.length }}</h2>
-              <div class="d-flex align-items-center text-success small">
-                <i class="bi bi-graph-up me-1"></i>
-                <span class="fw-bold">+14% from last month</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-purple p-3">
-              <i class="bi bi-people text-purple fs-4"></i>
-            </div>
-          </div>
+          <StatCard
+            label="Total Users"
+            :value="users.length"
+            footer-icon="bi-graph-up"
+            footer-text="+14% from last month"
+            footer-class="text-success"
+            main-icon="bi-people"
+            icon-class="text-purple"
+            bg-class="bg-light-purple"
+          />
         </div>
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">Active Today</p>
-              <h2 class="fw-bold mb-1">{{ users.filter(u => u.isOnline).length }}</h2>
-              <div class="d-flex align-items-center text-warning small">
-                <i class="bi bi-lightning-charge-fill me-1"></i>
-                <span class="fw-bold">High server load</span>
-              </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-orange p-3">
-              <i class="bi bi-eye text-orange fs-4"></i>
-            </div>
-          </div>
+          <StatCard
+            label="Active Today"
+            :value="users.filter(u => u.isOnline).length"
+            footer-icon="bi-lightning-charge-fill"
+            footer-text="High server load"
+            footer-class="text-warning"
+            main-icon="bi-eye"
+            icon-class="text-orange"
+            bg-class="bg-light-orange"
+          />
         </div>
         <div class="col-md-4">
-          <div class="metric-card p-4 rounded-4 border bg-white shadow-sm d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">New Signups</p>
-              <h2 class="fw-bold mb-1">84</h2>
-              <div class="d-flex align-items-center text-purple-light small">
-                <div class="mini-chart me-2 d-flex align-items-end gap-1">
-                  <span class="bar" style="height: 8px;"></span>
-                  <span class="bar" style="height: 12px;"></span>
-                  <span class="bar active" style="height: 16px;"></span>
-                  <span class="bar" style="height: 10px;"></span>
-                </div>
-                <span class="fw-bold">Weekly trend</span>
+          <StatCard
+            label="New Signups"
+            value="84"
+            footer-class="text-purple-light"
+            main-icon="bi-person-plus"
+            icon-class="text-green"
+            bg-class="bg-light-green"
+          >
+            <template #footer>
+              <div class="mini-chart me-2 d-flex align-items-end gap-1">
+                <span class="bar" style="height: 8px;"></span>
+                <span class="bar" style="height: 12px;"></span>
+                <span class="bar active" style="height: 16px;"></span>
+                <span class="bar" style="height: 10px;"></span>
               </div>
-            </div>
-            <div class="icon-box rounded-circle bg-light-green p-3">
-              <i class="bi bi-person-plus text-green fs-4"></i>
-            </div>
-          </div>
+              <span class="fw-bold">Weekly trend</span>
+            </template>
+          </StatCard>
         </div>
       </div>
 
@@ -87,14 +82,15 @@
         </div>
         <div class="col-xl-4">
           <UserDetailsCard v-if="selectedUser" :user="selectedUser" @suspend="handleSuspend(selectedUser.id)" />
-          <div v-else class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white h-100 d-flex flex-column align-items-center justify-content-center">
-            <div class="icon-circle-large mb-4 bg-light-purple-soft d-flex align-items-center justify-content-center rounded-circle mx-auto" style="width: 80px; height: 80px;">
+          <div v-else class="card border-0 shadow-sm rounded-4 p-5 text-center bg-surface border h-100 d-flex flex-column align-items-center justify-content-center">
+            <div class="icon-circle-large mb-4 bg-purple-light d-flex align-items-center justify-content-center rounded-circle mx-auto" style="width: 80px; height: 80px;">
               <i class="bi bi-person-bounding-box fs-1 text-purple"></i>
             </div>
-            <h5 class="fw-bold mb-2 text-dark">Select a User</h5>
+            <h5 class="fw-bold mb-2 text-adaptive">Select a User</h5>
             <p class="text-muted small mb-0 px-3">Choose a member from the directory to view their full profile and manage permissions.</p>
           </div>
         </div>
+      </div>
       </div>
     </main>
   </div>
@@ -105,6 +101,7 @@ import { ref, computed } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
 import UserTable from '../../components/admin/UserTable.vue';
 import UserDetailsCard from '../../components/admin/UserDetailsCard.vue';
+import StatCard from '../../components/admin/StatCard.vue';
 
 const searchQuery = ref('');
 const roleFilter = ref('ALL');
@@ -212,25 +209,13 @@ const handleBulkDelete = (ids) => {
 
 <style scoped>
 .user-management-layout {
+  background-color: var(--color-bg);
   font-family: var(--font-family-base);
 }
 
-.icon-box {
-  width: 52px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.admin-main {
+  background-color: var(--color-bg);
 }
-
-.bg-light-purple { background-color: rgba(139, 92, 246, 0.1); }
-.text-purple { color: #8b5cf6; }
-
-.bg-light-orange { background-color: rgba(245, 158, 11, 0.1); }
-.text-orange { color: #f59e0b; }
-
-.bg-light-green { background-color: rgba(16, 185, 129, 0.1); }
-.text-green { color: #10b981; }
 
 .icon-circle-large {
   width: 80px;
@@ -238,35 +223,33 @@ const handleBulkDelete = (ids) => {
   border-radius: 50%;
 }
 
-.bg-light-purple-soft {
-  background-color: rgba(139, 92, 246, 0.05);
-}
+.text-purple { color: var(--color-purple); }
 
 .mini-chart .bar {
   width: 3px;
-  background-color: #cbd5e1;
+  background-color: var(--color-border);
   border-radius: 1px;
 }
 
 .mini-chart .bar.active {
-  background-color: #8b5cf6;
-}
-
-.bg-light {
-  background-color: #f8fafc !important;
+  background-color: var(--color-purple);
 }
 
 .shadow-brand {
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2);
+  box-shadow: 0 4px 12px var(--color-primary-light);
 }
 
 .btn-primary {
-  background-color: #8b5cf6;
-  border-color: #8b5cf6;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .btn-primary:hover {
-  background-color: #7c3aed;
-  border-color: #7c3aed;
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
+
+.bg-surface { background-color: var(--color-surface) !important; }
+.text-adaptive { color: var(--color-text) !important; }
+.bg-purple-light { background-color: var(--color-purple-light) !important; }
 </style>

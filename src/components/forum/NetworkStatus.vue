@@ -20,7 +20,7 @@ const networkStatus = [
     <div class="status-rows">
       <div v-for="item in networkStatus" :key="item.id" class="status-row">
         <span class="status-label">{{ item.label }}</span>
-        <span class="status-value" :class="{ online: item.online }">
+        <span class="status-value">
           <span v-if="item.online" class="live-dot"></span>
           {{ item.value }}
         </span>
@@ -40,48 +40,40 @@ const networkStatus = [
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  color: #111827;
-  margin: 0;
-  letter-spacing: 0.1px;
+  color: var(--color-text);
+  margin: 0 0 8px 0;
 }
 
 .title-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-  border-radius: 8px;
-  color: #7c3aed;
+  width: 24px;
+  height: 24px;
+  background: var(--color-purple-light);
+  border-radius: 6px;
+  color: var(--color-purple);
   flex-shrink: 0;
 }
 
 .status-rows {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
 .status-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: #faf9ff;
-  border-radius: 10px;
-  transition: background 0.18s ease;
-}
-
-.status-row:hover {
-  background: #f3f0ff;
+  padding: 4px 0;
 }
 
 .status-label {
-  font-size: 12.5px;
-  color: #9ca3af;
+  font-size: 13.5px;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -91,20 +83,15 @@ const networkStatus = [
   gap: 6px;
   font-size: 13.5px;
   font-weight: 700;
-  color: #111827;
+  color: var(--color-text);
 }
 
 .live-dot {
   width: 7px;
   height: 7px;
-  background: #22c55e;
+  background: var(--color-success);
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
-  animation: live-pulse 2s ease-in-out infinite;
-}
-
-@keyframes live-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.18); }
-  50% { box-shadow: 0 0 0 5px rgba(34,197,94,0.08); }
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+  display: inline-block;
 }
 </style>

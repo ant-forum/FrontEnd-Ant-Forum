@@ -1,177 +1,296 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
 
-const recentPosts = ref([
+const searchQuery = ref('');
+const selectedCategory = ref('All');
+const sortBy = ref('latest');
+
+const categories = ['All', 'Frontend', 'DevOps', 'Systems', 'Architecture'];
+const allTags = ['Security', 'Cloud', 'Performance', 'Kubernetes', 'Testing', 'API Design'];
+const selectedTag = ref(null);
+
+const allPosts = ref([
   {
     id: 1,
-    category: "DEVOPS",
-    date: "Oct 18",
+    category: "Architecture",
+    tags: ["Kubernetes", "Cloud"],
+    date: "Oct 18, 2024",
     title: "Zero-Downtime Migrations in Kubernetes",
-    description: "Strategies for managing stateful applications during cluster upgrades, focusing on pod...",
+    description: "Strategies for managing stateful applications during cluster upgrades, focusing on pod lifecycle and data consistency.",
     author: "Sarah Jenkins",
+    author_avatar: "https://i.pravatar.cc/150?u=sarah",
     readTime: "8 min",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCB2sdCEKnAG-jYy3YmOU73Fq4gq-1chXqB2y_e2cLyj5-UnCQEl7nsC79vtaQAVoq84zsNfB8Hiln0ea736Wm5QtMilvYWwbnkp3oXZWjtn-7tlO-MI2sqBQXqoyst1iby1ZJZasMsyRNj19nwD1dE_4HpFsUNjgDJQx9zXkP_yUck03_ixdbEPA5v7BGSyU7-YCtyUbM0LixImwF2sXxtNqA2hjc84nmFSSpB_jGGFMPHBG6GOmRWRUqGcPVg9FGCIO5_s0ROoP8"
+    views: 1205,
+    likes: 84,
+    image: "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&q=80&w=800"
   },
   {
     id: 2,
-    category: "FRONTEND",
-    date: "Oct 12",
+    category: "Frontend",
+    tags: ["Performance", "Testing"],
+    date: "Oct 12, 2024",
     title: "React Context vs. Signals: A Performance Benchmark",
-    description: "An empirical study comparing render cycles and memory footprint when scaling global state across",
+    description: "An empirical study comparing render cycles and memory footprint when scaling global state across complex component trees.",
     author: "David Park",
+    author_avatar: "https://i.pravatar.cc/150?u=david",
     readTime: "6 min",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDu_Rf69uYa8hP1M0Qx_hpMYmnbw_Nm8e5JkE1-fRHhTDN0lLWPT5WdoEDwnxYVgnNJUJC27Y73upk0OeQOXcirdQua1ILTJh9FrHiQcPgfWF2kFlVtRplg2bDfn_CrIqwNfGx8oLjapldTiEKuZIhdUAjMFz9tpcMMcdHpJaqfXrQkau6B3kz-0KcyfW3M3TuGU2nAalmx92x6mNsQVwMilvxWHSJpqIZGkXZp2oFlVt_DeVtE_6m1GwQ5APQjhhj6d8z1rUzuV_7M"
+    views: 942,
+    likes: 120,
+    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&q=80&w=800"
   },
   {
     id: 3,
-    category: "SYSTEMS",
-    date: "Oct 05",
+    category: "Systems",
+    tags: ["API Design", "Security"],
+    date: "Oct 05, 2024",
     title: "Designing Idempotent APIs",
-    description: "Why idempotency keys are critical for distributed systems reliability, preventing duplicate... transactions during network failures.",
+    description: "Why idempotency keys are critical for distributed systems reliability, preventing duplicate transactions during network failures.",
     author: "Elena Rodriguez",
+    author_avatar: "https://i.pravatar.cc/150?u=elena",
     readTime: "9 min",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuArlYEHQrTu4obaqv3ymp3jjXYE6wEApFKkGDTrcAYFfgWabzMxSzoW0SQ3IBRhlCmiUT5nbLyKT3YUjWmrYfAlfmLGNt1g-9Fog1rqEM-M76IBeDES4AlZlSoK8VWKNAL8TDyc4y1fqeYB7pIY77xpjvu37IqhVyBDXdQI0k6RlYWCHFyGgRYzHevS2T57TcMSCCnu0nQ0B0ZB9unbJRfl5LQs7UQ3d8P9i0v6_WwbP46RdPUTz6H5JudN847OuvBy7zQURXS627g"
+    views: 2100,
+    likes: 156,
+    image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    id: 4,
+    category: "DevOps",
+    tags: ["Cloud", "Performance"],
+    date: "Sep 28, 2024",
+    title: "Automating Infrastructure with Terraform and GitHub Actions",
+    description: "Building a robust CI/CD pipeline for cloud infrastructure with automated testing and multi-environment deployments.",
+    author: "Marcus Chen",
+    author_avatar: "https://i.pravatar.cc/150?u=marcus",
+    readTime: "12 min",
+    views: 1500,
+    likes: 92,
+    image: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?auto=format&fit=crop&q=80&w=800"
   }
 ]);
+
+const filteredPosts = computed(() => {
+  let result = [...allPosts.value];
+
+  if (selectedCategory.value !== 'All') {
+    result = result.filter(p => p.category === selectedCategory.value);
+  }
+
+  if (selectedTag.value) {
+    result = result.filter(p => p.tags.includes(selectedTag.value));
+  }
+
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    result = result.filter(p => 
+      p.title.toLowerCase().includes(query) || 
+      p.description.toLowerCase().includes(query)
+    );
+  }
+
+  if (sortBy.value === 'popular') {
+    result.sort((a, b) => b.views - a.views);
+  } else {
+    result.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }
+
+  return result;
+});
+
+const featuredPost = allPosts.value[0];
 </script>
 
 <template>
   <div class="blog-layout min-vh-100 d-flex flex-column">
-    <Navbar class="bg-white" />
+    <Navbar />
 
-    <main class="flex-grow-1 bg-light-purple">
-      <!-- Hero Section -->
-      <section class="hero-section position-relative d-flex align-items-center justify-content-center overflow-hidden">
-        <div class="hero-gradient position-absolute top-0 start-0 w-100 h-100"></div>
-        
-        <div class="container position-relative z-3 py-5 my-5 text-center">
+    <main class="flex-grow-1 blog-wrapper">
+      <!-- Soft Banner Hero -->
+      <div class="banner-wrapper mb-5">
+        <div class="card border-0 rounded-5 p-4 p-lg-5 blog-banner-soft position-relative overflow-hidden">
+          <div class="soft-blob blob-left"></div>
+          <div class="soft-blob blob-right"></div>
           
-          <!-- Floating elements -->
-          <div class="floating-card code-card shadow-lg d-none d-lg-block">
-            <div class="code-header d-flex align-items-center px-3 py-2">
-              <span class="dot text-danger">&bull;</span>
-              <span class="dot text-warning">&bull;</span>
-              <span class="dot text-success">&bull;</span>
-              <span class="ms-2 small text-muted">build.ts</span>
-            </div>
-            <div class="code-body p-3 text-start font-monospace small">
-              <span class="text-pink">import</span> { optimize }<br>
-              <span class="text-pink">from</span> <span class="text-green">'core'</span>;<br>
-              <span class="text-blue">const</span> tree =<br>
-              optimize(ast);
-            </div>
-          </div>
-
-          <div class="floating-card deploy-card shadow-sm d-flex align-items-center px-3 py-2 rounded-pill bg-white d-none d-lg-flex">
-            <span class="badge bg-warning rounded-circle p-1 me-2"><i class="bi bi-rocket-fill text-dark"></i></span>
-            <span class="small fw-semibold text-dark">Deploying v2.4.0</span>
-          </div>
-
-          <!-- Main Hero Content -->
-          <div class="mx-auto hero-content" style="max-width: 800px;">
-            <div class="badge rounded-pill bg-purple-subtle text-purple mb-4 px-3 py-2 fw-semibold">
-              <span class="me-1">&bull;</span> LATEST INSIGHTS
-            </div>
-            
-            <h1 class="display-3 fw-bold mb-4 hero-title text-dark">
-              Engineering clarity in a<br>
-              <span class="text-purple">complex ecosystem</span>
-            </h1>
-
-            <p class="lead mb-5 text-muted px-4">
-              Deep dives into systems architecture, frontend performance, and the
-              operational patterns that scale modern applications.
-            </p>
-
-            <div class="d-flex flex-column flex-md-row justify-content-center gap-3 align-items-center">
-              <button class="btn btn-dark btn-lg px-4 py-3 rounded-pill fw-semibold d-flex align-items-center font-sm">
-                READ FEATURED
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right ms-2" viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                </svg>
-              </button>
+          <div class="row align-items-center position-relative z-2">
+            <div class="col-lg-8">
+              <div class="soft-badge mb-3">
+                <span class="dot"></span>
+                <span class="badge-text text-uppercase">Developer Blog</span>
+              </div>
+              <h2 class="display-5 fw-bold text-adaptive mb-3">Technical Insights & Engineering Patterns</h2>
+              <p class="soft-description mb-4 text-muted">
+                Deep dives into architecture, performance optimization, and modern development workflows from our engineering community.
+              </p>
               
-              <div class="search-input-wrapper position-relative">
-                <input type="text" class="form-control form-control-lg rounded-pill ps-4 pe-5 shadow-sm border-0" placeholder="Search topics...">
+              <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="search-box-soft position-relative flex-grow-1" style="max-width: 400px;">
+                  <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                  <input v-model="searchQuery" type="text" class="form-control rounded-pill ps-5 py-2 border-0 shadow-sm bg-surface" placeholder="Search articles...">
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- Featured Article -->
-      <section class="container py-5">
-        <router-link to="/blog/1" class="text-decoration-none d-block">
-          <div class="card border-0 shadow-sm rounded-4 overflow-hidden featured-card bg-white">
-          <div class="row g-0">
-            <div class="col-lg-6 position-relative">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzsfO0Uy0oSqfPbYpwmNxuQ05SnXwi8FJutwX2Sg773d1iTzrF2c__8LgV7MhesTylLgVxk1X-RkYmHOqk5hTmArCDph5M26rngNWKAQmRhC7E7izqP4TfcgCF8Wp1ATmlqKrXzG3aru1yOD_Ee1vuEPCC7qY9egtngBiy2rACeypgUs0sv7y1XQI2zEKOcquIsLXxEb2-qidSvDKlu2edpFMin-fOFqrsG3YQEQH620HNsjO47Wxb2ZBuQs3bXw1laV3kcOywFCg" class="img-fluid w-100 h-100 object-fit-cover" alt="Featured Article">
-              <span class="badge bg-white text-dark position-absolute top-0 start-0 m-4 px-3 py-2 rounded-pill fw-semibold shadow-sm font-xs">ARCHITECTURE</span>
-            </div>
-            <div class="col-lg-6 d-flex align-items-center">
-              <div class="card-body p-5">
-                <div class="text-muted small mb-3 d-flex align-items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-calendar3 me-2" viewBox="0 0 16 16"><path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/><path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
-                  Oct 24, 2023 &nbsp;&bull;&nbsp; 
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-clock me-1" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
-                  12 min read
+      <!-- Featured Article Hero Section -->
+      <div v-if="featuredPost && selectedCategory === 'All' && !searchQuery" class="mb-5 featured-section">
+        <h4 class="fw-bold text-adaptive mb-4 d-flex align-items-center gap-2">
+          <i class="bi bi-lightning-charge-fill text-warning"></i> Featured Article
+        </h4>
+        <router-link :to="'/blog/' + featuredPost.id" class="text-decoration-none">
+          <div class="card border-0 rounded-5 overflow-hidden featured-card-premium shadow-sm transition-up">
+            <div class="row g-0">
+              <div class="col-lg-7 position-relative">
+                <img :src="featuredPost.image" class="featured-hero-img" alt="Featured article">
+                <div class="featured-overlay-gradient"></div>
+              </div>
+              <div class="col-lg-5 d-flex flex-column justify-content-center p-4 p-lg-5 bg-surface">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <span class="badge bg-purple-light text-purple rounded-pill px-3 py-1 font-xs fw-bold text-uppercase">
+                    {{ featuredPost.category }}
+                  </span>
+                  <span class="text-muted font-xs fw-medium">{{ featuredPost.date }}</span>
                 </div>
-                <h2 class="display-6 fw-bold mb-3 text-dark">Deconstructing Micro-frontends at Enterprise Scale</h2>
-                <p class="text-muted mb-4 lead font-sm">
-                  An architectural deep dive into orchestrating independent deployment strategies, managing shared dependencies via Module Federation, and ensuring...
-                </p>
-                <div class="d-flex align-items-center">
-                  <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA96xxWrXvoQpLKogis081FV20yF3_cAn54nojVxz-rxfG_DP6qVC4XHvbaFme-NmhsPRY07BDvVUzVOPsu96Dp-Sp88IVNgvqAwKv2AWL63ksuHfPnzZa0sFcrfXkdYaKFeKkGNzXH47pI1Ko7gHknT04_osktGO5MG-d0illH3HtNGMwBF22XZ5TN4fuhUPlUpKaMYZ9AZMWPOBzt8y6SxvOXwHxzTGTj5K4VR0r6jp2GxsocKEcwnUgm7PeF9zJGt3s5WYqgFrw" class="rounded-circle me-3" width="48" height="48" alt="Marcus Lin">
-                  <div>
-                    <h6 class="mb-0 fw-bold text-dark">Marcus Lin</h6>
-                    <small class="text-muted">Principal Staff Engineer</small>
+                <h2 class="display-6 fw-bold text-adaptive mb-3 featured-title">{{ featuredPost.title }}</h2>
+                <p class="text-muted mb-4 featured-desc">{{ featuredPost.description }}</p>
+                <div class="d-flex align-items-center justify-content-between mt-auto pt-4 border-top-theme">
+                  <div class="author-info d-flex align-items-center gap-2">
+                    <img :src="featuredPost.author_avatar" class="rounded-circle border border-theme" width="32" height="32">
+                    <div>
+                      <div class="font-sm text-adaptive fw-bold">{{ featuredPost.author }}</div>
+                      <div class="font-xs text-muted">{{ featuredPost.readTime }} read</div>
+                    </div>
+                  </div>
+                  <div class="btn-read-featured">
+                    <span class="fw-bold text-purple font-sm">Read Story <i class="bi bi-arrow-right ms-1"></i></span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
         </router-link>
-      </section>
+      </div>
 
-      <!-- Recent Publications -->
-      <section class="container py-5 mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h3 class="fw-bold m-0 text-dark">Recent Publications</h3>
-          <a href="#" class="text-purple fw-semibold text-decoration-none font-sm">VIEW ALL ARCHIVE &rarr;</a>
-        </div>
-
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-          <div v-for="post in recentPosts" :key="post.id" class="col">
-            <router-link :to="`/blog/${post.id}`" class="text-decoration-none h-100 d-block text-dark">
-              <article class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white post-card">
-              <div class="post-img-wrapper overflow-hidden">
-                <img :src="post.image" class="card-img-top w-100 h-100 object-fit-cover" :alt="post.title">
-              </div>
-              <div class="card-body p-4 d-flex flex-column">
-                <div class="d-flex align-items-center mb-3">
-                  <span class="badge bg-purple-subtle text-purple fw-semibold font-xs me-2">{{ post.category }}</span>
-                  <span class="text-muted font-xs">{{ post.date }}</span>
-                </div>
-                <h5 class="card-title fw-bold text-dark mb-2">{{ post.title }}</h5>
-                <p class="card-text text-muted font-sm flex-grow-1">
-                  {{ post.description }}
-                </p>
-                <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-2">
-                  <span class="fw-semibold text-dark font-sm">{{ post.author }}</span>
-                  <span class="text-muted font-xs d-flex align-items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-clock me-1" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
-                    {{ post.readTime }}
-                  </span>
-                </div>
-              </div>
-              </article>
-            </router-link>
+      <!-- Categories & Filters -->
+      <div class="mb-5">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-4 mb-4">
+          <div class="category-pills d-flex flex-wrap gap-2">
+            <button 
+              v-for="cat in categories" 
+              :key="cat"
+              @click="selectedCategory = cat"
+              :class="['btn btn-sm rounded-pill px-4 py-2 transition-all fw-medium', selectedCategory === cat ? 'btn-purple text-white shadow-sm' : 'btn-light border-0 text-muted']"
+            >
+              {{ cat }}
+            </button>
+          </div>
+          
+          <div class="filter-dropdown">
+            <select v-model="sortBy" class="form-select rounded-pill px-4 py-2 border-0 shadow-sm text-muted fw-medium bg-surface-hover" style="width: 180px;">
+              <option value="latest">Latest First</option>
+              <option value="popular">Most Viewed</option>
+            </select>
           </div>
         </div>
-      </section>
+
+        <!-- Tag Cloud -->
+        <div class="tag-cloud-soft d-flex flex-wrap gap-2 align-items-center">
+          <span class="text-muted font-xs fw-bold text-uppercase me-2">Popular Tags:</span>
+          <button 
+            @click="selectedTag = null"
+            :class="['btn btn-xs rounded-pill px-3 py-1 transition-all', !selectedTag ? 'btn-dark' : 'btn-outline-secondary border-0 opacity-75']"
+          >
+            All Tags
+          </button>
+          <button 
+            v-for="tag in allTags" 
+            :key="tag"
+            @click="selectedTag = tag"
+            :class="['btn btn-xs rounded-pill px-3 py-1 transition-all', selectedTag === tag ? 'btn-purple-light text-purple' : 'btn-outline-secondary border-0 opacity-75']"
+          >
+            #{{ tag }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Blog Grid Section Title -->
+      <div class="mb-4 d-flex align-items-center justify-content-between">
+        <h4 class="fw-bold text-adaptive mb-0">
+          {{ selectedCategory === 'All' ? 'Latest Publications' : selectedCategory + ' Articles' }}
+        </h4>
+        <div class="text-muted font-sm">{{ filteredPosts.length }} Articles found</div>
+      </div>
+
+      <!-- Blog Grid -->
+      <div class="row g-4">
+        <div v-if="filteredPosts.length === 0" class="col-12 text-center py-5">
+          <div class="opacity-50">
+            <i class="bi bi-journal-x display-1 mb-3 d-block"></i>
+            <h4>No articles found matching your criteria.</h4>
+          </div>
+        </div>
+        
+        <div v-for="post in filteredPosts" :key="post.id" class="col-md-6 col-xl-4">
+          <router-link :to="'/blog/' + post.id" class="text-decoration-none h-100 d-block">
+            <article class="card border-0 shadow-sm rounded-4 h-100 blog-card-soft transition-up overflow-hidden bg-surface">
+              <div class="post-image-container position-relative overflow-hidden">
+                <img :src="post.image" class="card-img-top object-fit-cover post-img-zoom" height="240">
+                <div class="post-category-tag position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill bg-surface-blur backdrop-blur-sm shadow-sm">
+                  <span class="font-xs fw-bold text-purple text-uppercase">{{ post.category }}</span>
+                </div>
+              </div>
+              
+              <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 text-muted font-xs mb-3 fw-medium">
+                  <i class="bi bi-calendar3"></i> {{ post.date }} 
+                  <span class="mx-1">•</span>
+                  <i class="bi bi-eye"></i> {{ post.views >= 1000 ? (post.views/1000).toFixed(1) + 'k' : post.views }}
+                  <span class="mx-1">•</span>
+                  <i class="bi bi-heart"></i> {{ post.likes }}
+                </div>
+                <h5 class="fw-bold mb-2 text-adaptive blog-title-soft line-clamp-2">{{ post.title }}</h5>
+                
+                <!-- Card Tags -->
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                  <span v-for="tag in post.tags" :key="tag" class="font-xxs text-muted">#{{ tag }}</span>
+                </div>
+                
+                <p class="text-muted small mb-4 line-clamp-2">{{ post.description }}</p>
+                
+                <div class="d-flex align-items-center justify-content-between pt-3 border-top-theme mt-auto">
+                  <div class="author-info d-flex align-items-center gap-2">
+                    <img :src="post.author_avatar" class="rounded-circle border-theme" width="28" height="28">
+                    <span class="font-sm text-adaptive fw-bold">{{ post.author }}</span>
+                  </div>
+                  <div class="read-more-link text-purple font-sm fw-bold">
+                    Read <i class="bi bi-arrow-right ms-1"></i>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Newsletter Soft Section -->
+      <div class="mt-5 pt-5">
+        <div class="newsletter-card-soft rounded-5 p-4 p-lg-5 text-center position-relative overflow-hidden border">
+          <div class="position-relative z-2">
+            <h3 class="fw-bold text-adaptive mb-2">Engineering Weekly</h3>
+            <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
+              Subscribe to get the latest technical patterns and community highlights delivered to your inbox.
+            </p>
+            <div class="d-flex justify-content-center mx-auto" style="max-width: 450px;">
+              <div class="input-group shadow-sm rounded-pill overflow-hidden bg-surface border">
+                <input type="email" class="form-control border-0 ps-4 py-3 bg-transparent" placeholder="your@email.com">
+                <button class="btn btn-purple px-4 fw-bold" type="button">Subscribe</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <BaseFooter />
@@ -179,130 +298,249 @@ const recentPosts = ref([
 </template>
 
 <style scoped>
-/* Typography & Colors */
-.text-purple { color: #9333ea; }
-.bg-purple-subtle { background-color: #f3e8ff; }
-.bg-light-purple { background-color: #faf5ff; }
-.text-pink { color: #ec4899; }
-.text-green { color: #10b981; }
-.text-blue { color: #3b82f6; }
-.font-xs { font-size: 0.75rem; }
-.font-sm { font-size: 0.875rem; }
-
 .blog-layout {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  font-family: 'Sora', sans-serif;
+  color: var(--color-text);
 }
 
-/* Hero Section */
-.hero-gradient {
-  background: linear-gradient(135deg, rgba(243,232,255,1) 0%, rgba(255,255,255,1) 50%, rgba(243,232,255,0.5) 100%);
+.blog-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+/* Featured Card Styles */
+.featured-card-premium {
+  min-height: 400px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border) !important;
+}
+
+.featured-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s ease;
+}
+
+.featured-card-premium:hover .featured-hero-img {
+  transform: scale(1.03);
+}
+
+.featured-overlay-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, var(--color-shadow) 100%);
+  pointer-events: none;
+}
+
+.featured-title {
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.featured-desc {
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.btn-read-featured {
+  transition: transform 0.2s ease;
+}
+
+.featured-card-premium:hover .btn-read-featured {
+  transform: translateX(5px);
+}
+
+/* Soft Banner Styles */
+.blog-banner-soft {
+  background-color: var(--color-surface-hover);
+  min-height: 300px;
+  border: 1px solid var(--color-border) !important;
+}
+
+.soft-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
   z-index: 1;
 }
 
-.hero-title {
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+.blob-left {
+  width: 300px;
+  height: 300px;
+  background: var(--glow-purple);
+  top: -100px;
+  left: -50px;
 }
 
-/* Floating Elements */
-.floating-card {
-  position: absolute;
-  z-index: 4;
-  animation: float 6s ease-in-out infinite;
+.blob-right {
+  width: 400px;
+  height: 400px;
+  background: var(--glow-pink);
+  bottom: -150px;
+  right: -100px;
 }
 
-.code-card {
-  background: #1e1e2e;
-  border-radius: 12px;
-  width: 260px;
-  top: 20%;
-  left: 10%;
-  transform: rotate(-5deg);
-  border: 1px solid rgba(255,255,255,0.1);
+.soft-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-purple-light);
+  padding: 6px 16px;
+  border-radius: 100px;
 }
 
-.code-header {
-  background: rgba(0,0,0,0.2);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+.soft-badge .dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-purple);
+  border-radius: 50%;
 }
 
-.dot {
-  font-size: 24px;
-  line-height: 10px;
-  margin-right: 4px;
+.soft-badge .badge-text {
+  color: var(--color-purple);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
 }
 
-.deploy-card {
-  bottom: 25%;
-  right: 15%;
-  animation-delay: -3s;
+.text-adaptive {
+  color: var(--color-text) !important;
 }
 
-@keyframes float {
-  0% { transform: translateY(0px) rotate(-5deg); }
-  50% { transform: translateY(-15px) rotate(-3deg); }
-  100% { transform: translateY(0px) rotate(-5deg); }
+.soft-description {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 600px;
 }
 
-.deploy-card {
-  animation: float-right 5s ease-in-out infinite;
+.search-box-soft input {
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: all 0.3s ease;
 }
 
-@keyframes float-right {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+/* Pills & Filters */
+.btn-purple {
+  background-color: var(--color-purple);
+  color: white;
 }
 
-/* Inputs & Buttons */
-.search-input-wrapper {
-  width: 250px;
+.btn-purple:hover {
+  background-color: var(--color-purple-hover, #6d28d9);
 }
 
-.search-input-wrapper input {
-  font-size: 0.9rem;
+.transition-all {
+  transition: all 0.3s ease;
 }
 
-.btn-dark {
-  background-color: #111827;
-  border-color: #111827;
-  transition: all 0.2s ease;
+/* Blog Cards */
+.blog-card-soft {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border) !important;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-.btn-dark:hover {
-  background-color: #1f2937;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.2);
-}
-
-/* Cards */
-.featured-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.featured-card:hover {
+.blog-card-soft:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
-.post-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.post-image-container {
+  height: 240px;
 }
 
-.post-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.06) !important;
+.post-img-zoom {
+  transition: transform 0.6s ease;
 }
 
-.post-img-wrapper {
-  height: 200px;
-}
-
-.post-img-wrapper img {
-  transition: transform 0.5s ease;
-}
-
-.post-card:hover .post-img-wrapper img {
+.blog-card-soft:hover .post-img-zoom {
   transform: scale(1.05);
+}
+
+.blog-title-soft {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+
+.blog-card-soft:hover .blog-title-soft {
+  color: var(--color-purple);
+}
+
+.text-purple {
+  color: var(--color-purple);
+}
+
+/* Newsletter */
+.newsletter-card-soft {
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+}
+
+.bg-surface-blur {
+  background-color: var(--color-surface);
+  opacity: 0.9;
+}
+
+.border-top-theme {
+  border-top: 1px solid var(--color-border) !important;
+}
+
+.border-theme {
+  border-color: var(--color-border) !important;
+}
+
+.font-xs { font-size: 0.75rem; }
+.font-xxs { font-size: 0.65rem; }
+.font-sm { font-size: 0.875rem; }
+
+.btn-xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+}
+
+.bg-surface {
+  background-color: var(--color-surface) !important;
+}
+
+.bg-surface-hover {
+  background-color: var(--color-surface-hover) !important;
+}
+
+.font-xs { font-size: 0.75rem; }
+.font-xxs { font-size: 0.65rem; }
+.font-sm { font-size: 0.875rem; }
+
+.btn-xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 991px) {
+  .blog-wrapper { padding: 20px 16px 40px; }
+  .blog-banner-soft { text-align: center; padding: 40px 20px !important; }
+  .soft-badge { margin-bottom: 1.5rem; }
+  .search-box-soft { margin: 0 auto; }
 }
 </style>

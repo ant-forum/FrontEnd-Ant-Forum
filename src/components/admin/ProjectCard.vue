@@ -19,8 +19,8 @@
     <!-- Project Info -->
     <div class="card-body p-4">
       <div class="mb-4">
-        <h5 class="fw-bold mb-2 text-dark">{{ title }}</h5>
-        <p class="text-muted small mb-3 text-truncate-2" style="line-height: 1.6;">{{ description }}</p>
+        <h5 class="fw-bold mb-2 text-color">{{ title }}</h5>
+        <p class="text-muted-color small mb-3 text-truncate-2" style="line-height: 1.6;">{{ description }}</p>
         
         <div class="tech-stack d-flex flex-wrap gap-2">
           <span v-for="tech in techStack" :key="tech" class="tech-tag px-2 py-1 rounded-pill border text-muted">
@@ -37,7 +37,7 @@
             <span class="online-indicator bg-success"></span>
           </div>
           <div class="ms-2">
-            <div class="fw-bold text-dark" style="font-size: 0.8rem; line-height: 1;">{{ member.name }}</div>
+            <div class="fw-bold text-color" style="font-size: 0.8rem; line-height: 1;">{{ member.name }}</div>
             <div class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">{{ member.role }}</div>
           </div>
         </div>
@@ -97,14 +97,23 @@ const statusClass = computed(() => {
 <style scoped>
 .project-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: white;
-  border: 1px solid #f1f5f9 !important;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border) !important;
   cursor: pointer;
+  border: 1px solid transparent !important;
+}
+
+.text-color {
+  color: var(--color-text) !important;
+}
+
+.text-muted-color {
+  color: var(--color-muted) !important;
 }
 
 .project-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
+  box-shadow: var(--shadow-lg) !important;
   border-color: #8b5cf6 !important;
 }
 
@@ -129,8 +138,8 @@ const statusClass = computed(() => {
 
 .tech-tag {
   font-size: 0.65rem;
-  background-color: #f8fafc;
-  color: #64748b;
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-muted);
   font-weight: 600;
   transition: all 0.2s ease;
 }
@@ -139,6 +148,24 @@ const statusClass = computed(() => {
   background-color: #8b5cf6;
   color: white;
   border-color: #8b5cf6 !important;
+}
+
+.btn-light-green {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.btn-light-green:hover {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-light-red {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.btn-light-red:hover {
+  background-color: #ef4444;
+  color: white;
 }
 
 .text-truncate-2 {
@@ -168,7 +195,7 @@ const statusClass = computed(() => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid var(--color-surface);
 }
 
 .btn-icon {

@@ -22,7 +22,7 @@ import logo from "../../assets/ANT-Forum.png";
     <div class="footer-wave">
       <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
         <path 
-          fill="#4A0E4E" 
+          fill="var(--color-footer-bg)" 
           fill-opacity="1" 
           d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,128C960,139,1056,181,1152,197.3C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
         ></path>
@@ -55,8 +55,8 @@ import logo from "../../assets/ANT-Forum.png";
         <div class="row g-5">
           <!-- Newsletter Section -->
           <div class="col-12 col-lg-3">
-            <h6 class="text-white fw-bold mb-4">Stay Updated</h6>
-            <p class="text-white-50 small mb-3">Get the latest project updates and community highlights.</p>
+            <h6 class="text-footer fw-bold mb-4">Stay Updated</h6>
+            <p class="text-footer-muted small mb-3">Get the latest project updates and community highlights.</p>
             <div class="newsletter-form">
               <input type="email" class="form-control mb-3" placeholder="Enter your email">
               <button class="btn btn-subscribe w-100 fw-bold">SUBSCRIBE</button>
@@ -65,22 +65,22 @@ import logo from "../../assets/ANT-Forum.png";
 
           <!-- Community Links -->
           <div class="col-6 col-lg-3">
-            <h6 class="text-white fw-bold mb-4">Community</h6>
+            <h6 class="text-footer fw-bold mb-4">Community</h6>
             <ul class="list-unstyled">
               <li v-for="link in communityLinks" :key="link.name" class="mb-2">
                 <router-link :to="link.path" class="footer-link">{{ link.name }}</router-link>
               </li>
             </ul>
             <div class="social-links mt-4">
-              <a href="#" class="text-white me-3"><i class="bi bi-github fs-5"></i></a>
-              <a href="#" class="text-white me-3"><i class="bi bi-discord fs-5"></i></a>
-              <a href="#" class="text-white"><i class="bi bi-twitter-x fs-5"></i></a>
+              <a href="#" class="text-footer me-3"><i class="bi bi-github fs-5"></i></a>
+              <a href="#" class="text-footer me-3"><i class="bi bi-discord fs-5"></i></a>
+              <a href="#" class="text-footer"><i class="bi bi-twitter-x fs-5"></i></a>
             </div>
           </div>
 
           <!-- Resources -->
           <div class="col-6 col-lg-3">
-            <h6 class="text-white fw-bold mb-4">Resources</h6>
+            <h6 class="text-footer fw-bold mb-4">Resources</h6>
             <ul class="list-unstyled">
               <li v-for="link in resourceLinks" :key="link.name" class="mb-2">
                 <a :href="link.path" class="footer-link">{{ link.name }}</a>
@@ -91,15 +91,17 @@ import logo from "../../assets/ANT-Forum.png";
           <!-- Branding & Contact -->
           <div class="col-12 col-lg-3">
             <div class="d-flex align-items-center mb-4">
-              <img :src="logo" width="32" height="28" class="me-2 rounded bg-white p-1" />
-              <h6 class="text-white fw-bold mb-0">ANT Forum</h6>
+              <div class="logo-wrapper-footer me-2">
+                <img :src="logo" width="32" height="28" />
+              </div>
+              <h6 class="text-footer fw-bold mb-0">ANT Forum</h6>
             </div>
-            <div class="contact-details text-white small">
-              <p class="mb-2 text-white-50">
+            <div class="contact-details text-footer small">
+              <p class="mb-2 text-footer-muted">
                 A modern platform for developers to showcase projects and share knowledge.
               </p>
               <div class="d-flex align-items-center">
-                <i class="bi bi-envelope-fill me-2 text-white-50"></i>
+                <i class="bi bi-envelope-fill me-2 text-footer-muted"></i>
                 <span>support@antforum.io</span>
               </div>
             </div>
@@ -107,8 +109,8 @@ import logo from "../../assets/ANT-Forum.png";
         </div>
 
         <!-- Bottom Row -->
-        <div class="footer-bottom mt-5 pt-4 border-top border-secondary text-center">
-          <div class="legal-text text-white-50 small">
+        <div class="footer-bottom mt-5 pt-4 text-center">
+          <div class="legal-text text-footer-muted small">
             <p class="mb-0">© {{ year }} ANT Forum. Built for the developer community.</p>
           </div>
         </div>
@@ -119,15 +121,15 @@ import logo from "../../assets/ANT-Forum.png";
 
 <style scoped>
 .ant-footer {
-  background-color: #4A0E4E;
-  color: rgb(185, 2, 2);
+  background-color: transparent;
+  border-top: 1px solid var(--color-footer-border);
 }
 
 .footer-wave {
   position: relative;
   height: 120px;
-  /* background-color: transparent; */
-  background-color: #f5f3ff;
+  background-color: transparent;
+  margin-top: -1px; /* Avoid gap with top border */
 }
 
 .footer-wave svg {
@@ -138,18 +140,21 @@ import logo from "../../assets/ANT-Forum.png";
 }
 
 .silhouette-container {
-  position: absolute;
-  bottom: 5px;
-  width: 100%;
-  height: 80px;
-  z-index: 1;
-  pointer-events: none;
+  position: absolute; bottom: 5px; width: 100%; height: 80px; z-index: 1; pointer-events: none;
 }
 
 .silhouette-item {
   position: absolute;
-  color: #4A0E4E;
+  color: var(--color-footer-bg);
   opacity: 0.8;
+  filter: drop-shadow(0 0 8px rgba(0,0,0,0.2));
+  transition: all 0.3s ease;
+}
+
+[data-theme='dark'] .silhouette-item {
+  color: var(--color-purple);
+  opacity: 0.5;
+  filter: drop-shadow(0 0 15px var(--color-purple-light));
 }
 
 .item-1 { left: 8%; bottom: 35px; font-size: 2rem; transform: rotate(-10deg); }
@@ -166,55 +171,88 @@ import logo from "../../assets/ANT-Forum.png";
 }
 
 .footer-content {
+  background-color: var(--color-footer-bg);
   position: relative;
   z-index: 2;
+  transition: background-color var(--transition-slow);
 }
 
-.newsletter-form .form-control {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 8px;
+.text-footer {
+  color: var(--color-footer-text);
 }
 
-.newsletter-form .form-control:focus {
-  background-color: rgba(255, 255, 255, 0.15);
-  box-shadow: none;
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.newsletter-form .form-control::placeholder {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.btn-subscribe {
-  background: linear-gradient(90deg, #8B5CF6 0%, #D946EF 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px;
-  transition: transform 0.2s ease;
-}
-
-.btn-subscribe:hover {
-  transform: translateY(-2px);
-  color: white;
+.text-footer-muted {
+  color: var(--color-footer-link);
 }
 
 .footer-link {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-footer-link);
   text-decoration: none;
-  font-size: 0.9rem;
   transition: all 0.2s ease;
+  position: relative;
+  padding-left: 0;
 }
 
 .footer-link:hover {
-  color: white;
-  padding-left: 4px;
+  color: var(--color-footer-link-hover);
+  padding-left: 5px;
 }
 
-.border-secondary {
-  border-color: rgba(255, 255, 255, 0.1) !important;
+.logo-wrapper-footer {
+  background: white;
+  padding: 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+[data-theme='dark'] .logo-wrapper-footer {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.newsletter-form .form-control {
+  background-color: var(--color-footer-border);
+  border: 1px solid var(--color-footer-border);
+  color: var(--color-footer-text);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.newsletter-form .form-control:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px var(--color-purple-light);
+  border-color: var(--color-purple);
+}
+
+.btn-subscribe {
+  background: linear-gradient(135deg, var(--color-purple) 0%, #D946EF 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  letter-spacing: 1px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-subscribe:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px -5px var(--color-purple-light);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--color-footer-border) !important;
+}
+
+.social-links a {
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.social-links a:hover {
+  color: var(--color-purple) !important;
+  transform: translateY(-3px);
 }
 
 @media (max-width: 991.98px) {

@@ -40,21 +40,21 @@ const tags = [
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  color: #111827;
-  margin: 0;
+  color: var(--color-text);
+  margin: 0 0 8px 0;
 }
 
 .title-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-  border-radius: 8px;
-  color: #7c3aed;
+  width: 24px;
+  height: 24px;
+  background: var(--color-purple-light);
+  border-radius: 6px;
+  color: var(--color-purple);
   flex-shrink: 0;
 }
 
@@ -65,23 +65,21 @@ const tags = [
 }
 
 .tag-btn {
-  padding: 6px 14px;
-  background: #f3f0ff;
-  border: none;
-  color: #6d28d9;
-  font-size: 12px;
+  padding: 6px 12px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 12.5px;
   font-weight: 600;
-  border-radius: 100px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.22s ease;
+  transition: all 0.2s ease;
   font-family: inherit;
-  letter-spacing: 0.1px;
 }
 
 .tag-btn:hover {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3);
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  border-color: var(--color-purple);
 }
 </style>

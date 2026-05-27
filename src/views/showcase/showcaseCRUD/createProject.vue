@@ -63,15 +63,15 @@ const handleContinue = () => {
 
         <!-- Form Section -->
         <div class="col-lg-8">
-          <div class="card border-0 shadow-sm rounded-5 p-4 p-lg-5 bg-white">
+          <div class="card border-0 shadow-sm rounded-5 p-4 p-lg-5 bg-surface border">
             <form @submit.prevent="handleContinue">
               <!-- Basic Information -->
               <section class="mb-5">
                 <div class="section-header d-flex align-items-center gap-3 mb-4">
-                  <div class="section-icon bg-primary-subtle text-primary rounded-3">
+                  <div class="section-icon bg-primary-light text-primary rounded-3">
                     <i class="bi bi-info-circle"></i>
                   </div>
-                  <h5 class="fw-bold mb-0">Basic Information</h5>
+                  <h5 class="fw-bold mb-0 text-adaptive">Basic Information</h5>
                 </div>
                 
                 <div class="form-group-custom mb-4">
@@ -104,10 +104,10 @@ const handleContinue = () => {
               <!-- Repository Integration -->
               <section class="mb-5">
                 <div class="section-header d-flex align-items-center gap-3 mb-4">
-                  <div class="section-icon bg-indigo-subtle text-indigo rounded-3">
+                  <div class="section-icon bg-purple-light text-purple rounded-3">
                     <i class="bi bi-code-slash"></i>
                   </div>
-                  <h5 class="fw-bold mb-0">Links & Resources</h5>
+                  <h5 class="fw-bold mb-0 text-adaptive">Links & Resources</h5>
                 </div>
 
                 <div class="row g-4">
@@ -133,7 +133,7 @@ const handleContinue = () => {
               </section>
 
               <!-- Form Actions -->
-              <div class="d-flex justify-content-end align-items-center gap-4 mt-5 pt-4 border-top">
+              <div class="d-flex justify-content-end align-items-center gap-4 mt-5 pt-4 border-top-theme">
                 <button type="button" class="btn btn-link text-decoration-none fw-bold text-primary">Save Draft</button>
                 <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2">
                   Continue <i class="bi bi-arrow-right"></i>
@@ -145,10 +145,10 @@ const handleContinue = () => {
 
         <!-- Sidebar -->
         <aside class="col-lg-4">
-          <div class="card border-0 shadow-sm rounded-5 p-4 bg-white sticky-top" style="top: 100px;">
+          <div class="card border-0 shadow-sm rounded-5 p-4 bg-surface border sticky-top" style="top: 100px;">
             <div class="d-flex align-items-center gap-2 mb-4">
               <i class="bi bi-shield-check text-primary"></i>
-              <h6 class="fw-bold mb-0 text-dark">Submission Guidelines</h6>
+              <h6 class="fw-bold mb-0 text-adaptive">Submission Guidelines</h6>
             </div>
 
             <div class="guidelines-list d-flex flex-column gap-4">
@@ -157,13 +157,13 @@ const handleContinue = () => {
                   <i :class="['bi', item.icon]"></i>
                 </div>
                 <div>
-                  <div class="fw-bold small mb-1">{{ item.title }}</div>
+                  <div class="fw-bold small mb-1 text-adaptive">{{ item.title }}</div>
                   <p class="text-muted x-small mb-0">{{ item.desc }}</p>
                 </div>
               </div>
             </div>
 
-            <div class="mt-5 pt-4 border-top">
+            <div class="mt-5 pt-4 border-top-theme">
               <p class="text-muted small mb-0">
                 Need help? <a href="#" class="text-primary text-decoration-none fw-semibold">Read the docs</a>
               </p>
@@ -174,7 +174,7 @@ const handleContinue = () => {
     </main>
 
     <!-- Footer -->
-    <footer class="container-fluid py-4 px-lg-5 border-top bg-white">
+    <footer class="container-fluid py-4 px-lg-5 border-top-theme bg-surface">
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
         <div class="text-muted small fw-bold">© 2024 ANT-Forum Ecosystem. Built for developers.</div>
         <div class="footer-links d-flex gap-4">
@@ -191,16 +191,17 @@ const handleContinue = () => {
 
 <style scoped>
 .create-project-page {
-  background-color: #f8fafc;
-  color: #1e293b;
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
 /* Modern Stepper */
 .stepper-modern {
-  background: white;
+  background: var(--color-surface);
   padding: 24px;
   border-radius: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
 }
 
 .step-modern-item {
@@ -215,27 +216,28 @@ const handleContinue = () => {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 1rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid transparent;
+  border: 2px solid var(--color-border);
 }
 
 .step-modern-item.active .step-modern-circle {
-  background: #6366f1;
+  background: var(--color-primary);
   color: white;
-  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+  border-color: var(--color-primary);
+  box-shadow: 0 10px 15px -3px var(--color-primary-light);
 }
 
 .step-modern-item.current .step-modern-circle {
-  border-color: #6366f1;
-  background: white;
-  color: #6366f1;
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-primary);
 }
 
 .step-modern-content {
@@ -248,28 +250,28 @@ const handleContinue = () => {
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .step-modern-name {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .step-modern-item.active .step-modern-name {
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 .step-modern-line {
   flex-grow: 1;
   height: 2px;
-  background: #f1f5f9;
+  background: var(--color-border);
   margin: 0 20px;
 }
 
 .step-modern-item.active .step-modern-line {
-  background: #e2e8f0;
+  background: var(--color-primary-light);
 }
 
 /* Modern Form Elements */
@@ -285,7 +287,7 @@ const handleContinue = () => {
 .form-label-custom {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #475569;
+  color: var(--color-text);
   margin-bottom: 8px;
   display: block;
 }
@@ -299,7 +301,7 @@ const handleContinue = () => {
   left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--color-text-muted);
   font-size: 1.1rem;
   pointer-events: none;
   transition: color 0.2s;
@@ -309,11 +311,11 @@ const handleContinue = () => {
   width: 100%;
   padding: 12px 16px;
   padding-left: 48px;
-  background: white;
-  border: 2px solid #f1f5f9;
+  background: var(--color-surface-hover);
+  border: 2px solid var(--color-border);
   border-radius: 12px;
   font-size: 0.95rem;
-  color: #1e293b;
+  color: var(--color-text);
   transition: all 0.2s;
 }
 
@@ -323,13 +325,13 @@ textarea.form-control-modern {
 
 .form-control-modern:focus {
   outline: none;
-  border-color: #6366f1;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: var(--focus-ring);
 }
 
 .form-control-modern:focus + .input-icon {
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
 .input-group-modern {
@@ -339,11 +341,11 @@ textarea.form-control-modern {
 
 .input-group-modern .prefix {
   padding: 12px 16px;
-  background: #f8fafc;
-  border: 2px solid #f1f5f9;
+  background: var(--color-surface-hover);
+  border: 2px solid var(--color-border);
   border-right: none;
   border-radius: 12px 0 0 12px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -353,20 +355,21 @@ textarea.form-control-modern {
   padding-left: 16px;
 }
 
-.bg-indigo-subtle { background-color: #e0e7ff; }
-.text-indigo { color: #4f46e5; }
+.bg-surface { background-color: var(--color-surface) !important; }
+.border-top-theme { border-top: 1px solid var(--color-border) !important; }
+.text-adaptive { color: var(--color-text) !important; }
 
 .btn-primary {
-  background: #6366f1;
-  box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
+  background: var(--color-primary);
+  box-shadow: 0 4px 14px 0 var(--color-primary-light);
   border: none;
   transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
-  background: #4f46e5;
+  background: var(--color-primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.23);
+  box-shadow: 0 6px 20px var(--color-primary-light);
 }
 
 @media (max-width: 991px) {

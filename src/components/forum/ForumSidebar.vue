@@ -22,16 +22,18 @@ import TopContributors from './TopContributors.vue';
 .forum-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   position: sticky;
-  top: 88px;
+  top: 80px;
   align-self: start;
 }
 
 .sidebar-card {
-  background: white;
-  border-radius: 18px;
-  padding: 18px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
 }
 </style>

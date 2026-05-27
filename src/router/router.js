@@ -6,6 +6,7 @@ import HomePage from '../views/HomePage.vue';
 import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
+import RegisterView from '../views/auth/RegisterView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
 import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
 
@@ -20,8 +21,9 @@ import AdminDashboard from '../views/admin/adminDashboard.vue';
 import UserManagement from '../views/admin/UserManagement.vue';
 import CreateUserView from '../views/admin/CreateUserView.vue';
 import ProjectManagement from '../views/admin/ProjectManagement.vue';
+import CreateProjectView from '../views/admin/CreateProjectView.vue';
 import ThreadManagement from '../views/admin/ThreadManagement.vue';
-import AnalyticsView from '../views/admin/AnalyticsView.vue';
+// import AnalyticsView from '../views/admin/AnalyticsView.vue';
 import SettingsView from '../views/admin/SettingsView.vue';
 
 
@@ -52,6 +54,12 @@ const routes = [
     name: "login",
     component: LoginView,
     meta: { title: "Login" },
+  },
+  {
+    path: "/register",
+    name: "register",
+    component: RegisterView,
+    meta: { title: "Register" },
   },
   {
     path: "/forgot-password",
@@ -159,6 +167,12 @@ const routes = [
     component: ProjectManagement,
   },
   {
+    path: "/admin/projects/create",
+    name: "CreateProjectAdmin",
+    meta: { requiresAuth: true },
+    component: CreateProjectView,
+  },
+  {
     path: "/admin/threads",
     name: "ThreadManagement",
     meta: { requiresAuth: true },
@@ -168,7 +182,7 @@ const routes = [
     path: "/admin/analytics",
     name: "Analytics",
     meta: { requiresAuth: true },
-    component: AnalyticsView,
+    component: () => import("../views/admin/AnalyticsView.vue"),
   },
   {
     path: "/admin/settings",
@@ -204,6 +218,28 @@ const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     return { top: 0 }
   },
+});
+
+router.afterEach((to) => {
+  if (typeof window === "undefined") return;
+  
+  // Update page title
+  if (to.meta.title) {
+    document.title = `${to.meta.title} | ANT Forum`;
+  }
+
+  // Ensure theme is applied based on localStorage or system preference
+  const saved = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved ? saved : (prefersDark ? "dark" : "light");
+  
+  if (theme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+    document.body.classList.add('dark-mode');
+  } else {
+    document.documentElement.setAttribute("data-theme", "light");
+    document.body.classList.remove('dark-mode');
+  }
 });
 
 export default router;

@@ -60,9 +60,10 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import api from "../../api/api";
+import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
+const authStore = useAuthStore();
 const loading = ref(false);
 
 const form = reactive({ email: "" });
@@ -88,7 +89,7 @@ async function handleReset() {
   if (!validate()) return;
   loading.value = true;
   try {
-    await api.post("/api/auth/forgot-password", { email: form.email });
+    await authStore.forgotPassword(form.email);
     router.push("/verify");
   } catch (error) {
     // The global interceptor in src/api/api.js shows the error toast.
@@ -106,20 +107,20 @@ async function handleReset() {
   flex-direction: column;
   justify-content: center;
   border-radius: var(--radius-xl) 0 0 var(--radius-xl);
-  background: #fff;
+  background: var(--color-surface) !important;
 }
 
 h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--color-text) !important;
   letter-spacing: 0;
   margin-bottom: 0.5rem;
   line-height: var(--line-height-heading);
 }
 
 .subtitle {
-  color: var(--text-muted);
+  color: var(--color-text-muted) !important;
   font-size: 0.93rem;
   line-height: 1.55;
   margin-bottom: 2rem;
@@ -135,7 +136,7 @@ h1 {
   display: block;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--color-text-muted) !important;
   margin-bottom: 0.5rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -144,12 +145,12 @@ h1 {
 .form-control-custom {
   width: 100%;
   padding: 0.75rem var(--spacing-md);
-  border: 1.5px solid var(--input-border);
+  border: 1.5px solid var(--color-border) !important;
   border-radius: var(--radius-md);
   font-family: "Sora", sans-serif;
   font-size: 0.9rem;
-  color: var(--text-dark);
-  background: #fff;
+  color: var(--color-text) !important;
+  background: var(--color-input-bg) !important;
   outline: none;
   transition:
     border-color var(--transition-base),
@@ -157,28 +158,29 @@ h1 {
     background-color var(--transition-base);
 }
 .form-control-custom::placeholder {
-  color: #9ca3af;
+  color: var(--color-text-muted) !important;
+  opacity: 0.6;
 }
 .form-control-custom:focus {
-  border-color: var(--brand-light);
-  box-shadow: var(--focus-ring);
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--focus-ring) !important;
 }
 .form-control-custom.error {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 3px var(--color-danger-light) !important;
 }
 
 .error-msg {
   font-size: 0.78rem;
-  color: #ef4444;
+  color: var(--color-danger);
   margin-top: 4px;
 }
 
 .btn-signin {
   width: 100%;
   padding: 0.8rem;
-  background: var(--brand);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
   border: none;
   border-radius: var(--radius-md);
   font-family: "Sora", sans-serif;
@@ -193,19 +195,19 @@ h1 {
     background var(--transition-base),
     transform var(--transition-fast),
     box-shadow var(--transition-base);
-  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.35);
+  box-shadow: 0 4px 14px var(--color-primary-light);
 }
 
 @media (hover: hover) {
   .btn-signin:hover {
-    background: var(--brand-hover);
+    background: var(--color-primary-hover);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-brand);
+    box-shadow: 0 4px 14px var(--color-primary-light);
   }
 }
 .btn-signin:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-brand), var(--focus-ring);
+  box-shadow: 0 4px 14px var(--color-primary-light), var(--focus-ring);
 }
 .btn-signin:active {
   transform: translateY(0);
@@ -218,25 +220,26 @@ h1 {
 
 .back-link {
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 .back-link a {
-  color: var(--brand-light);
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
   border-radius: var(--radius-sm);
+  transition: color var(--transition-base);
 }
 .back-link a:hover,
 .back-link a:focus-visible {
-  color: var(--brand-hover);
+  color: var(--color-primary-hover);
   text-decoration: underline;
 }
 
 .spinner {
   width: 18px;
   height: 18px;
-  border: 2.5px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
+  border: 2.5px solid var(--color-primary-light);
+  border-top-color: var(--color-text-on-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }

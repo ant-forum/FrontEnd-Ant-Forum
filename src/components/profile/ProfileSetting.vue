@@ -162,7 +162,7 @@ const handleSubmit = async () => {
   <div class="dashboard-card-modern p-4">
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
       <div>
-        <h4 class="mb-0 fw-bold header-title">Edit Profile</h4>
+        <h4 class="mb-0 fw-bold header-title themed-text">Edit Profile</h4>
         <p class="text-muted small mb-0">Update your profile info, avatar, skills, and links.</p>
       </div>
       <div class="d-flex gap-2">
@@ -229,7 +229,7 @@ const handleSubmit = async () => {
 
       <div class="col-md-8">
         <div class="mb-3">
-          <label class="form-label fw-bold small text-dark">Full Name *</label>
+          <label class="form-label fw-bold small themed-text">Full Name *</label>
           <input
             v-model="form.name"
             class="form-control"
@@ -241,7 +241,7 @@ const handleSubmit = async () => {
 
         <div class="mb-3">
           <div class="d-flex justify-content-between">
-            <label class="form-label fw-bold small text-dark">Biography</label>
+            <label class="form-label fw-bold small themed-text">Biography</label>
             <span class="text-muted small">{{ form.bio ? form.bio.length : 0 }}/200</span>
           </div>
           <textarea
@@ -255,7 +255,7 @@ const handleSubmit = async () => {
         </div>
 
         <div class="mb-4">
-          <label class="form-label fw-bold small text-dark">Languages & Skills</label>
+          <label class="form-label fw-bold small themed-text">Languages & Skills</label>
           <div class="d-flex mb-2">
             <input
               v-model="skillInput"
@@ -281,7 +281,7 @@ const handleSubmit = async () => {
 
         <div class="row g-3">
           <div class="col-sm-6">
-            <label class="form-label fw-bold small text-dark">GitHub URL</label>
+            <label class="form-label fw-bold small themed-text">GitHub URL</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-github"></i></span>
               <input
@@ -294,7 +294,7 @@ const handleSubmit = async () => {
             </div>
           </div>
           <div class="col-sm-6">
-            <label class="form-label fw-bold small text-dark">LinkedIn URL</label>
+            <label class="form-label fw-bold small themed-text">LinkedIn URL</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi bi-linkedin"></i></span>
               <input
@@ -315,20 +315,25 @@ const handleSubmit = async () => {
 
 <style scoped>
 .dashboard-card-modern {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-surface) !important;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-xl);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--transition-slow), border-color var(--transition-slow);
 }
 
 .header-title {
-  color: #0f172a;
+  color: var(--color-text) !important;
   letter-spacing: -0.5px;
 }
 
+.themed-text {
+  color: var(--color-text) !important;
+}
+
 .border-slate-subtle {
-  border-color: #f1f5f9 !important;
+  border-color: var(--color-border) !important;
 }
 
 .avatar-preview-container {
@@ -337,8 +342,8 @@ const handleSubmit = async () => {
 }
 
 .avatar-preview-container img {
-  border: 3px solid #ffffff;
-  box-shadow: 0 8px 20px -6px rgba(124, 58, 237, 0.25);
+  border: 3px solid var(--color-surface) !important;
+  box-shadow: 0 8px 20px -6px var(--color-purple-light);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -350,7 +355,7 @@ const handleSubmit = async () => {
   height: 120px;
   margin: 0 auto;
   right: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(0, 0, 0, 0.4);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -372,38 +377,45 @@ const handleSubmit = async () => {
 }
 
 .form-control {
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-input-bg) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-md);
   padding: 0.6rem 0.8rem;
   font-size: 0.92rem;
-  color: #334155;
+  color: var(--color-text) !important;
   transition: all 0.2s ease;
 }
 
 .form-control:focus {
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
-  background-color: #ffffff;
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--focus-ring) !important;
+  background-color: var(--color-input-bg) !important;
+  color: var(--color-text) !important;
+}
+
+.form-control::placeholder {
+  color: var(--color-text-muted) !important;
+  opacity: 0.6;
 }
 
 .input-group-text {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background-color: var(--color-surface-hover) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-muted) !important;
   font-size: 0.95rem;
   transition: all 0.2s ease;
 }
 
 .input-group:focus-within .input-group-text {
-  border-color: #7c3aed;
-  color: #7c3aed;
-  background-color: rgba(124, 58, 237, 0.02);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
 }
 
 .skill-badge-premium {
-  background: rgba(124, 58, 237, 0.08);
-  color: #7c3aed;
-  border: 1px solid rgba(124, 58, 237, 0.15);
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  border: 1px solid var(--color-purple-light);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -415,7 +427,7 @@ const handleSubmit = async () => {
 }
 
 .skill-badge-premium:hover {
-  background: rgba(124, 58, 237, 0.12);
+  filter: brightness(0.95);
   transform: translateY(-1px);
 }
 
@@ -428,50 +440,51 @@ const handleSubmit = async () => {
 
 .remove-skill-trigger:hover {
   opacity: 1;
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
   font-weight: 700;
-  box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 4px 12px -2px var(--color-primary-light);
   transition: all 0.2s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-purple-hover, #6d28d9) 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px -2px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 6px 16px -2px var(--color-primary-light);
 }
 
 .btn-secondary {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-weight: 600;
   transition: all 0.2s ease;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #e2e8f0;
-  color: #1e293b;
+  background: var(--color-border);
+  color: var(--color-text);
 }
 
 .btn-outline-primary {
-  color: #7c3aed;
-  border-color: #ddd6fe;
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
   border-radius: var(--radius-md);
   transition: all 0.2s ease;
+  background: transparent;
 }
 
 .btn-outline-primary:hover {
-  background-color: #7c3aed;
+  background-color: var(--color-primary);
   color: #ffffff;
-  border-color: #7c3aed;
+  border-color: var(--color-primary);
 }
 
 @media (max-width: 768px) {

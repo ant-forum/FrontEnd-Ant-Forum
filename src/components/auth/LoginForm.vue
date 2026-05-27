@@ -186,17 +186,16 @@
 
     <!-- Register -->
     <div class="register-link text-center mt-4">
-      Have Any Problem Signing In? <a href="#">Contact Admin</a>
+      Don't have an account? <router-link to="/register">Create Account</router-link>
     </div>
   </div>
-</template>d
+</template>
 
 <script setup>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import api from "../../api/api";
-import { useAuthStore } from "../../stores/auth";
-import { useRequiredValidator } from "../../composables/useRequiredValidator";
+import { useAuthStore } from "@/stores/auth";
+import { useRequiredValidator } from "@/composables/useRequiredValidator";
 
 const showPass = ref(false);
 const loading = ref(false);
@@ -217,9 +216,10 @@ async function handleSignIn() {
   if (!validate()) return;
   loading.value = true;
   try {
-    const response = await api.post("/api/auth/login", form);
-    const { user, token } = response.data;
-    authStore.login(user, token);
+    await authStore.login({
+      email: form.email,
+      password: form.password
+    });
     router.push("/");
   } catch (error) {
     // The global interceptor in src/api/api.js handles showing the error toast.
@@ -237,20 +237,20 @@ async function handleSignIn() {
   flex-direction: column;
   justify-content: center;
   border-radius: var(--radius-xl) 0 0 var(--radius-xl);
-  background: #fff;
+  background: var(--color-surface) !important;
 }
 
 h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--color-text) !important;
   letter-spacing: 0;
   margin-bottom: 0.5rem;
   line-height: var(--line-height-heading);
 }
 
 .subtitle {
-  color: var(--text-muted);
+  color: var(--color-text-muted) !important;
   font-size: 0.93rem;
   line-height: 1.55;
   margin-bottom: 2rem;
@@ -265,12 +265,12 @@ h1 {
 .form-control-custom {
   width: 100%;
   padding: 0.75rem var(--spacing-md);
-  border: 1.5px solid var(--input-border);
+  border: 1.5px solid var(--color-border) !important;
   border-radius: var(--radius-md);
   font-family: "Sora", sans-serif;
   font-size: 0.9rem;
-  color: var(--text-dark);
-  background: #fff;
+  color: var(--color-text) !important;
+  background: var(--color-input-bg) !important;
   outline: none;
   transition:
     border-color var(--transition-base),
@@ -278,15 +278,16 @@ h1 {
     background-color var(--transition-base);
 }
 .form-control-custom::placeholder {
-  color: #9ca3af;
+  color: var(--color-text-muted) !important;
+  opacity: 0.6;
 }
 .form-control-custom:focus {
-  border-color: var(--brand-light);
-  box-shadow: var(--focus-ring);
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--focus-ring) !important;
 }
 .form-control-custom.error {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 3px var(--color-danger-light) !important;
 }
 
 .input-wrap {
@@ -303,7 +304,7 @@ h1 {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -315,7 +316,7 @@ h1 {
 }
 .toggle-eye:hover,
 .toggle-eye:focus-visible {
-  color: var(--brand);
+  color: var(--color-primary);
 }
 .toggle-eye:focus-visible {
   outline: none;
@@ -324,7 +325,7 @@ h1 {
 
 .error-msg {
   font-size: 0.78rem;
-  color: #ef4444;
+  color: var(--color-danger);
   margin-top: 4px;
 }
 
@@ -337,17 +338,17 @@ h1 {
 .custom-check input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: var(--brand);
+  accent-color: var(--color-primary);
   cursor: pointer;
 }
 .custom-check span {
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .forgot-link {
   font-size: 0.875rem;
-  color: var(--brand-light);
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
   border-radius: var(--radius-sm);
@@ -357,14 +358,14 @@ h1 {
 }
 .forgot-link:hover,
 .forgot-link:focus-visible {
-  color: var(--brand-hover);
+  color: var(--color-primary-hover);
 }
 
 .btn-signin {
   width: 100%;
   padding: 0.8rem;
-  background: var(--brand);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
   border: none;
   border-radius: var(--radius-md);
   font-family: "Sora", sans-serif;
@@ -379,14 +380,14 @@ h1 {
     background var(--transition-base),
     transform var(--transition-fast),
     box-shadow var(--transition-base);
-  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.35);
+  box-shadow: 0 4px 14px var(--color-primary-light);
 }
 
 @media (hover: hover) {
   .btn-signin:hover {
-    background: var(--brand-hover);
+    background: var(--color-primary-hover);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-brand);
+    box-shadow: 0 4px 14px var(--color-primary-light);
   }
 }
 .btn-signin:focus-visible {
@@ -406,7 +407,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 1rem;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   font-size: 0.78rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -416,36 +417,34 @@ h1 {
   content: "";
   flex: 1;
   height: 1px;
-  background: #e5e7eb;
+  background: var(--color-border);
 }
 
 .social-btn {
   width: 52px;
   height: 52px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--color-surface);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--color-text);
   cursor: pointer;
-  color: #374151;
   transition:
+    background-color var(--transition-base),
+    transform var(--transition-fast),
     border-color var(--transition-base),
-    box-shadow var(--transition-base),
-    transform var(--transition-fast);
+    box-shadow var(--transition-base);
 }
-
-@media (hover: hover) {
-  .social-btn:hover {
-    border-color: var(--brand-light);
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-    transform: translateY(-2px);
-  }
+.social-btn:hover,
+.social-btn:focus-visible {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
 }
 .social-btn:focus-visible {
   outline: none;
-  border-color: var(--brand-light);
   box-shadow: var(--focus-ring);
 }
 .social-btn:active {
@@ -453,25 +452,26 @@ h1 {
 }
 
 .register-link {
+  color: var(--color-text-muted);
   font-size: 0.875rem;
-  color: var(--text-muted);
 }
 .register-link a {
-  color: var(--brand-light);
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
+  transition: color var(--transition-base);
 }
 .register-link a:hover {
-  text-decoration: underline;
+  color: var(--color-primary-hover);
 }
 
 .spinner {
   width: 18px;
   height: 18px;
-  border: 2.5px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
+  border: 2.5px solid var(--color-primary-light);
+  border-top-color: var(--color-text-on-primary);
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
   to {
