@@ -117,7 +117,7 @@ import ThreadTable from '../../components/admin/ThreadTable.vue';
 import ThreadDetailCard from '../../components/admin/ThreadDetailCard.vue';
 import StatCard from '../../components/admin/StatCard.vue';
 import { useForumStore } from '../../stores/ForumStore';
-import { useToast } from 'vue-toastification';
+import { useToast } from '../../composables/useToast.js';
 
 const forumStore = useForumStore();
 const toast = useToast();

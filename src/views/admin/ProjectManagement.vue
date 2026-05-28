@@ -171,10 +171,10 @@ import StatCard from '../../components/admin/StatCard.vue';
 import ProjectCard from '../../components/admin/ProjectCard.vue';
 import ProjectDetailModal from '../../components/admin/ProjectDetailModal.vue';
 
-const searchQuery = ref('');
-const statusFilter = ref('ALL');
-const sortBy = ref('newest');
-const currentTab = ref('all');
+// const searchQuery = ref('');
+// const statusFilter = ref('ALL');
+// const sortBy = ref('newest');
+// const currentTab = ref('all');
 
 const showDetailModal = ref(false);
 const selectedProject = ref(null);

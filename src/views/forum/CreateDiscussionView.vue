@@ -5,7 +5,7 @@ import { useForumStore } from "@/stores/ForumStore";
 import Navbar from "@/components/layouts/header.vue";
 import MarkdownEditor from "@/components/forum/create/MarkdownEditor.vue";
 import LeftSidebar from "@/components/forum/LeftSidebar.vue";
-import { useToast } from "vue-toastification";
+import { useToast } from "@/composables/useToast.js";
 
 const router = useRouter();
 const forumStore = useForumStore();
@@ -407,308 +407,267 @@ const handleSubmit = async () => {
       </transition>
 
       <!-- Main Columns Grid Layout -->
-      <div class="create-layout-grid">
-        <!-- Left Column: The Form Card -->
-        <div class="form-column">
-          <div class="form-card">
-            <form class="create-form" @submit.prevent="handleSubmit">
-              <!-- 1. CATEGORY GRID SELECTOR -->
-              <div class="form-group">
-                <label class="section-title">
-                  <span class="num-badge">1</span>
-                  Select a Category <span class="required">*</span>
-                </label>
-                <p class="section-desc">
-                  Choose the context of your post. Selecting a category loads a
-                  helper outline in the editor.
-                </p>
-
-                <div class="category-grid">
-                  <div
-                    v-for="cat in categories"
-                    :key="cat.id"
-                    class="category-card"
-                    :class="{
-                      active: form.category === cat.id,
-                      [cat.id]: true,
-                    }"
-                    @click="selectCategory(cat.id)"
-                  >
-                    <div class="category-icon-wrapper">
-                      <i :class="cat.icon"></i>
-                    </div>
-                    <div class="category-meta">
-                      <strong>{{ cat.label }}</strong>
-                      <span>{{ cat.desc }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 2. TITLE INPUT -->
-              <div class="form-group">
-                <label class="section-title">
-                  <span class="num-badge">2</span>
-                  Title <span class="required">*</span>
-                </label>
-                <p class="section-desc">
-                  Be specific and concise. Imagine you are explaining your post
-                  in a single sentence.
-                </p>
-
-                <div class="input-glow-container">
-                  <input
-                    v-model="form.title"
-                    type="text"
-                    required
-                    class="form-input"
-                    :placeholder="
-                      form.category === 'question'
-                        ? 'e.g. How to manage component state cleanly in Vue 3?'
-                        : 'e.g. A Deep Dive into Reactive Primitives in modern web development'
-                    "
-                  />
-                  <span class="char-indicator" :class="{ valid: isTitleValid }">
-                    {{ form.title.trim().length }}/12+ chars
+      <div class="form-column">
+        <div class="form-card">
+          <form class="create-form" @submit.prevent="handleSubmit">
+            <!-- Premium Post Readiness Header Banner -->
+            <div class="readiness-banner" :class="{ completed: isFormReady }">
+              <div class="readiness-main">
+                <div class="readiness-info">
+                  <span class="readiness-title-text">
+                    <i class="bi bi-stars text-gradient-purple"></i>
+                    <strong>Post Completion Progress</strong>
                   </span>
+                  <span class="readiness-percentage">{{ checklistProgress }}%</span>
+                </div>
+                <div class="readiness-progress-bar-bg">
+                  <div class="readiness-progress-bar-fill" :style="{ width: checklistProgress + '%' }"></div>
                 </div>
               </div>
 
-              <!-- 3. INTERACTIVE TAG INPUT -->
-              <div class="form-group">
-                <label class="section-title">
-                  <span class="num-badge">3</span>
-                  Tags <span class="required">*</span>
-                </label>
-                <p class="section-desc">
-                  Add up to 5 descriptive tags. Press space, comma, or enter to
-                  register a tag.
-                </p>
+              <div class="readiness-checklist-grid">
+                <div class="readiness-check-item" :class="{ active: isTitleValid }">
+                  <i class="bi" :class="isTitleValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                  <span>Title (12+ chars)</span>
+                </div>
+                <div class="readiness-check-item" :class="{ active: isBodyValid }">
+                  <i class="bi" :class="isBodyValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                  <span>Description (25+ chars)</span>
+                </div>
+                <div class="readiness-check-item" :class="{ active: isCategoryValid }">
+                  <i class="bi" :class="isCategoryValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                  <span>Select Category</span>
+                </div>
+                <div class="readiness-check-item" :class="{ active: hasTags }">
+                  <i class="bi" :class="hasTags ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                  <span>Add at least 1 Tag</span>
+                </div>
+              </div>
+            </div>
 
+            <!-- 1. CATEGORY GRID SELECTOR -->
+            <div class="form-group">
+              <label class="section-title">
+                <span class="num-badge">1</span>
+                Select a Category <span class="required">*</span>
+              </label>
+              <p class="section-desc">
+                Choose the context of your post. Selecting a category loads a
+                helper outline in the editor.
+              </p>
+
+              <div class="category-grid">
                 <div
-                  class="tags-input-container"
-                  :class="{ focused: isEditorFocused }"
+                  v-for="cat in categories"
+                  :key="cat.id"
+                  class="category-card"
+                  :class="{
+                    active: form.category === cat.id,
+                    [cat.id]: true,
+                  }"
+                  @click="selectCategory(cat.id)"
                 >
-                  <div class="tags-list">
-                    <span
-                      v-for="(tag, idx) in tagsList"
-                      :key="idx"
-                      class="tag-pill"
-                      :style="getTagChipStyle(tag.color)"
-                    >
-                      {{ tag.label }}
-                      <button
-                        type="button"
-                        class="btn-remove-tag"
-                        @click="removeTag(idx)"
-                      >
-                        <i class="bi bi-x"></i>
-                      </button>
-                    </span>
-                    <input
-                      v-model="tagInput"
-                      type="text"
-                      class="tag-text-input"
-                      placeholder="Add tag..."
-                      @keydown="handleTagKeydown"
-                      @focus="isEditorFocused = true"
-                      @blur="isEditorFocused = false"
-                    />
+                  <div class="category-icon-wrapper">
+                    <i :class="cat.icon"></i>
+                  </div>
+                  <div class="category-meta">
+                    <strong>{{ cat.label }}</strong>
+                    <span>{{ cat.desc }}</span>
                   </div>
                 </div>
-
-                <!-- SUGGESTED TAGS PILLS -->
-                <div class="tag-suggestions">
-                  <span class="suggestion-title">Suggestions:</span>
-                  <button
-                    v-for="sTag in suggestedTags"
-                    :key="sTag"
-                    type="button"
-                    class="suggestion-pill"
-                    @click="addTag(sTag)"
-                  >
-                    + {{ sTag }}
-                  </button>
-                </div>
               </div>
+            </div>
 
-              <!-- 4. EDITOR WORKSPACE -->
-              <div class="form-group">
-                <label class="section-title">
-                  <span class="num-badge">4</span>
-                  Description / Body <span class="required">*</span>
-                </label>
-                <p class="section-desc">
-                  Include all context, code snippets, and explanations. Markdown
-                  is fully supported.
-                </p>
+            <!-- 2. TITLE INPUT -->
+            <div class="form-group">
+              <label class="section-title">
+                <span class="num-badge">2</span>
+                Title <span class="required">*</span>
+              </label>
+              <p class="section-desc">
+                Be specific and concise. Imagine you are explaining your post
+                in a single sentence.
+              </p>
 
-                <MarkdownEditor
-                  v-model="form.excerpt"
-                  :is-draft-saved="isDraftSaved"
-                  :last-saved-time="lastSavedTime"
+              <div class="input-glow-container">
+                <input
+                  v-model="form.title"
+                  type="text"
+                  required
+                  class="form-input"
+                  :placeholder="
+                    form.category === 'question'
+                      ? 'e.g. How to manage component state cleanly in Vue 3?'
+                      : 'e.g. A Deep Dive into Reactive Primitives in modern web development'
+                  "
                 />
+                <span class="char-indicator" :class="{ valid: isTitleValid }">
+                  {{ form.title.trim().length }}/12+ chars
+                </span>
               </div>
+            </div>
 
-              <!-- 5. CODE ATTACHMENT ACCORDION -->
-              <div class="form-group code-toggle-group">
-                <label class="toggle-label">
-                  <input type="checkbox" v-model="form.hasCode" />
-                  <span class="custom-checkbox"></span>
-                  <span class="toggle-text">
-                    <strong>Attach a separate full code snippet</strong>
-                    <p class="toggle-sub">
-                      Useful for complex debug files, build scripts, or large
-                      config sheets
-                    </p>
+            <!-- 3. INTERACTIVE TAG INPUT -->
+            <div class="form-group">
+              <label class="section-title">
+                <span class="num-badge">3</span>
+                Tags <span class="required">*</span>
+              </label>
+              <p class="section-desc">
+                Add up to 5 descriptive tags. Press space, comma, or enter to
+                register a tag.
+              </p>
+
+              <div
+                class="tags-input-container"
+                :class="{ focused: isEditorFocused }"
+              >
+                <div class="tags-list">
+                  <span
+                    v-for="(tag, idx) in tagsList"
+                    :key="idx"
+                    class="tag-pill"
+                    :style="getTagChipStyle(tag.color)"
+                  >
+                    {{ tag.label }}
+                    <button
+                      type="button"
+                      class="btn-remove-tag"
+                      @click="removeTag(idx)"
+                    >
+                      <i class="bi bi-x"></i>
+                    </button>
                   </span>
-                </label>
-              </div>
-
-              <transition name="slide-fade">
-                <div v-if="form.hasCode" class="form-group code-editor-card">
-                  <div class="code-editor-header">
-                    <i class="bi bi-braces"></i>
-                    <span>Code Snippet Editor</span>
-                  </div>
-                  <textarea
-                    v-model="form.code"
-                    rows="8"
-                    class="form-textarea code-font"
-                    placeholder="// Paste your full code snippet here (e.g. JavaScript, Python, Go)..."
-                  ></textarea>
+                  <input
+                    v-model="tagInput"
+                    type="text"
+                    class="tag-text-input"
+                    placeholder="Add tag..."
+                    @keydown="handleTagKeydown"
+                    @focus="isEditorFocused = true"
+                    @blur="isEditorFocused = false"
+                  />
                 </div>
-              </transition>
+              </div>
 
-              <!-- FORM FOOTER ACTIONS -->
-              <div class="form-actions">
+              <!-- SUGGESTED TAGS PILLS -->
+              <div class="tag-suggestions">
+                <span class="suggestion-title">Suggestions:</span>
                 <button
+                  v-for="sTag in suggestedTags"
+                  :key="sTag"
                   type="button"
-                  class="btn-cancel"
-                  @click="router.push('/forum')"
+                  class="suggestion-pill"
+                  @click="addTag(sTag)"
                 >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  class="btn-submit"
-                  :disabled="isSubmitting || !isFormReady"
-                >
-                  <span v-if="isSubmitting" class="btn-spinner"></span>
-                  <i v-else class="bi bi-send-fill"></i>
-                  {{ isSubmitting ? "Posting..." : "Publish Discussion" }}
+                  + {{ sTag }}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Right Column: Interactive Sidebar Checklist -->
-        <div class="sidebar-column">
-          <!-- Checklist Card -->
-          <div
-            class="sidebar-card checklist-card"
-            :class="{ completed: isFormReady }"
-          >
-            <div class="checklist-header">
-              <i class="bi bi-clipboard-check"></i>
-              <h3>Post Readiness</h3>
             </div>
 
-            <div class="checklist-progress">
-              <div class="progress-info">
-                <span>Completed Tasks</span>
-                <strong>{{ checklistProgress }}%</strong>
-              </div>
-              <div class="progress-bar-bg">
-                <div
-                  class="progress-bar-fill"
-                  :style="{ width: checklistProgress + '%' }"
-                ></div>
-              </div>
+            <!-- 4. EDITOR WORKSPACE -->
+            <div class="form-group">
+              <label class="section-title">
+                <span class="num-badge">4</span>
+                Description / Body <span class="required">*</span>
+              </label>
+              <p class="section-desc">
+                Include all context, code snippets, and explanations. Markdown
+                is fully supported.
+              </p>
+
+              <MarkdownEditor
+                v-model="form.excerpt"
+                :is-draft-saved="isDraftSaved"
+                :last-saved-time="lastSavedTime"
+              />
             </div>
 
-            <div class="checklist-items">
-              <div class="checklist-item" :class="{ ticked: isTitleValid }">
-                <span class="checkbox-circle">
-                  <i v-if="isTitleValid" class="bi bi-check-circle-fill"></i>
-                  <i v-else class="bi bi-circle"></i>
+            <!-- 5. CODE ATTACHMENT ACCORDION -->
+            <div class="form-group code-toggle-group">
+              <label class="toggle-label">
+                <input type="checkbox" v-model="form.hasCode" />
+                <span class="custom-checkbox"></span>
+                <span class="toggle-text">
+                  <strong>Attach a separate full code snippet</strong>
+                  <p class="toggle-sub">
+                    Useful for complex debug files, build scripts, or large
+                    config sheets
+                  </p>
                 </span>
-                <span class="item-text">Descriptive Title (12+ chars)</span>
-              </div>
-
-              <div class="checklist-item" :class="{ ticked: isBodyValid }">
-                <span class="checkbox-circle">
-                  <i v-if="isBodyValid" class="bi bi-check-circle-fill"></i>
-                  <i v-else class="bi bi-circle"></i>
-                </span>
-                <span class="item-text">Detailed Description (25+ chars)</span>
-              </div>
-
-              <div class="checklist-item" :class="{ ticked: isCategoryValid }">
-                <span class="checkbox-circle">
-                  <i v-if="isCategoryValid" class="bi bi-check-circle-fill"></i>
-                  <i v-else class="bi bi-circle"></i>
-                </span>
-                <span class="item-text">Select Category</span>
-              </div>
-
-              <div class="checklist-item" :class="{ ticked: hasTags }">
-                <span class="checkbox-circle">
-                  <i v-if="hasTags" class="bi bi-check-circle-fill"></i>
-                  <i v-else class="bi bi-circle"></i>
-                </span>
-                <span class="item-text">Add at least one tag</span>
-              </div>
+              </label>
             </div>
 
-            <!-- Congratulatory message -->
-            <transition name="fade">
-              <div v-if="isFormReady" class="checklist-complete-message">
-                <i class="bi bi-stars"></i>
-                <span
-                  >Your post is ready! Press "Publish Discussion" to share
-                  it.</span
-                >
+            <transition name="slide-fade">
+              <div v-if="form.hasCode" class="form-group code-editor-card">
+                <div class="code-editor-header">
+                  <i class="bi bi-braces"></i>
+                  <span>Code Snippet Editor</span>
+                </div>
+                <textarea
+                  v-model="form.code"
+                  rows="8"
+                  class="form-textarea code-font"
+                  placeholder="// Paste your full code snippet here (e.g. JavaScript, Python, Go)..."
+                ></textarea>
               </div>
             </transition>
-          </div>
 
-          <!-- Pro Tips helper card -->
-          <div class="sidebar-card tips-card">
-            <div class="tips-header">
-              <i class="bi bi-lightning-charge"></i>
-              <h3>Pro Writing Tips</h3>
+            <!-- Collapsible Pro Writing Tips -->
+            <div class="tips-accordion-card">
+              <details class="tips-details">
+                <summary class="tips-summary">
+                  <div class="summary-title-wrap">
+                    <i class="bi bi-lightning-charge-fill text-warning"></i>
+                    <span>Pro Writing Tips & Formatting Guide</span>
+                  </div>
+                  <span class="accordion-icon"><i class="bi bi-chevron-down"></i></span>
+                </summary>
+                
+                <div class="tips-accordion-content">
+                  <div class="tips-inline-grid">
+                    <div class="tip-box">
+                      <span class="tip-box-title">Provide Context</span>
+                      <p>Describe your environment, system config, frameworks, and versions to get faster answers.</p>
+                    </div>
+                    <div class="tip-box">
+                      <span class="tip-box-title">Format Code Blocks</span>
+                      <p>Surround snippets with <code>```</code> to highlight your code dynamically with automatic syntax highlighting.</p>
+                    </div>
+                    <div class="tip-box">
+                      <span class="tip-box-title">Add Descriptive Tags</span>
+                      <p>Tags like <code>Vue.js</code> or <code>System Design</code> help developers easily discover your thread.</p>
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
-            <ul class="tips-list">
-              <li>
-                <strong>Provide Context</strong>
-                <p>
-                  Describe your environment, system config, frameworks, and
-                  versions.
-                </p>
-              </li>
-              <li>
-                <strong>Format Code blocks</strong>
-                <p>
-                  Surround snippets with <code>```</code> to highlight your code
-                  dynamically.
-                </p>
-              </li>
-              <li>
-                <strong>Add descriptive tags</strong>
-                <p>
-                  Tags like <code>Vue.js</code> or
-                  <code>System Design</code> help people find your post.
-                </p>
-              </li>
-            </ul>
-          </div>
+
+            <!-- FORM FOOTER ACTIONS -->
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn-cancel"
+                @click="router.push('/forum')"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                class="btn-submit"
+                :disabled="isSubmitting || !isFormReady"
+              >
+                <span v-if="isSubmitting" class="btn-spinner"></span>
+                <i v-else class="bi bi-send-fill"></i>
+                {{ isSubmitting ? "Posting..." : "Publish Discussion" }}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
-    </div>
+  </div>
   </div>
 </template>
 
@@ -721,17 +680,17 @@ const handleSubmit = async () => {
 
 .create-page-grid-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  max-width: 1440px;
+  grid-template-columns: 240px 1fr;
+  max-width: 1280px;
   margin: 0 auto;
   gap: 28px;
-  padding: 0 24px;
+  padding: 32px 24px 60px;
 }
 
 @media (max-width: 1024px) {
   .create-page-grid-layout {
     grid-template-columns: 1fr;
-    padding: 0;
+    padding: 20px 16px 40px;
   }
   .left-sidebar-navigation {
     display: none !important;
@@ -739,9 +698,9 @@ const handleSubmit = async () => {
 }
 
 .create-wrapper {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 24px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header styling */
@@ -1011,8 +970,8 @@ const handleSubmit = async () => {
 /* Category grid selector styling */
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
   margin-left: 34px;
 }
 
@@ -1200,7 +1159,7 @@ const handleSubmit = async () => {
 
 .suggestion-title {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   font-weight: 600;
 }
 
@@ -1278,7 +1237,7 @@ const handleSubmit = async () => {
 }
 
 .checklist-header i {
-  color: var(--brand-light);
+  color: var(--color-primary);
 }
 .checklist-card.completed .checklist-header i {
   color: #10b981;
@@ -1305,7 +1264,7 @@ const handleSubmit = async () => {
   display: flex;
   justify-content: space-between;
   font-size: 12.5px;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin-bottom: 6px;
 }
 
@@ -1316,14 +1275,14 @@ const handleSubmit = async () => {
 
 .progress-bar-bg {
   height: 6px;
-  background: #e2e8f0;
+  background: var(--color-border);
   border-radius: 10px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--brand-light), #10b981);
+  background: linear-gradient(90deg, var(--color-primary), #10b981);
   border-radius: 10px;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1338,7 +1297,7 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 13px;
   font-weight: 500;
   transition: all 0.2s ease;
@@ -1351,7 +1310,8 @@ const handleSubmit = async () => {
 
 .checkbox-circle {
   font-size: 16px;
-  color: #cbd5e1;
+  color: var(--color-text-muted);
+  opacity: 0.8;
   display: flex;
   align-items: center;
 }
@@ -1396,17 +1356,19 @@ const handleSubmit = async () => {
 
 .tips-list li p {
   font-size: 12px;
-  color: #64748b;
+  color: var(--color-text-muted);
   line-height: 1.4;
   margin: 0;
 }
 
 .tips-list li code {
-  background: #f1f5f9;
-  padding: 1px 4px;
-  border-radius: 4px;
-  font-size: 11px;
-  color: var(--brand-light);
+  background: var(--color-surface-hover);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
 }
 
 /* Separate code editor attachment styling */
@@ -1430,12 +1392,12 @@ const handleSubmit = async () => {
 .custom-checkbox {
   width: 20px;
   height: 20px;
-  border: 2px solid #cbd5e1;
+  border: 2px solid var(--color-border);
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: var(--color-input-bg);
   transition: all 0.2s ease;
   margin-top: 2px;
 }
@@ -1461,7 +1423,7 @@ const handleSubmit = async () => {
 
 .toggle-sub {
   font-size: 12.5px;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 2px 0 0;
 }
 
@@ -1514,7 +1476,7 @@ const handleSubmit = async () => {
   gap: 16px;
   margin-top: 16px;
   padding-top: 32px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-border);
   margin-left: 34px;
 }
 
@@ -1534,18 +1496,18 @@ const handleSubmit = async () => {
 
 .btn-cancel {
   background: transparent;
-  border: 1.5px solid #cbd5e1;
-  color: #475569;
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-muted);
 }
 
 .btn-cancel:hover {
-  background: #f1f5f9;
+  background: var(--color-surface-hover);
   color: var(--text-dark);
-  border-color: #94a3b8;
+  border-color: var(--color-text-muted);
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, var(--brand-light), var(--brand));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
   border: none;
   color: white;
   box-shadow: 0 4px 18px rgba(109, 40, 217, 0.2);
@@ -1557,11 +1519,12 @@ const handleSubmit = async () => {
 }
 
 .btn-submit:disabled {
-  background: #cbd5e1;
-  color: #94a3b8;
+  background: var(--color-border);
+  color: var(--color-text-muted);
   box-shadow: none;
   cursor: not-allowed;
   transform: none;
+  opacity: 0.6;
 }
 
 .btn-spinner {
@@ -1649,6 +1612,232 @@ const handleSubmit = async () => {
 
   .sidebar-column {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Premium Readiness Banner Header inside form card */
+.readiness-banner {
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.3s ease;
+}
+
+.readiness-banner.completed {
+  border-color: var(--color-success);
+  background: rgba(16, 185, 129, 0.03);
+}
+
+.readiness-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.readiness-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.readiness-title-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.readiness-title-text i {
+  font-size: 16px;
+}
+
+.readiness-percentage {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.readiness-banner.completed .readiness-percentage {
+  color: var(--color-success);
+}
+
+.readiness-progress-bar-bg {
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.readiness-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+  border-radius: 10px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.readiness-checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+}
+
+.readiness-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.readiness-check-item i {
+  font-size: 15px;
+  color: var(--color-border);
+}
+
+.readiness-check-item.active {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.readiness-check-item.active i {
+  color: var(--color-success);
+}
+
+/* Accordion Writing Tips block */
+.tips-accordion-card {
+  margin-left: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.tips-accordion-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.tips-details {
+  width: 100%;
+}
+
+.tips-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.tips-summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-title-wrap i {
+  font-size: 16px;
+}
+
+.accordion-icon {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  transition: transform 0.25s ease;
+}
+
+.tips-details[open] .accordion-icon {
+  transform: rotate(180deg);
+}
+
+.tips-accordion-content {
+  padding: 0 20px 20px;
+  border-top: 1px dashed var(--color-border);
+  animation: slideDown 0.2s ease-out;
+}
+
+.tips-inline-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.tip-box {
+  background: var(--color-surface-hover);
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+}
+
+.tip-box-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.tip-box p {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.tip-box code {
+  background: var(--color-surface);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .readiness-checklist-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .tips-inline-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .tips-accordion-card {
+    margin-left: 0;
   }
 }
 </style>

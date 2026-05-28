@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted } from "vue";
-import { useAuthStore } from "../stores/auth";
+import { useAuthStore } from "../stores/AuthStore.js";
 import DashboardStats from "../components/dashboards/DashboardStats.vue";
 import RecentActivity from "../components/dashboards/RecentActivity.vue";
 

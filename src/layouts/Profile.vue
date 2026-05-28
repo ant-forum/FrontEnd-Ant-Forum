@@ -2,7 +2,7 @@
 import { reactive, ref, computed, onMounted } from "vue";
 import Navbar from "../components/layouts/header.vue";
 import Footer from "../components/layouts/footer.vue";
-import { useAuthStore } from "../stores/auth";
+import { useAuthStore } from "../stores/AuthStore";
 
 // Sub-components
 import ProfileOverview from "../components/profile/ProfileOverview.vue";
