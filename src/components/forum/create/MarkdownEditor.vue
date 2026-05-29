@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { useToast } from "vue-toastification";
+import { useToast } from "@/composables/useToast.js";
 
 const props = defineProps({
   modelValue: {

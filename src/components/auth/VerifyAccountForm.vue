@@ -65,8 +65,8 @@
 <script setup>
 import { ref, reactive, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import { useToast } from "vue-toastification";
-import { useAuthStore } from "@/stores/auth";
+import { useToast } from "../../composables/useToast.js";
+import { useAuthStore } from "../../stores/AuthStore.js";
 import api from "@/api/api";
 
 const router = useRouter();

@@ -37,9 +37,14 @@ const discussion = computed(() => {
   return forumStore.discussion || mockDiscussion.value;
 });
 
-onMounted(async () => {
-  const id = route.params.id;
-  await forumStore.fetchDiscussion(id);
+const loadDiscussion = async (id) => {
+  loading.value = true;
+  
+  // Start fetching and add a minimum 700ms delay to make the premium shimmer skeleton loader visible
+  const fetchPromise = forumStore.fetchDiscussion(id);
+  const delayPromise = new Promise((resolve) => setTimeout(resolve, 750));
+  
+  await Promise.all([fetchPromise, delayPromise]);
   
   // Mock data fallback if the API call didn't populate discussion
   if (!forumStore.discussion) {
@@ -77,7 +82,21 @@ onMounted(async () => {
 
   loading.value = false;
   setupCopyButtons();
+};
+
+onMounted(() => {
+  loadDiscussion(route.params.id);
 });
+
+// Watch for route ID changes to correctly trigger skeleton on page transitions
+watch(
+  () => route.params.id,
+  (newId) => {
+    if (newId) {
+      loadDiscussion(newId);
+    }
+  }
+);
 
 // Watch for discussion changes and setup copy code buttons
 watch(() => forumStore.discussion, () => {
@@ -208,9 +227,66 @@ const setupCopyButtons = () => {
         Back to Discussions
       </button>
 
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        Loading thread...
+      <!-- Premium Animated Skeleton Loader -->
+      <div v-if="loading" class="skeleton-thread-container">
+        <!-- Main Thread Skeleton Card -->
+        <div class="skeleton-card main-thread-skeleton">
+          <div class="skeleton-meta-row">
+            <div class="skeleton-bar badge skeleton-shimmer"></div>
+            <div class="skeleton-bar badge skeleton-shimmer"></div>
+          </div>
+          
+          <div class="skeleton-title skeleton-shimmer"></div>
+          <div class="skeleton-title short skeleton-shimmer"></div>
+          
+          <div class="skeleton-author-row">
+            <div class="skeleton-avatar skeleton-shimmer"></div>
+            <div class="skeleton-author-meta">
+              <div class="skeleton-bar name skeleton-shimmer"></div>
+              <div class="skeleton-bar time skeleton-shimmer"></div>
+            </div>
+          </div>
+          
+          <div class="skeleton-body">
+            <div class="skeleton-bar text-line skeleton-shimmer"></div>
+            <div class="skeleton-bar text-line skeleton-shimmer"></div>
+            <div class="skeleton-bar text-line three-quarters skeleton-shimmer"></div>
+          </div>
+          
+          <div class="skeleton-tags">
+            <div class="skeleton-bar tag skeleton-shimmer"></div>
+            <div class="skeleton-bar tag skeleton-shimmer"></div>
+          </div>
+
+          <div class="skeleton-footer">
+            <div class="skeleton-bar action skeleton-shimmer"></div>
+            <div class="skeleton-bar action skeleton-shimmer"></div>
+          </div>
+        </div>
+
+        <!-- Replies Section Skeleton -->
+        <div class="skeleton-replies-section">
+          <div class="skeleton-bar replies-title skeleton-shimmer"></div>
+          
+          <div class="skeleton-replies-list">
+            <div v-for="i in 2" :key="i" class="skeleton-card reply-skeleton">
+              <div class="skeleton-author-row">
+                <div class="skeleton-avatar small skeleton-shimmer"></div>
+                <div class="skeleton-author-meta">
+                  <div class="skeleton-bar name skeleton-shimmer"></div>
+                  <div class="skeleton-bar time skeleton-shimmer"></div>
+                </div>
+              </div>
+              <div class="skeleton-body small">
+                <div class="skeleton-bar text-line skeleton-shimmer"></div>
+                <div class="skeleton-bar text-line half skeleton-shimmer"></div>
+              </div>
+              <div class="skeleton-footer small">
+                <div class="skeleton-bar action skeleton-shimmer"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
       <div v-else-if="discussion" class="thread-container">
@@ -1035,6 +1111,188 @@ const setupCopyButtons = () => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* High-Fidelity Animated Skeleton Shimmer Styles */
+.skeleton-thread-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  animation: fade-in 0.3s ease;
+}
+
+.skeleton-card {
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 32px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.reply-skeleton {
+  padding: 24px 28px;
+  margin-bottom: 16px;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border-soft) 37%,
+    var(--color-surface-hover) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-animation 1.5s infinite linear;
+}
+
+@keyframes shimmer-animation {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-bar {
+  border-radius: 6px;
+  height: 14px;
+  background: var(--color-surface-hover);
+}
+
+.skeleton-meta-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.skeleton-bar.badge {
+  width: 80px;
+  height: 20px;
+  border-radius: 100px;
+}
+
+.skeleton-title {
+  height: 28px;
+  width: 90%;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+
+.skeleton-title.short {
+  width: 50%;
+  margin-bottom: 24px;
+}
+
+.skeleton-author-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.skeleton-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-surface-hover);
+}
+
+.skeleton-avatar.small {
+  width: 32px;
+  height: 32px;
+}
+
+.skeleton-author-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 120px;
+}
+
+.skeleton-bar.name {
+  width: 100%;
+  height: 12px;
+}
+
+.skeleton-bar.time {
+  width: 60%;
+  height: 10px;
+}
+
+.skeleton-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.skeleton-body.small {
+  margin-bottom: 14px;
+}
+
+.skeleton-bar.text-line {
+  width: 100%;
+  height: 14px;
+}
+
+.skeleton-bar.text-line.three-quarters {
+  width: 75%;
+}
+
+.skeleton-bar.text-line.half {
+  width: 50%;
+}
+
+.skeleton-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.skeleton-bar.tag {
+  width: 70px;
+  height: 22px;
+  border-radius: 8px;
+}
+
+.skeleton-footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.skeleton-footer.small {
+  border-top: none;
+  padding-top: 0;
+}
+
+.skeleton-bar.action {
+  width: 90px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.skeleton-replies-section {
+  margin-top: 12px;
+}
+
+.skeleton-bar.replies-title {
+  width: 180px;
+  height: 20px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+}
+
+.skeleton-replies-list {
+  display: flex;
+  flex-direction: column;
+  padding-left: 20px;
+  border-left: 2px solid var(--color-border-soft);
 }
 </style>
 

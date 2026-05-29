@@ -6,7 +6,7 @@
       your password. Your access remains uninterrupted and secure.
     </p>
 
-    <form class="form-stack" @submit.prevent="handleReset">
+    <form class="form-stack" @submit.prevent="handleReset" novalidate>
       <!-- Email -->
       <div>
         <label class="input-label">EMAIL ADDRESS</label>
@@ -60,33 +60,36 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "../../stores/AuthStore.js";
+import { useRequiredValidator } from "../../composables/useRequiredValidator.js";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const loading = ref(false);
 
 const form = reactive({ email: "" });
-const errors = reactive({ email: "" });
 
-function clearError(field) {
-  errors[field] = "";
-}
+const { errors, clearError, validateField } = useRequiredValidator();
 
-function validate() {
-  let ok = true;
+const validateEmail = () => {
   if (!form.email.trim()) {
-    errors.email = "Email address is required.";
-    ok = false;
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = "Please enter a valid email address.";
-    ok = false;
+    return validateField("email", form.email, "Email address is required.");
   }
-  return ok;
-}
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!EMAIL_REGEX.test(form.email.trim())) {
+    errors.email = "Please enter a valid email address.";
+    return false;
+  }
+  errors.email = "";
+  return true;
+};
+
+const validateForm = () => {
+  return validateEmail();
+};
 
 async function handleReset() {
-  if (!validate()) return;
+  if (!validateForm()) return;
   loading.value = true;
   try {
     await authStore.forgotPassword(form.email);

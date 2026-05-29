@@ -1,12 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "../stores/auth";
+import { useAuthStore } from "../stores/AuthStore";
 
-import Home from '../views/Home.vue';
+
 import HomePage from '../views/HomePage.vue';
 import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
-import RegisterView from '../views/auth/RegisterView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
 import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
 
@@ -38,6 +37,12 @@ import Empty from "../components/layouts/Empty.vue";
 
 const routes = [
   {
+    path: "/",
+    name: "HomePage",
+    component: HomePage,
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/loading",
     name: "loading",
     component: Loading,
@@ -59,12 +64,6 @@ const routes = [
     meta: { title: "Login" },
   },
   {
-    path: "/register",
-    name: "register",
-    component: RegisterView,
-    meta: { title: "Register" },
-  },
-  {
     path: "/forgot-password",
     name: "forgot-password",
     component: ForgotPasswordView,
@@ -77,25 +76,15 @@ const routes = [
     meta: { title: "Verify Account" },
   },
   {
-    path: "/home",
-    component: Home,
-    name: "HomeLayout",
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/",
-    name: "HomePage",
-    component: HomePage,
-    meta: { requiresAuth: true },
-  },
-  {
     path: "/blog",
     name: "Blog",
+    meta: { requiresAuth: true },
     component: () => import("../views/blog/Blog.vue"),
   },
   {
     path: "/blog/:id",
     name: "BlogDetail",
+    meta: { requiresAuth: true },
     component: () => import("../views/blog/BlogDetail.vue"),
   },
   {
@@ -109,6 +98,12 @@ const routes = [
     name: "Profile",
     meta: { requiresAuth: true },
     component: Profile,
+  },
+  {
+    path: "/notifications",
+    name: "Notifications",
+    meta: { requiresAuth: true, title: "Notifications" },
+    component: () => import("../views/notification/NotificationsView.vue"),
   },
   {
     path: "/help",
@@ -145,52 +140,53 @@ const routes = [
     name: "ReviewProject",
     meta: { requiresAuth: true },
     component: ReviewProject,
-  },{
+  },
+  {
     path: "/admin",
     name: "AdminDashboard",
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: "admin" },
     component: AdminDashboard,
   },
   {
     path: "/admin/users",
     name: "UserManagement",
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: "admin" },
     component: UserManagement,
   },
   {
     path: "/admin/users/create",
     name: "CreateUser",
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: "admin" },
     component: CreateUserView,
   },
   {
     path: "/admin/projects",
     name: "ProjectManagement",
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: "admin" },
     component: ProjectManagement,
   },
   {
     path: "/admin/projects/create",
     name: "CreateProjectAdmin",
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: "admin" },
     component: CreateProjectView,
   },
   {
     path: "/admin/threads",
     name: "ThreadManagement",
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: "admin" },
     component: ThreadManagement,
   },
   {
     path: "/admin/analytics",
     name: "Analytics",
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: "admin" },
     component: () => import("../views/admin/AnalyticsView.vue"),
   },
   {
     path: "/admin/settings",
     name: "Settings",
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: "admin" },
     component: SettingsView,
   },
   {
@@ -211,7 +207,10 @@ const routes = [
     meta: { requiresAuth: true },
     component: () => import("../views/forum/ThreadRepliesView.vue"),
   },
-
+  {
+    path: "/:pathMatch(.*)*",
+    redirect: "/404",
+  },
 ];
 
 
@@ -224,9 +223,65 @@ const router = createRouter({
   },
 });
 
+router.beforeEach(async (to, from) => {
+  const authStore = useAuthStore();
+
+  // 1. Unify profile loading: fetch user info once if token is present but user state is null
+  if (authStore.token && !authStore.user) {
+    try {
+      await authStore.fetchProfile();
+    } catch (err) {
+      // Ignored: fetchProfile handles token invalidation on 401s internally
+    }
+  }
+
+  const isLoggedIn = !!authStore.token && !!authStore.user;
+
+  // 2. Redirect logged-in users away from login page to their dashboard
+  if (to.name === "login" && isLoggedIn) {
+    return authStore.user?.role === "admin" 
+      ? { name: "AdminDashboard" } 
+      : { name: "Dashboard" };
+  }
+
+  // 3. Enforce authentication and role constraints
+  if (to.meta.requiresAuth) {
+    if (!isLoggedIn) {
+      return { name: "login" };
+    }
+
+    // Role verification guard
+    if (to.meta.role && authStore.user?.role !== to.meta.role) {
+      console.warn(`[Route Guard] Unauthorized access attempt to ${to.path}. Required: ${to.meta.role}. Current: ${authStore.user?.role}`);
+      
+      // Cancel navigation if user was already browsing a valid page inside the app
+      if (from && from.name && from.path !== "/") {
+        return false;
+      }
+      
+      // Fallback reload redirect to their last successfully visited page
+      const lastPath = localStorage.getItem("ANT_LastPath");
+      if (lastPath && lastPath !== to.path) {
+        return lastPath;
+      }
+      
+      return authStore.user?.role === "admin"
+        ? { name: "AdminDashboard" }
+        : { name: "Dashboard" };
+    }
+  }
+
+  return true;
+});
+
 router.afterEach((to) => {
   if (typeof window === "undefined") return;
   
+  // Save last successfully visited valid student page (excluding login / restricted routes)
+  if (to.meta.requiresAuth && !to.meta.role) {
+    localStorage.setItem("ANT_LastPath", to.fullPath);
+  }
+
   // Update page title
   if (to.meta.title) {
     document.title = `${to.meta.title} | ANT Forum`;

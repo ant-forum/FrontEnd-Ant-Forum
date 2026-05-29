@@ -23,13 +23,18 @@ const handleItemClick = (tabId) => {
     emit('selectTab', 'home');
     if (route.path !== '/forum') {
       router.push('/forum');
+    } else if (Object.keys(route.query).length > 0) {
+      router.push('/forum'); // Clear query parameters to restore full discussion list
     }
   } else if (tabId === 'profile') {
     router.push('/profile');
   } else if (tabId === 'projects') {
     router.push('/showcase');
-  } else if (tabId === 'settings') {
-    router.push('/admin/settings');
+  } else if (tabId === 'saves') {
+    emit('selectTab', 'saves');
+    if (route.path !== '/forum') {
+      router.push({ path: '/forum', query: { tab: 'saves' } });
+    }
   } else {
     emit('selectTab', tabId);
   }
@@ -58,11 +63,11 @@ const handleItemClick = (tabId) => {
     <div class="sidebar-menu">
       <button 
         class="sidebar-menu-item" 
-        :class="{ active: route.path === '/profile' }" 
-        @click="handleItemClick('profile')"
+        :class="{ active: (route.path === '/forum' && activeTab !== 'saves' && route.query.tab !== 'saves') || activeTab === 'home' || activeTab === 'questions' }" 
+        @click="handleItemClick('discussions')"
       >
-        <i class="bi bi-person-circle"></i>
-        <span>My Profile</span>
+        <i class="bi bi-chat-left-text"></i>
+        <span>Forum</span>
       </button>
 
       <button 
@@ -76,15 +81,6 @@ const handleItemClick = (tabId) => {
 
       <button 
         class="sidebar-menu-item" 
-        :class="{ active: route.path === '/forum' || activeTab === 'home' || activeTab === 'questions' }" 
-        @click="handleItemClick('discussions')"
-      >
-        <i class="bi bi-chat-left-text"></i>
-        <span>Discussions</span>
-      </button>
-
-      <button 
-        class="sidebar-menu-item" 
         :class="{ active: activeTab === 'contributions' }" 
         @click="handleItemClick('contributions')"
       >
@@ -94,11 +90,11 @@ const handleItemClick = (tabId) => {
 
       <button 
         class="sidebar-menu-item" 
-        :class="{ active: route.path.startsWith('/admin') }" 
-        @click="handleItemClick('settings')"
+        :class="{ active: activeTab === 'saves' || route.query.tab === 'saves' }" 
+        @click="handleItemClick('saves')"
       >
-        <i class="bi bi-gear"></i>
-        <span>Settings</span>
+        <i :class="['bi', activeTab === 'saves' || route.query.tab === 'saves' ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
+        <span>Saved</span>
       </button>
     </div>
 
@@ -128,19 +124,24 @@ const handleItemClick = (tabId) => {
 .left-sidebar-navigation {
   display: flex;
   flex-direction: column;
-  background: transparent;
-  padding-right: 16px;
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
   height: fit-content;
   user-select: none;
-  min-height: 500px;
+  min-height: 480px;
   position: sticky;
   top: 80px;
   align-self: start;
 }
 
 .sidebar-header {
-  padding: 12px 16px;
-  margin-bottom: 24px;
+  padding: 0 0 16px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .sidebar-title {
@@ -196,7 +197,9 @@ const handleItemClick = (tabId) => {
 
 /* Submit Project Cta Button */
 .sidebar-cta-wrap {
-  padding: 24px 16px 16px;
+  padding: 20px 0 0 0;
+  margin-top: 16px;
+  border-top: 1px solid var(--color-border);
 }
 
 .btn-submit-project {
@@ -225,7 +228,7 @@ const handleItemClick = (tabId) => {
 
 .sidebar-footer {
   margin-top: auto;
-  padding: 16px;
+  padding: 20px 0 0 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -299,9 +302,13 @@ const handleItemClick = (tabId) => {
     z-index: 9998;
     padding: 32px 24px;
     border-right: 1px solid var(--color-border);
+    border-left: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-radius: 0px !important;
+    box-shadow: 15px 0 35px var(--color-shadow) !important;
     transform: translateX(-100%);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 15px 0 35px var(--color-shadow);
   }
 
   .left-sidebar-navigation.mobile-open {

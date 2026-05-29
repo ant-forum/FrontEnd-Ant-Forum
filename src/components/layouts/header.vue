@@ -1,18 +1,31 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDarkMode } from '../../composables/useDarkMode';
+import { useAuthStore } from '../../stores/AuthStore';
+import { useNotificationStore } from '../../stores/NotificationStore';
+import NotificationDropdown from '../notification/NotificationDropdown.vue';
 
 const route = useRoute();
 const { isDark, toggleDarkMode } = useDarkMode();
+const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
+
 const activeLink = ref(route.name || 'Forum');
 const isMobileMenuOpen = ref(false);
+const isNotificationOpen = ref(false);
 
 const navLinks = [
   { name: 'Forum', path: '/forum' },
   { name: 'Showcase', path: '/showcase' },
   { name: 'Blog', path: '/blog' }
 ];
+
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    notificationStore.fetchNotifications();
+  }
+});
 </script>
 
 <template>
@@ -42,17 +55,57 @@ const navLinks = [
 
       <!-- Right Actions -->
       <div class="header-right d-flex align-items-center justify-content-end gap-3 flex-1">
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center">
           <button @click="toggleDarkMode" class="btn btn-icon-modern" :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
             <i :class="isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill'"></i>
           </button>
-          <button class="btn btn-icon-modern"><i class="bi bi-bell"></i></button>
-          <!-- Settings icon removed as per user request -->
+          
+          <!-- Only show notification bell when logged in -->
+          <div v-if="authStore.isAuthenticated" class="position-relative d-flex align-items-center justify-content-center">
+            <button 
+              @click="isNotificationOpen = !isNotificationOpen" 
+              class="btn btn-icon-modern btn-bell-toggle position-relative" 
+              title="Notifications"
+            >
+              <i class="bi bi-bell"></i>
+              <!-- Unread notification count badge -->
+              <span v-if="notificationStore.unreadCount > 0" class="badge-unread-count rounded-circle position-absolute d-flex align-items-center justify-content-center fw-bold">
+                {{ notificationStore.unreadCount }}
+              </span>
+            </button>
+            <NotificationDropdown 
+              v-if="isNotificationOpen" 
+              @close="isNotificationOpen = false" 
+            />
+          </div>
         </div>
 
-        <router-link to="/profile" class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 border rounded-pill shadow-sm cursor-pointer text-decoration-none">
-          <img src="https://i.pravatar.cc/150?u=alex" class="rounded-circle border border-2 border-primary-subtle" width="32" height="32" alt="User">
-          <span class="small fw-bold d-none d-xl-block">Alex Chen</span>
+        <!-- Authenticated Profile Pill -->
+        <router-link 
+          v-if="authStore.isAuthenticated" 
+          to="/profile" 
+          class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 border rounded-pill shadow-sm cursor-pointer text-decoration-none"
+        >
+          <img 
+            :src="authStore.user?.profile_pic || '/charles_leclerc.png'" 
+            class="rounded-circle border border-2 border-primary-subtle object-fit-cover" 
+            width="32" 
+            height="32" 
+            alt="User"
+          >
+          <span class="small fw-bold d-none d-xl-block">{{ authStore.user?.username}}</span>
+        </router-link>
+
+        <!-- Guest / Unauthenticated Profile Pill -->
+        <router-link 
+          v-else 
+          to="/login" 
+          class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 border rounded-pill shadow-sm cursor-pointer text-decoration-none guest-pill"
+        >
+          <div class="guest-avatar rounded-circle border border-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <span class="small fw-bold d-none d-xl-block">Log In</span>
         </router-link>
 
         <button class="btn btn-icon-modern d-md-none ms-2" @click="isMobileMenuOpen = !isMobileMenuOpen">
@@ -169,12 +222,42 @@ const navLinks = [
   box-shadow: var(--shadow-md) !important;
 }
 
+.guest-avatar {
+  background: var(--color-surface-hover) !important;
+  color: var(--color-text-muted) !important;
+  border-color: var(--color-border) !important;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+}
+
+.user-profile-pill:hover .guest-avatar {
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
 .cursor-pointer {
   cursor: pointer;
 }
 
 .x-small {
   font-size: 0.7rem;
+}
+
+.badge-unread-count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: var(--color-primary, #7c3aed);
+  border: 2px solid var(--color-surface, #1e1e30);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  box-shadow: 0 0 8px var(--color-primary-light, rgba(124, 58, 237, 0.4));
+  transition: all 0.3s ease;
+  z-index: 10;
 }
 
 @media (max-width: 768px) {

@@ -6,19 +6,40 @@
       the developer community and resources.
     </p>
 
-    <form class="form-stack" @submit.prevent="handleSignIn">
+    <form class="form-stack" @submit.prevent="handleSignIn" novalidate>
+      <!-- Alert Banner -->
+      <div v-if="formError" class="alert-banner">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          class="alert-icon"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+        <span>{{ formError }}</span>
+      </div>
+
       <!-- Email -->
       <div>
         <input
           v-model="form.email"
-          type="text"
+          type="email"
           class="form-control-custom"
           :class="{ error: errors.email }"
-          placeholder="Username or Email"
-          autocomplete="username"
+          placeholder="Email"
+          autocomplete="email"
           @focus="clearError('email')"
         />
-        <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
+        <div v-if="errors.email && errors.email !== 'true'" class="error-msg">{{ errors.email }}</div>
       </div>
 
       <!-- Password -->
@@ -81,7 +102,7 @@
             </svg>
           </button>
         </div>
-        <div v-if="errors.password" class="error-msg">
+        <div v-if="errors.password && errors.password !== 'true'" class="error-msg">
           {{ errors.password }}
         </div>
       </div>
@@ -124,69 +145,24 @@
       </button>
     </form>
 
-    <!-- Divider -->
-    <div class="divider mt-4 mb-3">or continue with</div>
-
-    <!-- Social Buttons -->
-    <div class="d-flex justify-content-center gap-3">
-      <!-- GitHub -->
-      <button class="social-btn" title="GitHub">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path
-            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"
-          />
-        </svg>
-      </button>
-      <!-- Google -->
-      <button class="social-btn" title="Google">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-          />
-          <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-          />
-        </svg>
-      </button>
-      <!-- SSO -->
-      <button class="social-btn" title="SSO">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15"
-          />
-        </svg>
-      </button>
+    <!-- Security Portal Verification Status -->
+    <div class="security-badge-card">
+      <div class="badge-header">
+        <i class="bi bi-shield-fill-check text-success"></i>
+        <span>ANT Security Portal</span>
+      </div>
+      <p class="badge-text">
+        Authenticated sessions are protected by enterprise-grade token encryption and automatic session cycling.
+      </p>
+      <div class="system-status-indicator">
+        <span class="status-dot"></span>
+        <span class="status-text">All Gateway Services Operational</span>
+      </div>
     </div>
 
     <!-- Register -->
     <div class="register-link text-center mt-4">
-      Don't have an account? <router-link to="/register">Create Account</router-link>
+      Don't have an account? <router-link to="">Contact ANT Admin</router-link>
     </div>
   </div>
 </template>
@@ -194,36 +170,92 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
-import { useRequiredValidator } from "@/composables/useRequiredValidator";
+import { useToast } from "../../composables/useToast.js";
+import { useAuthStore } from "../../stores/AuthStore.js";
+import { useRequiredValidator } from "../../composables/useRequiredValidator.js";
 
 const showPass = ref(false);
 const loading = ref(false);
 const authStore = useAuthStore();
 const router = useRouter();
+const toast = useToast();
 
 const form = reactive({ email: "", password: "", remember: false });
+const formError = ref("");
 
-const { errors, clearError, validateEmail, validatePassword } = useRequiredValidator();
+const { errors, clearError: baseClearError, validateField } = useRequiredValidator();
 
-function validate() {
-  const isEmailValid = validateEmail(form.email);
-  const isPasswordValid = validatePassword(form.password);
-  return isEmailValid && isPasswordValid;
-}
+const clearError = (field) => {
+  baseClearError(field);
+  formError.value = "";
+};
+
+const validateEmail = () => {
+  return validateField("email", form.email, "Email is required.");
+};
+
+const validatePassword = () => {
+  if (!form.password) {
+    return validateField("password", form.password, "Password is required.");
+  }
+  if (form.password.length < 6) {
+    errors.password = "Password must be at least 6 characters.";
+    return false;
+  }
+  errors.password = "";
+  return true;
+};
+
+const validateForm = () => {
+  const emailValid = validateEmail();
+  const passwordValid = validatePassword();
+  return emailValid && passwordValid;
+};
 
 async function handleSignIn() {
-  if (!validate()) return;
+  if (!validateForm()) return;
   loading.value = true;
+  formError.value = "";
   try {
     await authStore.login({
       email: form.email,
-      password: form.password
+      password: form.password,
+      remember: form.remember
     });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    toast.success("Welcome back! Login successful");
     router.push("/");
   } catch (error) {
-    // The global interceptor in src/api/api.js handles showing the error toast.
     console.error("Login failed:", error);
+    if (error && error.error) {
+      if (Array.isArray(error.error)) {
+        error.error.forEach((errStr) => {
+          if (errStr.includes("email")) {
+            errors.email = errStr.replace(/"/g, ""); // Clean up quotes
+          }
+          if (errStr.includes("password")) {
+            errors.password = errStr.replace(/"/g, ""); // Clean up quotes
+          }
+        });
+      } else if (typeof error.error === "object") {
+        if (error.error.email) errors.email = error.error.email;
+        if (error.error.password) errors.password = error.error.password;
+      }
+    } else if (
+      error &&
+      (error.message === "Email not found" ||
+       error.message === "Invalid password" ||
+       error.result === false)
+    ) {
+      // Security hardening: use a generic error banner at the top, and turn both field borders red
+      formError.value = "Invalid email or password.";
+      errors.email = "true";
+      errors.password = "true";
+    } else if (error && typeof error === "string") {
+      toast.error(error);
+    } else if (error && error.message) {
+      toast.error(error.message);
+    }
   } finally {
     loading.value = false;
   }
@@ -329,21 +361,92 @@ h1 {
   margin-top: 4px;
 }
 
+.alert-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0.8rem 1rem;
+  background-color: var(--color-danger-light) !important;
+  border: 1px solid var(--color-danger) !important;
+  border-radius: var(--radius-md);
+  color: var(--color-danger) !important;
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin-bottom: var(--spacing-md);
+  animation: slideDown 0.3s ease-out;
+}
+
+.alert-icon {
+  flex-shrink: 0;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .custom-check {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   cursor: pointer;
+  user-select: none;
 }
 .custom-check input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--color-primary);
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-hover);
   cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  margin: 0;
+}
+/* Hover State */
+.custom-check input[type="checkbox"]:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+}
+/* Checked State */
+.custom-check input[type="checkbox"]:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.35);
+}
+/* Center Checkmark Symbol */
+.custom-check input[type="checkbox"]:checked::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-0.5px, -0.5px);
+}
+/* Keyboard Focus Accessibility */
+.custom-check input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 .custom-check span {
   font-size: 0.875rem;
   color: var(--color-text-muted);
+  transition: color var(--transition-base);
+}
+.custom-check:hover span {
+  color: var(--color-text);
 }
 
 .forgot-link {
@@ -403,52 +506,82 @@ h1 {
   transform: none;
 }
 
-.divider {
+.security-badge-card {
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-lg);
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  color: var(--color-text-muted);
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.divider::before,
-.divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  transition: all var(--transition-base);
 }
 
-.social-btn {
-  width: 52px;
-  height: 52px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+.security-badge-card:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 4px 12px var(--color-shadow);
+}
+
+.badge-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: var(--spacing-sm);
+  font-weight: 700;
+  font-size: 0.88rem;
   color: var(--color-text);
-  cursor: pointer;
-  transition:
-    background-color var(--transition-base),
-    transform var(--transition-fast),
-    border-color var(--transition-base),
-    box-shadow var(--transition-base);
 }
-.social-btn:hover,
-.social-btn:focus-visible {
-  background-color: var(--color-surface-hover);
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
+
+.badge-header i {
+  font-size: 1.1rem;
 }
-.social-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+
+.badge-text {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  margin: 0;
 }
-.social-btn:active {
-  transform: translateY(0);
+
+.system-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background-color: var(--color-success);
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-ring 1.8s infinite;
+}
+
+.status-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-success);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
 
 .register-link {
