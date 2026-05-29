@@ -179,6 +179,17 @@ function getAvatarStyle(author) {
   return { background: grad };
 }
 
+function goToProfile(author) {
+  let username = 'user';
+  if (typeof author === 'object' && author !== null) {
+    username = author.username || author.name || 'user';
+  } else if (typeof author === 'string') {
+    username = author;
+  }
+  username = username.replace('@', '').trim();
+  router.push(`/viewprofile/${username}`);
+}
+
 // Search and inject copy buttons in pre tags dynamically
 const setupCopyButtons = () => {
   nextTick(() => {
@@ -309,11 +320,11 @@ const setupCopyButtons = () => {
             <h1 class="thread-title">{{ discussion.title }}</h1>
             
             <div class="thread-meta">
-              <div class="thread-avatar" :style="getAvatarStyle(discussion.author)">
+              <div class="thread-avatar" :style="getAvatarStyle(discussion.author)" @click="goToProfile(discussion.author)">
                 {{ getAvatarInitials(discussion.author) }}
               </div>
               <div class="thread-user-info">
-                <span class="author">{{ getAvatarName(discussion.author) }}</span>
+                <span class="author" @click="goToProfile(discussion.author)">{{ getAvatarName(discussion.author) }}</span>
                 <span class="time">{{ discussion.timestamp }}</span>
               </div>
             </div>
@@ -380,11 +391,11 @@ const setupCopyButtons = () => {
               
               <div v-else v-for="(reply, idx) in discussion.replies" :key="idx" class="reply-card">
                 <div class="reply-header">
-                  <div class="reply-avatar" :style="getAvatarStyle(reply.author)">
+                  <div class="reply-avatar" :style="getAvatarStyle(reply.author)" @click="goToProfile(reply.author)">
                     {{ getAvatarInitials(reply.author) }}
                   </div>
                   <div class="reply-user-info">
-                    <span class="reply-author">{{ getAvatarName(reply.author) }}</span>
+                    <span class="reply-author" @click="goToProfile(reply.author)">{{ getAvatarName(reply.author) }}</span>
                     <span class="reply-time">{{ reply.timestamp || 'Just now' }}</span>
                   </div>
                 </div>
@@ -590,6 +601,12 @@ const setupCopyButtons = () => {
   font-size: 18px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   border: 2px solid var(--color-surface);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.thread-avatar:hover {
+  transform: scale(1.05);
 }
 
 .thread-user-info {
@@ -602,6 +619,13 @@ const setupCopyButtons = () => {
   font-weight: 700;
   color: var(--color-text);
   font-size: 15px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.thread-meta .author:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .thread-meta .time {
@@ -925,6 +949,12 @@ const setupCopyButtons = () => {
   font-size: 13px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   border: 1.5px solid var(--color-surface);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.reply-avatar:hover {
+  transform: scale(1.08);
 }
 
 .reply-user-info {
@@ -936,6 +966,13 @@ const setupCopyButtons = () => {
   font-weight: 700;
   color: var(--color-text);
   font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.reply-author:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .reply-time {
