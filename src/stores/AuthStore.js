@@ -59,14 +59,13 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   const setUser = (newUser) => {
-    console.log("[AuthStore] setUser called with:", newUser);
     user.value = newUser;
   };
 
   const login = async (payloads) => {
     try {
       const { email, password, remember = false } = payloads;
-      const res = await api.post("/auth/login", { email, password });
+      const res = await api.post("/auth/login", { email, password }, { skipGlobalToast: true });
       console.log(res.data);
       if (res.data && res.data.data && res.data.data.token) {
         const data = res.data.data;
@@ -136,7 +135,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const fetchProfile = async () => {
     try {
-      const res = await api.get("/api/users/get/profile");
+      const res = await api.get("/api/get/profile");
       console.log("res", res.data);
       if (res.data && res.data.result !== false) {
         setUser(res.data.data || res.data);
@@ -144,21 +143,10 @@ export const useAuthStore = defineStore("auth", () => {
       }
 
       console.warn("No user data found in profile response:", res.data);
+      logout();
     } catch (err) {
-      const errMsg = (err.response?.data?.message || err.response?.data?.error || err.message || "").toString().toLowerCase();
-      // Force local logout on any token error, even if the status is not exactly 401
-      const isTokenErr = 
-        err.response?.status === 401 || 
-        errMsg.includes("invalid token") || 
-        errMsg.includes("token expired") || 
-        errMsg.includes("jwt expired") || 
-        errMsg.includes("unauthorized") ||
-        errMsg.includes("expired token");
-
-      if (isTokenErr) {
-        console.warn("[AuthStore] Stale/Expired token detected, clearing local session...");
-        logout();
-      }
+      console.warn("[AuthStore] Profile fetch failed, clearing local session...", err.message);
+      logout();
       throw err.response?.data || err.message || err;
     }
   };
@@ -186,5 +174,51 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
-  return { user, token, refreshToken, isAuthenticated, login, fetchProfile, refreshAccessToken, logout };
+  const forgotPassword = async (email) => {
+    try {
+      const res = await api.post("/api/forgot-password", { email }, { skipGlobalToast: true });
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
+  };
+
+  const verifyAccount = async (otpCode) => {
+    try {
+      const resetToken = sessionStorage.getItem("ANT_ResetToken");
+      const payload = { otp: otpCode };
+      const config = { skipGlobalToast: true };
+      if (resetToken) {
+        payload.resetToken = resetToken;
+        config.headers = {
+          Authorization: `Bearer ${resetToken}`
+        };
+      }
+      const res = await api.post("/api/verify-otp", payload, config);
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
+  };
+
+  const resetPassword = async (newPassword, confirmPassword, verifiedToken) => {
+    try {
+      const token = verifiedToken || sessionStorage.getItem("ANT_VerifiedToken");
+      const config = { skipGlobalToast: true };
+      if (token) {
+        config.headers = {
+          Authorization: `Bearer ${token}`
+        };
+      }
+      const res = await api.post("/api/reset-password", {
+        newPassword,
+        confirmPassword
+      }, config);
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
+  };
+
+  return { user, token, refreshToken, isAuthenticated, login, fetchProfile, refreshAccessToken, logout, forgotPassword, verifyAccount, resetPassword };
 });
