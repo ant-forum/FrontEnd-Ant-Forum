@@ -111,7 +111,10 @@ export const useAuthStore = defineStore("auth", () => {
         const accToken = data.token;
         const refToken = data.refresh_token || data.refreshToken;
         // Strip out tokens from user profile object to avoid cluttering
-        const { token, refresh_token, refreshToken, ...userObj } = data;
+        const userObj = { ...data };
+        delete userObj.token;
+        delete userObj.refresh_token;
+        delete userObj.refreshToken;
 
         // Persist the remember preference
         isRemembered.value = remember;

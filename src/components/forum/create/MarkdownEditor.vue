@@ -291,7 +291,7 @@ const handleImageUpload = async (event) => {
   if (!file) return;
 
   const imageUrl = await uploadImageToServer(file);
-  const imageLink = `[${file.name}](${imageUrl})`;
+  const imageLink = `![${file.name}](${imageUrl})`;
 
   await replaceSelection(`\n${imageLink}\n`);
   event.target.value = "";
@@ -333,8 +333,7 @@ const renderInlineMarkdown = (text = "") => {
   let html = escapeHtml(text);
 
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
-    const label = alt || url;
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    return `<img class="markdown-image" src="${url}" alt="${alt}" loading="lazy">`;
   });
 
   html = html.replace(
@@ -1206,6 +1205,16 @@ const handleBlur = () => {
 
 .preview-body :deep(p) {
   margin-bottom: 12px;
+}
+
+.preview-body :deep(.markdown-image) {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  margin: 14px 0;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
 }
 
 .preview-body :deep(blockquote) {

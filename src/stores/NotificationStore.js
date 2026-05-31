@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import api from "@/api/api";
 
 export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref([]);
