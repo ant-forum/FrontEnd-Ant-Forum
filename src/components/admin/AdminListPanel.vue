@@ -20,7 +20,28 @@
             <th v-if="showActions" class="text-end">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody v-if="isLoading">
+          <tr v-for="i in 5" :key="i" class="skeleton-row">
+            <td v-for="column in columns" :key="column.key">
+              <div v-if="column.key === 'name'" class="identity-skeleton d-flex align-items-center gap-3">
+                <div class="skeleton-circle shimmer"></div>
+                <div class="d-flex flex-column gap-2 flex-grow-1">
+                  <div class="skeleton-line w-75 shimmer"></div>
+                  <div class="skeleton-line w-50 shimmer"></div>
+                </div>
+              </div>
+              <div v-else-if="column.type === 'status'" class="skeleton-badge shimmer"></div>
+              <div v-else class="skeleton-line w-75 shimmer"></div>
+            </td>
+            <td v-if="showActions" class="text-end">
+              <div class="skeleton-actions d-flex justify-content-end gap-2">
+                <div class="skeleton-btn shimmer"></div>
+                <div class="skeleton-btn shimmer"></div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-else>
           <tr v-for="row in visibleRows" :key="row.name">
             <td v-for="column in columns" :key="column.key">
               <div v-if="column.key === 'name'" class="identity-cell">
@@ -77,6 +98,10 @@ const props = defineProps({
   showActions: {
     type: Boolean,
     default: true,
+  },
+  isLoading: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -264,6 +289,86 @@ defineEmits(['edit', 'delete']);
   .search-box {
     width: 100%;
     min-width: 0;
+  }
+}
+
+/* Shimmer Skeleton Styles */
+.skeleton-row td {
+  padding: 1.15rem 0.8rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.skeleton-line {
+  height: 12px;
+  background: var(--color-border-soft);
+  border-radius: 4px;
+}
+
+[data-theme='dark'] .skeleton-line {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.skeleton-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-border-soft);
+  flex-shrink: 0;
+}
+
+[data-theme='dark'] .skeleton-circle {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.skeleton-badge {
+  width: 64px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-border-soft);
+}
+
+[data-theme='dark'] .skeleton-badge {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.skeleton-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--color-border-soft);
+}
+
+[data-theme='dark'] .skeleton-btn {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-border-soft) 25%,
+    var(--color-surface-hover) 37%,
+    var(--color-border-soft) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer-animation 1.4s ease infinite;
+}
+
+[data-theme='dark'] .shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 37%,
+    rgba(255, 255, 255, 0.04) 63%
+  );
+  background-size: 400% 100%;
+}
+
+@keyframes shimmer-animation {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
   }
 }
 </style>

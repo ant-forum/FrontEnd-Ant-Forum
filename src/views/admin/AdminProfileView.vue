@@ -167,6 +167,7 @@
                     <div class="field-block">
                       <label>Administrative Role</label>
                       <select class="form-control premium-input form-select" v-model="editForm.role">
+                        <option value="admin">Admin</option>
                         <option value="super admin">Super Admin</option>
                         <option value="moderator">Moderator</option>
                         <option value="dean of students">Dean of Students</option>
@@ -426,6 +427,8 @@ const adminName = computed(() => authStore.user?.name || authStore.user?.usernam
 const adminEmail = computed(() => authStore.user?.email || 'admin@ant.dev');
 const adminRole = computed(() => {
   const role = authStore.user?.role || 'Super Admin';
+  if (role.toLowerCase() === 'admin') return 'Admin';
+  if (role.toLowerCase() === 'super admin') return 'Super Admin';
   if (role.toLowerCase() === 'dean of students') return 'Dean of Students';
   if (role.toLowerCase() === 'academic coordinator') return 'Academic Coordinator';
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
@@ -668,24 +671,25 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 .academic-stat-box {
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 12px;
   transition: all var(--transition-base);
 }
 
 .academic-stat-box:hover {
   background: var(--color-surface);
-  border-color: var(--color-text-muted);
-  transform: translateY(-1px);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm), 0 4px 12px rgba(99, 102, 241, 0.04);
 }
 
 .stat-number {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--color-text);
 }
 
 .academic-stat-box small {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
   display: block;
 }
@@ -718,6 +722,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 .profile-tab-btn.active {
   color: var(--color-primary);
   background: var(--color-primary-light);
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.15);
 }
 
 /* Form Styling */

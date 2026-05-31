@@ -18,6 +18,7 @@
       placeholder="Search users"
       :columns="columns"
       :rows="mappedUsers"
+      :is-loading="usersStore.isLoading"
       @edit="openEditModal"
       @delete="openDeleteModal"
     />

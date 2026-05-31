@@ -1,123 +1,99 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import api from "@/api/api";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import api from '@/api/api.js';
 
-export const useUsersStore = defineStore("users", () => {
-  const isLoading = ref(false);
+const ensureSuccess = (response) => {
+  if (response.data && response.data.result === false) {
+    throw new Error(response.data.message ?? 'User request failed.');
+  }
+};
 
+export const useUsersStore = defineStore('users', () => {
   const users = ref([]);
   const user = ref(null);
+  const isLoading = ref(false);
 
-  /**
-   * Admin Create User
-   * @param {Object} payload 
-   * @param {string} payload.username
-   * @param {string} payload.email
-   * @param {string} payload.password
-   * @param {string} payload.role - 'user' or 'mentor'
-   * @param {string} payload.gender - 'male' or 'female'
-   */
+  // Real backend endpoint for creating users
   const createUser = async (payload) => {
     try {
       isLoading.value = true;
-      const response = await api.post("/auth/createUsers", {
+      const response = await api.post('/auth/createUsers', {
         username: payload.username,
         email: payload.email,
         password: payload.password,
         role: payload.role,
         gender: payload.gender,
       });
+      ensureSuccess(response);
 
-      if (response.data && response.data.result === false) {
-        throw new Error(response.data.message || "Failed to create user");
-      }
+      // Save created user in-memory so they show up in the table instantly!
+      const newUserObj = {
+        id: response.data.data?.id || response.data.data?._id || String(Date.now()),
+        username: payload.username,
+        email: payload.email,
+        role: payload.role,
+        gender: payload.gender,
+        createdAt: new Date().toISOString(),
+      };
+      users.value.push(newUserObj);
 
       return response.data;
-    } catch (err) {
-      throw err.response?.data || err;
     } finally {
       isLoading.value = false;
     }
   };
 
-  /**
-   * Admin Get All Users
-   */
+  // Admin Get All Users (Real API Endpoint)
   const fetchUsers = async () => {
     try {
       isLoading.value = true;
-      const response = await api.get("/api/admin/gell-all-users");
-      if (response.data && response.data.result === false) {
-        throw new Error(response.data.message || "Failed to fetch users");
-      }
+      const response = await api.get('/api/admin/gell-all-users');
+      ensureSuccess(response);
       users.value = response.data.data || response.data;
       return users.value;
-    } catch (err) {
-      throw err.response?.data || err;
     } finally {
       isLoading.value = false;
     }
   };
 
-  /**
-   * Admin Get User by ID
-   */
   const fetchUserById = async (id) => {
     try {
       isLoading.value = true;
       const response = await api.get(`/api/admin/get-user/${id}`);
-      if (response.data && response.data.result === false) {
-        throw new Error(response.data.message || "Failed to fetch user");
-      }
+      ensureSuccess(response);
       user.value = response.data.data || response.data;
       return user.value;
-    } catch (err) {
-      throw err.response?.data || err;
     } finally {
       isLoading.value = false;
     }
   };
 
-  /**
-   * Admin Update User
-   */
   const updateUser = async (id, payload) => {
     try {
       isLoading.value = true;
       const response = await api.put(`/api/admin/update-user/${id}`, payload);
-      if (response.data && response.data.result === false) {
-        throw new Error(response.data.message || "Failed to update user");
-      }
+      ensureSuccess(response);
       return response.data;
-    } catch (err) {
-      throw err.response?.data || err;
     } finally {
       isLoading.value = false;
     }
   };
 
-  /**
-   * Admin Delete User
-   */
   const deleteUser = async (id) => {
     try {
       isLoading.value = true;
       const response = await api.delete(`/api/admin/delete-user/${id}`);
-      if (response.data && response.data.result === false) {
-        throw new Error(response.data.message || "Failed to delete user");
-      }
+      ensureSuccess(response);
       return response.data;
-    } catch (err) {
-      throw err.response?.data || err;
     } finally {
       isLoading.value = false;
     }
   };
 
   return {
-    isLoading,
     users,
     user,
+    isLoading,
     createUser,
     fetchUsers,
     fetchUserById,

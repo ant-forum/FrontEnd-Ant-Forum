@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
 import { useBlogStore } from '../../stores/BlogStore';
@@ -7,6 +8,8 @@ import { useAuthStore } from '../../stores/AuthStore';
 
 const blogStore = useBlogStore();
 const authStore = useAuthStore();
+const route = useRoute();
+const router = useRouter();
 
 const searchQuery = ref('');
 const selectedCategory = ref('All');
@@ -45,6 +48,7 @@ const showModal = ref(false);
 const isEditing = ref(false);
 const editingBlogId = ref(null);
 const thumbnailPreview = ref(null);
+const cameFromAdmin = ref(false);
 
 const form = ref({
   title: '',
@@ -140,6 +144,14 @@ const openEditModal = (post) => {
   showModal.value = true;
 };
 
+const closeModal = () => {
+  showModal.value = false;
+  if (cameFromAdmin.value) {
+    cameFromAdmin.value = false;
+    router.push('/admin/blogs');
+  }
+};
+
 const handleFileChange = (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -177,7 +189,7 @@ const submitForm = async () => {
       await blogStore.fetchBlogs();
     }
     
-    showModal.value = false;
+    closeModal();
   } catch (err) {
     console.error("Failed to submit blog form:", err);
   }
@@ -442,7 +454,7 @@ const handleImgError = (e) => {
           <h3 class="fw-bold text-adaptive mb-0">
             {{ isEditing ? 'Edit Blog Article' : 'Create New Article' }}
           </h3>
-          <button @click="showModal = false" class="btn-close-modal border-0 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <button @click="closeModal" class="btn-close-modal border-0 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
             <i class="bi bi-x-lg text-adaptive"></i>
           </button>
         </div>
@@ -492,7 +504,7 @@ const handleImgError = (e) => {
             </div>
             
             <div class="col-12 d-flex justify-content-end gap-3 mt-4">
-              <button type="button" @click="showModal = false" class="btn btn-light rounded-pill px-4 py-2 fw-bold border-theme text-adaptive">
+              <button type="button" @click="closeModal" class="btn btn-light rounded-pill px-4 py-2 fw-bold border-theme text-adaptive">
                 Cancel
               </button>
               <button type="submit" class="btn btn-purple rounded-pill px-4 py-2 fw-bold text-white shadow-sm d-flex align-items-center gap-2">

@@ -100,10 +100,9 @@
             <div class="field-block">
               <label for="blog-category">Category</label>
               <select id="blog-category" v-model="form.category_id" class="form-select">
-                <option value="1">Announcements</option>
-                <option value="2">Guides</option>
-                <option value="3">Policy</option>
-                <option value="4">Showcase</option>
+                <option v-for="cat in blogStore.categories" :key="cat.id" :value="cat.id.toString()">
+                  {{ cat.name || cat.title }}
+                </option>
               </select>
             </div>
 
@@ -118,9 +117,10 @@
           </div>
 
           <div class="publish-actions">
-            <button class="btn btn-light border" type="button" @click="resetForm">Clear</button>
-            <button class="btn btn-primary" type="submit" form="blog-post-form">
-              <i class="bi bi-send-check"></i>
+            <button class="btn btn-light border" type="button" @click="resetForm" :disabled="blogStore.isLoading">Clear</button>
+            <button class="btn btn-primary" type="submit" form="blog-post-form" :disabled="blogStore.isLoading">
+              <span v-if="blogStore.isLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+              <i v-else class="bi bi-send-check"></i>
               <span>{{ saveButtonLabel }}</span>
             </button>
           </div>
@@ -187,13 +187,21 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import MarkdownEditor from '../../components/forum/create/MarkdownEditor.vue';
+import { useBlogStore } from '../../stores/BlogStore.js';
+import { useToast } from '../../composables/useToast.js';
+
+const blogStore = useBlogStore();
+const router = useRouter();
+const toast = useToast();
 
 const saved = ref(false);
 const thumbnailInputRef = ref(null);
 const thumbnailPreview = ref('');
+const selectedFile = ref(null);
 
 const form = reactive({
   title: '',
@@ -203,12 +211,16 @@ const form = reactive({
   status: 'draft',
 });
 
-const categories = {
-  1: 'Announcements',
-  2: 'Guides',
-  3: 'Policy',
-  4: 'Showcase',
-};
+onMounted(async () => {
+  try {
+    await blogStore.fetchCategories();
+    if (blogStore.categories.length > 0) {
+      form.category_id = blogStore.categories[0].id.toString();
+    }
+  } catch (err) {
+    console.error('Failed to load categories:', err);
+  }
+});
 
 const previewText = computed(() => {
   const text = form.description
@@ -224,7 +236,11 @@ const descriptionWordCount = computed(() => {
   return text ? text.split(/\s+/).length : 0;
 });
 
-const categoryLabel = computed(() => categories[form.category_id] || 'Uncategorized');
+const categoryLabel = computed(() => {
+  const found = blogStore.categories.find(c => c.id.toString() === form.category_id.toString());
+  return found ? (found.name || found.title) : 'Guides';
+});
+
 const hasClearTitle = computed(() => form.title.trim().length >= 8);
 const hasUsefulDescription = computed(() => descriptionWordCount.value >= 40);
 
@@ -249,19 +265,58 @@ const releaseThumbnailPreview = () => {
 const handleThumbnail = (event) => {
   releaseThumbnailPreview();
   const file = event.target.files?.[0];
-  form.thumbnail = file?.name || '';
-  if (file) thumbnailPreview.value = URL.createObjectURL(file);
+  if (file) {
+    selectedFile.value = file;
+    form.thumbnail = file.name;
+    thumbnailPreview.value = URL.createObjectURL(file);
+  } else {
+    selectedFile.value = null;
+    form.thumbnail = '';
+    thumbnailPreview.value = '';
+  }
 };
 
-const savePost = () => {
-  saved.value = true;
+const savePost = async () => {
+  if (!form.title.trim()) {
+    toast.error('Please enter a blog title.');
+    return;
+  }
+  if (!form.description.trim()) {
+    toast.error('Please enter the blog content.');
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('title', form.title);
+    formData.append('description', form.description);
+    formData.append('category_id', form.category_id);
+    formData.append('status', form.status);
+    
+    if (selectedFile.value) {
+      formData.append('thumbnail', selectedFile.value);
+    }
+
+    await blogStore.createBlog(formData);
+    
+    toast.success('Blog created successfully!');
+    saved.value = true;
+
+    setTimeout(() => {
+      router.push('/admin/blogs');
+    }, 800);
+  } catch (err) {
+    console.error('Failed to create blog:', err);
+    toast.error(err.message || 'Failed to create blog.');
+  }
 };
 
 const resetForm = () => {
   releaseThumbnailPreview();
+  selectedFile.value = null;
   form.title = '';
   form.description = '';
-  form.category_id = '2';
+  form.category_id = blogStore.categories.length > 0 ? blogStore.categories[0].id.toString() : '2';
   form.thumbnail = '';
   form.status = 'draft';
   saved.value = false;
