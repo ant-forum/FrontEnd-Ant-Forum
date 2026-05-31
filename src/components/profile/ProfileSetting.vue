@@ -136,11 +136,7 @@ const handleSubmit = async () => {
   errorMessage.value = "";
 
   try {
-    const response = await api.put("/api/users/me", payload, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await api.put("/api/users/me", payload);
 
     const updatedUser = response.data?.user ?? response.data ?? {};
     successMessage.value = "Profile saved successfully.";

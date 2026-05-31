@@ -2,14 +2,13 @@ import axios from "axios";
 import { useToast } from "../composables/useToast.js";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.DEV ? "" : import.meta.env.VITE_API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
     Accept: "application/json",
   },
 });
 
-// Request Interceptor: Synchronously attach token from storage
+// Request Interceptor: Attach token and handle Content-Type for FormData
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("ANT_Token") || sessionStorage.getItem("ANT_Token");
   
@@ -21,6 +20,15 @@ api.interceptors.request.use((config) => {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
   }
+
+  // When sending FormData, let the browser/axios auto-set Content-Type
+  // with the correct multipart boundary. Otherwise default to JSON.
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  } else if (!config.headers["Content-Type"]) {
+    config.headers["Content-Type"] = "application/json";
+  }
+
   return config;
 });
 

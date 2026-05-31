@@ -58,7 +58,46 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  const normalizeAvatar = (avatarPath) => {
+    if (!avatarPath) return null;
+    let path = avatarPath;
+    if (path.includes("localhost:3000")) {
+      path = path.replace(/https?:\/\/localhost:3000/, "");
+    }
+    const base = import.meta.env.VITE_API_BASE_URL || "";
+    if (base) {
+      const cleanBase = base.replace(/https?:\/\//, "").replace(/\/$/, "");
+      const baseRegex = new RegExp(`https?:\\/\\/${cleanBase}`, "i");
+      path = path.replace(baseRegex, "");
+    }
+    
+    // Strip any /public/ or public/ prefixes
+    if (path.includes("/public/")) {
+      path = path.replace("/public/", "/");
+    } else if (path.startsWith("public/")) {
+      path = path.replace("public/", "");
+    }
+    
+    if (!path.startsWith("http") && !path.startsWith("data:")) {
+      if (!path.startsWith("/")) {
+        path = `/${path}`;
+      }
+    }
+    return path;
+  };
+
   const setUser = (newUser) => {
+    if (newUser) {
+      if (newUser.profile_pic) {
+        newUser.profile_pic = normalizeAvatar(newUser.profile_pic);
+      }
+      if (newUser.avatar) {
+        newUser.avatar = normalizeAvatar(newUser.avatar);
+      }
+      if (newUser.avatarUrl) {
+        newUser.avatarUrl = normalizeAvatar(newUser.avatarUrl);
+      }
+    }
     user.value = newUser;
   };
 
