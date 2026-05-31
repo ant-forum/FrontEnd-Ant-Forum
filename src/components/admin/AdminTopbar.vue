@@ -33,19 +33,22 @@
         <span></span>
       </button>
 
-      <div class="topbar-profile">
-        <span class="profile-avatar">AR</span>
+      <router-link to="/admin/profile" class="topbar-profile text-decoration-none">
+        <img v-if="adminAvatar" :src="adminAvatar" class="profile-avatar border border-1 border-primary-subtle" style="object-fit: cover; border-radius: 50%;" width="38" height="38">
+        <span v-else class="profile-avatar">{{ adminInitials }}</span>
         <div>
-          <strong>Alex Rivera</strong>
-          <small>Super Admin</small>
+          <strong>{{ adminName }}</strong>
+          <small class="text-muted">{{ adminRole }}</small>
         </div>
-      </div>
+      </router-link>
     </div>
   </header>
 </template>
 
 <script setup>
 import { useDarkMode } from '../../composables/useDarkMode';
+import { useAuthStore } from '../../stores/AuthStore';
+import { computed } from 'vue';
 
 defineProps({
   currentTitle: {
@@ -59,6 +62,23 @@ defineProps({
 });
 
 const { isDark, toggleDarkMode } = useDarkMode();
+const authStore = useAuthStore();
+
+const adminName = computed(() => authStore.user?.name || authStore.user?.username || 'Alex Rivera');
+const adminRole = computed(() => {
+  const r = authStore.user?.role || 'Super Admin';
+  return r.charAt(0).toUpperCase() + r.slice(1).toLowerCase();
+});
+const adminInitials = computed(() => {
+  return adminName.value
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase() || 'AR';
+});
+const adminAvatar = computed(() => authStore.user?.avatar || authStore.user?.profile_pic || authStore.user?.avatarUrl);
 </script>
 
 <style scoped>
@@ -126,6 +146,13 @@ const { isDark, toggleDarkMode } = useDarkMode();
   background: var(--color-input-bg);
   border: 1px solid var(--color-border);
   border-radius: 8px;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
+}
+
+.topbar-search:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+  background: var(--color-surface);
 }
 
 .topbar-search input {
@@ -135,6 +162,12 @@ const { isDark, toggleDarkMode } = useDarkMode();
   background: transparent;
   color: var(--color-text);
   font-size: 0.9rem;
+}
+
+.topbar-search input:focus,
+.topbar-search input:focus-visible {
+  outline: none;
+  box-shadow: none !important;
 }
 
 .topbar-icon {

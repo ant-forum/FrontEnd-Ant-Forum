@@ -149,6 +149,13 @@ defineEmits(['edit', 'delete']);
   align-items: center;
   gap: 0.6rem;
   padding: 0 0.8rem;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
+}
+
+.search-box:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+  background: var(--color-surface);
 }
 
 .search-box input {
@@ -157,6 +164,12 @@ defineEmits(['edit', 'delete']);
   background: transparent;
   color: var(--color-text);
   width: 100%;
+}
+
+.search-box input:focus,
+.search-box input:focus-visible {
+  outline: none;
+  box-shadow: none !important;
 }
 
 .clean-table thead th {

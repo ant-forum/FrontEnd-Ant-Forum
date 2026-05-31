@@ -157,6 +157,12 @@ const routes = [
     component: AdminDashboard,
   },
   {
+    path: "/admin/profile",
+    name: "AdminProfile",
+    meta: { requiresAuth: true, role: "admin", title: "Admin Profile" },
+    component: () => import("../views/admin/AdminProfileView.vue"),
+  },
+  {
     path: "/admin/users",
     name: "UserManagement",
     meta: { requiresAuth: true, role: "admin" },
