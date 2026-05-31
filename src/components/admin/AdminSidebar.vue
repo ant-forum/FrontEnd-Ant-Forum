@@ -20,7 +20,7 @@
             <router-link 
               :to="item.path" 
               class="nav-link d-flex align-items-center px-3 py-2-5 rounded-3"
-              active-class="premium-active"
+              :class="{ 'premium-active': isRouteActive(item.path) }"
             >
               <i :class="[item.icon, 'me-3']"></i>
               <span class="nav-text">{{ item.label }}</span>
@@ -35,6 +35,9 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 
 const navigationCategories = ref([
   {
@@ -57,6 +60,13 @@ const navigationCategories = ref([
     ]
   }
 ]);
+
+const isRouteActive = (itemPath) => {
+  if (itemPath === '/admin') {
+    return route.path === '/admin';
+  }
+  return route.path.startsWith(itemPath);
+};
 </script>
 
 <style scoped>

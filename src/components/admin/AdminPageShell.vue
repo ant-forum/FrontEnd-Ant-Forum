@@ -3,7 +3,7 @@
     <AdminSidebar />
 
     <main class="admin-main flex-grow-1">
-      <AdminTopbar :current-title="title" />
+      <AdminTopbar :current-title="title" :breadcrumbs="breadcrumbs" />
 
       <div class="admin-content-wrapper admin-page-content">
         <header class="admin-page-header">
@@ -44,6 +44,10 @@ defineProps({
   metrics: {
     type: Array,
     default: () => [],
+  },
+  breadcrumbs: {
+    type: Array,
+    default: null,
   },
 });
 </script>

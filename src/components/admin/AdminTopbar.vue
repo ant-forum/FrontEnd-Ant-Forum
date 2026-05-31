@@ -3,8 +3,17 @@
     <div class="topbar-left">
       <div class="breadcrumb-line">
         <router-link to="/admin">Admin</router-link>
-        <i class="bi bi-chevron-right"></i>
-        <span>{{ currentTitle }}</span>
+        <template v-if="breadcrumbs && breadcrumbs.length">
+          <template v-for="(crumb, idx) in breadcrumbs" :key="idx">
+            <i class="bi bi-chevron-right"></i>
+            <router-link v-if="crumb.to" :to="crumb.to">{{ crumb.label }}</router-link>
+            <span v-else>{{ crumb.label }}</span>
+          </template>
+        </template>
+        <template v-else>
+          <i class="bi bi-chevron-right"></i>
+          <span>{{ currentTitle }}</span>
+        </template>
       </div>
       <h1>{{ currentTitle }}</h1>
     </div>
@@ -42,6 +51,10 @@ defineProps({
   currentTitle: {
     type: String,
     default: 'Overview',
+  },
+  breadcrumbs: {
+    type: Array,
+    default: null,
   },
 });
 

@@ -3,6 +3,10 @@
     title="Create Blog"
     kicker="Admin Publishing"
     subtitle="Write and prepare an official long-form article for the ANT Forum community."
+    :breadcrumbs="[
+      { label: 'Blog Management', to: '/admin/blogs' },
+      { label: 'Create Blog' }
+    ]"
   >
     <template #actions>
       <router-link class="btn btn-light border back-link" to="/admin/blogs">

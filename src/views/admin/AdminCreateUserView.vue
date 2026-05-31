@@ -2,7 +2,11 @@
   <AdminPageShell
     title="Create User"
     kicker="Admin Users"
-    subtitle="Add a user, choose access, and send the invite after review."
+    subtitle="Add a student or mentor, assign their role, and create their account."
+    :breadcrumbs="[
+      { label: 'Users', to: '/admin/users' },
+      { label: 'Create User' }
+    ]"
   >
     <template #actions>
       <router-link class="btn btn-light border back-link" to="/admin/users">
@@ -12,66 +16,59 @@
     </template>
 
     <section class="create-user-grid">
-      <form class="admin-panel clean-form" @submit.prevent="saved = true">
+      <form class="admin-panel clean-form" @submit.prevent="handleCreateUser">
         <div class="form-heading">
           <span class="panel-icon">
             <i class="bi bi-person-plus"></i>
           </span>
           <div>
             <h2>Account Details</h2>
-            <p>Keep the profile clear and assign the smallest role needed.</p>
+            <p>Ensure all information matches the API schema requirements.</p>
           </div>
         </div>
 
         <div class="form-row">
           <div class="field-block">
-            <label>Full Name</label>
-            <input v-model="form.name" class="form-control" type="text" placeholder="Enter full name">
+            <label>Username</label>
+            <input v-model="form.username" class="form-control" type="text" placeholder="Enter username" required>
           </div>
 
           <div class="field-block">
             <label>Email Address</label>
-            <input v-model="form.email" class="form-control" type="email" placeholder="name@example.com">
+            <input v-model="form.email" class="form-control" type="email" placeholder="name@example.com" required>
           </div>
         </div>
 
         <div class="form-row">
           <div class="field-block">
-            <label>Role</label>
-            <select v-model="form.role" class="form-select">
-              <option>Student</option>
-              <option>Moderator</option>
-              <option>Admin</option>
-            </select>
+            <label>Password</label>
+            <input v-model="form.password" class="form-control" type="password" placeholder="Enter password (min 6 chars)" required>
           </div>
 
           <div class="field-block">
-            <label>Status</label>
-            <select v-model="form.status" class="form-select">
-              <option>Invite Pending</option>
-              <option>Active</option>
-              <option>Suspended</option>
+            <label>Role</label>
+            <select v-model="form.role" class="form-select" required>
+              <option value="user">Student</option>
+              <option value="mentor">Mentor</option>
             </select>
           </div>
         </div>
 
-        <div class="field-block">
-          <label>Notes</label>
-          <textarea v-model="form.notes" class="form-control" rows="4" placeholder="Optional admin notes"></textarea>
+        <div class="form-row">
+          <div class="field-block">
+            <label>Gender</label>
+            <select v-model="form.gender" class="form-select" required>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
         </div>
 
-        <label class="invite-toggle">
-          <span>
-            <strong>Send invite email</strong>
-            <small>User receives setup instructions after saving.</small>
-          </span>
-          <input v-model="form.sendInvite" class="form-check-input" type="checkbox">
-        </label>
-
         <div class="form-actions">
-          <button class="btn btn-primary" type="submit">
-            <i class="bi bi-check2"></i>
-            <span>{{ saved ? 'Saved' : 'Create User' }}</span>
+          <button class="btn btn-primary" type="submit" :disabled="usersStore.isLoading">
+            <span v-if="usersStore.isLoading" class="spinner-border spinner-border-sm me-2"></span>
+            <i v-else class="bi bi-check2"></i>
+            <span>{{ usersStore.isLoading ? 'Creating...' : 'Create User' }}</span>
           </button>
         </div>
       </form>
@@ -79,11 +76,11 @@
       <aside class="side-stack">
         <div class="admin-panel preview-panel">
           <div class="preview-avatar">{{ initials }}</div>
-          <h2>{{ form.name || 'New User' }}</h2>
+          <h2>{{ form.username || 'New User' }}</h2>
           <p>{{ form.email || 'No email added' }}</p>
           <div class="preview-meta">
-            <span>{{ form.role }}</span>
-            <span>{{ form.status }}</span>
+            <span class="text-capitalize">{{ form.role === 'user' ? 'Student' : form.role }}</span>
+            <span class="text-capitalize">{{ form.gender }}</span>
           </div>
         </div>
 
@@ -91,9 +88,9 @@
           <h2>Before Saving</h2>
           <ul>
             <li><i class="bi bi-check-circle"></i>Use a real email address</li>
-            <li><i class="bi bi-check-circle"></i>Pick the smallest role needed</li>
-            <li><i class="bi bi-check-circle"></i>Review invite status</li>
-            <li><i class="bi bi-check-circle"></i>Record notes when needed</li>
+            <li><i class="bi bi-check-circle"></i>Provide a password of at least 6 characters</li>
+            <li><i class="bi bi-check-circle"></i>Confirm the selected role is appropriate</li>
+            <li><i class="bi bi-check-circle"></i>Select correct gender identity</li>
           </ul>
         </div>
       </aside>
@@ -102,24 +99,29 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
+import { useUsersStore } from '../../stores/UsersStore';
+import { useToast } from '../../composables/useToast';
 
-const saved = ref(false);
+const usersStore = useUsersStore();
+const router = useRouter();
+const toast = useToast();
+
 const form = reactive({
-  name: '',
+  username: '',
   email: '',
-  role: 'Student',
-  status: 'Invite Pending',
-  notes: '',
-  sendInvite: true,
+  password: '',
+  role: 'user',
+  gender: 'male',
 });
 
 const initials = computed(() => {
-  const name = form.name.trim();
-  if (!name) return 'NU';
+  const username = form.username.trim();
+  if (!username) return 'NU';
 
-  return name
+  return username
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
@@ -127,6 +129,32 @@ const initials = computed(() => {
     .join('')
     .toUpperCase();
 });
+
+const handleCreateUser = async () => {
+  if (form.password.length < 6) {
+    toast.error('Password must be at least 6 characters.');
+    return;
+  }
+
+  try {
+    const res = await usersStore.createUser({
+      username: form.username,
+      email: form.email,
+      password: form.password,
+      role: form.role,
+      gender: form.gender,
+    });
+
+    toast.success('User created successfully!');
+    
+    // Redirect to User Management page
+    router.push('/admin/users');
+  } catch (error) {
+    console.error('Failed to create user:', error);
+    const errorMsg = error.message || error.msg || 'An error occurred while creating user.';
+    toast.error(errorMsg);
+  }
+};
 </script>
 
 <style scoped>

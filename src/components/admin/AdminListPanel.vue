@@ -36,8 +36,11 @@
               <span v-else>{{ row[column.key] }}</span>
             </td>
             <td v-if="showActions" class="text-end">
-              <button class="icon-btn small" type="button" title="Edit">
+              <button class="icon-btn small me-1" type="button" title="Edit" @click="$emit('edit', row)">
                 <i class="bi bi-pencil"></i>
+              </button>
+              <button class="icon-btn small text-danger" type="button" title="Delete" @click="$emit('delete', row)">
+                <i class="bi bi-trash"></i>
               </button>
             </td>
           </tr>
@@ -102,6 +105,8 @@ const statusClass = (status) => {
   if (value.includes('suspended')) return 'danger';
   return 'neutral';
 };
+
+defineEmits(['edit', 'delete']);
 </script>
 
 <style scoped>

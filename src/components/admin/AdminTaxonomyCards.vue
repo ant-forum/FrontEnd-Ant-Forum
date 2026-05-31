@@ -11,8 +11,13 @@
       </button>
     </div>
 
-    <div class="taxonomy-grid">
-      <article v-for="item in items" :key="item.id || item.name" class="taxonomy-card">
+    <div v-if="isLoading" class="taxonomy-empty">
+      <span class="spinner-border spinner-border-sm"></span>
+      <span>Loading {{ title.toLowerCase() }}...</span>
+    </div>
+
+    <div v-else-if="items.length" class="taxonomy-grid">
+      <article v-for="item in items" :key="item.id ?? item.name" class="taxonomy-card">
         <span :class="['taxonomy-icon', item.colorClass]">
           <i :class="['bi', icon]"></i>
         </span>
@@ -20,24 +25,56 @@
           <h3>{{ item.name }}</h3>
           <p>{{ item.description }}</p>
           <div class="taxonomy-meta">
-            <span>{{ item.items }} items</span>
-            <span>{{ item.type || item.owner }}</span>
+            <span v-if="item.items !== undefined">{{ item.items }} items</span>
+            <span v-if="item.type" class="taxonomy-type">
+              <i class="bi bi-layers"></i>
+              {{ item.type }}
+            </span>
+            <span v-else-if="item.owner" class="taxonomy-type">
+              <i class="bi bi-layers"></i>
+              {{ item.owner }}
+            </span>
           </div>
         </div>
-        <div class="taxonomy-actions">
-          <button class="icon-btn" type="button" :title="`Edit ${item.name}`" @click="$emit('edit', item)">
-            <i class="bi bi-pencil"></i>
+        <div class="taxonomy-menu">
+          <button
+            class="icon-btn"
+            type="button"
+            :title="`Actions for ${item.name}`"
+            aria-label="Open actions menu"
+            @click.stop="toggleMenu(item)"
+          >
+            <i class="bi bi-three-dots"></i>
           </button>
-          <button class="icon-btn delete-btn" type="button" :title="`Delete ${item.name}`" @click="$emit('delete', item)">
-            <i class="bi bi-trash"></i>
-          </button>
+
+          <div v-if="activeMenuId === item.id" class="taxonomy-menu-dropdown">
+            <button v-if="showView" type="button" @click="selectAction('view', item)">
+              <i class="bi bi-eye"></i>
+              <span>View details</span>
+            </button>
+            <button type="button" @click="selectAction('edit', item)">
+              <i class="bi bi-pencil"></i>
+              <span>Edit</span>
+            </button>
+            <button class="delete-btn" type="button" @click="selectAction('delete', item)">
+              <i class="bi bi-trash"></i>
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
       </article>
+    </div>
+
+    <div v-else class="taxonomy-empty">
+      <i class="bi bi-inbox"></i>
+      <span>No {{ title.toLowerCase() }} found.</span>
     </div>
   </section>
 </template>
 
 <script setup>
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+
 defineProps({
   title: {
     type: String,
@@ -59,9 +96,39 @@ defineProps({
     type: String,
     required: true,
   },
+  isLoading: {
+    type: Boolean,
+    default: false,
+  },
+  showView: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-defineEmits(['create', 'edit', 'delete']);
+const emit = defineEmits(['create', 'view', 'edit', 'delete']);
+const activeMenuId = ref(null);
+
+const closeMenu = () => {
+  activeMenuId.value = null;
+};
+
+const toggleMenu = (item) => {
+  activeMenuId.value = activeMenuId.value === item.id ? null : item.id;
+};
+
+const selectAction = (action, item) => {
+  closeMenu();
+  emit(action, item);
+};
+
+onMounted(() => {
+  document.addEventListener('click', closeMenu);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeMenu);
+});
 </script>
 
 <style scoped>
@@ -100,6 +167,16 @@ defineEmits(['create', 'edit', 'delete']);
   gap: 1rem;
 }
 
+.taxonomy-empty {
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+}
+
 .taxonomy-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -112,7 +189,6 @@ defineEmits(['create', 'edit', 'delete']);
 }
 
 .create-btn,
-.taxonomy-actions,
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -123,26 +199,59 @@ defineEmits(['create', 'edit', 'delete']);
   white-space: nowrap;
 }
 
-.taxonomy-actions {
-  gap: 0.35rem;
-}
-
 .icon-btn {
   width: 34px;
   height: 34px;
   justify-content: center;
   color: var(--color-text-muted);
-  background: transparent;
-  border: 1px solid var(--color-border);
+  background: var(--color-surface-hover);
+  border: 1px solid transparent;
   border-radius: 8px;
 }
 
 .icon-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.taxonomy-menu {
+  position: relative;
+}
+
+.taxonomy-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 5;
+  width: 150px;
+  padding: 0.35rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.taxonomy-menu-dropdown button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+}
+
+.taxonomy-menu-dropdown button:hover {
   color: var(--color-primary);
   background: var(--color-surface-hover);
 }
 
-.delete-btn:hover {
+.taxonomy-menu-dropdown .delete-btn:hover {
   color: var(--color-danger);
 }
 
@@ -192,6 +301,13 @@ defineEmits(['create', 'edit', 'delete']);
   gap: 0.75rem;
   flex-wrap: wrap;
   font-size: 0.82rem;
+}
+
+.taxonomy-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-primary);
 }
 
 @media (max-width: 767.98px) {
