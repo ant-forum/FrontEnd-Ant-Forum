@@ -1,6 +1,20 @@
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useForumStore } from '@/stores/ForumStore';
+
+const router = useRouter();
+
+function goToProfile(author) {
+  let username = 'user';
+  if (typeof author === 'object' && author !== null) {
+    username = author.username || author.name || 'user';
+  } else if (typeof author === 'string') {
+    username = author;
+  }
+  username = username.replace('@', '').trim();
+  router.push(`/viewprofile/${username}`);
+}
 
 defineProps({
   discussions: { type: Array, required: true }
@@ -100,7 +114,7 @@ function handleVote(id, direction) {
             </span>
           </div>
           <span class="thread-time">
-            Posted {{ d.timestamp }} by <span class="author-name">@{{ typeof d.author === 'object' ? (d.author.username?.replace('@','') || 'author') : d.author?.replace('@','') }}</span>
+            Posted {{ d.timestamp }} by <span class="author-name" @click.stop="goToProfile(d.author)">@{{ typeof d.author === 'object' ? (d.author.username?.replace('@','') || 'author') : d.author?.replace('@','') }}</span>
           </span>
         </div>
 
@@ -261,6 +275,13 @@ function handleVote(id, direction) {
 .author-name {
   font-weight: 600;
   color: var(--color-text);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.author-name:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 /* Title & Excerpt */
