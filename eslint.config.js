@@ -12,7 +12,11 @@ export default [
       sourceType: 'module',
       globals: {
         console: 'readonly',
-        localStorage: 'readonly'
+        document: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        setTimeout: 'readonly',
+        window: 'readonly'
       }
     }
   }
