@@ -115,6 +115,8 @@ const handleCategorySelect = (id) => {
 watch(() => route.query.tab, (newTab) => {
   if (newTab) {
     handleSidebarSelect(newTab);
+  } else {
+    handleSidebarSelect('home');
   }
 });
 
@@ -514,7 +516,7 @@ const clearFilters = () => {
   width: 100%;
   height: 38px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -523,7 +525,7 @@ const clearFilters = () => {
   width: 120px;
   height: 14px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }

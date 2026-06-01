@@ -1,63 +1,72 @@
 <template>
   <aside class="admin-sidebar d-flex flex-column">
     <!-- Brand Header -->
-    <div class="sidebar-header p-4 mb-4">
-      <h3 class="fw-bold mb-2 brand-title">Admin Suite</h3>
+    <div class="sidebar-header p-4 mb-3">
+      <h3 class="fw-bold mb-2 brand-title d-flex align-items-center gap-2">
+        <i class="bi bi-shield-lock-fill text-primary"></i>
+        Admin Suite
+      </h3>
       <p class="text-muted text-uppercase tracking-widest fw-bold mb-0" style="font-size: 0.7rem; line-height: 1.6;">
         Technical<br>Operations
       </p>
     </div>
 
-    <!-- Navigation -->
+    <!-- Navigation Grouped -->
     <nav class="sidebar-nav flex-grow-1 px-3">
-      <ul class="list-unstyled">
-        <li v-for="item in navItems" :key="item.label" class="mb-1">
-          <router-link 
-            :to="item.path" 
-            class="nav-link d-flex align-items-center p-3 rounded-3"
-            active-class="active"
-          >
-            <i :class="[item.icon, 'me-3']"></i>
-            <span class="nav-text">{{ item.label }}</span>
-          </router-link>
-        </li>
-      </ul>
+      <div v-for="category in navigationCategories" :key="category.title" class="nav-group mb-4">
+        <div class="sidebar-heading">{{ category.title }}</div>
+        <ul class="list-unstyled mb-0">
+          <li v-for="item in category.items" :key="item.label" class="mb-1">
+            <router-link 
+              :to="item.path" 
+              class="nav-link d-flex align-items-center px-3 py-2-5 rounded-3"
+              :class="{ 'premium-active': isRouteActive(item.path) }"
+            >
+              <i :class="[item.icon, 'me-3']"></i>
+              <span class="nav-text">{{ item.label }}</span>
+            </router-link>
+          </li>
+        </ul>
+      </div>
     </nav>
 
-    <!-- Sidebar Footer -->
-    <div class="sidebar-footer p-4">
-      <div class="user-profile d-flex align-items-center">
-        <img src="https://i.pravatar.cc/150?u=alex" alt="Alex Rivera" class="rounded-circle me-3" width="36" height="36">
-        <div class="user-info overflow-hidden">
-          <h6 class="mb-0 fw-bold text-truncate" style="font-size: 0.9rem;">Alex Rivera</h6>
-          <small class="text-muted text-truncate d-block" style="font-size: 0.75rem;">Lead Architect</small>
-        </div>
-      </div>
-      <button class="theme-toggle-btn mt-3 w-100 d-flex align-items-center justify-content-between px-3 py-2 rounded-3" type="button" @click="toggleDarkMode">
-        <span class="d-flex align-items-center gap-2">
-          <i :class="['bi', isDark ? 'bi-moon-stars-fill' : 'bi-sun-fill']"></i>
-          <span class="fw-bold small">Theme</span>
-        </span>
-        <span class="small fw-bold text-muted">{{ isDark ? 'Dark' : 'Light' }}</span>
-      </button>
-    </div>
   </aside>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { useDarkMode } from '../../composables/useDarkMode';
+import { useRoute } from 'vue-router';
 
-const { isDark, toggleDarkMode } = useDarkMode();
+const route = useRoute();
 
-const navItems = ref([
-  { label: 'Overview', icon: 'bi bi-grid-1x2', path: '/admin' },
-  { label: 'Users', icon: 'bi bi-people', path: '/admin/users' },
-  { label: 'Projects', icon: 'bi bi-folder2', path: '/admin/projects' },
-  { label: 'Threads', icon: 'bi bi-chat-dots', path: '/admin/threads' },
-  { label: 'Analytics', icon: 'bi bi-bar-chart', path: '/admin/analytics' },
-  { label: 'Settings', icon: 'bi bi-gear', path: '/admin/settings' },
+const navigationCategories = ref([
+  {
+    title: 'Manage',
+    items: [
+      { label: 'Overview', icon: 'bi bi-grid-1x2', path: '/admin' },
+      { label: 'Users', icon: 'bi bi-people', path: '/admin/users' },
+      { label: 'Projects', icon: 'bi bi-folder2', path: '/admin/projects' },
+      { label: 'Blogs', icon: 'bi bi-file-earmark-post', path: '/admin/blogs' },
+      { label: 'Categories', icon: 'bi bi-grid-fill', path: '/admin/categories' },
+      { label: 'Tags', icon: 'bi bi-tags', path: '/admin/tags' },
+      { label: 'Threads', icon: 'bi bi-chat-dots', path: '/admin/threads' },
+    ]
+  },
+  {
+    title: 'System',
+    items: [
+      { label: 'Analytics', icon: 'bi bi-bar-chart', path: '/admin/analytics' },
+      { label: 'Settings', icon: 'bi bi-gear', path: '/admin/settings' },
+    ]
+  }
 ]);
+
+const isRouteActive = (itemPath) => {
+  if (itemPath === '/admin') {
+    return route.path === '/admin';
+  }
+  return route.path.startsWith(itemPath);
+};
 </script>
 
 <style scoped>
@@ -69,11 +78,13 @@ const navItems = ref([
   position: sticky;
   top: 0;
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .brand-title {
   letter-spacing: -0.5px;
   color: var(--color-text);
+  font-size: 1.25rem;
 }
 
 .tracking-widest {
@@ -84,54 +95,81 @@ const navItems = ref([
   color: var(--color-text-muted);
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
+  border-radius: 99px;
 }
 
-.nav-link:hover {
-  background-color: var(--color-surface-hover);
-  color: var(--color-text);
+.py-2-5 {
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
 }
 
-.nav-link.active {
+.nav-link:hover,
+.nav-link.premium-active,
+.nav-link.router-link-active {
   background-color: var(--color-surface-hover);
   color: var(--color-text);
 }
 
 .nav-link i {
-  font-size: 1.2rem;
-  opacity: 0.8;
+  font-size: 1.1rem;
+  opacity: 0.75;
+  transition: all 0.2s ease;
 }
 
-.nav-link.active i {
+.nav-link:hover i {
   opacity: 1;
 }
 
-.btn-primary {
-  background-color: var(--color-purple);
-  border: none;
-  font-size: 0.9rem;
-  color: white;
-}
+@media (max-width: 991.98px) {
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
 
-.btn-primary:hover {
-  background-color: var(--color-purple);
-  filter: brightness(0.9);
-  transform: translateY(-1px);
-}
+  .sidebar-header {
+    padding: 1rem 1rem 0.5rem !important;
+    margin-bottom: 0.75rem !important;
+  }
 
-.user-profile {
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border);
-}
+  .sidebar-header p {
+    display: none;
+  }
 
-.theme-toggle-btn {
-  background-color: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-}
+  .sidebar-nav {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 0 1rem 1rem !important;
+  }
 
-.theme-toggle-btn:hover {
-  background-color: var(--color-surface);
+  .nav-group {
+    min-width: max-content;
+    margin-bottom: 0 !important;
+  }
+
+  .nav-group ul {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .sidebar-heading {
+    display: none;
+  }
+
+  .nav-link {
+    white-space: nowrap;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-hover);
+  }
+
+  .nav-link i {
+    margin-right: 0.45rem !important;
+  }
+
 }
 </style>

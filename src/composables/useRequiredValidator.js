@@ -35,8 +35,14 @@ export function useRequiredValidator() {
       errors.password = "Password is required.";
       return false;
     }
-    if (value.length < 6) {
-      errors.password = "Password must be at least 6 characters.";
+    if (value.length < 8) {
+      errors.password = "Password must be at least 8 characters.";
+      return false;
+    }
+    // Requires at least one uppercase letter, one lowercase letter, one number, and one special character
+    const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#.+=(){}[\]^~])[A-Za-z\d@$!%*?&_\-#.+=(){}[\]^~]{8,}$/;
+    if (!STRONG_PASSWORD_REGEX.test(value)) {
+      errors.password = "Password must include uppercase, lowercase, numbers, and special characters.";
       return false;
     }
     errors.password = "";

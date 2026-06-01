@@ -6,7 +6,7 @@
       your password. Your access remains uninterrupted and secure.
     </p>
 
-    <form class="form-stack" @submit.prevent="handleReset">
+    <form class="form-stack" @submit.prevent="handleReset" novalidate>
       <!-- Email -->
       <div>
         <label class="input-label">EMAIL ADDRESS</label>
@@ -14,12 +14,14 @@
           v-model="form.email"
           type="email"
           class="form-control-custom"
-          :class="{ error: errors.email }"
+          :class="{ error: errors.email, success: isEmailValid && !errors.email }"
           placeholder="name@company.com"
           autocomplete="email"
-          @focus="clearError('email')"
+          @focus="onEmailInput"
+          @input="onEmailInput"
         />
         <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
+        <div v-if="successMsg" class="success-msg">{{ successMsg }}</div>
       </div>
 
       <!-- Submit -->
@@ -58,42 +60,101 @@
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "../../stores/AuthStore.js";
+import { useRequiredValidator } from "../../composables/useRequiredValidator.js";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const loading = ref(false);
+const successMsg = ref("");
 
 const form = reactive({ email: "" });
-const errors = reactive({ email: "" });
 
-function clearError(field) {
-  errors[field] = "";
-}
+const { errors, clearError, validateField } = useRequiredValidator();
 
-function validate() {
-  let ok = true;
+const isEmailValid = computed(() => {
+  if (!form.email.trim()) return false;
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return EMAIL_REGEX.test(form.email.trim());
+});
+
+const onEmailInput = () => {
+  clearError("email");
+  successMsg.value = "";
+};
+
+const validateEmail = () => {
   if (!form.email.trim()) {
-    errors.email = "Email address is required.";
-    ok = false;
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = "Please enter a valid email address.";
-    ok = false;
+    return validateField("email", form.email, "Email address is required.");
   }
-  return ok;
-}
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!EMAIL_REGEX.test(form.email.trim())) {
+    errors.email = "Please enter a valid email address.";
+    return false;
+  }
+  errors.email = "";
+  return true;
+};
+
+const validateForm = () => {
+  return validateEmail();
+};
 
 async function handleReset() {
-  if (!validate()) return;
+  if (!validateForm()) return;
   loading.value = true;
+  successMsg.value = "";
   try {
-    await authStore.forgotPassword(form.email);
-    router.push("/verify");
+    const res = await authStore.forgotPassword(form.email);
+    
+    // Save the resetToken for the subsequent OTP verify step
+    if (res && res.resetToken) {
+      sessionStorage.setItem("ANT_ResetToken", res.resetToken);
+    }
+    
+    // Save recovery email for resending OTP code securely
+    sessionStorage.setItem("ANT_ResetEmail", form.email);
+    
+    errors.email = "";
+    successMsg.value = "OTP sent to your email successfully! Please check your inbox mail.";
+    
+    setTimeout(() => {
+      router.push("/verify");
+    }, 1800);
   } catch (error) {
-    // The global interceptor in src/api/api.js shows the error toast.
     console.error("Password reset failed:", error);
+    const errMsg = (
+      error.message || 
+      error.error || 
+      error.response?.data?.message || 
+      error.response?.data?.error || 
+      ""
+    ).toString().toLowerCase();
+    
+    // Security hardening: mask "User not found" errors to prevent email enumeration
+    const isUserNotFound = 
+      errMsg.includes("user not found") || 
+      errMsg.includes("not found") || 
+      errMsg.includes("not registered") || 
+      errMsg.includes("no user") || 
+      error.status === 404 || 
+      error.response?.status === 404;
+
+    if (isUserNotFound) {
+      // Save recovery email for resending OTP code securely
+      sessionStorage.setItem("ANT_ResetEmail", form.email);
+      errors.email = "";
+      successMsg.value = "OTP sent to your email successfully! Please check your inbox mail.";
+      
+      setTimeout(() => {
+        router.push("/verify");
+      }, 1800);
+    } else {
+      errors.email = error.message || error.error || "An error occurred. Please try again.";
+      successMsg.value = "";
+    }
   } finally {
     loading.value = false;
   }
@@ -169,10 +230,19 @@ h1 {
   border-color: var(--color-danger) !important;
   box-shadow: 0 0 0 3px var(--color-danger-light) !important;
 }
+.form-control-custom.success {
+  border-color: var(--color-success, #10b981) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
 
 .error-msg {
   font-size: 0.78rem;
   color: var(--color-danger);
+  margin-top: 4px;
+}
+.success-msg {
+  font-size: 0.78rem;
+  color: var(--color-success, #10b981);
   margin-top: 4px;
 }
 
