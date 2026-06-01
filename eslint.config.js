@@ -1,23 +1,25 @@
-import js from '@eslint/js'
+import js from "@eslint/js";
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**']
+    ignores: ["dist/**", "node_modules/**"],
   },
   js.configs.recommended,
   {
-    files: ['src/**/*.js', 'vite.config.js'],
+    files: ["src/**/*.js", "vite.config.js"],
     languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
+      ecmaVersion: "latest",
+      sourceType: "module",
       globals: {
-        console: 'readonly',
-        document: 'readonly',
-        localStorage: 'readonly',
-        sessionStorage: 'readonly',
-        setTimeout: 'readonly',
-        window: 'readonly'
-      }
-    }
-  }
-]
+        console: "readonly",
+        document: "readonly",
+        FormData: "readonly",
+        localStorage: "readonly",
+        process: "readonly",
+        sessionStorage: "readonly",
+        setTimeout: "readonly",
+        window: "readonly",
+      },
+    },
+  },
+];

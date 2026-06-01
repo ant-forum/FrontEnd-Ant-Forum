@@ -1,62 +1,23 @@
 import { defineStore } from "pinia";
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import api, { setAuthRefreshHandler } from "@/api/api";
 import { useNotificationStore } from "./NotificationStore";
+import {
+  clearStoredTokens,
+  getRememberPreference,
+  getStoredAccessToken,
+  getStoredRefreshSession,
+  saveStoredTokens,
+  setRememberPreference,
+} from "@/utils/authStorage";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
-  const isRemembered = ref(localStorage.getItem("ANT_Remember") === "true");
-
-  const token = ref(
-    localStorage.getItem("ANT_Token") || 
-    sessionStorage.getItem("ANT_Token") || 
-    null
-  );
-  const refreshToken = ref(
-    localStorage.getItem("ANT_RefreshToken") || 
-    sessionStorage.getItem("ANT_RefreshToken") || 
-    null
-  );
+  const isRemembered = ref(getRememberPreference());
+  const token = ref(getStoredAccessToken());
+  const refreshToken = ref(getStoredRefreshSession().refreshToken);
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
-
-  // Watch for auth changes reactively to log state changes clearly
-  watch(
-    [token, refreshToken, user, isAuthenticated],
-    ([newToken, newRefreshToken, newUser, newAuth]) => {
-      console.log("[AuthStore] State Changed:", {
-        hasToken: !!newToken,
-        hasRefreshToken: !!newRefreshToken,
-        hasUser: !!newUser,
-        isAuthenticated: newAuth,
-      });
-    },
-    { immediate: true }
-  );
-
-  const setToken = (newToken, newRefreshToken = null, remember = isRemembered.value) => {
-    // Clear both storage containers to prevent duplicate tokens existing in both
-    localStorage.removeItem("ANT_Token");
-    localStorage.removeItem("ANT_RefreshToken");
-    sessionStorage.removeItem("ANT_Token");
-    sessionStorage.removeItem("ANT_RefreshToken");
-
-    const storage = remember ? localStorage : sessionStorage;
-
-    if (newToken) {
-      token.value = newToken;
-      storage.setItem("ANT_Token", newToken);
-    } else {
-      token.value = null;
-    }
-
-    if (newRefreshToken) {
-      refreshToken.value = newRefreshToken;
-      storage.setItem("ANT_RefreshToken", newRefreshToken);
-    } else if (newRefreshToken === null && !newToken) {
-      refreshToken.value = null;
-    }
-  };
 
   const normalizeAvatar = (avatarPath) => {
     if (!avatarPath) return null;
@@ -70,14 +31,14 @@ export const useAuthStore = defineStore("auth", () => {
       const baseRegex = new RegExp(`https?:\\/\\/${cleanBase}`, "i");
       path = path.replace(baseRegex, "");
     }
-    
+
     // Strip any /public/ or public/ prefixes
     if (path.includes("/public/")) {
       path = path.replace("/public/", "/");
     } else if (path.startsWith("public/")) {
       path = path.replace("public/", "");
     }
-    
+
     if (!path.startsWith("http") && !path.startsWith("data:")) {
       if (!path.startsWith("/")) {
         path = `/${path}`;
@@ -101,74 +62,98 @@ export const useAuthStore = defineStore("auth", () => {
     user.value = newUser;
   };
 
+  const setTokens = (
+    newAccessToken,
+    newRefreshToken,
+    remember = isRemembered.value,
+  ) => {
+    token.value = newAccessToken || null;
+    refreshToken.value = newRefreshToken || null;
+
+    if (newAccessToken && newRefreshToken) {
+      saveStoredTokens(newAccessToken, newRefreshToken, remember);
+    } else {
+      clearStoredTokens();
+    }
+  };
+
+  const clearSession = () => {
+    isRemembered.value = false;
+    setRememberPreference(false);
+    setTokens(null, null);
+    setUser(null);
+
+    try {
+      const notificationStore = useNotificationStore();
+      notificationStore.clearNotifications();
+    } catch (err) {
+      console.error("Failed to clear notification store:", err);
+    }
+  };
+
+  const getUserProfile = (data) => {
+    const userProfile = { ...data };
+    delete userProfile.token;
+    delete userProfile.refresh_token;
+    delete userProfile.refreshToken;
+    return userProfile;
+  };
+
   const login = async (payloads) => {
     try {
       const { email, password, remember = false } = payloads;
-      const res = await api.post("/auth/login", { email, password }, { skipGlobalToast: true });
-      if (res.data && res.data.data && res.data.data.token) {
-        const data = res.data.data;
-        const accToken = data.token;
-        const refToken = data.refresh_token || data.refreshToken;
-        // Strip out tokens from user profile object to avoid cluttering
-        const userObj = { ...data };
-        delete userObj.token;
-        delete userObj.refresh_token;
-        delete userObj.refreshToken;
+      const res = await api.post(
+        "/auth/login",
+        { email, password },
+        { skipGlobalToast: true },
+      );
+      const data = res.data?.data;
 
-        // Persist the remember preference
-        isRemembered.value = remember;
-        if (remember) {
-          localStorage.setItem("ANT_Remember", "true");
-        } else {
-          localStorage.removeItem("ANT_Remember");
-        }
-
-        setToken(accToken, refToken, remember);
-        setUser(userObj);
-        return res.data;
-      } else {
+      if (!data?.token || !data?.refresh_token) {
         throw res.data;
       }
+
+      isRemembered.value = remember;
+      setRememberPreference(remember);
+      setTokens(data.token, data.refresh_token, remember);
+      setUser(getUserProfile(data));
+      return res.data;
     } catch (err) {
       throw err.response?.data || err;
     }
   };
 
-  const requestNewAccessToken = async (url) => {
-    const res = await api.post(
-      url,
-      {
-        refresh_token: refreshToken.value,
-        refreshToken: refreshToken.value,
-      },
-      { skipGlobalToast: true }
-    );
-    const data = res.data?.data;
-
-    if (!data?.token) {
-      throw new Error(`Invalid token refresh response from ${url}`);
+  const requestNewAccessToken = async () => {
+    const persistedSession = getStoredRefreshSession();
+    if (!persistedSession.refreshToken) {
+      throw new Error("No refresh token available");
     }
 
-    setToken(
-      data.token,
-      data.refresh_token || data.refreshToken || refreshToken.value
+    refreshToken.value = persistedSession.refreshToken;
+    const res = await api.post(
+      "/auth/refresh-token",
+      {},
+      { skipGlobalToast: true },
     );
+    const data = res.data?.data;
+    const newRefreshToken = data?.refresh_token;
+
+    if (!data?.token || !newRefreshToken) {
+      throw new Error(
+        "Invalid token refresh response from /auth/refresh-token",
+      );
+    }
+
+    setTokens(data.token, newRefreshToken, persistedSession.remember);
     return data.token;
   };
 
   const refreshAccessToken = async () => {
     try {
-      if (!refreshToken.value) {
-        throw new Error("No refresh token available");
-      }
-
-      console.log("[AuthStore] Attempting token refresh via /auth/refresh-token...");
-      const accToken = await requestNewAccessToken("/auth/refresh-token");
-      console.log("[AuthStore] Token refreshed successfully via /auth/refresh-token");
+      const accToken = await requestNewAccessToken();
       return accToken;
     } catch (err) {
-      console.error("[AuthStore] Token refresh failed. Logging out...", err.message);
-      logout();
+      clearSession();
       throw err;
     }
   };
@@ -178,47 +163,39 @@ export const useAuthStore = defineStore("auth", () => {
   const fetchProfile = async () => {
     try {
       const res = await api.get("/api/get/profile");
-      console.log("res", res.data);
       if (res.data && res.data.result !== false) {
         setUser(res.data.data || res.data);
         return res.data;
       }
-
-      console.warn("No user data found in profile response:", res.data);
-      logout();
+      clearSession();
     } catch (err) {
-      console.warn("[AuthStore] Profile fetch failed, clearing local session...", err.message);
-      logout();
+      clearSession();
       throw err.response?.data || err.message || err;
     }
   };
 
   const logout = async () => {
     try {
-      isRemembered.value = false;
-      localStorage.removeItem("ANT_Remember");
-      setToken(null);
-      setUser(null);
-      const notificationStore = useNotificationStore();
-      notificationStore.clearNotifications();
+      const res = await api.delete("/api/logout", { skipGlobalToast: true });
+      return res.data;
     } catch (err) {
-      isRemembered.value = false;
-      localStorage.removeItem("ANT_Remember");
-      setToken(null);
-      setUser(null);
-      try {
-        const notificationStore = useNotificationStore();
-        notificationStore.clearNotifications();
-      } catch (e) {
-        console.error("Failed to clear notification store:", e);
-      }
-      throw err.response?.data || err.message;
+      console.warn(
+        "[AuthStore] Server logout failed. Clearing local session...",
+        err.message,
+      );
+      return err.response?.data || { result: false, message: err.message };
+    } finally {
+      clearSession();
     }
   };
 
   const forgotPassword = async (email) => {
     try {
-      const res = await api.post("/api/forgot-password", { email }, { skipGlobalToast: true });
+      const res = await api.post(
+        "/api/forgot-password",
+        { email },
+        { skipGlobalToast: true },
+      );
       return res.data;
     } catch (err) {
       throw err.response?.data || err;
@@ -233,7 +210,7 @@ export const useAuthStore = defineStore("auth", () => {
       if (resetToken) {
         payload.resetToken = resetToken;
         config.headers = {
-          Authorization: `Bearer ${resetToken}`
+          Authorization: `Bearer ${resetToken}`,
         };
       }
       const res = await api.post("/api/verify-otp", payload, config);
@@ -245,22 +222,39 @@ export const useAuthStore = defineStore("auth", () => {
 
   const resetPassword = async (newPassword, confirmPassword, verifiedToken) => {
     try {
-      const token = verifiedToken || sessionStorage.getItem("ANT_VerifiedToken");
+      const token =
+        verifiedToken || sessionStorage.getItem("ANT_VerifiedToken");
       const config = { skipGlobalToast: true };
       if (token) {
         config.headers = {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         };
       }
-      const res = await api.post("/api/reset-password", {
-        newPassword,
-        confirmPassword
-      }, config);
+      const res = await api.post(
+        "/api/reset-password",
+        {
+          newPassword,
+          confirmPassword,
+        },
+        config,
+      );
       return res.data;
     } catch (err) {
       throw err.response?.data || err;
     }
   };
 
-  return { user, token, refreshToken, isAuthenticated, login, fetchProfile, refreshAccessToken, logout, forgotPassword, verifyAccount, resetPassword };
+  return {
+    user,
+    token,
+    refreshToken,
+    isAuthenticated,
+    login,
+    fetchProfile,
+    refreshAccessToken,
+    logout,
+    forgotPassword,
+    verifyAccount,
+    resetPassword,
+  };
 });
