@@ -8,7 +8,7 @@
       { label: 'Create Blog' }
     ]"
   >
-    <template #actions>
+    <template #before-title>
       <router-link class="btn btn-light border back-link" to="/admin/blogs">
         <i class="bi bi-arrow-left"></i>
         <span>Back to Blogs</span>
@@ -332,6 +332,10 @@ onBeforeUnmount(releaseThumbnailPreview);
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+}
+
+.back-link {
+  margin-bottom: 1rem;
 }
 
 .composer-toolbar,

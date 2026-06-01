@@ -41,11 +41,18 @@
             </td>
           </tr>
         </tbody>
-        <tbody v-else>
-          <tr v-for="row in visibleRows" :key="row.name">
+        <tbody v-else-if="filteredRows.length">
+          <tr v-for="row in paginatedRows" :key="row.id ?? row.name">
             <td v-for="column in columns" :key="column.key">
               <div v-if="column.key === 'name'" class="identity-cell">
-                <span class="avatar-dot">{{ initials(row.name) }}</span>
+                <img
+                  v-if="row.avatar && !failedAvatars.has(row.id ?? row.name)"
+                  :src="row.avatar"
+                  :alt="`${row.name} profile picture`"
+                  class="avatar-image"
+                  @error="handleAvatarError(row)"
+                >
+                <span v-else class="avatar-dot">{{ initials(row.name) }}</span>
                 <div>
                   <strong>{{ row.name }}</strong>
                   <small>{{ row.detail }}</small>
@@ -66,13 +73,65 @@
             </td>
           </tr>
         </tbody>
+        <tbody v-else>
+          <tr>
+            <td class="empty-table-state" :colspan="columns.length + (showActions ? 1 : 0)">
+              <i class="bi bi-search"></i>
+              <span>No {{ itemLabel }} found matching your search.</span>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
+
+    <footer v-if="!isLoading && filteredRows.length" class="pagination-footer">
+      <p>
+        Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong>
+        of <strong>{{ filteredRows.length }}</strong> {{ itemLabel }}
+      </p>
+
+      <nav v-if="totalPages > 1" class="pagination-controls" :aria-label="`${itemLabel} list pagination`">
+        <button
+          class="pagination-btn"
+          type="button"
+          :disabled="currentPage === 1"
+          aria-label="Previous page"
+          title="Previous page"
+          @click="currentPage -= 1"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <button
+          v-for="page in pageNumbers"
+          :key="page"
+          class="pagination-btn"
+          :class="{ active: currentPage === page }"
+          type="button"
+          :aria-current="currentPage === page ? 'page' : undefined"
+          :aria-label="`Page ${page}`"
+          @click="currentPage = page"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          class="pagination-btn"
+          type="button"
+          :disabled="currentPage === totalPages"
+          aria-label="Next page"
+          title="Next page"
+          @click="currentPage += 1"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </nav>
+    </footer>
   </section>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
   title: {
@@ -95,6 +154,10 @@ const props = defineProps({
     type: String,
     default: 'Search records',
   },
+  itemLabel: {
+    type: String,
+    default: 'records',
+  },
   showActions: {
     type: Boolean,
     default: true,
@@ -103,16 +166,45 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  pageSize: {
+    type: Number,
+    default: 10,
+  },
 });
 
 const search = ref('');
+const currentPage = ref(1);
+const failedAvatars = ref(new Set());
 
-const visibleRows = computed(() => {
+const filteredRows = computed(() => {
   const needle = search.value.toLowerCase();
   if (!needle) return props.rows;
 
   return props.rows.filter((row) => JSON.stringify(row).toLowerCase().includes(needle));
 });
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / props.pageSize)));
+const firstVisibleRow = computed(() => (currentPage.value - 1) * props.pageSize + 1);
+const lastVisibleRow = computed(() => Math.min(currentPage.value * props.pageSize, filteredRows.value.length));
+const pageNumbers = computed(() => Array.from({ length: totalPages.value }, (_, index) => index + 1));
+const paginatedRows = computed(() => {
+  const start = (currentPage.value - 1) * props.pageSize;
+  return filteredRows.value.slice(start, start + props.pageSize);
+});
+
+watch(search, () => {
+  currentPage.value = 1;
+});
+
+watch(totalPages, (pageCount) => {
+  if (currentPage.value > pageCount) {
+    currentPage.value = pageCount;
+  }
+});
+
+const handleAvatarError = (row) => {
+  failedAvatars.value = new Set([...failedAvatars.value, row.id ?? row.name]);
+};
 
 const initials = (name) => name
   .split(' ')
@@ -234,6 +326,15 @@ defineEmits(['edit', 'delete']);
   flex-shrink: 0;
 }
 
+.avatar-image {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+}
+
 .icon-btn {
   width: 40px;
   height: 40px;
@@ -281,6 +382,75 @@ defineEmits(['edit', 'delete']);
   color: var(--color-text-muted);
 }
 
+.pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.pagination-footer p {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.pagination-footer strong {
+  color: var(--color-text);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pagination-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  color: var(--color-primary);
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+
+.pagination-btn.active {
+  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.empty-table-state {
+  padding: 2.75rem 1rem !important;
+  color: var(--color-text-muted) !important;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.empty-table-state i {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 1.25rem;
+}
+
 @media (max-width: 767.98px) {
   .panel-title-row {
     flex-direction: column;
@@ -289,6 +459,15 @@ defineEmits(['edit', 'delete']);
   .search-box {
     width: 100%;
     min-width: 0;
+  }
+
+  .pagination-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
   }
 }
 

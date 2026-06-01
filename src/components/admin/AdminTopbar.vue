@@ -64,7 +64,7 @@
                     <span class="sender-name text-truncate">{{ item.title }}</span>
                     <span class="notification-time text-nowrap">{{ formatTimeAgo(item.created_at) }}</span>
                   </div>
-                  <p class="notification-text text-truncate">{{ item.message }}</p>
+                  <p class="notification-text">{{ item.message }}</p>
                 </div>
                 <span v-if="!item.read" class="unread-dot-indicator"></span>
               </div>
@@ -404,11 +404,16 @@ onUnmounted(() => {
 .dropdown-body-premium {
   max-height: 280px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .notifications-scroll {
   display: flex;
   flex-direction: column;
+}
+
+.min-width-0 {
+  min-width: 0;
 }
 
 .notification-item-premium {
@@ -458,6 +463,12 @@ onUnmounted(() => {
   font-size: 0.76rem;
   color: var(--color-text-muted);
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
 }
 
 .unread-dot-indicator {

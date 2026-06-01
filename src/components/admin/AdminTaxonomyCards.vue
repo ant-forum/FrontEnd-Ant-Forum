@@ -5,10 +5,32 @@
         <h2>{{ title }}</h2>
         <p>{{ subtitle }}</p>
       </div>
-      <button class="btn btn-primary create-btn" type="button" @click="$emit('create')">
-        <i class="bi bi-plus-lg"></i>
-        <span>Add {{ itemLabel }}</span>
-      </button>
+
+      <div class="panel-toolbar">
+        <label v-if="showSearch" class="search-field">
+          <span class="visually-hidden">Search {{ title.toLowerCase() }}</span>
+          <i class="bi bi-search"></i>
+          <input
+            v-model.trim="searchQuery"
+            type="search"
+            :placeholder="`Search ${title.toLowerCase()}...`"
+          >
+          <button
+            v-if="searchQuery"
+            type="button"
+            aria-label="Clear search"
+            title="Clear search"
+            @click="searchQuery = ''"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </label>
+
+        <button class="btn btn-primary create-btn" type="button" @click="$emit('create')">
+          <i class="bi bi-plus-lg"></i>
+          <span>Add {{ itemLabel }}</span>
+        </button>
+      </div>
     </div>
 
     <div v-if="isLoading" class="taxonomy-empty">
@@ -16,8 +38,17 @@
       <span>Loading {{ title.toLowerCase() }}...</span>
     </div>
 
-    <div v-else-if="items.length" class="taxonomy-grid">
-      <article v-for="item in items" :key="item.id ?? item.name" class="taxonomy-card">
+    <div v-else-if="filteredItems.length" class="taxonomy-grid">
+      <article
+        v-for="item in filteredItems"
+        :key="item.id ?? item.name"
+        class="taxonomy-card"
+        :class="{ 'taxonomy-card-clickable': clickable }"
+        :role="clickable ? 'link' : undefined"
+        :tabindex="clickable ? 0 : undefined"
+        @click="handleCardClick(item)"
+        @keydown.enter.self="handleCardClick(item)"
+      >
         <span :class="['taxonomy-icon', item.colorClass]">
           <i :class="['bi', icon]"></i>
         </span>
@@ -48,21 +79,22 @@
           </button>
 
           <div v-if="activeMenuId === item.id" class="taxonomy-menu-dropdown">
-            <button v-if="showView" type="button" @click="selectAction('view', item)">
-              <i class="bi bi-eye"></i>
-              <span>View details</span>
-            </button>
-            <button type="button" @click="selectAction('edit', item)">
+            <button type="button" @click.stop="selectAction('edit', item)">
               <i class="bi bi-pencil"></i>
               <span>Edit</span>
             </button>
-            <button class="delete-btn" type="button" @click="selectAction('delete', item)">
+            <button class="delete-btn" type="button" @click.stop="selectAction('delete', item)">
               <i class="bi bi-trash"></i>
               <span>Delete</span>
             </button>
           </div>
         </div>
       </article>
+    </div>
+
+    <div v-else-if="searchQuery" class="taxonomy-empty">
+      <i class="bi bi-search"></i>
+      <span>No {{ title.toLowerCase() }} match "{{ searchQuery }}".</span>
     </div>
 
     <div v-else class="taxonomy-empty">
@@ -73,9 +105,9 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-defineProps({
+const props = defineProps({
   title: {
     type: String,
     required: true,
@@ -104,10 +136,30 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  clickable: {
+    type: Boolean,
+    default: false,
+  },
+  showSearch: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const emit = defineEmits(['create', 'view', 'edit', 'delete']);
+const emit = defineEmits(['create', 'view', 'edit', 'delete', 'click-item']);
 const activeMenuId = ref(null);
+const searchQuery = ref('');
+
+const filteredItems = computed(() => {
+  const needle = searchQuery.value.toLowerCase();
+  if (!needle) return props.items;
+
+  return props.items.filter((item) => {
+    return [item.name, item.description, item.type, item.owner]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(needle));
+  });
+});
 
 const closeMenu = () => {
   activeMenuId.value = null;
@@ -120,6 +172,11 @@ const toggleMenu = (item) => {
 const selectAction = (action, item) => {
   closeMenu();
   emit(action, item);
+};
+
+const handleCardClick = (item) => {
+  if (!props.clickable) return;
+  selectAction('click-item', item);
 };
 
 onMounted(() => {
@@ -161,6 +218,72 @@ onBeforeUnmount(() => {
   color: var(--color-text-muted);
 }
 
+.panel-title-row p {
+  margin-bottom: 0;
+}
+
+.panel-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.search-field {
+  position: relative;
+  width: min(320px, 55vw);
+}
+
+.search-field > i {
+  position: absolute;
+  top: 50%;
+  left: 0.85rem;
+  color: var(--color-text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.search-field input {
+  width: 100%;
+  height: 40px;
+  padding: 0 2.45rem 0 2.35rem;
+  color: var(--color-text);
+  font-size: 0.86rem;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  outline: 0;
+  transition: all var(--transition-base);
+}
+
+.search-field input:focus {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.search-field button {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  transform: translateY(-50%);
+}
+
+.search-field button:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
 .taxonomy-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -186,6 +309,22 @@ onBeforeUnmount(() => {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 8px;
+  transition: all var(--transition-base);
+}
+
+.taxonomy-card-clickable {
+  cursor: pointer;
+}
+
+.taxonomy-card-clickable:hover,
+.taxonomy-card-clickable:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.taxonomy-card-clickable:focus-visible {
+  outline: 3px solid var(--color-primary-light);
 }
 
 .create-btn,
@@ -313,6 +452,15 @@ onBeforeUnmount(() => {
 @media (max-width: 767.98px) {
   .panel-title-row {
     flex-direction: column;
+  }
+
+  .panel-toolbar {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .search-field {
+    width: 100%;
   }
 
   .taxonomy-grid {

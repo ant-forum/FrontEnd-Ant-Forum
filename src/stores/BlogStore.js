@@ -344,6 +344,17 @@ export const useBlogStore = defineStore('blog', () => {
     }
   };
 
+  const fetchBlogsByCategory = async (categoryId) => {
+    try {
+      isLoading.value = true;
+      const response = await api.get(`/api/blog/getBlogsByCategory/${categoryId}`);
+      ensureSuccess(response);
+      return getNormalizedList(response.data);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   return {
     // state
     blogs,
@@ -362,6 +373,7 @@ export const useBlogStore = defineStore('blog', () => {
     fetchOwnBlogs,
     deleteOwnBlog,
     fetchCategories,
+    fetchBlogsByCategory,
 
     // admin specific actions
     createBlog,

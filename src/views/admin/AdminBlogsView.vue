@@ -5,35 +5,45 @@
     subtitle="Manage official posts. Only admins can create and publish blog content."
     :metrics="metrics"
   >
-    <template #actions>
-      <router-link class="btn btn-primary create-btn" to="/admin/blogs/create">
-        <i class="bi bi-plus-lg"></i>
-        <span>Create Blog</span>
-      </router-link>
-    </template>
-
     <section class="admin-panel posts-panel">
       <div class="panel-heading">
         <div>
           <h2>Recent Blog Posts</h2>
           <p>Track admin-created blog content and publishing status.</p>
+          <!-- Premium Status Filter Tabs -->
+          <div class="filter-tabs">
+            <button
+              v-for="tab in ['all', 'published', 'draft', 'scheduled']"
+              :key="tab"
+              @click="activeTab = tab"
+              :class="['tab-btn', { active: activeTab === tab }]"
+            >
+              <span class="tab-label">{{ tab }}</span>
+              <span class="tab-badge">{{ getTabCount(tab) }}</span>
+            </button>
+          </div>
         </div>
-        <label class="search-box">
-          <i class="bi bi-search"></i>
-          <input v-model.trim="search" type="search" placeholder="Search posts">
-        </label>
+        <div class="panel-tools">
+          <label class="search-box">
+            <i class="bi bi-search"></i>
+            <input v-model.trim="search" type="search" placeholder="Search posts">
+          </label>
+          <router-link class="btn btn-primary create-btn" to="/admin/blogs/create">
+            <i class="bi bi-plus-lg"></i>
+            <span>Create Blog</span>
+          </router-link>
+        </div>
       </div>
 
-      <!-- Premium Status Filter Tabs -->
-      <div class="filter-tabs mb-4">
-        <button 
-          v-for="tab in ['all', 'published', 'draft', 'scheduled']" 
-          :key="tab"
-          @click="activeTab = tab"
-          :class="['tab-btn', { active: activeTab === tab }]"
-        >
-          <span class="tab-label">{{ tab }}</span>
-          <span class="tab-badge">{{ getTabCount(tab) }}</span>
+      <!-- Premium Category Filter Indicator -->
+      <div v-if="route.query.category_id" class="category-filter-alert mb-4">
+        <span class="alert-info-text">
+          <i class="bi bi-funnel-fill text-purple"></i>
+          <span>Showing articles in category: <strong>{{ getCategoryName(route.query.category_id) }}</strong></span>
+        </span>
+        <button type="button" class="btn-clear-filter" @click="clearCategoryFilter" title="Clear category filter">
+          <i class="bi bi-x-circle-fill"></i>
+          <span>Clear Filter</span>
         </button>
       </div>
 
@@ -171,7 +181,7 @@
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import { useBlogStore } from '../../stores/BlogStore.js';
 import { useToast } from '../../composables/useToast.js';
@@ -179,6 +189,7 @@ import BaseModal from '../../components/base/BaseModal.vue';
 
 const blogStore = useBlogStore();
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 const search = ref('');
 const activeTab = ref('all');
@@ -214,6 +225,12 @@ const visiblePosts = computed(() => {
   const needle = search.value.toLowerCase();
   let items = blogStore.ownBlogs || [];
 
+  // Filter by Category Query Param
+  const catId = route.query.category_id;
+  if (catId) {
+    items = items.filter(post => String(post.category_id) === String(catId));
+  }
+
   // Filter by Tab Status
   if (activeTab.value !== 'all') {
     items = items.filter(post => post.status === activeTab.value);
@@ -229,6 +246,15 @@ const visiblePosts = computed(() => {
 
 const handleImgError = (e) => {
   e.target.src = 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800';
+};
+
+const getCategoryName = (catId) => {
+  const cat = blogStore.categories.find(c => String(c.id) === String(catId));
+  return cat ? (cat.name || cat.title) : `Category #${catId}`;
+};
+
+const clearCategoryFilter = () => {
+  router.replace({ path: '/admin/blogs' });
 };
 
 const navigateToDetail = (id) => {
@@ -357,6 +383,14 @@ const deleteBlog = async (id) => {
   gap: 0.5rem;
 }
 
+.panel-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
 .panel-heading h2 {
   color: var(--color-text);
   font-size: 1rem;
@@ -396,6 +430,7 @@ const deleteBlog = async (id) => {
   display: flex;
   gap: 0.5rem;
   border-bottom: 1px solid var(--color-border);
+  margin-top: 1rem;
   padding-bottom: 0.75rem;
 }
 
@@ -638,6 +673,15 @@ const deleteBlog = async (id) => {
     flex-direction: column;
   }
 
+  .panel-tools {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .filter-tabs {
+    flex-wrap: wrap;
+  }
+
   .search-box {
     width: 100%;
     min-width: 0;
@@ -773,5 +817,40 @@ const deleteBlog = async (id) => {
 
 .bg-surface-hover {
   background-color: var(--color-surface-hover) !important;
+}
+
+.category-filter-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-primary-light);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 8px;
+  font-size: 0.86rem;
+  color: var(--color-primary);
+}
+
+.alert-info-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-clear-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-primary);
+  background: transparent;
+  border: 0;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.btn-clear-filter:hover {
+  opacity: 0.8;
 }
 </style>

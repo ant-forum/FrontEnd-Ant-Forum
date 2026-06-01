@@ -16,6 +16,7 @@
       title="All Users"
       subtitle="A clean table for managing forum members."
       placeholder="Search users"
+      item-label="users"
       :columns="columns"
       :rows="mappedUsers"
       :is-loading="usersStore.isLoading"
@@ -124,6 +125,7 @@ const mappedUsers = computed(() => {
     joined: u.createdAt
       ? new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
       : 'May 31, 2026',
+    avatar: u.profile_pic || u.avatar || u.avatarUrl || '',
     gender: u.gender || 'male',
     rawRole: u.role || 'user',
   }));
