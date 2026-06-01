@@ -1,6 +1,23 @@
 import axios from "axios";
 import { useToast } from "../composables/useToast.js";
 
+let refreshAccessTokenHandler = null;
+let refreshRequest = null;
+
+export const setAuthRefreshHandler = (handler) => {
+  refreshAccessTokenHandler = handler;
+};
+
+const getStoredRefreshToken = () =>
+  localStorage.getItem("ANT_RefreshToken") ||
+  sessionStorage.getItem("ANT_RefreshToken");
+
+const isRefreshRequest = (config) =>
+  config?.url?.includes("/auth/refresh");
+
+const isLoginRequest = (config) =>
+  config?.url?.includes("/auth/login");
+
 const api = axios.create({
   baseURL: import.meta.env.DEV ? "" : import.meta.env.VITE_API_BASE_URL,
   headers: {
@@ -8,9 +25,35 @@ const api = axios.create({
   },
 });
 
+const retryRequestWithFreshToken = async (originalRequest) => {
+  originalRequest._retry = true;
+
+  if (!refreshRequest) {
+    refreshRequest = Promise.resolve(refreshAccessTokenHandler()).finally(() => {
+      refreshRequest = null;
+    });
+  }
+
+  const token = await refreshRequest;
+  if (!token) {
+    throw new Error("Unable to refresh access token");
+  }
+
+  if (originalRequest.headers && typeof originalRequest.headers.set === "function") {
+    originalRequest.headers.set("Authorization", `Bearer ${token}`);
+  } else {
+    originalRequest.headers = originalRequest.headers || {};
+    originalRequest.headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return api(originalRequest);
+};
+
 // Request Interceptor: Attach token and handle Content-Type for FormData
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("ANT_Token") || sessionStorage.getItem("ANT_Token");
+  const token = isRefreshRequest(config)
+    ? getStoredRefreshToken()
+    : localStorage.getItem("ANT_Token") || sessionStorage.getItem("ANT_Token");
   
   if (token) {
     if (config.headers && typeof config.headers.set === "function") {
@@ -49,14 +92,42 @@ api.interceptors.response.use(
       if (isAuthError) {
         const error = new Error(data.message || data.msg || "Unauthorized");
         error.response = response;
+        error.config = response.config;
+
+        if (
+          !response.config._retry &&
+          !isRefreshRequest(response.config) &&
+          !isLoginRequest(response.config) &&
+          getStoredRefreshToken() &&
+          refreshAccessTokenHandler
+        ) {
+          return retryRequestWithFreshToken(response.config);
+        }
+
         return Promise.reject(error);
       }
     }
     return response;
   },
-  (error) => {
+  async (error) => {
     const originalRequest = error.config;
     const toast = useToast();
+    const shouldRefresh =
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isRefreshRequest(originalRequest) &&
+      !isLoginRequest(originalRequest) &&
+      getStoredRefreshToken() &&
+      refreshAccessTokenHandler;
+
+    if (shouldRefresh) {
+      try {
+        return await retryRequestWithFreshToken(originalRequest);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
+    }
 
     // Skip showing generic toasts for internal auth requests or explicit skips
     const isProfileRequest = originalRequest?.url?.includes("/api/get/profile");

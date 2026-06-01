@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
-import api from "@/api/api";
+import api, { setAuthRefreshHandler } from "@/api/api";
 import { useNotificationStore } from "./NotificationStore";
 
 export const useAuthStore = defineStore("auth", () => {
@@ -105,7 +105,6 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const { email, password, remember = false } = payloads;
       const res = await api.post("/auth/login", { email, password }, { skipGlobalToast: true });
-      console.log(res.data);
       if (res.data && res.data.data && res.data.data.token) {
         const data = res.data.data;
         const accToken = data.token;
@@ -135,45 +134,46 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  const requestNewAccessToken = async (url) => {
+    const res = await api.post(
+      url,
+      {
+        refresh_token: refreshToken.value,
+        refreshToken: refreshToken.value,
+      },
+      { skipGlobalToast: true }
+    );
+    const data = res.data?.data;
+
+    if (!data?.token) {
+      throw new Error(`Invalid token refresh response from ${url}`);
+    }
+
+    setToken(
+      data.token,
+      data.refresh_token || data.refreshToken || refreshToken.value
+    );
+    return data.token;
+  };
+
   const refreshAccessToken = async () => {
     try {
       if (!refreshToken.value) {
         throw new Error("No refresh token available");
       }
 
-      console.log("[AuthStore] Attempting token refresh via /auth/refresh...");
-      const res = await api.post("/auth/refresh", {
-        refresh_token: refreshToken.value,
-        refreshToken: refreshToken.value,
-      });
-
-      if (res.data && res.data.data && res.data.data.token) {
-        const { token: accToken, refresh_token: refToken, refreshToken: refTokenCamel } = res.data.data;
-        setToken(accToken, refToken || refTokenCamel || refreshToken.value);
-        console.log("[AuthStore] Token refreshed successfully via /auth/refresh");
-        return accToken;
-      }
+      console.log("[AuthStore] Attempting token refresh via /auth/refresh-token...");
+      const accToken = await requestNewAccessToken("/auth/refresh-token");
+      console.log("[AuthStore] Token refreshed successfully via /auth/refresh-token");
+      return accToken;
     } catch (err) {
-      console.warn("[AuthStore] Token refresh via /auth/refresh failed, trying /auth/refresh-token...", err.message);
-      try {
-        const res = await api.post("/auth/refresh-token", {
-          refresh_token: refreshToken.value,
-          refreshToken: refreshToken.value,
-        });
-
-        if (res.data && res.data.data && res.data.data.token) {
-          const { token: accToken, refresh_token: refToken, refreshToken: refTokenCamel } = res.data.data;
-          setToken(accToken, refToken || refTokenCamel || refreshToken.value);
-          console.log("[AuthStore] Token refreshed successfully via /auth/refresh-token");
-          return accToken;
-        }
-      } catch (err2) {
-        console.error("[AuthStore] Token refresh failed completely. Logging out...", err2.message);
-        logout();
-        throw err2;
-      }
+      console.error("[AuthStore] Token refresh failed. Logging out...", err.message);
+      logout();
+      throw err;
     }
   };
+
+  setAuthRefreshHandler(refreshAccessToken);
 
   const fetchProfile = async () => {
     try {
