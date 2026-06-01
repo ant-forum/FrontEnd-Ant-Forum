@@ -180,7 +180,7 @@ export const useAuthStore = defineStore("auth", () => {
       const res = await api.get("/api/get/profile");
       console.log("res", res.data);
       if (res.data && res.data.result !== false) {
-        setUser(res.data.data || res.data);
+        setUser(res.data.user || res.data.data || res.data);
         return res.data;
       }
 
@@ -262,5 +262,5 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
-  return { user, token, refreshToken, isAuthenticated, login, fetchProfile, refreshAccessToken, logout, forgotPassword, verifyAccount, resetPassword };
+  return { user, token, refreshToken, isAuthenticated, login, fetchProfile, refreshAccessToken, logout, forgotPassword, verifyAccount, resetPassword, setUser };
 });

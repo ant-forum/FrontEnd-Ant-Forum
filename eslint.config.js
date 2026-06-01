@@ -16,7 +16,13 @@ export default [
         localStorage: 'readonly',
         sessionStorage: 'readonly',
         setTimeout: 'readonly',
-        window: 'readonly'
+        window: 'readonly',
+        FormData: 'readonly',
+        process: 'readonly',
+        URL: 'readonly',
+        confirm: 'readonly',
+        Blob: 'readonly',
+        File: 'readonly'
       }
     }
   }
