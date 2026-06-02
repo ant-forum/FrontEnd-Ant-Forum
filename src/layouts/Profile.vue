@@ -1,8 +1,10 @@
 <script setup>
 import { reactive, ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import Navbar from "../components/layouts/header.vue";
 import Footer from "../components/layouts/footer.vue";
 import { useAuthStore } from "../stores/AuthStore";
+import BaseModal from "../components/base/BaseModal.vue";
 
 // Sub-components
 import ProfileOverview from "../components/profile/ProfileOverview.vue";
@@ -11,12 +13,36 @@ import ProfileSetting from "../components/profile/ProfileSetting.vue";
 
 // Stores
 const authStore = useAuthStore();
+const router = useRouter();
 import { useUserProfilesStore } from "../stores/UserProfilesStore";
 
 const userProfilesStore = useUserProfilesStore();
 
 // Tab state: 'profile' | 'projects' | 'settings'
 const activeTab = ref("profile");
+const showLogoutModal = ref(false);
+const isLoggingOut = ref(false);
+
+const openLogoutModal = () => {
+  showLogoutModal.value = true;
+};
+
+const closeLogoutModal = () => {
+  if (isLoggingOut.value) return;
+  showLogoutModal.value = false;
+};
+
+const confirmLogout = async () => {
+  isLoggingOut.value = true;
+
+  try {
+    await authStore.logout();
+    showLogoutModal.value = false;
+    await router.push("/login");
+  } finally {
+    isLoggingOut.value = false;
+  }
+};
 
 onMounted(async () => {
   try {
@@ -117,7 +143,7 @@ const activityFeed = ref([]);
               <i class="bi bi-question-circle fs-5"></i>
               <span>Help</span>
             </router-link>
-            <button @click="authStore.logout()" class="sidebar-link-btn bg-transparent border-0 text-start">
+            <button @click="openLogoutModal" class="sidebar-link-btn bg-transparent border-0 text-start">
               <i class="bi bi-box-arrow-right fs-5"></i>
               <span>Logout</span>
             </button>
@@ -164,6 +190,39 @@ const activityFeed = ref([]);
   </div>
   
   <Footer />
+
+  <BaseModal
+    v-if="showLogoutModal"
+    title="Log out of ANT Forum?"
+    kicker=""
+    icon="bi bi-box-arrow-right"
+    theme="danger"
+    @closeModal="closeLogoutModal"
+  >
+    <p class="logout-modal-copy">
+      Are you sure you want to log out? You will need to sign in again to access your account.
+    </p>
+
+    <template #footer>
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        :disabled="isLoggingOut"
+        @click="closeLogoutModal"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger d-inline-flex align-items-center gap-2"
+        :disabled="isLoggingOut"
+        @click="confirmLogout"
+      >
+        <span v-if="isLoggingOut" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span>{{ isLoggingOut ? "Logging out..." : "Logout" }}</span>
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <style scoped>
@@ -174,6 +233,11 @@ const activityFeed = ref([]);
   min-height: 90vh;
   font-family: var(--font-family-base);
   color: var(--color-text) !important;
+}
+
+.logout-modal-copy {
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
 /* Sidebar */

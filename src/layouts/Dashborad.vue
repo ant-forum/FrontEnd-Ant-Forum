@@ -1,18 +1,10 @@
 <script setup>
-import { computed, onMounted } from "vue";
-import { useAuthStore } from "../stores/AuthStore.js";
+import { computed } from "vue";
 import DashboardStats from "../components/dashboards/DashboardStats.vue";
 import RecentActivity from "../components/dashboards/RecentActivity.vue";
 
 import Navbar from "../components/layouts/header.vue";
 import Footer from "../components/layouts/footer.vue";
-
-const authStore = useAuthStore();
-
-// Fetch user on load
-onMounted(() => {
-  authStore.fetchProfile();
-});
 
 // Example stats (replace with API later)
 const stats = computed(() => ({

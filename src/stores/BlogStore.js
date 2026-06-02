@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import api from '@/api/api.js';
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import api from "@/api/api";
 
 const ensureSuccess = (response) => {
   if (response.data && response.data.result === false) {
