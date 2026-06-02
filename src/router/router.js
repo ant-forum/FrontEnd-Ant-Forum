@@ -25,6 +25,7 @@ import AdminCreateUserView from '../views/admin/AdminCreateUserView.vue';
 import AdminSettingsView from '../views/admin/AdminSettingsView.vue';
 import AdminTagsView from '../views/admin/AdminTagsView.vue';
 import AdminUsersView from '../views/admin/AdminUsersView.vue';
+import AdminReportsView from '../views/admin/AdminReportsView.vue';
 import ProjectReviewManagement from '../views/admin/ProjectReviewManagement.vue';
 import ThreadModerationView from '../views/admin/ThreadModerationView.vue';
 // import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
@@ -191,6 +192,12 @@ const routes = [
     name: "ThreadManagement",
     meta: { requiresAuth: true, role: "admin" },
     component: ThreadModerationView,
+  },
+  {
+    path: "/admin/reports",
+    name: "ReportManagement",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminReportsView,
   },
   {
     path: "/admin/blogs",

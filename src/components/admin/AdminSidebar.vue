@@ -24,6 +24,7 @@
             >
               <i :class="[item.icon, 'me-3']"></i>
               <span class="nav-text">{{ item.label }}</span>
+              <span v-if="badgeFor(item.path)" class="nav-count ms-auto">{{ badgeFor(item.path) }}</span>
             </router-link>
           </li>
         </ul>
@@ -36,8 +37,10 @@
 <script setup>
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
 
 const route = useRoute();
+const adminStore = useAdminOperationsStore();
 
 const navigationCategories = ref([
   {
@@ -50,6 +53,7 @@ const navigationCategories = ref([
       { label: 'Categories', icon: 'bi bi-grid-fill', path: '/admin/categories' },
       { label: 'Tags', icon: 'bi bi-tags', path: '/admin/tags' },
       { label: 'Threads', icon: 'bi bi-chat-dots', path: '/admin/threads' },
+      { label: 'Reports', icon: 'bi bi-flag', path: '/admin/reports' },
     ]
   },
   {
@@ -68,6 +72,8 @@ const isRouteActive = (itemPath) => {
   }
   return route.path.startsWith(itemPath);
 };
+
+const badgeFor = (itemPath) => adminStore.sidebarBadges[itemPath] || 0;
 </script>
 
 <style scoped>
@@ -149,6 +155,20 @@ const isRouteActive = (itemPath) => {
 
 .nav-link:hover i {
   opacity: 1;
+}
+
+.nav-count {
+  min-width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.35rem;
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
 }
 
 @media (max-width: 991.98px) {

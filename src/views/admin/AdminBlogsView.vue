@@ -10,7 +10,6 @@
         <div>
           <h2>Recent Blog Posts</h2>
           <p>Track admin-created blog content and publishing status.</p>
-          <!-- Premium Status Filter Tabs -->
           <div class="filter-tabs">
             <button
               v-for="tab in ['all', 'published', 'draft', 'scheduled']"
@@ -49,7 +48,7 @@
 
       <div class="post-list">
         <!-- Skeleton Loading State -->
-        <template v-if="blogStore.isLoading && blogStore.ownBlogs.length === 0">
+        <template v-if="blogStore.isLoading || isTabSwitching">
           <article v-for="i in 3" :key="i" class="post-row skeleton-row animate-pulse">
             <span class="post-thumb skeleton-thumb shimmer"></span>
             <div class="flex-grow-1 d-flex flex-column gap-2 ms-2">
@@ -69,10 +68,10 @@
         </div>
         <article 
           v-else 
-          v-for="post in visiblePosts" 
+          v-for="post in paginatedPosts"
           :key="post.id || post.title" 
           class="post-row clickable-row"
-          @click="navigateToDetail(post.id)"
+          @click="navigateToDetail(post)"
         >
           <span class="post-thumb">
             <img v-if="post.image" :src="post.image" @error="handleImgError" class="thumb-img" alt="Post thumbnail">
@@ -112,88 +111,98 @@
           </div>
         </article>
       </div>
-    </section>
-    <!-- Beautiful BaseModal for Edit Blog -->
-    <BaseModal
-      v-if="showModal"
-      title="Edit Blog Article"
-      icon="bi bi-pencil-fill"
-      kicker=""
-      @closeModal="showModal = false"
-    >
-      <form class="edit-blog-form" @submit.prevent="submitForm">
-        <div class="field-block">
-          <label>Article Title</label>
-          <input v-model="form.title" class="form-control" type="text" placeholder="Enter article title" required>
-        </div>
 
-        <div class="form-row">
-          <div class="field-block">
-            <label>Category</label>
-            <select v-model="form.category_id" class="form-select" required>
-              <option v-for="cat in blogStore.categories" :key="cat.id" :value="cat.id.toString()">
-                {{ cat.name || cat.title }}
-              </option>
-            </select>
-          </div>
+      <footer v-if="!blogStore.isLoading && visiblePosts.length" class="pagination-footer mt-4">
+        <p>
+          Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong>
+          of <strong>{{ visiblePosts.length }}</strong> articles
+        </p>
 
-          <div class="field-block">
-            <label>Status</label>
-            <select v-model="form.status" class="form-select" required>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field-block">
-          <label>Thumbnail Image</label>
-          <div class="thumbnail-dropzone rounded-4 border-dashed border-theme p-3 text-center position-relative transition-all bg-surface-hover">
-            <input type="file" @change="handleFileChange" accept="image/*" class="position-absolute w-100 h-100 top-0 start-0 opacity-0 cursor-pointer">
-            <div v-if="thumbnailPreview" class="d-flex flex-column align-items-center">
-              <img :src="thumbnailPreview" class="img-preview rounded-3 mb-2 border border-theme" style="max-height: 120px; max-width: 100%; object-fit: cover;">
-              <span class="text-purple small fw-semibold">Click to replace thumbnail</span>
-            </div>
-            <div v-else class="text-center py-3">
-              <i class="bi bi-image text-muted display-6 mb-2 d-block"></i>
-              <span class="text-muted small">Drag & drop or click to upload thumbnail</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="field-block">
-          <label>Content / Description</label>
-          <textarea v-model="form.description" class="form-control" rows="4" placeholder="Enter description/content..." required></textarea>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn btn-light border" @click="showModal = false">Cancel</button>
-          <button type="submit" class="btn btn-primary" :disabled="blogStore.isLoading">
-            <span v-if="blogStore.isLoading" class="spinner-border spinner-border-sm me-2"></span>
-            <i v-else class="bi bi-check-lg me-1"></i>
-            <span>Save Changes</span>
+        <nav v-if="totalPages > 1" class="pagination-controls" aria-label="blog list pagination">
+          <button
+            class="pagination-btn"
+            type="button"
+            :disabled="currentPage === 1"
+            aria-label="Previous page"
+            title="Previous page"
+            @click="currentPage -= 1"
+          >
+            <i class="bi bi-chevron-left"></i>
           </button>
-        </div>
-      </form>
-    </BaseModal>
+
+          <button
+            v-for="page in pageNumbers"
+            :key="page"
+            class="pagination-btn"
+            :class="{ active: currentPage === page }"
+            type="button"
+            :aria-current="currentPage === page ? 'page' : undefined"
+            :aria-label="`Page ${page}`"
+            @click="currentPage = page"
+          >
+            {{ page }}
+          </button>
+
+          <button
+            class="pagination-btn"
+            type="button"
+            :disabled="currentPage === totalPages"
+            aria-label="Next page"
+            title="Next page"
+            @click="currentPage += 1"
+          >
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </nav>
+      </footer>
+    </section>
   </AdminPageShell>
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import { useBlogStore } from '../../stores/BlogStore.js';
 import { useToast } from '../../composables/useToast.js';
-import BaseModal from '../../components/base/BaseModal.vue';
 
 const blogStore = useBlogStore();
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
-const search = ref('');
-const activeTab = ref('all');
+const activeTab = ref(
+  route.query.tab && ['all', 'published', 'draft', 'scheduled'].includes(route.query.tab)
+    ? route.query.tab
+    : 'all'
+);
 const activeMenuId = ref(null);
+const search = ref('');
+const isTabSwitching = ref(false);
+
+watch(activeTab, (newTab) => {
+  isTabSwitching.value = true;
+  setTimeout(() => {
+    isTabSwitching.value = false;
+  }, 350);
+
+  router.replace({
+    query: {
+      ...route.query,
+      tab: newTab === 'all' ? undefined : newTab
+    }
+  });
+});
+
+watch(() => route.query.tab, (newTab) => {
+  const target = newTab || 'all';
+  if (activeTab.value !== target && ['all', 'published', 'draft', 'scheduled'].includes(target)) {
+    isTabSwitching.value = true;
+    setTimeout(() => {
+      isTabSwitching.value = false;
+    }, 350);
+    activeTab.value = target;
+  }
+});
 
 onMounted(async () => {
   try {
@@ -244,6 +253,22 @@ const visiblePosts = computed(() => {
   );
 });
 
+const currentPage = ref(1);
+const pageSize = 5;
+
+const totalPages = computed(() => Math.max(1, Math.ceil(visiblePosts.value.length / pageSize)));
+const firstVisibleRow = computed(() => (currentPage.value - 1) * pageSize + 1);
+const lastVisibleRow = computed(() => Math.min(currentPage.value * pageSize, visiblePosts.value.length));
+const pageNumbers = computed(() => Array.from({ length: totalPages.value }, (_, index) => index + 1));
+const paginatedPosts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return visiblePosts.value.slice(start, start + pageSize);
+});
+
+watch(visiblePosts, () => {
+  currentPage.value = 1;
+});
+
 const handleImgError = (e) => {
   e.target.src = 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800';
 };
@@ -257,8 +282,12 @@ const clearCategoryFilter = () => {
   router.replace({ path: '/admin/blogs' });
 };
 
-const navigateToDetail = (id) => {
-  router.push(`/blog/${id}`);
+const navigateToDetail = (post) => {
+  if (post.status === 'draft') {
+    router.push(`/admin/blogs/create?id=${post.id}`);
+  } else {
+    router.push(`/blog/${post.id}`);
+  }
 };
 
 const toggleMenu = (id) => {
@@ -281,68 +310,9 @@ onUnmounted(() => {
   document.removeEventListener('click', closeAllMenus);
 });
 
-const showModal = ref(false);
-const editingBlogId = ref(null);
-const thumbnailPreview = ref(null);
-
-const form = ref({
-  title: '',
-  description: '',
-  category_id: '1',
-  status: 'published',
-  thumbnail: null
-});
-
-const openEditModal = (post) => {
-  editingBlogId.value = post.id;
-  thumbnailPreview.value = post.image || null;
-  form.value = {
-    title: post.title,
-    description: post.description || post.content || '',
-    category_id: post.category_id ? post.category_id.toString() : '1',
-    status: post.status || 'published',
-    thumbnail: null
-  };
-  showModal.value = true;
-};
-
-const handleFileChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    form.value.thumbnail = file;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      thumbnailPreview.value = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const submitForm = async () => {
-  const formData = new FormData();
-  formData.append('title', form.value.title);
-  formData.append('description', form.value.description);
-  formData.append('category_id', form.value.category_id);
-  formData.append('status', form.value.status);
-  
-  if (form.value.thumbnail) {
-    formData.append('thumbnail', form.value.thumbnail);
-  }
-
-  try {
-    await blogStore.updateBlog(editingBlogId.value, formData);
-    toast.success('Blog article updated successfully.');
-    showModal.value = false;
-    await blogStore.fetchAllBlogs();
-  } catch (err) {
-    console.error("Failed to update blog:", err);
-    toast.error('Failed to update blog.');
-  }
-};
-
 const editBlog = (post) => {
   activeMenuId.value = null;
-  openEditModal(post);
+  router.push(`/admin/blogs/create?id=${post.id}`);
 };
 
 const deleteBlog = async (id) => {
@@ -425,29 +395,33 @@ const deleteBlog = async (id) => {
   color: var(--color-text);
 }
 
-/* Premium Filter Tabs */
 .filter-tabs {
   display: flex;
-  gap: 0.5rem;
-  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  width: fit-content;
   margin-top: 1rem;
-  padding-bottom: 0.75rem;
+  padding: 0.25rem;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
 }
 
 .tab-btn {
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: transparent;
-  border: 0;
-  padding: 0.5rem 1rem;
+  gap: 0.4rem;
+  padding: 0 0.7rem;
   color: var(--color-text-muted);
-  font-size: 0.88rem;
-  font-weight: 700;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 800;
   cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s ease;
   text-transform: capitalize;
+  transition: color var(--transition-base), background-color var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .tab-btn:hover {
@@ -457,22 +431,21 @@ const deleteBlog = async (id) => {
 
 .tab-btn.active {
   background: var(--color-primary-light);
-  color: var(--color-primary);
+  border-color: rgba(99, 102, 241, 0.38);
+  color: var(--color-primary-hover);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.08);
 }
 
 .tab-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  background: var(--color-border);
-  color: var(--color-text-muted);
+  min-width: 18px;
+  padding: 0.1rem 0.3rem;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  transition: all 0.2s ease;
+  text-align: center;
 }
 
 .tab-btn.active .tab-badge {
@@ -768,57 +741,6 @@ const deleteBlog = async (id) => {
   }
 }
 
-.edit-blog-form {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.field-block {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.field-block label {
-  color: var(--color-text);
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.65rem;
-  margin-top: 1rem;
-}
-
-.thumbnail-dropzone {
-  cursor: pointer;
-  border-width: 2px;
-  border-style: dashed;
-}
-
-.thumbnail-dropzone:hover {
-  border-color: var(--color-purple) !important;
-}
-
-.border-dashed {
-  border-style: dashed !important;
-}
-
-.border-theme {
-  border-color: var(--color-border) !important;
-}
-
-.bg-surface-hover {
-  background-color: var(--color-surface-hover) !important;
-}
-
 .category-filter-alert {
   display: flex;
   align-items: center;
@@ -852,5 +774,63 @@ const deleteBlog = async (id) => {
 
 .btn-clear-filter:hover {
   opacity: 0.8;
+}
+
+/* Pagination Footer Styles */
+.pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.pagination-footer p {
+  color: var(--color-text-muted) !important;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.pagination-footer strong {
+  color: var(--color-text);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pagination-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  transition: all var(--transition-base);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  color: var(--color-primary);
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+
+.pagination-btn.active {
+  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 </style>

@@ -100,15 +100,6 @@
               
               <button 
                 class="profile-tab-btn" 
-                :class="{ active: activeTab === 'notifications' }"
-                @click="activeTab = 'notifications'"
-              >
-                <i class="bi bi-bell me-2"></i>
-                <span>Notification Preferences</span>
-              </button>
-              
-              <button 
-                class="profile-tab-btn" 
                 :class="{ active: activeTab === 'security' }"
                 @click="activeTab = 'security'"
               >
@@ -234,80 +225,7 @@
               </form>
             </div>
 
-            <!-- Tab 2: Notification Toggles -->
-            <div v-else-if="activeTab === 'notifications'" class="profile-tab-pane fade-in-panel">
-              <h4 class="form-section-title">Institutional Alert Preferences</h4>
-              <p class="panel-subtitle mb-4">Choose how you want to be notified of student activities and moderation actions on the forum.</p>
-              
-              <div class="notification-toggles-list">
-                <div class="toggle-row-premium">
-                  <div class="toggle-row-info">
-                    <i class="bi bi-person-plus-fill text-primary"></i>
-                    <div>
-                      <strong>New Student Registration Alerts</strong>
-                      <p class="text-muted m-0">Send a notification when a new student completes their account verification.</p>
-                    </div>
-                  </div>
-                  <div class="form-check form-switch">
-                    <input class="form-check-input premium-switch" type="checkbox" v-model="notifySettings.studentRegistrations">
-                  </div>
-                </div>
-
-                <div class="toggle-row-premium">
-                  <div class="toggle-row-info">
-                    <i class="bi bi-folder-symlink-fill text-success"></i>
-                    <div>
-                      <strong>Student Project Review Requests</strong>
-                      <p class="text-muted m-0">Notify immediately when a student submits a portfolio showcase project for approval.</p>
-                    </div>
-                  </div>
-                  <div class="form-check form-switch">
-                    <input class="form-check-input premium-switch" type="checkbox" v-model="notifySettings.projectReviews">
-                  </div>
-                </div>
-
-                <div class="toggle-row-premium">
-                  <div class="toggle-row-info">
-                    <i class="bi bi-exclamation-octagon-fill text-danger"></i>
-                    <div>
-                      <strong>Reported Posts & Threads alerts</strong>
-                      <p class="text-muted m-0">Receive alert when a discussion receives user reports violating guidelines.</p>
-                    </div>
-                  </div>
-                  <div class="form-check form-switch">
-                    <input class="form-check-input premium-switch" type="checkbox" v-model="notifySettings.moderationReports">
-                  </div>
-                </div>
-
-                <div class="toggle-row-premium">
-                  <div class="toggle-row-info">
-                    <i class="bi bi-envelope-paper-fill text-info"></i>
-                    <div>
-                      <strong>Weekly Forum Summaries</strong>
-                      <p class="text-muted m-0">Receive a weekly operations summary outlining forum engagement, statistics, and pending action items.</p>
-                    </div>
-                  </div>
-                  <div class="form-check form-switch">
-                    <input class="form-check-input premium-switch" type="checkbox" v-model="notifySettings.weeklyDigest">
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-actions mt-4 pt-3 d-flex justify-content-end">
-                <button 
-                  type="button" 
-                  class="btn btn-primary-premium animate-save" 
-                  @click="saveNotifications"
-                  :disabled="isNotificationsSaving"
-                >
-                  <i class="bi bi-check2-circle me-2" v-if="!isNotificationsSaving"></i>
-                  <span class="spinner-border spinner-border-sm me-2" v-else></span>
-                  <span>{{ isNotificationsSaving ? 'Saving Alerts...' : 'Save Alert Preferences' }}</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Tab 3: Security & Password -->
+            <!-- Tab 2: Security & Password -->
             <div v-else-if="activeTab === 'security'" class="profile-tab-pane fade-in-panel">
               <form class="clean-form" @submit.prevent="savePassword">
                 <h4 class="form-section-title">Change Account Password</h4>
@@ -393,7 +311,6 @@ const activeTab = ref('credentials');
 
 // Actions saving indicators
 const isProfileSaving = ref(false);
-const isNotificationsSaving = ref(false);
 const isPasswordSaving = ref(false);
 
 // School operational details
@@ -405,14 +322,6 @@ const editForm = reactive({
   phone: '+855 12 345 678',
   officeHours: 'Mon - Fri, 8:00 AM - 5:00 PM',
   bio: ''
-});
-
-// Notifications states
-const notifySettings = reactive({
-  studentRegistrations: true,
-  projectReviews: true,
-  moderationReports: true,
-  weeklyDigest: false
 });
 
 // Password states
@@ -488,12 +397,6 @@ const saveProfile = async () => {
   };
   
   isProfileSaving.value = false;
-};
-
-const saveNotifications = async () => {
-  isNotificationsSaving.value = true;
-  await sleep(1000);
-  isNotificationsSaving.value = false;
 };
 
 const savePassword = async () => {
@@ -810,61 +713,6 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 .btn-secondary-premium:hover {
   background: var(--color-surface-hover);
   color: var(--color-text);
-}
-
-/* Toggle lines */
-.notification-toggles-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.toggle-row-premium {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: 1rem;
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  transition: background-color var(--transition-base);
-}
-
-.toggle-row-premium:hover {
-  background: var(--color-surface);
-}
-
-.toggle-row-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.toggle-row-info i {
-  font-size: 1.35rem;
-  flex-shrink: 0;
-}
-
-.toggle-row-info strong {
-  display: block;
-  font-size: 0.86rem;
-  color: var(--color-text);
-}
-
-.toggle-row-info p {
-  font-size: 0.74rem;
-}
-
-.premium-switch {
-  width: 2.6em;
-  height: 1.4em;
-  cursor: pointer;
-}
-
-.premium-switch:checked {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
 }
 
 /* Animations */

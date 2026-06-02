@@ -26,10 +26,10 @@
           </button>
         </label>
 
-        <button class="btn btn-primary create-btn" type="button" @click="$emit('create')">
+        <BaseButton class="create-btn" type="button" @click="$emit('create')">
           <i class="bi bi-plus-lg"></i>
           <span>Add {{ itemLabel }}</span>
-        </button>
+        </BaseButton>
       </div>
     </div>
 
@@ -40,7 +40,7 @@
 
     <div v-else-if="filteredItems.length" class="taxonomy-grid">
       <article
-        v-for="item in filteredItems"
+        v-for="item in paginatedItems"
         :key="item.id ?? item.name"
         class="taxonomy-card"
         :class="{ 'taxonomy-card-clickable': clickable }"
@@ -92,6 +92,50 @@
       </article>
     </div>
 
+    <footer v-if="!isLoading && filteredItems.length" class="pagination-footer mt-4">
+      <p>
+        Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong>
+        of <strong>{{ filteredItems.length }}</strong> {{ itemLabel.toLowerCase() }}s
+      </p>
+
+      <nav v-if="totalPages > 1" class="pagination-controls" :aria-label="`${itemLabel} list pagination`">
+        <button
+          class="pagination-btn"
+          type="button"
+          :disabled="currentPage === 1"
+          aria-label="Previous page"
+          title="Previous page"
+          @click="currentPage -= 1"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <button
+          v-for="page in pageNumbers"
+          :key="page"
+          class="pagination-btn"
+          :class="{ active: currentPage === page }"
+          type="button"
+          :aria-current="currentPage === page ? 'page' : undefined"
+          :aria-label="`Page ${page}`"
+          @click="currentPage = page"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          class="pagination-btn"
+          type="button"
+          :disabled="currentPage === totalPages"
+          aria-label="Next page"
+          title="Next page"
+          @click="currentPage += 1"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </nav>
+    </footer>
+
     <div v-else-if="searchQuery" class="taxonomy-empty">
       <i class="bi bi-search"></i>
       <span>No {{ title.toLowerCase() }} match "{{ searchQuery }}".</span>
@@ -105,7 +149,8 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import BaseButton from '../base/BaseButton.vue';
 
 const props = defineProps({
   title: {
@@ -159,6 +204,22 @@ const filteredItems = computed(() => {
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(needle));
   });
+});
+
+const currentPage = ref(1);
+const pageSize = 8;
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredItems.value.length / pageSize)));
+const firstVisibleRow = computed(() => (currentPage.value - 1) * pageSize + 1);
+const lastVisibleRow = computed(() => Math.min(currentPage.value * pageSize, filteredItems.value.length));
+const pageNumbers = computed(() => Array.from({ length: totalPages.value }, (_, index) => index + 1));
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return filteredItems.value.slice(start, start + pageSize);
+});
+
+watch(filteredItems, () => {
+  currentPage.value = 1;
 });
 
 const closeMenu = () => {
@@ -466,5 +527,63 @@ onBeforeUnmount(() => {
   .taxonomy-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Pagination Footer Styles */
+.pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.pagination-footer p {
+  color: var(--color-text-muted) !important;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.pagination-footer strong {
+  color: var(--color-text);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pagination-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  transition: all var(--transition-base);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  color: var(--color-primary);
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+
+.pagination-btn.active {
+  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 </style>

@@ -12,6 +12,7 @@ export const useUsersStore = defineStore('users', () => {
   const users = ref([]);
   const user = ref(null);
   const isLoading = ref(false);
+  const isListLoading = ref(false);
 
   // Real backend endpoint for creating users
   const createUser = async (payload) => {
@@ -25,6 +26,7 @@ export const useUsersStore = defineStore('users', () => {
         gender: payload.gender,
       });
       ensureSuccess(response);
+      console.log("response",response);
 
       // Save created user in-memory so they show up in the table instantly!
       const newUserObj = {
@@ -44,15 +46,15 @@ export const useUsersStore = defineStore('users', () => {
   };
 
   // Admin Get All Users (Real API Endpoint)
-  const fetchUsers = async () => {
+  const fetchUsers = async (silent = false) => {
     try {
-      isLoading.value = true;
+      if (!silent) isListLoading.value = true;
       const response = await api.get('/api/admin/gell-all-users');
       ensureSuccess(response);
       users.value = response.data.data || response.data;
       return users.value;
     } finally {
-      isLoading.value = false;
+      isListLoading.value = false;
     }
   };
 
@@ -94,6 +96,7 @@ export const useUsersStore = defineStore('users', () => {
     users,
     user,
     isLoading,
+    isListLoading,
     createUser,
     fetchUsers,
     fetchUserById,

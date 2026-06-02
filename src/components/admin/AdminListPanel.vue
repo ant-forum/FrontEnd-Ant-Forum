@@ -34,8 +34,7 @@
               <div v-else class="skeleton-line w-75 shimmer"></div>
             </td>
             <td v-if="showActions" class="text-end">
-              <div class="skeleton-actions d-flex justify-content-end gap-2">
-                <div class="skeleton-btn shimmer"></div>
+              <div class="skeleton-actions d-flex justify-content-end">
                 <div class="skeleton-btn shimmer"></div>
               </div>
             </td>
@@ -64,12 +63,27 @@
               <span v-else>{{ row[column.key] }}</span>
             </td>
             <td v-if="showActions" class="text-end">
-              <button class="icon-btn small me-1" type="button" title="Edit" @click="$emit('edit', row)">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button class="icon-btn small text-danger" type="button" title="Delete" @click="$emit('delete', row)">
-                <i class="bi bi-trash"></i>
-              </button>
+              <div class="actions-dropdown-container">
+                <button 
+                  class="btn-action-dots" 
+                  type="button" 
+                  title="Actions"
+                  @click.stop="toggleMenu(row.id ?? row.name)"
+                >
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                
+                <div v-if="activeMenuId === (row.id ?? row.name)" class="actions-dropdown-menu">
+                  <button type="button" @click.stop="handleEdit(row)" class="dropdown-item">
+                    <i class="bi bi-pencil-fill text-primary"></i>
+                    <span>Edit</span>
+                  </button>
+                  <button type="button" @click.stop="handleDelete(row)" class="dropdown-item delete">
+                    <i class="bi bi-trash-fill text-danger"></i>
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -131,7 +145,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
   title: {
@@ -223,7 +237,35 @@ const statusClass = (status) => {
   return 'neutral';
 };
 
-defineEmits(['edit', 'delete']);
+const emit = defineEmits(['edit', 'delete']);
+
+const activeMenuId = ref(null);
+
+const toggleMenu = (id) => {
+  activeMenuId.value = activeMenuId.value === id ? null : id;
+};
+
+const closeMenu = () => {
+  activeMenuId.value = null;
+};
+
+const handleEdit = (row) => {
+  closeMenu();
+  emit('edit', row);
+};
+
+const handleDelete = (row) => {
+  closeMenu();
+  emit('delete', row);
+};
+
+onMounted(() => {
+  document.addEventListener('click', closeMenu);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeMenu);
+});
 </script>
 
 <style scoped>
@@ -350,6 +392,89 @@ defineEmits(['edit', 'delete']);
 .icon-btn.small {
   width: 34px;
   height: 34px;
+}
+
+/* Premium Actions Dropdown */
+.actions-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-action-dots {
+  color: var(--color-text-muted);
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-action-dots:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.actions-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+  z-index: 100;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  animation: dropdown-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdown-enter {
+  from { opacity: 0; transform: translateY(-4px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.4rem 0.65rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: left;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.dropdown-item i {
+  font-size: 0.9rem;
+}
+
+.dropdown-item.delete {
+  color: var(--color-danger, #ef4444);
+}
+
+.dropdown-item.delete:hover {
+  background: var(--color-danger-light, rgba(239, 68, 68, 0.12));
+  color: var(--color-danger, #ef4444);
 }
 
 .status-pill {

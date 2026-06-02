@@ -118,6 +118,10 @@ defineEmits(['closeModal']);
   margin: 0;
 }
 
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
 .modal-icon {
   font-size: 1.15rem;
 }

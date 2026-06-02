@@ -44,9 +44,16 @@ defineEmits(["click"]);
 }
 
 .btn-primary {
-  background-color: #25397e;
-  border-color: #25397e;
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 .btn:hover:not(:disabled) {
