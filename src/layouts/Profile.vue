@@ -9,105 +9,45 @@ import ProfileOverview from "../components/profile/ProfileOverview.vue";
 import ProfileProject from "../components/profile/ProfileProject.vue";
 import ProfileSetting from "../components/profile/ProfileSetting.vue";
 
-// Auth Store
+// Stores
 const authStore = useAuthStore();
+import { useUserProfilesStore } from "../stores/UserProfilesStore";
+
+const userProfilesStore = useUserProfilesStore();
 
 // Tab state: 'profile' | 'projects' | 'settings'
 const activeTab = ref("profile");
 
-const savedAvatarPreview = ref("");
-const savedProfile = reactive({
-  name: "",
-  bio: "",
-  github: "",
-  linkedin: "",
-  skills: [],
+onMounted(async () => {
+  try {
+    await userProfilesStore.fetchProfile();
+  } catch (err) {
+    console.error("Failed to load user profile:", err);
+  }
 });
 
-const loadSavedProfile = () => {
-  const user = authStore.user || {};
-  savedProfile.name = user.name || "";
-  savedProfile.bio = user.bio || "";
-  savedProfile.github = user.github || "";
-  savedProfile.linkedin = user.linkedin || "";
-  savedProfile.skills = Array.isArray(user.skills) ? [...user.skills] : [];
-  savedAvatarPreview.value = user.avatar || user.avatarUrl || "";
-};
-
-onMounted(loadSavedProfile);
-
-const handleProfileSaved = (updatedUser) => {
-  savedProfile.name = updatedUser.name;
-  savedProfile.bio = updatedUser.bio;
-  savedProfile.github = updatedUser.github;
-  savedProfile.linkedin = updatedUser.linkedin;
-  savedProfile.skills = Array.isArray(updatedUser.skills) ? [...updatedUser.skills] : [];
-  savedAvatarPreview.value = updatedUser.avatar || updatedUser.avatarUrl || "";
-  
+const handleProfileSaved = () => {
   // Switch tab back to profile overview dashboard
   activeTab.value = "profile";
 };
 
-// Profile Dashboard Dynamic Data / Mock Data
-const profileName = computed(() => savedProfile.name || "Alex 'Dev' Rivera");
+// Profile Dashboard Dynamic Data from AuthStore (which is globally synced and normalized)
+const profileName = computed(() => authStore.user?.username || "");
 const profileRole = computed(() => {
   const role = authStore.user?.role || "Student";
   if (role.toLowerCase() === 'mentor') return 'Teacher';
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 });
-const profileBio = computed(() => savedProfile.bio || "Passionate full-stack architect with 8+ years of experience building scalable distributed systems and open-source ecosystems. Specializing in high-performance React architectures and Go-based microservices. Active contributor to the ANT-Forum core and mentor for emerging tech talent.");
-const profileGithub = computed(() => savedProfile.github || "https://github.com");
-const profileLinkedin = computed(() => savedProfile.linkedin || "https://linkedin.com");
-const profileSkills = computed(() => savedProfile.skills.length > 0 ? savedProfile.skills : ["Rust", "Go", "TypeScript", "Python"]);
-const profileAvatar = computed(() => savedAvatarPreview.value || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300");
+const profileBio = computed(() => "");
+const profileGithub = computed(() => "");
+const profileLinkedin = computed(() => "");
+const profileSkills = computed(() => []);
+const profileAvatar = computed(() => authStore.user?.profile_pic || authStore.user?.avatar || "");
 
-// Default Showcase Projects (matches screenshot)
-const defaultProjects = [
-  {
-    title: "Nexus UI Engine",
-    stars: "2.4k",
-    desc: "A low-latency rendering engine for technical dashboards and real-time data visualization systems.",
-    tags: ["REACT", "WEBGPU", "TYPESCRIPT"]
-  },
-  {
-    title: "ANT-Gateway",
-    stars: "842",
-    desc: "High-performance API gateway and authentication layer optimized for the ANT-Forum ecosystem.",
-    tags: ["GO", "REDIS", "GRPC"]
-  }
-];
-
-// Additional Projects for Showcase tab
-const additionalProjects = [
-  {
-    title: "Aether OS Gateway",
-    stars: "1.2k",
-    desc: "Microservices API gateway designed for low-latency financial systems.",
-    tags: ["NODE.JS", "REDIS", "GRAPHQL"]
-  },
-  {
-    title: "Lumina Design System",
-    stars: "3.4k",
-    desc: "A comprehensive suite of accessible React components for scale.",
-    tags: ["REACT", "TAILWIND", "STORYBOOK"]
-  }
-];
-
-// Activity Feed (matches screenshot)
-const activityFeed = [
-  {
-    type: "discussion",
-    title: "How to optimize SSR in large-scale Next.js apps?",
-    meta: "FORUM DISCUSSION • 2H AGO • 48 COMMENTS",
-    icon: "bi-chat-left-text"
-  },
-  {
-    type: "merge",
-    title: "Merge pull request #452: Implement dynamic layout slots",
-    meta: "REPOSITORY: ANT-UI • 1D AGO",
-    icon: "bi-git"
-  }
-];
+// Empty arrays since these are not part of the current API schema
+const defaultProjects = ref([]);
+const additionalProjects = ref([]);
+const activityFeed = ref([]);
 </script>
 
 <template>
