@@ -8,7 +8,8 @@
       <div class="admin-content-wrapper admin-page-content">
         <header class="admin-page-header">
           <div>
-            <p class="admin-kicker mb-2">{{ kicker }}</p>
+            <slot name="before-title"></slot>
+
             <h1>{{ title }}</h1>
             <p>{{ subtitle }}</p>
           </div>

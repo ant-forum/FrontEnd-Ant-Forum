@@ -16,8 +16,12 @@
       title="All Users"
       subtitle="A clean table for managing forum members."
       placeholder="Search users"
+      item-label="users"
+      empty-title="No user accounts yet"
+      empty-description="New forum accounts will appear here after registration."
       :columns="columns"
       :rows="mappedUsers"
+      :is-loading="isPageLoading"
       @edit="openEditModal"
       @delete="openDeleteModal"
     />
@@ -30,38 +34,68 @@
       kicker=""
       @closeModal="closeEditModal"
     >
-      <form class="edit-user-form" @submit.prevent="handleUpdateUser">
+      <form class="edit-user-form" @submit.prevent="handleUpdateUser" novalidate>
         <div class="field-block">
           <label>Username</label>
-          <input v-model="mEdit.data.username" class="form-control" type="text" placeholder="Enter username" required>
+          <input 
+            v-model="mEdit.data.username" 
+            class="form-control" 
+            :class="{ 'is-invalid': errors.username }" 
+            type="text" 
+            placeholder="Enter username"
+            @input="handleEditInput('username')"
+          >
+          <div v-if="errors.username" class="invalid-feedback d-block">{{ errors.username }}</div>
         </div>
 
         <div class="field-block">
           <label>Email Address</label>
-          <input v-model="mEdit.data.email" class="form-control" type="email" placeholder="name@example.com" required>
+          <input 
+            v-model="mEdit.data.email" 
+            class="form-control" 
+            :class="{ 'is-invalid': errors.email }" 
+            type="email" 
+            placeholder="name@example.com"
+            @input="handleEditInput('email')"
+          >
+          <div v-if="errors.email" class="invalid-feedback d-block">{{ errors.email }}</div>
         </div>
 
         <div class="form-row">
           <div class="field-block">
             <label>Role</label>
-            <select v-model="mEdit.data.role" class="form-select" required>
-              <option value="user">Student</option>
+            <select 
+              v-model="mEdit.data.role" 
+              class="form-select"
+              :class="{ 'is-invalid': errors.role }"
+              @change="handleEditInput('role')"
+            >
+              <option value="">Select Role</option>
+              <option value="student">Student</option>
               <option value="mentor">Mentor</option>
             </select>
+            <div v-if="errors.role" class="invalid-feedback d-block">{{ errors.role }}</div>
           </div>
 
           <div class="field-block">
             <label>Gender</label>
-            <select v-model="mEdit.data.gender" class="form-select" required>
+            <select 
+              v-model="mEdit.data.gender" 
+              class="form-select"
+              :class="{ 'is-invalid': errors.gender }"
+              @change="handleEditInput('gender')"
+            >
+              <option value="">Select Gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
+            <div v-if="errors.gender" class="invalid-feedback d-block">{{ errors.gender }}</div>
           </div>
         </div>
 
         <div class="modal-actions">
           <button class="btn btn-light border" type="button" @click="closeEditModal">Cancel</button>
-          <button class="btn btn-primary" type="submit" :disabled="usersStore.isLoading">
+          <button class="btn btn-primary" type="submit" :disabled="usersStore.isLoading || isSaveDisabled">
             <span v-if="usersStore.isLoading" class="spinner-border spinner-border-sm me-2"></span>
             <i v-else class="bi bi-check-lg me-1"></i>
             <span>Save Changes</span>
@@ -96,15 +130,36 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import AdminListPanel from '../../components/admin/AdminListPanel.vue';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import BaseModal from '../../components/base/BaseModal.vue';
 import { useUsersStore } from '../../stores/UsersStore';
 import { useToast } from '../../composables/useToast';
+import { useRequiredValidator } from '../../composables/useRequiredValidator';
 
 const usersStore = useUsersStore();
 const toast = useToast();
+const isEditSubmitted = ref(false);
+const isPageLoading = ref(true);
+const {
+  errors,
+  clearError,
+  validateUsername,
+  validateEmail,
+  validateField
+} = useRequiredValidator();
+
+const handleEditInput = (field) => {
+  if (isEditSubmitted.value) {
+    if (field === 'username') validateUsername(mEdit.data.username);
+    if (field === 'email') validateEmail(mEdit.data.email);
+    if (field === 'role') validateField('role', mEdit.data.role, 'Role is required.');
+    if (field === 'gender') validateField('gender', mEdit.data.gender, 'Gender is required.');
+  } else {
+    clearError(field);
+  }
+};
 
 const columns = [
   { key: 'name', label: 'Name' },
@@ -113,18 +168,26 @@ const columns = [
   { key: 'joined', label: 'Joined' },
 ];
 
+const formatJoinedDate = (value) => {
+  if (!value) return 'Not available';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 const mappedUsers = computed(() => {
   return (usersStore.users || []).map((u) => ({
     id: u.id || u._id,
     name: u.username || 'No Username',
     detail: u.email || 'No email',
-    role: u.role === 'user' ? 'Student' : (u.role === 'mentor' ? 'Mentor' : (u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : 'Student')),
+    role: (u.role === 'user' || u.role === 'student') ? 'Student' : (u.role === 'mentor' ? 'Mentor' : (u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : 'Student')),
     status: u.status || 'Active',
-    joined: u.createdAt
-      ? new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-      : 'May 31, 2026',
+    joined: formatJoinedDate(u.createdAt || u.created_at),
+    avatar: u.profile_pic || u.avatar || u.avatarUrl || '',
     gender: u.gender || 'male',
-    rawRole: u.role || 'user',
+    rawRole: u.role || 'student',
   }));
 });
 
@@ -145,10 +208,13 @@ const metrics = computed(() => {
 
 onMounted(async () => {
   try {
-    await usersStore.fetchUsers();
+    isPageLoading.value = true;
+    await usersStore.fetchUsers(true);
   } catch (error) {
     console.error('Failed to load users:', error);
     toast.error('Could not load user accounts from the server.');
+  } finally {
+    isPageLoading.value = false;
   }
 });
 
@@ -159,18 +225,51 @@ const mEdit = reactive({
   data: {
     username: '',
     email: '',
-    role: 'user',
+    role: 'student',
     gender: 'male',
   },
 });
 
+const isSaveDisabled = computed(() => {
+  if (!mEdit.item) return true;
+
+  const currentUsername = (mEdit.data.username || '').trim();
+  const currentEmail = (mEdit.data.email || '').trim();
+  const currentRole = mEdit.data.role;
+  const currentGender = mEdit.data.gender;
+
+  // Disable if any required fields are empty
+  if (!currentUsername || !currentEmail || !currentRole || !currentGender) {
+    return true;
+  }
+
+  // Disable if fields are completely unmodified from their original states
+  const originalUsername = (mEdit.item.name || '').trim();
+  const originalEmail = (mEdit.item.detail || '').trim();
+  const originalRole = mEdit.item.rawRole || '';
+  const originalGender = mEdit.item.gender || '';
+
+  const isUnchanged =
+    currentUsername === originalUsername &&
+    currentEmail === originalEmail &&
+    currentRole === originalRole &&
+    currentGender === originalGender;
+
+  return isUnchanged;
+});
+
 const openEditModal = (mappedUser) => {
+  isEditSubmitted.value = false;
+  clearError('username');
+  clearError('email');
+  clearError('role');
+  clearError('gender');
   mEdit.item = mappedUser;
   mEdit.data = {
     username: mappedUser.name,
     email: mappedUser.detail,
-    role: mappedUser.rawRole,
-    gender: mappedUser.gender,
+    role: mappedUser.rawRole || '',
+    gender: mappedUser.gender || '',
   };
   mEdit.isVisible = true;
 };
@@ -181,6 +280,18 @@ const closeEditModal = () => {
 };
 
 const handleUpdateUser = async () => {
+  isEditSubmitted.value = true;
+
+  const isUsernameValid = validateUsername(mEdit.data.username);
+  const isEmailValid = validateEmail(mEdit.data.email);
+  const isRoleValid = validateField('role', mEdit.data.role, 'Role is required.');
+  const isGenderValid = validateField('gender', mEdit.data.gender, 'Gender is required.');
+
+  if (!isUsernameValid || !isEmailValid || !isRoleValid || !isGenderValid) {
+    toast.error('Please fix the validation errors before saving.');
+    return;
+  }
+
   try {
     await usersStore.updateUser(mEdit.item.id, {
       username: mEdit.data.username,
@@ -190,12 +301,15 @@ const handleUpdateUser = async () => {
     });
     toast.success('User updated successfully!');
     closeEditModal();
-    // Refresh the table
-    await usersStore.fetchUsers();
+    // Show skeleton while loading the refreshed user list
+    isPageLoading.value = true;
+    await usersStore.fetchUsers(true);
   } catch (error) {
     console.error('Failed to update user:', error);
     const errorMsg = error.message || error.msg || 'An error occurred while updating the user account.';
     toast.error(errorMsg);
+  } finally {
+    isPageLoading.value = false;
   }
 };
 
@@ -220,12 +334,15 @@ const handleDeleteUser = async () => {
     await usersStore.deleteUser(mDelete.item.id);
     toast.success('User account deleted successfully!');
     closeDeleteModal();
-    // Refresh the table
-    await usersStore.fetchUsers();
+    // Show skeleton while loading the refreshed user list
+    isPageLoading.value = true;
+    await usersStore.fetchUsers(true);
   } catch (error) {
     console.error('Failed to delete user:', error);
     const errorMsg = error.message || error.msg || 'An error occurred while deleting the user account.';
     toast.error(errorMsg);
+  } finally {
+    isPageLoading.value = false;
   }
 };
 </script>
@@ -257,6 +374,7 @@ const handleDeleteUser = async () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+  align-items: start;
 }
 
 .modal-actions {
@@ -281,5 +399,27 @@ const handleDeleteUser = async () => {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+/* Remove Bootstrap's default validation background icons */
+.form-control.is-invalid,
+.form-select.is-invalid {
+  background-image: none !important;
+  border-color: var(--color-danger) !important;
+  padding-right: 0.75rem !important;
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+  border-color: var(--color-danger) !important;
+}
+
+/* Reduce spacing between input and validation error message */
+.invalid-feedback {
+  margin-top: -0.3rem !important;
+  font-size: 0.8rem;
+  color: var(--color-danger);
+  font-weight: 700;
 }
 </style>

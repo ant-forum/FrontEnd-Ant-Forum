@@ -13,6 +13,7 @@
       :items="tags"
       :is-loading="isLoading"
       show-view
+      show-search
       @create="openCreateModal"
       @view="openDetailModal"
       @edit="openEditModal"
@@ -55,7 +56,7 @@
       v-if="mForm.isVisible"
       :title="mForm.mode === 'edit' ? 'Edit Tag' : 'Create Tag'"
       icon="bi bi-tag"
-      kicker="Forum Taxonomy"
+      kicker=""
       @closeModal="closeFormModal"
     >
       <form class="taxonomy-form" @submit.prevent="saveTag">
@@ -82,7 +83,7 @@
       title="Delete Tag?"
       icon="bi bi-trash"
       theme="danger"
-      kicker="Confirm Action"
+      kicker=""
       @closeModal="closeDeleteModal"
     >
       <p class="delete-message">
