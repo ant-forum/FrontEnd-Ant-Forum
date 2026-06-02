@@ -164,7 +164,7 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const res = await api.get("/api/get/profile");
       if (res.data && res.data.result !== false) {
-        setUser(res.data.data || res.data);
+        setUser(res.data.user || res.data.data || res.data);
         return res.data;
       }
       clearSession();

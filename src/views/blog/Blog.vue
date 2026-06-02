@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
 import { useBlogStore } from '../../stores/BlogStore';
@@ -7,6 +8,8 @@ import { useAuthStore } from '../../stores/AuthStore';
 
 const blogStore = useBlogStore();
 const authStore = useAuthStore();
+const route = useRoute();
+const router = useRouter();
 
 const searchQuery = ref('');
 const selectedCategory = ref('All');
@@ -45,6 +48,7 @@ const showModal = ref(false);
 const isEditing = ref(false);
 const editingBlogId = ref(null);
 const thumbnailPreview = ref(null);
+const cameFromAdmin = ref(false);
 
 const form = ref({
   title: '',
@@ -140,6 +144,14 @@ const openEditModal = (post) => {
   showModal.value = true;
 };
 
+const closeModal = () => {
+  showModal.value = false;
+  if (cameFromAdmin.value) {
+    cameFromAdmin.value = false;
+    router.push('/admin/blogs');
+  }
+};
+
 const handleFileChange = (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -177,26 +189,12 @@ const submitForm = async () => {
       await blogStore.fetchBlogs();
     }
     
-    showModal.value = false;
+    closeModal();
   } catch (err) {
     console.error("Failed to submit blog form:", err);
   }
 };
 
-const handleDeleteBlog = async (id) => {
-  if (confirm("Are you sure you want to delete this article? This action cannot be undone.")) {
-    try {
-      await blogStore.deleteOwnBlog(id);
-      if (authStore.user?.role === 'admin') {
-        await blogStore.fetchAllBlogs();
-      } else {
-        await blogStore.fetchBlogs();
-      }
-    } catch (err) {
-      console.error("Deletion failed:", err);
-    }
-  }
-};
 const handleImgError = (e) => {
   e.target.src = "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800";
 };
@@ -229,9 +227,6 @@ const handleImgError = (e) => {
                   <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                   <input v-model="searchQuery" type="text" class="form-control rounded-pill ps-5 py-2 border-0 shadow-sm bg-surface" placeholder="Search articles...">
                 </div>
-                <button v-if="authStore.user?.role === 'admin'" @click="openCreateModal" class="btn btn-purple rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2">
-                  <i class="bi bi-plus-circle-fill"></i> Create New Blog
-                </button>
               </div>
             </div>
           </div>
@@ -385,16 +380,7 @@ const handleImgError = (e) => {
                     <span class="font-sm text-adaptive fw-bold">{{ post.author }}</span>
                   </div>
                   
-                  <!-- Admin actions -->
-                  <div v-if="authStore.user?.role === 'admin'" class="d-flex gap-1" @click.stop.prevent>
-                    <button @click="openEditModal(post)" class="btn btn-xs btn-outline-primary border-0 rounded-circle p-1" title="Edit Blog">
-                      <i class="bi bi-pencil-fill"></i>
-                    </button>
-                    <button @click="handleDeleteBlog(post.id)" class="btn btn-xs btn-outline-danger border-0 rounded-circle p-1" title="Delete Blog">
-                      <i class="bi bi-trash-fill"></i>
-                    </button>
-                  </div>
-                  <div v-else class="read-more-link text-purple font-sm fw-bold">
+                  <div class="read-more-link text-purple font-sm fw-bold">
                     Read <i class="bi bi-arrow-right ms-1"></i>
                   </div>
                 </div>
@@ -442,7 +428,7 @@ const handleImgError = (e) => {
           <h3 class="fw-bold text-adaptive mb-0">
             {{ isEditing ? 'Edit Blog Article' : 'Create New Article' }}
           </h3>
-          <button @click="showModal = false" class="btn-close-modal border-0 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <button @click="closeModal" class="btn-close-modal border-0 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
             <i class="bi bi-x-lg text-adaptive"></i>
           </button>
         </div>
@@ -492,7 +478,7 @@ const handleImgError = (e) => {
             </div>
             
             <div class="col-12 d-flex justify-content-end gap-3 mt-4">
-              <button type="button" @click="showModal = false" class="btn btn-light rounded-pill px-4 py-2 fw-bold border-theme text-adaptive">
+              <button type="button" @click="closeModal" class="btn btn-light rounded-pill px-4 py-2 fw-bold border-theme text-adaptive">
                 Cancel
               </button>
               <button type="submit" class="btn btn-purple rounded-pill px-4 py-2 fw-bold text-white shadow-sm d-flex align-items-center gap-2">
@@ -767,57 +753,5 @@ const handleImgError = (e) => {
   .search-box-soft { margin: 0 auto; }
 }
 
-/* Modal Backdrop Blur */
-.modal-backdrop-blur {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  z-index: 1050;
-  transition: all 0.3s ease;
-}
 
-/* Glassmorphism Modal Card */
-.modal-card-glassmorphism {
-  background: var(--color-surface);
-  border-color: var(--color-border) !important;
-  backdrop-filter: blur(16px);
-  animation: modal-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes modal-enter {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.btn-close-modal {
-  background: var(--color-surface-hover);
-  color: var(--color-text-muted);
-  transition: all 0.2s ease;
-}
-
-.btn-close-modal:hover {
-  background: var(--color-border);
-  color: var(--color-text);
-}
-
-.thumbnail-dropzone {
-  cursor: pointer;
-  border-width: 2px;
-  border-style: dashed;
-}
-
-.thumbnail-dropzone:hover {
-  border-color: var(--color-purple) !important;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.border-dashed {
-  border-style: dashed !important;
-}
-
-.z-1050 {
-  z-index: 1050;
-}
 </style>

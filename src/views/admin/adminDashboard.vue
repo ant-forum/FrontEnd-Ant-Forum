@@ -11,7 +11,7 @@
             <p class="section-kicker mb-2">Admin Overview</p>
             <h1 class="fw-bold text-adaptive mb-2">ANT Forum Control Center</h1>
             <p class="text-muted mb-0">
-              Track users, projects, blog content, and forum moderation from one clean sample dashboard.
+              Track review queues, publishing activity, and forum moderation from one control center.
             </p>
           </div>
 
@@ -44,8 +44,8 @@
             <div class="card border-0 shadow-sm dashboard-panel mb-4">
               <div class="panel-header">
                 <div>
-                  <h5 class="fw-bold text-adaptive mb-1">Weekly Activity</h5>
-                  <p class="text-muted small mb-0">Sample data for discussions, replies, and projects</p>
+                  <h5 class="fw-bold text-adaptive mb-1">{{ selectedPeriod }} Activity</h5>
+                  <p class="text-muted small mb-0">Compare forum activity across the selected period</p>
                 </div>
                 <div class="btn-group btn-group-sm period-tabs" role="group" aria-label="Activity period">
                   <button
@@ -60,33 +60,50 @@
                 </div>
               </div>
 
-              <div class="activity-chart" aria-label="Weekly activity chart">
-                <svg class="activity-svg" viewBox="0 0 680 260" role="img" aria-label="Activity trend">
-                  <g class="grid-lines">
-                    <line v-for="line in chartGrid" :key="line" x1="32" x2="652" :y1="line" :y2="line"></line>
-                  </g>
+              <div class="activity-summary">
+                <article v-for="item in activityTotals" :key="item.key" class="activity-total">
+                  <span :class="['legend-dot', item.key]"></span>
+                  <div>
+                    <small>{{ item.label }}</small>
+                    <strong>{{ item.value }}</strong>
+                  </div>
+                </article>
+              </div>
 
-                  <g v-for="series in chartSeries" :key="series.key" :class="['series', series.key]">
-                    <polyline :points="series.points"></polyline>
-                    <circle
-                      v-for="dot in series.dots"
-                      :key="`${series.key}-${dot.day}`"
-                      :cx="dot.x"
-                      :cy="dot.y"
-                      r="4"
-                    ></circle>
-                  </g>
-                </svg>
+              <div class="activity-chart" :aria-label="`${selectedPeriod} activity chart`">
+                <div class="chart-scale" aria-hidden="true">
+                  <span v-for="tick in chartScale" :key="tick">{{ tick }}</span>
+                </div>
 
-                <div class="chart-axis" :style="{ gridTemplateColumns: `repeat(${chartData.length}, 1fr)` }" aria-hidden="true">
-                  <span v-for="item in chartData" :key="item.day">{{ item.day }}</span>
+                <div class="chart-stage">
+                  <div class="chart-grid" aria-hidden="true">
+                    <span v-for="tick in chartScale" :key="tick"></span>
+                  </div>
+
+                  <div class="bar-groups" :style="{ gridTemplateColumns: `repeat(${chartData.length}, minmax(54px, 1fr))` }">
+                    <div v-for="item in chartData" :key="item.day" class="bar-group">
+                      <div class="bar-stack">
+                        <span
+                          v-for="series in activitySeries"
+                          :key="series.key"
+                          :class="['activity-bar', series.key]"
+                          :style="{ height: `${barHeight(item[series.key])}%` }"
+                          :aria-label="`${item.day}: ${item[series.key]} ${series.label}`"
+                          role="img"
+                        >
+                          <small>{{ item[series.key] }}</small>
+                        </span>
+                      </div>
+                      <strong>{{ item.day }}</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div class="chart-legend">
-                <span><i class="legend-dot discussions"></i>Discussions</span>
-                <span><i class="legend-dot replies"></i>Replies</span>
-                <span><i class="legend-dot projects"></i>Projects</span>
+                <span v-for="series in activitySeries" :key="series.key">
+                  <i :class="['legend-dot', series.key]"></i>{{ series.label }}
+                </span>
               </div>
             </div>
 
@@ -96,7 +113,7 @@
                   <h5 class="fw-bold text-adaptive mb-1">Moderation Queue</h5>
                   <p class="text-muted small mb-0">Items that need admin review</p>
                 </div>
-                <router-link class="btn btn-light btn-sm border" to="/admin/threads">
+                <router-link class="btn btn-light btn-sm border" to="/admin/reports">
                   <i class="bi bi-arrow-up-right"></i>
                 </router-link>
               </div>
@@ -129,9 +146,9 @@
                         <span :class="['status-pill', item.statusClass]">{{ item.status }}</span>
                       </td>
                       <td class="text-end">
-                        <button class="btn btn-light btn-sm border" type="button" @click="toast.info(`Review ${item.title}`)">
+                        <router-link class="btn btn-light btn-sm border" :to="item.to">
                           Review
-                        </button>
+                        </router-link>
                       </td>
                     </tr>
                   </tbody>
@@ -172,7 +189,7 @@
               <div class="panel-header">
                 <div>
                   <h5 class="fw-bold text-adaptive mb-1">System Health</h5>
-                  <p class="text-muted small mb-0">Simple admin sample status</p>
+                  <p class="text-muted small mb-0">Current operational snapshot</p>
                 </div>
               </div>
 
@@ -207,28 +224,27 @@ import { computed, ref } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
 import AdminTopbar from '../../components/admin/AdminTopbar.vue';
 import StatCard from '../../components/admin/StatCard.vue';
-import { useToast } from '../../composables/useToast.js';
+import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
 
-const toast = useToast();
-
+const adminStore = useAdminOperationsStore();
 const selectedPeriod = ref('Week');
 const periods = ['Day', 'Week', 'Month'];
 
-const metrics = [
+const metrics = computed(() => [
   {
-    label: 'Total Users',
-    value: 1284,
-    description: '+12% this month',
-    descriptionIcon: 'bi-arrow-up-right',
-    descriptionColorClass: 'text-success',
-    icon: 'bi bi-people',
+    label: 'Admin Actions',
+    value: adminStore.activityLog.length,
+    description: 'Recorded locally',
+    descriptionIcon: 'bi-activity',
+    descriptionColorClass: 'text-muted',
+    icon: 'bi bi-activity',
     iconBgClass: 'bg-purple-light',
     iconColorClass: 'text-purple',
   },
   {
     label: 'Projects',
-    value: 64,
-    description: '8 pending review',
+    value: adminStore.projects.length,
+    description: `${adminStore.pendingProjects.length} pending review`,
     descriptionIcon: 'bi-folder-check',
     descriptionColorClass: 'text-warning',
     icon: 'bi bi-folder2-open',
@@ -236,9 +252,9 @@ const metrics = [
     iconColorClass: 'text-orange',
   },
   {
-    label: 'Threads',
-    value: 348,
-    description: '23 new today',
+    label: 'Moderated Threads',
+    value: adminStore.threadReports.length,
+    description: `${adminStore.lockedThreads.length} currently locked`,
     descriptionIcon: 'bi-chat-dots',
     descriptionColorClass: 'text-success',
     icon: 'bi bi-chat-square-text',
@@ -247,15 +263,15 @@ const metrics = [
   },
   {
     label: 'Reports',
-    value: 12,
-    description: 'Needs action',
+    value: adminStore.pendingReports.length,
+    description: `${adminStore.highPriorityReports.length} high priority`,
     descriptionIcon: 'bi-exclamation-triangle',
     descriptionColorClass: 'text-danger',
     icon: 'bi bi-flag',
     iconBgClass: 'bg-red-light',
     iconColorClass: 'text-red',
   },
-];
+]);
 
 const chartSets = {
   Day: [
@@ -285,74 +301,50 @@ const chartSets = {
 
 const chartData = computed(() => chartSets[selectedPeriod.value]);
 
-const chartGrid = [36, 82, 128, 174, 220];
-
-const seriesMeta = [
-  { key: 'discussions' },
-  { key: 'replies' },
-  { key: 'projects' },
+const activitySeries = [
+  { key: 'discussions', label: 'Discussions' },
+  { key: 'replies', label: 'Replies' },
+  { key: 'projects', label: 'Projects' },
 ];
 
-const chartSeries = computed(() => {
-  const width = 620;
-  const left = 32;
-  const top = 24;
-  const height = 204;
-  const items = chartData.value;
-  const divisor = Math.max(items.length - 1, 1);
+const activityTotals = computed(() => activitySeries.map((series) => ({
+  ...series,
+  value: chartData.value.reduce((sum, item) => sum + item[series.key], 0),
+})));
 
-  return seriesMeta.map((series) => {
-    const dots = items.map((item, index) => {
-      const x = left + (width / divisor) * index;
-      const y = top + height - (height * item[series.key]) / 100;
-
-      return {
-        day: item.day,
-        x: Number(x.toFixed(2)),
-        y: Number(y.toFixed(2)),
-      };
-    });
-
-    return {
-      ...series,
-      dots,
-      points: dots.map((dot) => `${dot.x},${dot.y}`).join(' '),
-    };
-  });
+const chartMaximum = computed(() => {
+  const values = chartData.value.flatMap((item) => activitySeries.map((series) => item[series.key]));
+  return Math.max(100, Math.ceil(Math.max(...values) / 20) * 20);
 });
 
-const queueItems = [
-  {
-    id: 1,
-    title: 'Vue router guard issue',
-    type: 'Flagged thread',
-    owner: 'Dara Kim',
-    status: 'Flagged',
-    statusClass: 'danger',
+const chartScale = computed(() => [chartMaximum.value, chartMaximum.value * 0.75, chartMaximum.value * 0.5, chartMaximum.value * 0.25, 0]);
+
+const barHeight = (value) => Math.max(4, (value / chartMaximum.value) * 100);
+
+const queueItems = computed(() => [
+  ...adminStore.pendingReports.slice(0, 2).map((item) => ({
+    id: `report-${item.id}`,
+    title: item.title,
+    type: 'Reported thread',
+    owner: item.author,
+    status: item.priority,
+    statusClass: item.priority === 'High' ? 'danger' : 'warning',
     icon: 'bi-chat-left-text',
     iconClass: 'danger',
-  },
-  {
-    id: 2,
-    title: 'Portfolio showcase upload',
+    to: '/admin/reports',
+  })),
+  ...adminStore.pendingProjects.slice(0, 2).map((item) => ({
+    id: `project-${item.id}`,
+    title: item.name,
     type: 'Project approval',
-    owner: 'Sophea V.',
+    owner: item.author,
     status: 'Pending',
     statusClass: 'warning',
     icon: 'bi-folder2',
     iconClass: 'warning',
-  },
-  {
-    id: 3,
-    title: 'ANT weekly release notes',
-    type: 'Blog review',
-    owner: 'Admin Team',
-    status: 'Draft',
-    statusClass: 'info',
-    icon: 'bi-file-earmark-post',
-    iconClass: 'info',
-  },
-];
+    to: '/admin/projects',
+  })),
+].slice(0, 4));
 
 const quickActions = [
   {
@@ -363,11 +355,11 @@ const quickActions = [
     to: '/admin/users/create',
   },
   {
-    label: 'Manage Threads',
-    description: 'Moderate forum discussions',
-    icon: 'bi-chat-dots',
+    label: 'Review Reports',
+    description: 'Resolve flagged discussions',
+    icon: 'bi-flag',
     colorClass: 'teal',
-    to: '/admin/threads',
+    to: '/admin/reports',
   },
   {
     label: 'Edit Categories',
@@ -385,11 +377,11 @@ const quickActions = [
   },
 ];
 
-const healthItems = [
+const healthItems = computed(() => [
   { label: 'API Response', value: 94, colorClass: 'bg-success' },
   { label: 'Storage Usage', value: 68, colorClass: 'bg-warning' },
-  { label: 'Moderation Load', value: 42, colorClass: 'bg-info' },
-];
+  { label: 'Moderation Load', value: Math.min(100, adminStore.pendingReports.length * 20), colorClass: 'bg-info' },
+]);
 </script>
 
 <style scoped>
@@ -475,77 +467,163 @@ const healthItems = [
   box-shadow: var(--shadow-sm);
 }
 
-.activity-chart {
-  height: 324px;
-  margin-top: 1.5rem;
-  padding: 1rem 1.1rem 0.9rem;
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  overflow-x: auto;
+.activity-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
 }
 
-.activity-svg {
-  width: 100%;
-  min-width: 560px;
-  height: 250px;
+.activity-total {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  padding: 0.75rem 0.85rem;
+  background: color-mix(in srgb, var(--color-surface-hover) 78%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.activity-total div,
+.activity-total small,
+.activity-total strong {
   display: block;
 }
 
-.grid-lines line {
-  stroke: var(--color-border);
-  stroke-width: 1;
-  opacity: 0.75;
-}
-
-.series polyline {
-  fill: none;
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.series circle {
-  fill: var(--color-surface);
-  stroke-width: 3;
-}
-
-.series.discussions polyline,
-.series.discussions circle {
-  stroke: var(--color-primary);
-}
-
-.series.replies polyline,
-.series.replies circle {
-  stroke: var(--color-success);
-}
-
-.series.projects polyline,
-.series.projects circle {
-  stroke: var(--color-warning);
-}
-
-.chart-axis {
-  min-width: 560px;
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.5rem;
-  padding: 0 0.25rem;
+.activity-total small {
   color: var(--color-text-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
+}
+
+.activity-total strong {
+  margin-top: 0.05rem;
+  color: var(--color-text);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.activity-chart {
+  display: grid;
+  grid-template-columns: 32px minmax(560px, 1fr);
+  gap: 0.7rem;
+  height: 266px;
+  margin-top: 1rem;
+  padding: 1rem 1.1rem 0.75rem 0.8rem;
+  overflow-x: auto;
+  background: color-mix(in srgb, var(--color-input-bg) 88%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.chart-scale {
+  height: 212px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.chart-stage {
+  min-width: 560px;
+  height: 212px;
+  position: relative;
+}
+
+.chart-grid {
+  position: absolute;
+  inset: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.chart-grid span {
+  display: block;
+  width: 100%;
+  border-top: 1px dashed var(--color-border);
+}
+
+.bar-groups {
+  height: 100%;
+  display: grid;
+  gap: 0.6rem;
+  position: relative;
+}
+
+.bar-group {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 24px;
+  gap: 0.45rem;
+}
+
+.bar-group > strong {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
   text-align: center;
 }
 
+.bar-stack {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.activity-bar {
+  width: clamp(8px, 18%, 16px);
+  min-height: 4px;
+  position: relative;
+  border-radius: 4px 4px 2px 2px;
+  opacity: 0.88;
+  transition: opacity var(--transition-base), transform var(--transition-base);
+}
+
+.activity-bar:hover {
+  z-index: 1;
+  opacity: 1;
+  transform: scaleX(1.12);
+}
+
+.activity-bar small {
+  position: absolute;
+  bottom: calc(100% + 0.3rem);
+  left: 50%;
+  padding: 0.15rem 0.32rem;
+  color: var(--color-text);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  transform: translateX(-50%);
+  transition: opacity var(--transition-base);
+}
+
+.activity-bar:hover small {
+  opacity: 1;
+}
+
+.activity-bar.discussions,
 .legend-dot.discussions {
   background: var(--color-primary);
 }
 
+.activity-bar.replies,
 .legend-dot.replies {
   background: var(--color-success);
 }
 
+.activity-bar.projects,
 .legend-dot.projects {
   background: var(--color-warning);
 }
@@ -726,8 +804,12 @@ const healthItems = [
 }
 
 @media (max-width: 575.98px) {
+  .activity-summary {
+    grid-template-columns: 1fr;
+  }
+
   .activity-chart {
-    height: 292px;
+    height: 250px;
   }
 
   .admin-hero,

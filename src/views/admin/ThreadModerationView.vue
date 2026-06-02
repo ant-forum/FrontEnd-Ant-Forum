@@ -10,13 +10,16 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import AdminThreadQueue from '../../components/admin/AdminThreadQueue.vue';
+import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
 
-const metrics = [
-  { label: 'Open Threads', value: '342', change: '+18 today', icon: 'bi-chat-dots', className: 'blue' },
-  { label: 'Reports', value: '7', change: '3 high priority', icon: 'bi-flag', className: 'orange' },
-  { label: 'Locked', value: '11', change: 'This month', icon: 'bi-lock', className: 'purple' },
-  { label: 'Resolved', value: '96%', change: 'Response rate', icon: 'bi-check2-circle', className: 'green' },
-];
+const adminStore = useAdminOperationsStore();
+const metrics = computed(() => [
+  { label: 'Open Reports', value: String(adminStore.pendingReports.length), change: 'Needs admin decision', icon: 'bi-chat-dots', className: 'blue' },
+  { label: 'High Priority', value: String(adminStore.highPriorityReports.length), change: 'Review these first', icon: 'bi-flag', className: 'orange' },
+  { label: 'Locked', value: String(adminStore.lockedThreads.length), change: 'Current thread state', icon: 'bi-lock', className: 'purple' },
+  { label: 'Resolved', value: String(adminStore.resolvedReports.length), change: 'Recorded decisions', icon: 'bi-check2-circle', className: 'green' },
+]);
 </script>

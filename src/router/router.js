@@ -25,6 +25,7 @@ import AdminCreateUserView from '../views/admin/AdminCreateUserView.vue';
 import AdminSettingsView from '../views/admin/AdminSettingsView.vue';
 import AdminTagsView from '../views/admin/AdminTagsView.vue';
 import AdminUsersView from '../views/admin/AdminUsersView.vue';
+import AdminReportsView from '../views/admin/AdminReportsView.vue';
 import ProjectReviewManagement from '../views/admin/ProjectReviewManagement.vue';
 import ThreadModerationView from '../views/admin/ThreadModerationView.vue';
 // import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
@@ -157,6 +158,12 @@ const routes = [
     component: AdminDashboard,
   },
   {
+    path: "/admin/profile",
+    name: "AdminProfile",
+    meta: { requiresAuth: true, role: "admin", title: "Admin Profile" },
+    component: () => import("../views/admin/AdminProfileView.vue"),
+  },
+  {
     path: "/admin/users",
     name: "UserManagement",
     meta: { requiresAuth: true, role: "admin" },
@@ -187,6 +194,12 @@ const routes = [
     component: ThreadModerationView,
   },
   {
+    path: "/admin/reports",
+    name: "ReportManagement",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminReportsView,
+  },
+  {
     path: "/admin/blogs",
     name: "BlogManagement",
     meta: { requiresAuth: true, role: "admin" },
@@ -203,6 +216,12 @@ const routes = [
     name: "CategoryManagement",
     meta: { requiresAuth: true, role: "admin" },
     component: AdminCategoriesView,
+  },
+  {
+    path: "/admin/categories/:id",
+    name: "CategoryDetail",
+    meta: { requiresAuth: true, role: "admin" },
+    component: () => import("../views/admin/AdminCategoryDetailView.vue"),
   },
   {
     path: "/admin/tags",

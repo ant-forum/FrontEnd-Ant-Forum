@@ -10,20 +10,23 @@
       subtitle="Category structure for discussions and projects."
       icon="bi-grid"
       item-label="Category"
-      :items="categories"
+      :items="categoriesWithCount"
       :is-loading="isLoading"
       show-view
+      show-search
+      clickable
       @create="openCreateModal"
       @view="openDetailModal"
       @edit="openEditModal"
       @delete="openDeleteModal"
+      @click-item="handleCategoryClick"
     />
 
     <BaseModal
       v-if="mDetail.isVisible"
       title="Category Details"
       icon="bi bi-eye"
-      kicker="Forum Taxonomy"
+      kicker=""
       @closeModal="closeDetailModal"
     >
       <div v-if="mDetail.isLoading" class="detail-loading">
@@ -44,6 +47,27 @@
           <span>Description</span>
           <p>{{ mDetail.item?.description }}</p>
         </div>
+
+        <!-- Dynamic Category Blogs List -->
+        <div class="category-blogs-section mt-3">
+          <span class="blogs-label">Blogs in Category ({{ mDetail.blogs.length }})</span>
+          <div v-if="mDetail.blogs.length === 0" class="no-blogs border rounded p-3 text-center text-muted">
+            <i class="bi bi-journal-x fs-5 d-block mb-1"></i>
+            <span>No articles are currently assigned to this category.</span>
+          </div>
+          <div v-else class="modal-blogs-scroll border rounded p-2 d-flex flex-column gap-2">
+            <div v-for="b in mDetail.blogs" :key="b.id" class="modal-blog-item d-flex align-items-center gap-3 p-2 rounded border bg-surface">
+              <img :src="b.image" class="rounded object-fit-cover" width="40" height="40" @error="handleImgError" />
+              <div class="flex-grow-1 min-width-0">
+                <h6 class="m-0 fw-bold text-adaptive text-truncate" style="font-size: 0.84rem;">{{ b.title }}</h6>
+                <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">By {{ b.author }} • {{ b.date }}</small>
+              </div>
+              <router-link :to="'/blog/' + b.id" target="_blank" class="btn btn-sm btn-link p-0 text-decoration-none text-purple fw-bold flex-shrink-0" style="font-size: 0.76rem;" @click="closeDetailModal">
+                View
+              </router-link>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="modal-actions">
@@ -59,7 +83,7 @@
       v-if="mForm.isVisible"
       :title="mForm.mode === 'edit' ? 'Edit Category' : 'Create Category'"
       icon="bi bi-grid"
-      kicker="Forum Taxonomy"
+      kicker=""
       @closeModal="closeFormModal"
     >
       <form class="taxonomy-form" @submit.prevent="saveCategory">
@@ -71,47 +95,6 @@
           <span>Description</span>
           <textarea v-model.trim="mForm.data.description" class="form-control" rows="3" placeholder="Explain what belongs in this category" required></textarea>
         </label>
-        <div class="type-field">
-          <span>Type</span>
-          <div class="type-mode" role="group" aria-label="Category type source">
-            <button
-              class="type-mode-btn"
-              :class="{ active: mForm.typeMode === 'existing' }"
-              type="button"
-              @click="selectTypeMode('existing')"
-            >
-              <i class="bi bi-list-check"></i>
-              Existing Type
-            </button>
-            <button
-              class="type-mode-btn"
-              :class="{ active: mForm.typeMode === 'new' }"
-              type="button"
-              @click="selectTypeMode('new')"
-            >
-              <i class="bi bi-plus-lg"></i>
-              New Type
-            </button>
-          </div>
-
-          <select v-if="mForm.typeMode === 'existing'" v-model="mForm.typeOption" class="form-select" required>
-            <option value="" disabled>Select an existing type</option>
-            <option v-for="type in categoryTypes" :key="type" :value="type">
-              {{ type }}
-            </option>
-          </select>
-
-          <input
-            v-else
-            v-model.trim="mForm.data.type"
-            class="form-control"
-            type="text"
-            maxlength="50"
-            placeholder="Enter a new category type"
-            required
-          >
-          <small>{{ mForm.typeMode === 'existing' ? 'Reuse a type to keep categories organized.' : 'Create a type only when the category needs a new group.' }}</small>
-        </div>
 
         <div class="modal-actions">
           <button class="btn btn-light border" type="button" @click="closeFormModal">Cancel</button>
@@ -148,19 +131,30 @@
 <script setup>
 import { computed, onMounted, reactive } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import AdminTaxonomyCards from '../../components/admin/AdminTaxonomyCards.vue';
 import BaseModal from '../../components/base/BaseModal.vue';
 import { useToast } from '../../composables/useToast';
 import { useCategoriesStore } from '../../stores/CategoriesStore';
+import { useBlogStore } from '../../stores/BlogStore';
 
 const categoryStore = useCategoriesStore();
 const { categories, isLoading } = storeToRefs(categoryStore);
+const blogStore = useBlogStore();
+const router = useRouter();
 const toast = useToast();
+const DEFAULT_CATEGORY_TYPE = 'forum';
 
-const categoryTypes = computed(() => {
-  const apiTypes = categories.value.map((category) => category.type).filter(Boolean);
-  return [...new Set(['forum', 'blog', 'project', ...apiTypes])];
+const categoriesWithCount = computed(() => {
+  const allBlogs = blogStore.ownBlogs || [];
+  return categories.value.map((cat) => {
+    const count = allBlogs.filter((b) => String(b.category_id) === String(cat.id)).length;
+    return {
+      ...cat,
+      items: count,
+    };
+  });
 });
 
 const metrics = computed(() => [
@@ -175,8 +169,6 @@ const mForm = reactive({
   mode: 'create',
   item: null,
   isLoading: false,
-  typeMode: 'existing',
-  typeOption: '',
   data: {
     name: '',
     description: '',
@@ -194,30 +186,32 @@ const mDetail = reactive({
   isVisible: false,
   isLoading: false,
   item: null,
+  blogs: [],
 });
+
+const handleImgError = (e) => {
+  e.target.src = 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800';
+};
 
 onMounted(async () => {
   try {
     await categoryStore.fetchCategories();
+    await blogStore.fetchAllBlogs();
   } catch (error) {
-    console.error('Failed to fetch categories:', error);
+    console.error('Failed to fetch categories or blogs:', error);
   }
 });
 
 const openCreateModal = () => {
   mForm.mode = 'create';
   mForm.item = null;
-  mForm.typeMode = 'existing';
-  mForm.typeOption = categoryTypes.value[0] ?? '';
-  mForm.data = { name: '', description: '', type: '' };
+  mForm.data = { name: '', description: '', type: DEFAULT_CATEGORY_TYPE };
   mForm.isVisible = true;
 };
 
 const openEditModal = (category) => {
   mForm.mode = 'edit';
   mForm.item = category;
-  mForm.typeMode = 'existing';
-  mForm.typeOption = category.type;
   mForm.data = {
     name: category.name,
     description: category.description,
@@ -233,12 +227,14 @@ const closeFormModal = () => {
 
 const openDetailModal = async (category) => {
   mDetail.item = category;
+  mDetail.blogs = [];
   mDetail.isVisible = true;
   try {
     mDetail.isLoading = true;
     mDetail.item = await categoryStore.fetchCategoryById(category.id);
+    mDetail.blogs = await blogStore.fetchBlogsByCategory(category.id);
   } catch (error) {
-    console.error('Failed to fetch category details:', error);
+    console.error('Failed to fetch category details or blogs:', error);
   } finally {
     mDetail.isLoading = false;
   }
@@ -247,21 +243,13 @@ const openDetailModal = async (category) => {
 const closeDetailModal = () => {
   mDetail.isVisible = false;
   mDetail.item = null;
+  mDetail.blogs = [];
 };
 
 const editFromDetail = () => {
   const category = mDetail.item;
   closeDetailModal();
   openEditModal(category);
-};
-
-const selectTypeMode = (mode) => {
-  mForm.typeMode = mode;
-  if (mode === 'existing') {
-    mForm.typeOption = categoryTypes.value[0] ?? '';
-  } else {
-    mForm.data.type = '';
-  }
 };
 
 const openDeleteModal = (category) => {
@@ -277,15 +265,11 @@ const closeDeleteModal = () => {
 const saveCategory = async () => {
   try {
     mForm.isLoading = true;
-    const payload = {
-      ...mForm.data,
-      type: mForm.typeMode === 'new' ? mForm.data.type : mForm.typeOption,
-    };
     if (mForm.mode === 'edit') {
-      await categoryStore.updateCategory(mForm.item.id, payload);
+      await categoryStore.updateCategory(mForm.item.id, mForm.data);
       toast.success('Category updated successfully!');
     } else {
-      await categoryStore.createCategory(payload);
+      await categoryStore.createCategory(mForm.data);
       toast.success('Category created successfully!');
     }
     closeFormModal();
@@ -308,6 +292,10 @@ const deleteCategory = async () => {
     mDelete.isLoading = false;
   }
 };
+
+const handleCategoryClick = (category) => {
+  router.push(`/admin/categories/${category.id}`);
+};
 </script>
 
 <style scoped>
@@ -325,56 +313,6 @@ const deleteCategory = async () => {
   color: var(--color-text);
   font-size: 0.84rem;
   font-weight: 800;
-}
-
-.type-field {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.type-field > span {
-  color: var(--color-text);
-  font-size: 0.84rem;
-  font-weight: 800;
-}
-
-.type-field small {
-  color: var(--color-text-muted);
-  font-size: 0.74rem;
-}
-
-.type-mode {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.35rem;
-  padding: 0.3rem;
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-}
-
-.type-mode-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-height: 38px;
-  color: var(--color-text-muted);
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.type-mode-btn:hover {
-  color: var(--color-text);
-  background: var(--color-surface-hover);
-}
-
-.type-mode-btn.active {
-  color: var(--color-primary);
-  background: var(--color-primary-light);
 }
 
 .modal-actions {
@@ -436,5 +374,38 @@ const deleteCategory = async () => {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.category-blogs-section {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.blogs-label {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.no-blogs {
+  background: var(--color-input-bg);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.modal-blogs-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--color-input-bg);
+}
+
+.modal-blog-item {
+  transition: all var(--transition-fast);
+}
+
+.modal-blog-item:hover {
+  border-color: var(--color-purple) !important;
+  transform: translateY(-1px);
 }
 </style>

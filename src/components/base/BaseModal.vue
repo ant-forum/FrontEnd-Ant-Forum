@@ -118,6 +118,10 @@ defineEmits(['closeModal']);
   margin: 0;
 }
 
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
 .modal-icon {
   font-size: 1.15rem;
 }
@@ -148,7 +152,9 @@ defineEmits(['closeModal']);
 }
 
 .modal-backdrop {
-  background-color: rgba(2, 6, 23, 0.72);
+  background-color: rgba(2, 6, 23, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .modal-enter-active,
