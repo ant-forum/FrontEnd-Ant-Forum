@@ -19,6 +19,14 @@
       </button>
     </div>
 
+    <div v-if="activeFilterChips.length" class="active-filters" aria-label="Active project filters">
+      <span>Filtered by</span>
+      <button v-for="chip in activeFilterChips" :key="chip.key" type="button" class="filter-chip" @click="removeFilter(chip.key)">
+        {{ chip.label }}
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
     <div class="project-list">
       <article v-for="project in visibleProjects" :key="project.id" class="project-list-item">
         <div class="project-main">
@@ -49,7 +57,12 @@
 
       <div v-if="visibleProjects.length === 0" class="empty-projects">
         <i class="bi bi-search"></i>
-        <span>No student projects match this filter.</span>
+        <strong>{{ emptyStateTitle }}</strong>
+        <span>{{ emptyStateMessage }}</span>
+        <button v-if="hasActiveFilters" class="btn btn-light btn-sm border empty-action" type="button" @click="clearFilters">
+          <i class="bi bi-x-circle"></i>
+          Clear Filters
+        </button>
       </div>
     </div>
   </section>
@@ -133,6 +146,22 @@ const visibleProjects = computed(() => {
   if (selectedSort.value === 'rejected') return results.filter((project) => project.status === 'Rejected');
   return [...results].sort((a, b) => b.dateOrder - a.dateOrder);
 });
+const hasActiveFilters = computed(() => Boolean(query.value) || selectedSort.value !== 'recent');
+const sortLabels = Object.fromEntries(sortOptions.value.map((option) => [option.value, option.label]));
+const activeFilterChips = computed(() => [
+  ...(query.value ? [{ key: 'query', label: `Search: ${query.value}` }] : []),
+  ...(selectedSort.value !== 'recent' ? [{ key: 'sort', label: `View: ${sortLabels[selectedSort.value]}` }] : []),
+]);
+const emptyStateTitle = computed(() => adminStore.projects.length ? 'No projects match this filter' : 'No student projects yet');
+const emptyStateMessage = computed(() => adminStore.projects.length ? 'Clear the filter or try a different search phrase.' : 'Student showcase submissions will appear here for review.');
+const clearFilters = () => {
+  query.value = '';
+  selectedSort.value = 'recent';
+};
+const removeFilter = (key) => {
+  if (key === 'query') query.value = '';
+  if (key === 'sort') selectedSort.value = 'recent';
+};
 
 const openReview = (project) => {
   selectedId.value = project.id;
@@ -170,6 +199,9 @@ const formatDate = (date) => new Date(date).toLocaleString(undefined, { month: '
 .project-sort-tabs button.active { color: var(--color-primary-hover); background: var(--color-primary-light); border-color: rgba(99, 102, 241, 0.38); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.08); }
 .project-sort-tabs small { min-width: 18px; padding: 0.1rem 0.3rem; color: var(--color-primary); background: var(--color-primary-light); border-radius: 999px; text-align: center; }
 .project-sort-tabs button.active small { color: #fff; background: var(--color-primary); }
+.active-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; color: var(--color-text-muted); font-size: 0.75rem; font-weight: 700; }
+.filter-chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; color: var(--color-primary); background: var(--color-primary-light); border: 1px solid rgba(99, 102, 241, 0.22); border-radius: 999px; font-size: 0.75rem; font-weight: 800; }
+.filter-chip:hover { border-color: var(--color-primary); }
 .project-list { display: grid; gap: 0.75rem; }
 .project-list-item { display: flex; justify-content: space-between; align-items: center; gap: 0.9rem; padding: 0.85rem 1rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; }
 .project-main { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.8rem; }
@@ -186,7 +218,10 @@ const formatDate = (date) => new Date(date).toLocaleString(undefined, { month: '
 .status-pill.warning { color: var(--color-warning); background: var(--color-warning-light); }
 .status-pill.info { color: var(--color-info); background: var(--color-info-light); }
 .status-pill.danger { color: var(--color-danger); background: var(--color-danger-light); }
-.empty-projects { min-height: 120px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--color-text-muted); border: 1px dashed var(--color-border); border-radius: 8px; }
+.empty-projects { min-height: 150px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0.35rem; padding: 1rem; color: var(--color-text-muted); border: 1px dashed var(--color-border); border-radius: 8px; text-align: center; }
+.empty-projects > i { color: var(--color-primary); font-size: 1.45rem; }
+.empty-projects strong { color: var(--color-text); }
+.empty-action { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; font-weight: 700; }
 .review-content { display: grid; gap: 1rem; }
 .project-review-heading { display: flex; justify-content: space-between; gap: 1rem; }
 .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }

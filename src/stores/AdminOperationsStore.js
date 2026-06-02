@@ -205,6 +205,9 @@ export const useAdminOperationsStore = defineStore('adminOperations', () => {
     addActivity('settings', 'Updated forum settings', 'Forum configuration');
   };
 
+  const recordProfileUpdate = () => addActivity('profile', 'Updated staff profile', 'Profile details');
+  const recordSecurityUpdate = () => addActivity('security', 'Updated account password', 'Security credentials');
+
   const resetDemoData = () => {
     state.value = clone(defaultState);
   };
@@ -233,6 +236,8 @@ export const useAdminOperationsStore = defineStore('adminOperations', () => {
     toggleThreadLock,
     reviewProject,
     saveSettings,
+    recordProfileUpdate,
+    recordSecurityUpdate,
     resetDemoData,
   };
 });

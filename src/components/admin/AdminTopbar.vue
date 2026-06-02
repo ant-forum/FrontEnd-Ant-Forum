@@ -15,7 +15,6 @@
           <span>{{ currentTitle }}</span>
         </template>
       </div>
-      <h1>{{ currentTitle }}</h1>
     </div>
 
     <div class="topbar-right">

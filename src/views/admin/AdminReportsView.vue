@@ -45,6 +45,14 @@
         </button>
       </div>
 
+      <div v-if="activeFilterChips.length" class="active-filters" aria-label="Active report filters">
+        <span>Filtered by</span>
+        <button v-for="chip in activeFilterChips" :key="chip.key" type="button" class="filter-chip" @click="removeFilter(chip.key)">
+          {{ chip.label }}
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
       <div class="table-responsive">
         <table class="table clean-table align-middle mb-0">
           <thead>
@@ -94,8 +102,12 @@
             <tr>
               <td colspan="7" class="empty-state">
                 <i class="bi bi-inbox"></i>
-                <strong>No reports found</strong>
-                <span>Try another filter or search phrase.</span>
+                <strong>{{ emptyStateTitle }}</strong>
+                <span>{{ emptyStateMessage }}</span>
+                <button v-if="hasActiveFilters" class="btn btn-light btn-sm border empty-action" type="button" @click="clearFilters">
+                  <i class="bi bi-x-circle"></i>
+                  Clear Filters
+                </button>
               </td>
             </tr>
           </tbody>
@@ -240,6 +252,24 @@ const visibleReports = computed(() => {
     return matchesQuery && matchesStatus && matchesPriority;
   });
 });
+const hasActiveFilters = computed(() => Boolean(query.value) || statusFilter.value !== 'all' || priorityFilter.value !== 'all');
+const activeFilterChips = computed(() => [
+  ...(query.value ? [{ key: 'query', label: `Search: ${query.value}` }] : []),
+  ...(statusFilter.value !== 'all' ? [{ key: 'status', label: `Status: ${statusFilter.value}` }] : []),
+  ...(priorityFilter.value !== 'all' ? [{ key: 'priority', label: `Priority: ${priorityFilter.value}` }] : []),
+]);
+const emptyStateTitle = computed(() => adminStore.threadReports.length ? 'No reports match these filters' : 'No reports received yet');
+const emptyStateMessage = computed(() => adminStore.threadReports.length ? 'Clear the filters or try a different search phrase.' : 'New member reports will appear here when they need review.');
+const clearFilters = () => {
+  query.value = '';
+  statusFilter.value = 'all';
+  priorityFilter.value = 'all';
+};
+const removeFilter = (key) => {
+  if (key === 'query') query.value = '';
+  if (key === 'status') statusFilter.value = 'all';
+  if (key === 'priority') priorityFilter.value = 'all';
+};
 
 const openReport = (report) => {
   selectedId.value = report.id;
@@ -303,6 +333,9 @@ const formatDateTime = (date) => new Date(date).toLocaleString(undefined, { mont
 .status-tabs button { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.75rem; color: var(--color-text-muted); background: var(--color-input-bg); border: 1px solid var(--color-border); border-radius: 999px; font-size: 0.8rem; font-weight: 800; white-space: nowrap; }
 .status-tabs button.active { color: var(--color-primary); background: var(--color-primary-light); border-color: var(--color-primary); }
 .status-tabs small { min-width: 19px; padding: 0.05rem 0.3rem; color: inherit; background: var(--color-surface); border-radius: 999px; text-align: center; }
+.active-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; padding: 0 1.25rem 1rem; color: var(--color-text-muted); font-size: 0.75rem; font-weight: 700; }
+.filter-chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; color: var(--color-primary); background: var(--color-primary-light); border: 1px solid rgba(99, 102, 241, 0.22); border-radius: 999px; font-size: 0.75rem; font-weight: 800; }
+.filter-chip:hover { border-color: var(--color-primary); }
 .clean-table thead th { padding: 0.8rem 0.75rem; color: var(--color-text-muted); background: var(--color-surface-hover); border-color: var(--color-border); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
 .clean-table tbody td { padding: 0.85rem 0.75rem; border-color: var(--color-border); }
 .content-cell { min-width: 280px; }
@@ -319,8 +352,10 @@ const formatDateTime = (date) => new Date(date).toLocaleString(undefined, { mont
 .report-count { color: var(--color-text-muted); }
 .lock-icon { color: var(--color-primary); }
 .empty-state { padding: 3rem !important; color: var(--color-text-muted); text-align: center; }
-.empty-state i, .empty-state strong, .empty-state span { display: block; }
+.empty-state > i, .empty-state strong, .empty-state span { display: block; }
 .empty-state i { margin-bottom: 0.5rem; color: var(--color-primary); font-size: 1.7rem; }
+.empty-action { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.85rem; font-weight: 700; }
+.empty-action i { margin: 0; color: inherit; font-size: inherit; }
 .reports-footer { display: flex; justify-content: space-between; gap: 1rem; padding: 0.75rem 1.25rem; color: var(--color-text-muted); background: var(--color-surface-hover); font-size: 0.78rem; font-weight: 700; }
 .insight-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
 .insight-card { padding: 1rem; }

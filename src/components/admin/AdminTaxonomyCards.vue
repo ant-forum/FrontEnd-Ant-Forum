@@ -33,108 +33,124 @@
       </div>
     </div>
 
-    <div v-if="isLoading" class="taxonomy-empty">
-      <span class="spinner-border spinner-border-sm"></span>
-      <span>Loading {{ title.toLowerCase() }}...</span>
-    </div>
-
-    <div v-else-if="filteredItems.length" class="taxonomy-grid">
+    <div v-if="isLoading" class="taxonomy-grid" aria-live="polite" aria-busy="true">
+      <span class="visually-hidden">Loading {{ title.toLowerCase() }}...</span>
       <article
-        v-for="item in paginatedItems"
-        :key="item.id ?? item.name"
-        class="taxonomy-card"
-        :class="{ 'taxonomy-card-clickable': clickable }"
-        :role="clickable ? 'link' : undefined"
-        :tabindex="clickable ? 0 : undefined"
-        @click="handleCardClick(item)"
-        @keydown.enter.self="handleCardClick(item)"
+        v-for="item in 6"
+        :key="item"
+        class="taxonomy-card taxonomy-card-skeleton"
+        aria-hidden="true"
       >
-        <span :class="['taxonomy-icon', item.colorClass]">
-          <i :class="['bi', icon]"></i>
-        </span>
+        <span class="taxonomy-skeleton-icon shimmer"></span>
         <div class="taxonomy-content">
-          <h3>{{ item.name }}</h3>
-          <p>{{ item.description }}</p>
-          <div class="taxonomy-meta">
-            <span v-if="item.items !== undefined">{{ item.items }} items</span>
-            <span v-if="item.type" class="taxonomy-type">
-              <i class="bi bi-layers"></i>
-              {{ item.type }}
-            </span>
-            <span v-else-if="item.owner" class="taxonomy-type">
-              <i class="bi bi-layers"></i>
-              {{ item.owner }}
-            </span>
-          </div>
+          <span class="taxonomy-skeleton-line taxonomy-skeleton-title shimmer"></span>
+          <span class="taxonomy-skeleton-line shimmer"></span>
+          <span class="taxonomy-skeleton-line taxonomy-skeleton-description shimmer"></span>
+          <span class="taxonomy-skeleton-line taxonomy-skeleton-meta shimmer"></span>
         </div>
-        <div class="taxonomy-menu">
-          <button
-            class="icon-btn"
-            type="button"
-            :title="`Actions for ${item.name}`"
-            aria-label="Open actions menu"
-            @click.stop="toggleMenu(item)"
-          >
-            <i class="bi bi-three-dots"></i>
-          </button>
-
-          <div v-if="activeMenuId === item.id" class="taxonomy-menu-dropdown">
-            <button type="button" @click.stop="selectAction('edit', item)">
-              <i class="bi bi-pencil"></i>
-              <span>Edit</span>
-            </button>
-            <button class="delete-btn" type="button" @click.stop="selectAction('delete', item)">
-              <i class="bi bi-trash"></i>
-              <span>Delete</span>
-            </button>
-          </div>
-        </div>
+        <span class="taxonomy-skeleton-menu shimmer"></span>
       </article>
     </div>
 
-    <footer v-if="!isLoading && filteredItems.length" class="pagination-footer mt-4">
-      <p>
-        Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong>
-        of <strong>{{ filteredItems.length }}</strong> {{ itemLabel.toLowerCase() }}s
-      </p>
-
-      <nav v-if="totalPages > 1" class="pagination-controls" :aria-label="`${itemLabel} list pagination`">
-        <button
-          class="pagination-btn"
-          type="button"
-          :disabled="currentPage === 1"
-          aria-label="Previous page"
-          title="Previous page"
-          @click="currentPage -= 1"
+    <template v-else-if="filteredItems.length">
+      <div class="taxonomy-grid">
+        <article
+          v-for="item in paginatedItems"
+          :key="item.id ?? item.name"
+          class="taxonomy-card"
+          :class="{ 'taxonomy-card-clickable': clickable }"
+          :role="clickable ? 'link' : undefined"
+          :tabindex="clickable ? 0 : undefined"
+          @click="handleCardClick(item)"
+          @keydown.enter.self="handleCardClick(item)"
         >
-          <i class="bi bi-chevron-left"></i>
-        </button>
+          <span :class="['taxonomy-icon', item.colorClass]">
+            <i :class="['bi', icon]"></i>
+          </span>
+          <div class="taxonomy-content">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.description }}</p>
+            <div class="taxonomy-meta">
+              <span v-if="item.items !== undefined">{{ item.items }} items</span>
+              <span v-if="item.type" class="taxonomy-type">
+                <i class="bi bi-layers"></i>
+                {{ item.type }}
+              </span>
+              <span v-else-if="item.owner" class="taxonomy-type">
+                <i class="bi bi-layers"></i>
+                {{ item.owner }}
+              </span>
+            </div>
+          </div>
+          <div class="taxonomy-menu">
+            <button
+              class="icon-btn"
+              type="button"
+              :title="`Actions for ${item.name}`"
+              aria-label="Open actions menu"
+              @click.stop="toggleMenu(item)"
+            >
+              <i class="bi bi-three-dots"></i>
+            </button>
 
-        <button
-          v-for="page in pageNumbers"
-          :key="page"
-          class="pagination-btn"
-          :class="{ active: currentPage === page }"
-          type="button"
-          :aria-current="currentPage === page ? 'page' : undefined"
-          :aria-label="`Page ${page}`"
-          @click="currentPage = page"
-        >
-          {{ page }}
-        </button>
+            <div v-if="activeMenuId === item.id" class="taxonomy-menu-dropdown">
+              <button type="button" @click.stop="selectAction('edit', item)">
+                <i class="bi bi-pencil"></i>
+                <span>Edit</span>
+              </button>
+              <button class="delete-btn" type="button" @click.stop="selectAction('delete', item)">
+                <i class="bi bi-trash"></i>
+                <span>Delete</span>
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
 
-        <button
-          class="pagination-btn"
-          type="button"
-          :disabled="currentPage === totalPages"
-          aria-label="Next page"
-          title="Next page"
-          @click="currentPage += 1"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </nav>
-    </footer>
+      <footer class="pagination-footer mt-4">
+        <p>
+          Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong>
+          of <strong>{{ filteredItems.length }}</strong> {{ itemLabel.toLowerCase() }}s
+        </p>
+
+        <nav v-if="totalPages > 1" class="pagination-controls" :aria-label="`${itemLabel} list pagination`">
+          <button
+            class="pagination-btn"
+            type="button"
+            :disabled="currentPage === 1"
+            aria-label="Previous page"
+            title="Previous page"
+            @click="currentPage -= 1"
+          >
+            <i class="bi bi-chevron-left"></i>
+          </button>
+
+          <button
+            v-for="page in pageNumbers"
+            :key="page"
+            class="pagination-btn"
+            :class="{ active: currentPage === page }"
+            type="button"
+            :aria-current="currentPage === page ? 'page' : undefined"
+            :aria-label="`Page ${page}`"
+            @click="currentPage = page"
+          >
+            {{ page }}
+          </button>
+
+          <button
+            class="pagination-btn"
+            type="button"
+            :disabled="currentPage === totalPages"
+            aria-label="Next page"
+            title="Next page"
+            @click="currentPage += 1"
+          >
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </nav>
+      </footer>
+    </template>
 
     <div v-else-if="searchQuery" class="taxonomy-empty">
       <i class="bi bi-search"></i>
@@ -371,6 +387,83 @@ onBeforeUnmount(() => {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   transition: all var(--transition-base);
+}
+
+.taxonomy-card-skeleton {
+  pointer-events: none;
+}
+
+.taxonomy-skeleton-icon,
+.taxonomy-skeleton-menu,
+.taxonomy-skeleton-line {
+  display: block;
+  background: var(--color-border-soft, rgba(0, 0, 0, 0.08));
+}
+
+.taxonomy-skeleton-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+
+.taxonomy-skeleton-menu {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+}
+
+.taxonomy-skeleton-line {
+  width: 100%;
+  height: 10px;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+
+.taxonomy-skeleton-title {
+  width: 42%;
+  height: 14px;
+  margin-bottom: 0.75rem;
+}
+
+.taxonomy-skeleton-description {
+  width: 72%;
+  margin-bottom: 0.85rem;
+}
+
+.taxonomy-skeleton-meta {
+  width: 32%;
+  margin-bottom: 0;
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-border-soft, rgba(0, 0, 0, 0.08)) 25%,
+    var(--color-surface-hover, rgba(0, 0, 0, 0.04)) 37%,
+    var(--color-border-soft, rgba(0, 0, 0, 0.08)) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer-animation 1.4s ease infinite;
+}
+
+[data-theme='dark'] .shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 37%,
+    rgba(255, 255, 255, 0.04) 63%
+  );
+  background-size: 400% 100%;
+}
+
+@keyframes shimmer-animation {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0 50%;
+  }
 }
 
 .taxonomy-card-clickable {

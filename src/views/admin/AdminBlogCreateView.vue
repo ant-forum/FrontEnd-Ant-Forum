@@ -147,8 +147,8 @@
           </div>
 
           <div class="publish-actions">
-            <button class="btn btn-light border" type="button" @click="resetForm" :disabled="blogStore.isLoading">Clear</button>
-            <button class="btn btn-primary" type="submit" form="blog-post-form" :disabled="blogStore.isLoading">
+            <button class="btn btn-light border" type="button" @click="resetForm" :disabled="blogStore.isLoading || !hasChanges">Clear</button>
+            <button class="btn btn-primary" type="submit" form="blog-post-form" :disabled="blogStore.isLoading || !hasChanges">
               <span v-if="blogStore.isLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
               <i v-else class="bi bi-send-check"></i>
               <span>{{ saveButtonLabel }}</span>
@@ -223,6 +223,7 @@ import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import MarkdownEditor from '../../components/forum/create/MarkdownEditor.vue';
 import { useBlogStore } from '../../stores/BlogStore.js';
 import { useToast } from '../../composables/useToast.js';
+import { useUnsavedChangesGuard } from '../../composables/useUnsavedChangesGuard.js';
 
 const blogStore = useBlogStore();
 const router = useRouter();
@@ -234,6 +235,7 @@ const thumbnailInputRef = ref(null);
 const thumbnailPreview = ref('');
 const selectedFile = ref(null);
 const isEditLoading = ref(!!route.query.id);
+const isInitializing = ref(true);
 
 const form = reactive({
   title: '',
@@ -242,6 +244,10 @@ const form = reactive({
   thumbnail: '',
   status: 'draft',
 });
+const serializeForm = () => JSON.stringify(form);
+const formSnapshot = ref(serializeForm());
+const hasChanges = computed(() => !isInitializing.value && (serializeForm() !== formSnapshot.value || Boolean(selectedFile.value)));
+useUnsavedChangesGuard(hasChanges, 'You have unsaved blog changes. Leave this page and discard them?');
 
 const statusBadgeLabel = computed(() => {
   if (saved.value) return 'Saved';
@@ -304,6 +310,9 @@ onMounted(async () => {
       isEditLoading.value = false;
     }
   }
+
+  formSnapshot.value = serializeForm();
+  isInitializing.value = false;
 });
 
 const previewText = computed(() => {
@@ -389,6 +398,8 @@ const savePost = async () => {
       toast.success('Blog created successfully!');
     }
     
+    formSnapshot.value = serializeForm();
+    selectedFile.value = null;
     saved.value = true;
 
     setTimeout(() => {

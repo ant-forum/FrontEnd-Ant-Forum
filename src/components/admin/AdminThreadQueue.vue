@@ -25,6 +25,14 @@
       </div>
     </div>
 
+    <div v-if="activeFilterChips.length" class="active-filters" aria-label="Active thread filters">
+      <span>Filtered by</span>
+      <button v-for="chip in activeFilterChips" :key="chip.key" type="button" class="filter-chip" @click="removeFilter(chip.key)">
+        {{ chip.label }}
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
     <div class="table-responsive">
       <table class="table clean-table align-middle mb-0">
         <thead>
@@ -67,7 +75,12 @@
           <tr>
             <td colspan="6" class="empty-state">
               <i class="bi bi-check2-circle"></i>
-              <span>No moderation items match these filters.</span>
+              <strong>{{ emptyStateTitle }}</strong>
+              <span>{{ emptyStateMessage }}</span>
+              <button v-if="hasActiveFilters" class="btn btn-light btn-sm border empty-action" type="button" @click="clearFilters">
+                <i class="bi bi-x-circle"></i>
+                Clear Filters
+              </button>
             </td>
           </tr>
         </tbody>
@@ -173,6 +186,24 @@ const visibleThreads = computed(() => {
     return matchesQuery && matchesStatus && matchesPriority;
   });
 });
+const hasActiveFilters = computed(() => Boolean(query.value) || statusFilter.value !== 'all' || priorityFilter.value !== 'all');
+const activeFilterChips = computed(() => [
+  ...(query.value ? [{ key: 'query', label: `Search: ${query.value}` }] : []),
+  ...(statusFilter.value !== 'all' ? [{ key: 'status', label: `Status: ${statusFilter.value}` }] : []),
+  ...(priorityFilter.value !== 'all' ? [{ key: 'priority', label: `Priority: ${priorityFilter.value}` }] : []),
+]);
+const emptyStateTitle = computed(() => adminStore.threadReports.length ? 'No threads match these filters' : 'Moderation queue is clear');
+const emptyStateMessage = computed(() => adminStore.threadReports.length ? 'Clear the filters or search for a different thread.' : 'Reported discussions will appear here when they need attention.');
+const clearFilters = () => {
+  query.value = '';
+  statusFilter.value = 'all';
+  priorityFilter.value = 'all';
+};
+const removeFilter = (key) => {
+  if (key === 'query') query.value = '';
+  if (key === 'status') statusFilter.value = 'all';
+  if (key === 'priority') priorityFilter.value = 'all';
+};
 
 const openReview = (thread) => {
   selectedId.value = thread.id;
@@ -229,6 +260,9 @@ const formatDate = (date) => new Date(date).toLocaleString(undefined, { month: '
 .search-box:focus-within { border-color: var(--color-primary); box-shadow: var(--focus-ring); }
 .search-box input { width: 100%; color: var(--color-text); background: transparent; border: 0; outline: 0; }
 .compact-select { width: auto; min-width: 140px; height: 40px; font-size: 0.82rem; }
+.active-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.8rem; color: var(--color-text-muted); font-size: 0.75rem; font-weight: 700; }
+.filter-chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; color: var(--color-primary); background: var(--color-primary-light); border: 1px solid rgba(99, 102, 241, 0.22); border-radius: 999px; font-size: 0.75rem; font-weight: 800; }
+.filter-chip:hover { border-color: var(--color-primary); }
 .clean-table th { color: var(--color-text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
 .identity-cell { min-width: 260px; }
 .identity-cell strong, .identity-cell small { display: block; }
@@ -242,7 +276,10 @@ const formatDate = (date) => new Date(date).toLocaleString(undefined, { month: '
 .lock-icon { color: var(--color-primary); }
 .review-btn { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; }
 .empty-state { padding: 2.5rem !important; color: var(--color-text-muted); text-align: center; }
-.empty-state i { margin-right: 0.4rem; color: var(--color-success); }
+.empty-state > i, .empty-state strong, .empty-state span { display: block; }
+.empty-state > i { margin-bottom: 0.45rem; color: var(--color-success); font-size: 1.45rem; }
+.empty-action { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.85rem; font-weight: 700; }
+.empty-action i { color: inherit; }
 .review-content { display: grid; gap: 1rem; }
 .review-heading { display: flex; justify-content: space-between; gap: 1rem; }
 .content-preview { padding: 0.85rem; color: var(--color-text-muted); background: var(--color-input-bg); border: 1px solid var(--color-border); border-radius: 8px; font-size: 0.88rem; }

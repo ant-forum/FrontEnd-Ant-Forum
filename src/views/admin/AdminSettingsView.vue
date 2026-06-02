@@ -271,6 +271,7 @@
 import { computed, reactive, ref } from 'vue';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import { useToast } from '../../composables/useToast';
+import { useUnsavedChangesGuard } from '../../composables/useUnsavedChangesGuard';
 import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
 
 const adminStore = useAdminOperationsStore();
@@ -294,6 +295,7 @@ const metrics = computed(() => [
   { label: 'Admin 2FA', value: form.security.requireAdminTwoFactor ? 'On' : 'Off', change: 'Login protection', icon: 'bi-shield-lock', className: 'orange' },
 ]);
 const hasChanges = computed(() => JSON.stringify(form) !== JSON.stringify(adminStore.settings));
+useUnsavedChangesGuard(hasChanges, 'You have unsaved settings changes. Leave this page and discard them?');
 
 const resetForm = () => {
   Object.assign(form, cloneSettings());

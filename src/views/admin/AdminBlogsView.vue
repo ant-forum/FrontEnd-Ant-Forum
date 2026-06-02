@@ -46,6 +46,14 @@
         </button>
       </div>
 
+      <div v-if="activeFilterChips.length" class="active-filters" aria-label="Active blog filters">
+        <span>Filtered by</span>
+        <button v-for="chip in activeFilterChips" :key="chip.key" type="button" class="filter-chip" @click="removePostFilter(chip.key)">
+          {{ chip.label }}
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
       <div class="post-list">
         <!-- Skeleton Loading State -->
         <template v-if="blogStore.isLoading || isTabSwitching">
@@ -62,9 +70,18 @@
             </div>
           </article>
         </template>
-        <div v-else-if="visiblePosts.length === 0" class="py-5 text-center text-muted">
-          <i class="bi bi-file-earmark-x display-6 mb-2 d-block"></i>
-          <span>No {{ activeTab !== 'all' ? activeTab : '' }} blog posts found matching your search.</span>
+        <div v-else-if="visiblePosts.length === 0" class="empty-posts">
+          <i class="bi bi-file-earmark-x"></i>
+          <strong>{{ emptyStateTitle }}</strong>
+          <span>{{ emptyStateMessage }}</span>
+          <button v-if="hasActiveFilters" class="btn btn-light btn-sm border empty-action" type="button" @click="clearPostFilters">
+            <i class="bi bi-x-circle"></i>
+            Clear Filters
+          </button>
+          <router-link v-else class="btn btn-primary btn-sm empty-action" to="/admin/blogs/create">
+            <i class="bi bi-plus-lg"></i>
+            Create Blog
+          </router-link>
         </div>
         <article 
           v-else 
@@ -252,6 +269,22 @@ const visiblePosts = computed(() => {
     (post.description || '').toLowerCase().includes(needle)
   );
 });
+const hasActiveFilters = computed(() => Boolean(search.value) || activeTab.value !== 'all' || Boolean(route.query.category_id));
+const activeFilterChips = computed(() => [
+  ...(search.value ? [{ key: 'search', label: `Search: ${search.value}` }] : []),
+  ...(activeTab.value !== 'all' ? [{ key: 'status', label: `Status: ${activeTab.value}` }] : []),
+]);
+const emptyStateTitle = computed(() => blogStore.ownBlogs.length ? 'No blog posts match these filters' : 'No blog posts yet');
+const emptyStateMessage = computed(() => blogStore.ownBlogs.length ? 'Clear the filters or try a different search phrase.' : 'Create the first official article for the forum community.');
+const clearPostFilters = () => {
+  search.value = '';
+  activeTab.value = 'all';
+  router.replace({ path: '/admin/blogs' });
+};
+const removePostFilter = (key) => {
+  if (key === 'search') search.value = '';
+  if (key === 'status') activeTab.value = 'all';
+};
 
 const currentPage = ref(1);
 const pageSize = 5;
@@ -453,9 +486,68 @@ const deleteBlog = async (id) => {
   color: #fff;
 }
 
+.active-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.filter-chip:hover {
+  border-color: var(--color-primary);
+}
+
 .post-list {
   display: grid;
   gap: 0.75rem;
+}
+
+.empty-posts {
+  min-height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.25rem;
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.empty-posts > i {
+  color: var(--color-primary);
+  font-size: 1.65rem;
+}
+
+.empty-posts strong {
+  color: var(--color-text);
+}
+
+.empty-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+  font-weight: 700;
 }
 
 .post-row {

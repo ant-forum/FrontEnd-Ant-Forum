@@ -12,6 +12,14 @@
       </label>
     </div>
 
+    <div v-if="search" class="active-filters" aria-label="Active table filters">
+      <span>Filtered by</span>
+      <button class="filter-chip" type="button" @click="search = ''">
+        Search: {{ search }}
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
     <div class="table-responsive">
       <table class="table clean-table align-middle mb-0">
         <thead>
@@ -91,7 +99,12 @@
           <tr>
             <td class="empty-table-state" :colspan="columns.length + (showActions ? 1 : 0)">
               <i class="bi bi-search"></i>
-              <span>No {{ itemLabel }} found matching your search.</span>
+              <strong>{{ emptyStateTitle }}</strong>
+              <span>{{ emptyStateMessage }}</span>
+              <button v-if="search" class="btn btn-light btn-sm border empty-action" type="button" @click="search = ''">
+                <i class="bi bi-x-circle"></i>
+                Clear Search
+              </button>
             </td>
           </tr>
         </tbody>
@@ -172,6 +185,14 @@ const props = defineProps({
     type: String,
     default: 'records',
   },
+  emptyTitle: {
+    type: String,
+    default: '',
+  },
+  emptyDescription: {
+    type: String,
+    default: '',
+  },
   showActions: {
     type: Boolean,
     default: true,
@@ -196,6 +217,8 @@ const filteredRows = computed(() => {
 
   return props.rows.filter((row) => JSON.stringify(row).toLowerCase().includes(needle));
 });
+const emptyStateTitle = computed(() => search.value ? `No ${props.itemLabel} match your search` : (props.emptyTitle || `No ${props.itemLabel} yet`));
+const emptyStateMessage = computed(() => search.value ? 'Clear the search or try a different phrase.' : (props.emptyDescription || `New ${props.itemLabel} will appear here when available.`));
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / props.pageSize)));
 const firstVisibleRow = computed(() => (currentPage.value - 1) * props.pageSize + 1);
@@ -329,6 +352,34 @@ onBeforeUnmount(() => {
 .search-box input:focus-visible {
   outline: none;
   box-shadow: none !important;
+}
+
+.active-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.filter-chip:hover {
+  border-color: var(--color-primary);
 }
 
 .clean-table thead th {
@@ -574,6 +625,29 @@ onBeforeUnmount(() => {
   display: block;
   margin-bottom: 0.45rem;
   font-size: 1.25rem;
+}
+
+.empty-table-state strong,
+.empty-table-state span {
+  display: block;
+}
+
+.empty-table-state strong {
+  color: var(--color-text);
+}
+
+.empty-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  font-weight: 700;
+}
+
+.empty-action i {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
 }
 
 @media (max-width: 767.98px) {

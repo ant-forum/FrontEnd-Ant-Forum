@@ -2,7 +2,7 @@
   <AdminPageShell
     title="Profile & Preferences"
     kicker="Administrative Account"
-    subtitle="Manage your staff profile details, operational role, and system notification preferences."
+    subtitle="Manage your staff profile details, operational role, and account security."
   >
     <section class="school-admin-profile">
       <div class="row g-4">
@@ -208,6 +208,7 @@
                   <button 
                     type="button" 
                     class="btn btn-secondary-premium" 
+                    :disabled="!hasProfileChanges"
                     @click="resetForm"
                   >
                     Discard Changes
@@ -215,7 +216,7 @@
                   <button 
                     type="submit" 
                     class="btn btn-primary-premium"
-                    :disabled="isProfileSaving"
+                    :disabled="isProfileSaving || !hasProfileChanges"
                   >
                     <i class="bi bi-check2-circle me-2" v-if="!isProfileSaving"></i>
                     <span class="spinner-border spinner-border-sm me-2" v-else></span>
@@ -276,6 +277,7 @@
                   <button 
                     type="button" 
                     class="btn btn-secondary-premium" 
+                    :disabled="!hasPasswordChanges"
                     @click="clearPasswordForm"
                   >
                     Clear Fields
@@ -283,7 +285,7 @@
                   <button 
                     type="submit" 
                     class="btn btn-primary-premium"
-                    :disabled="isPasswordSaving"
+                    :disabled="isPasswordSaving || !hasCompletePasswordForm"
                   >
                     <i class="bi bi-shield-check me-2" v-if="!isPasswordSaving"></i>
                     <span class="spinner-border spinner-border-sm me-2" v-else></span>
@@ -291,6 +293,39 @@
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+
+          <div class="admin-panel activity-panel mt-4">
+            <div class="activity-panel-header">
+              <div>
+                <h4 class="panel-section-title mb-1">Recent Admin Activity</h4>
+                <p class="panel-subtitle mb-0">Your latest moderation, project, settings, and account actions.</p>
+              </div>
+              <RouterLink class="activity-link" to="/admin/analytics">
+                View Analytics
+                <i class="bi bi-arrow-right"></i>
+              </RouterLink>
+            </div>
+
+            <div v-if="recentActivity.length" class="activity-list mt-3">
+              <div v-for="item in recentActivity" :key="item.id" class="activity-row">
+                <span :class="['activity-icon', item.type]">
+                  <i :class="['bi', activityIcon(item.type)]"></i>
+                </span>
+                <div class="activity-copy">
+                  <strong>{{ item.action }}</strong>
+                  <small>{{ item.target }} · {{ formatActivityDate(item.createdAt) }}</small>
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="activity-empty mt-3">
+              <i class="bi bi-activity"></i>
+              <div>
+                <strong>No admin activity yet</strong>
+                <small>Your recorded actions will appear here.</small>
+              </div>
             </div>
           </div>
         </main>
@@ -302,9 +337,12 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useAuthStore } from '../../stores/AuthStore';
+import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
+import { useUnsavedChangesGuard } from '../../composables/useUnsavedChangesGuard';
 
 const authStore = useAuthStore();
+const adminStore = useAdminOperationsStore();
 
 // Tab state
 const activeTab = ref('credentials');
@@ -330,6 +368,29 @@ const passwordForm = reactive({
   new: '',
   confirm: ''
 });
+const profileSnapshot = ref('');
+const serializeProfile = () => JSON.stringify(editForm);
+const hasProfileChanges = computed(() => Boolean(profileSnapshot.value) && serializeProfile() !== profileSnapshot.value);
+const hasPasswordChanges = computed(() => Object.values(passwordForm).some(Boolean));
+const hasCompletePasswordForm = computed(() => Boolean(passwordForm.current && passwordForm.new && passwordForm.confirm));
+const hasUnsavedChanges = computed(() => hasProfileChanges.value || hasPasswordChanges.value);
+const recentActivity = computed(() => adminStore.activityLog.slice(0, 4));
+useUnsavedChangesGuard(hasUnsavedChanges, 'You have unsaved profile changes. Leave this page and discard them?');
+
+const activityIcon = (type) => ({
+  moderation: 'bi-shield-check',
+  project: 'bi-folder-check',
+  settings: 'bi-gear',
+  profile: 'bi-person-check',
+  security: 'bi-shield-lock',
+}[type] || 'bi-activity');
+
+const formatActivityDate = (value) => new Intl.DateTimeFormat('en', {
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+}).format(new Date(value));
 
 // Dynamic values from authStore
 const adminName = computed(() => authStore.user?.name || authStore.user?.username || 'Alex Rivera');
@@ -371,6 +432,7 @@ const resetForm = () => {
   editForm.phone = user.phone || '+855 12 345 678';
   editForm.officeHours = user.officeHours || 'Mon - Fri, 8:00 AM - 5:00 PM';
   editForm.bio = user.bio || 'Administrative supervisor managing forum community standards and scholastic showcase evaluations.';
+  profileSnapshot.value = serializeProfile();
 };
 
 const clearPasswordForm = () => {
@@ -381,6 +443,7 @@ const clearPasswordForm = () => {
 
 // Form Save Actions
 const saveProfile = async () => {
+  if (!hasProfileChanges.value) return;
   isProfileSaving.value = true;
   await sleep(1200);
   
@@ -396,10 +459,13 @@ const saveProfile = async () => {
     bio: editForm.bio
   };
   
+  profileSnapshot.value = serializeProfile();
+  adminStore.recordProfileUpdate();
   isProfileSaving.value = false;
 };
 
 const savePassword = async () => {
+  if (!hasCompletePasswordForm.value) return;
   if (passwordForm.new !== passwordForm.confirm) {
     alert("New password and confirmation password do not match!");
     return;
@@ -408,6 +474,7 @@ const savePassword = async () => {
   isPasswordSaving.value = true;
   await sleep(1400);
   clearPasswordForm();
+  adminStore.recordSecurityUpdate();
   isPasswordSaving.value = false;
   alert("Password updated securely!");
 };
@@ -697,6 +764,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 .btn-primary-premium:disabled {
   opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .btn-secondary-premium {
@@ -713,6 +781,119 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 .btn-secondary-premium:hover {
   background: var(--color-surface-hover);
   color: var(--color-text);
+}
+
+.btn-secondary-premium:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Recent activity */
+.activity-panel-header,
+.activity-row,
+.activity-empty {
+  display: flex;
+  align-items: center;
+}
+
+.activity-panel-header {
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.activity-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.activity-link:hover {
+  color: var(--color-primary-hover);
+}
+
+.activity-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.activity-row {
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.activity-icon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-radius: 9px;
+}
+
+.activity-icon.project {
+  color: var(--color-success);
+  background: var(--color-success-light);
+}
+
+.activity-icon.settings {
+  color: var(--color-warning);
+  background: var(--color-warning-light);
+}
+
+.activity-icon.security {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.activity-copy strong,
+.activity-copy small,
+.activity-empty strong,
+.activity-empty small {
+  display: block;
+}
+
+.activity-copy strong,
+.activity-empty strong {
+  color: var(--color-text);
+  font-size: 0.84rem;
+}
+
+.activity-copy small,
+.activity-empty small {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.activity-empty {
+  gap: 0.75rem;
+  min-height: 88px;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface-hover);
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
+}
+
+.activity-empty > i {
+  font-size: 1.3rem;
+}
+
+@media (max-width: 575.98px) {
+  .activity-panel-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 /* Animations */

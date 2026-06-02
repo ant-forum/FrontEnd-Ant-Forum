@@ -17,6 +17,8 @@
       subtitle="A clean table for managing forum members."
       placeholder="Search users"
       item-label="users"
+      empty-title="No user accounts yet"
+      empty-description="New forum accounts will appear here after registration."
       :columns="columns"
       :rows="mappedUsers"
       :is-loading="isPageLoading"
@@ -166,6 +168,15 @@ const columns = [
   { key: 'joined', label: 'Joined' },
 ];
 
+const formatJoinedDate = (value) => {
+  if (!value) return 'Not available';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 const mappedUsers = computed(() => {
   return (usersStore.users || []).map((u) => ({
     id: u.id || u._id,
@@ -173,9 +184,7 @@ const mappedUsers = computed(() => {
     detail: u.email || 'No email',
     role: (u.role === 'user' || u.role === 'student') ? 'Student' : (u.role === 'mentor' ? 'Mentor' : (u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : 'Student')),
     status: u.status || 'Active',
-    joined: u.createdAt
-      ? new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-      : 'May 31, 2026',
+    joined: formatJoinedDate(u.createdAt || u.created_at),
     avatar: u.profile_pic || u.avatar || u.avatarUrl || '',
     gender: u.gender || 'male',
     rawRole: u.role || 'student',
