@@ -121,6 +121,12 @@ const routes = [
     component: () => import("../views/HelpView.vue"),
   },
   {
+    path: "/about",
+    name: "About",
+    meta: { requiresAuth: true },
+    component: () => import("../views/AboutUsView.vue"),
+  },
+  {
     path: "/showcase",
     name: "ShowcaseDashboard",
     meta: { requiresAuth: true },

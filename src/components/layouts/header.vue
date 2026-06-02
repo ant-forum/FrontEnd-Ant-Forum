@@ -18,7 +18,8 @@ const isNotificationOpen = ref(false);
 const navLinks = [
   { name: 'Forum', path: '/forum' },
   { name: 'Showcase', path: '/showcase' },
-  { name: 'Blog', path: '/blog' }
+  { name: 'Blog', path: '/blog' },
+  { name: 'About', path: '/about' }
 ];
 
 onMounted(() => {

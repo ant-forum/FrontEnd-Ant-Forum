@@ -9,7 +9,7 @@ const communityLinks = [
 
 const resourceLinks = [
   { name: "FAQs", path: "#" },
-  { name: "About ANT", path: "#" },
+  { name: "About ANT", path: "/about" },
   { name: "Terms of Service", path: "#" },
 ];
 
@@ -83,7 +83,8 @@ import logo from "../../assets/ANT-Forum.png";
             <h6 class="text-footer fw-bold mb-4">Resources</h6>
             <ul class="list-unstyled">
               <li v-for="link in resourceLinks" :key="link.name" class="mb-2">
-                <a :href="link.path" class="footer-link">{{ link.name }}</a>
+                <router-link v-if="link.path.startsWith('/')" :to="link.path" class="footer-link">{{ link.name }}</router-link>
+                <a v-else :href="link.path" class="footer-link">{{ link.name }}</a>
               </li>
             </ul>
           </div>

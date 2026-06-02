@@ -4,9 +4,11 @@ import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
 import { useBlogStore } from '../../stores/BlogStore';
 import { useAuthStore } from '../../stores/AuthStore';
+import { useCategoriesStore } from '../../stores/CategoriesStore';
 
 const blogStore = useBlogStore();
 const authStore = useAuthStore();
+const categoriesStore = useCategoriesStore();
 
 const searchQuery = ref('');
 const selectedCategory = ref('All');
@@ -21,42 +23,20 @@ const fallbackCategories = [
 ];
 
 const activeCategories = computed(() => {
-  return blogStore.categories && blogStore.categories.length > 0
-    ? blogStore.categories
+  return categoriesStore.categories && categoriesStore.categories.length > 0
+    ? categoriesStore.categories
     : fallbackCategories;
 });
 
 const categories = computed(() => {
   return ['All', ...activeCategories.value.map(c => c.name || c.title)];
 });
-const allTags = computed(() => {
-  const tagsSet = new Set();
-  activeBlogs.value.forEach(p => {
-    if (p.tags) {
-      p.tags.forEach(t => tagsSet.add(t));
-    }
-  });
-  return Array.from(tagsSet);
-});
-const selectedTag = ref(null);
 
-// Modal state
-const showModal = ref(false);
-const isEditing = ref(false);
-const editingBlogId = ref(null);
-const thumbnailPreview = ref(null);
 
-const form = ref({
-  title: '',
-  description: '',
-  category_id: '1',
-  status: 'published',
-  thumbnail: null
-});
 
 onMounted(async () => {
   try {
-    await blogStore.fetchCategories();
+    await categoriesStore.fetchCategories();
   } catch (err) {
     console.error("Failed to fetch categories:", err);
   }
@@ -80,10 +60,6 @@ const filteredPosts = computed(() => {
 
   if (selectedCategory.value !== 'All') {
     result = result.filter(p => p.category === selectedCategory.value);
-  }
-
-  if (selectedTag.value) {
-    result = result.filter(p => p.tags && p.tags.includes(selectedTag.value));
   }
 
   if (searchQuery.value) {
@@ -112,91 +88,7 @@ const featuredPost = computed(() => {
   return activeBlogs.value.find(p => p.status === 'published') || activeBlogs.value[0] || null;
 });
 
-const openCreateModal = () => {
-  isEditing.value = false;
-  editingBlogId.value = null;
-  thumbnailPreview.value = null;
-  form.value = {
-    title: '',
-    description: '',
-    category_id: '1',
-    status: 'published',
-    thumbnail: null
-  };
-  showModal.value = true;
-};
 
-const openEditModal = (post) => {
-  isEditing.value = true;
-  editingBlogId.value = post.id;
-  thumbnailPreview.value = post.image || null;
-  form.value = {
-    title: post.title,
-    description: post.description || post.content || '',
-    category_id: post.category_id ? post.category_id.toString() : '1',
-    status: post.status || 'published',
-    thumbnail: null
-  };
-  showModal.value = true;
-};
-
-const handleFileChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    form.value.thumbnail = file;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      thumbnailPreview.value = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const submitForm = async () => {
-  const formData = new FormData();
-  formData.append('title', form.value.title);
-  formData.append('description', form.value.description);
-  formData.append('category_id', form.value.category_id);
-  formData.append('status', form.value.status);
-  
-  if (form.value.thumbnail) {
-    formData.append('thumbnail', form.value.thumbnail);
-  }
-
-  try {
-    if (isEditing.value) {
-      await blogStore.updateBlog(editingBlogId.value, formData);
-    } else {
-      await blogStore.createBlog(formData);
-    }
-    
-    // Refresh blogs
-    if (authStore.user?.role === 'admin') {
-      await blogStore.fetchAllBlogs();
-    } else {
-      await blogStore.fetchBlogs();
-    }
-    
-    showModal.value = false;
-  } catch (err) {
-    console.error("Failed to submit blog form:", err);
-  }
-};
-
-const handleDeleteBlog = async (id) => {
-  if (confirm("Are you sure you want to delete this article? This action cannot be undone.")) {
-    try {
-      await blogStore.deleteOwnBlog(id);
-      if (authStore.user?.role === 'admin') {
-        await blogStore.fetchAllBlogs();
-      } else {
-        await blogStore.fetchBlogs();
-      }
-    } catch (err) {
-      console.error("Deletion failed:", err);
-    }
-  }
-};
 const handleImgError = (e) => {
   e.target.src = "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800";
 };
@@ -229,9 +121,6 @@ const handleImgError = (e) => {
                   <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                   <input v-model="searchQuery" type="text" class="form-control rounded-pill ps-5 py-2 border-0 shadow-sm bg-surface" placeholder="Search articles...">
                 </div>
-                <button v-if="authStore.user?.role === 'admin'" @click="openCreateModal" class="btn btn-purple rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2">
-                  <i class="bi bi-plus-circle-fill"></i> Create New Blog
-                </button>
               </div>
             </div>
           </div>
@@ -314,25 +203,6 @@ const handleImgError = (e) => {
             </select>
           </div>
         </div>
-
-        <!-- Tag Cloud -->
-        <div class="tag-cloud-soft d-flex flex-wrap gap-2 align-items-center">
-          <span class="text-muted font-xs fw-bold text-uppercase me-2">Popular Tags:</span>
-          <button 
-            @click="selectedTag = null"
-            :class="['btn btn-xs rounded-pill px-3 py-1 transition-all', !selectedTag ? 'btn-dark' : 'btn-outline-secondary border-0 opacity-75']"
-          >
-            All Tags
-          </button>
-          <button 
-            v-for="tag in allTags" 
-            :key="tag"
-            @click="selectedTag = tag"
-            :class="['btn btn-xs rounded-pill px-3 py-1 transition-all', selectedTag === tag ? 'btn-purple-light text-purple' : 'btn-outline-secondary border-0 opacity-75']"
-          >
-            #{{ tag }}
-          </button>
-        </div>
       </div>
 
       <!-- Blog Grid Section Title -->
@@ -385,16 +255,7 @@ const handleImgError = (e) => {
                     <span class="font-sm text-adaptive fw-bold">{{ post.author }}</span>
                   </div>
                   
-                  <!-- Admin actions -->
-                  <div v-if="authStore.user?.role === 'admin'" class="d-flex gap-1" @click.stop.prevent>
-                    <button @click="openEditModal(post)" class="btn btn-xs btn-outline-primary border-0 rounded-circle p-1" title="Edit Blog">
-                      <i class="bi bi-pencil-fill"></i>
-                    </button>
-                    <button @click="handleDeleteBlog(post.id)" class="btn btn-xs btn-outline-danger border-0 rounded-circle p-1" title="Delete Blog">
-                      <i class="bi bi-trash-fill"></i>
-                    </button>
-                  </div>
-                  <div v-else class="read-more-link text-purple font-sm fw-bold">
+                  <div class="read-more-link text-purple font-sm fw-bold">
                     Read <i class="bi bi-arrow-right ms-1"></i>
                   </div>
                 </div>
@@ -435,75 +296,7 @@ const handleImgError = (e) => {
       </div>
     </main>
 
-    <!-- Beautiful Glassmorphism Modal for Create/Edit Blog -->
-    <div v-if="showModal" class="modal-backdrop-blur d-flex align-items-center justify-content-center position-fixed w-100 h-100 top-0 start-0 z-1050 p-3">
-      <div class="modal-card-glassmorphism rounded-5 p-4 p-lg-5 w-100 shadow-2xl border transition-all" style="max-width: 600px;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h3 class="fw-bold text-adaptive mb-0">
-            {{ isEditing ? 'Edit Blog Article' : 'Create New Article' }}
-          </h3>
-          <button @click="showModal = false" class="btn-close-modal border-0 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-            <i class="bi bi-x-lg text-adaptive"></i>
-          </button>
-        </div>
-        
-        <form @submit.prevent="submitForm">
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label text-adaptive small fw-bold">ARTICLE TITLE</label>
-              <input v-model="form.title" type="text" class="form-control rounded-pill px-4 py-2 border-theme bg-surface text-adaptive" placeholder="Enter blog title..." required>
-            </div>
-            
-            <div class="col-md-6">
-              <label class="form-label text-adaptive small fw-bold">CATEGORY</label>
-              <select v-model="form.category_id" class="form-select rounded-pill px-4 py-2 border-theme bg-surface text-adaptive">
-                <option v-for="cat in activeCategories" :key="cat.id" :value="cat.id.toString()">
-                  {{ cat.name || cat.title }}
-                </option>
-              </select>
-            </div>
-            
-            <div class="col-md-6">
-              <label class="form-label text-adaptive small fw-bold">STATUS</label>
-              <select v-model="form.status" class="form-select rounded-pill px-4 py-2 border-theme bg-surface text-adaptive">
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
-              </select>
-            </div>
-            
-            <div class="col-12">
-              <label class="form-label text-adaptive small fw-bold">THUMBNAIL IMAGE</label>
-              <div class="thumbnail-dropzone rounded-4 border-dashed border-theme p-3 text-center position-relative transition-all bg-surface-hover">
-                <input type="file" @change="handleFileChange" accept="image/*" class="position-absolute w-100 h-100 top-0 start-0 opacity-0 cursor-pointer">
-                <div v-if="thumbnailPreview" class="d-flex flex-column align-items-center">
-                  <img :src="thumbnailPreview" class="img-preview rounded-3 mb-2 border border-theme" style="max-height: 120px; max-width: 100%; object-fit: cover;">
-                  <span class="text-purple small fw-semibold">Click to replace thumbnail</span>
-                </div>
-                <div v-else class="text-center py-3">
-                  <i class="bi bi-image text-muted display-6 mb-2 d-block"></i>
-                  <span class="text-muted small">Drag & drop or click to upload thumbnail</span>
-                </div>
-              </div>
-            </div>
 
-            <div class="col-12">
-              <label class="form-label text-adaptive small fw-bold">CONTENT / DESCRIPTION</label>
-              <textarea v-model="form.description" class="form-control rounded-4 px-4 py-3 border-theme bg-surface text-adaptive" rows="4" placeholder="Enter description/content..." required></textarea>
-            </div>
-            
-            <div class="col-12 d-flex justify-content-end gap-3 mt-4">
-              <button type="button" @click="showModal = false" class="btn btn-light rounded-pill px-4 py-2 fw-bold border-theme text-adaptive">
-                Cancel
-              </button>
-              <button type="submit" class="btn btn-purple rounded-pill px-4 py-2 fw-bold text-white shadow-sm d-flex align-items-center gap-2">
-                <span v-if="blogStore.isLoading" class="spinner-border spinner-border-sm" role="status"></span>
-                <span>{{ isEditing ? 'Save Changes' : 'Publish Article' }}</span>
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
 
     <BaseFooter />
   </div>
@@ -767,57 +560,5 @@ const handleImgError = (e) => {
   .search-box-soft { margin: 0 auto; }
 }
 
-/* Modal Backdrop Blur */
-.modal-backdrop-blur {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  z-index: 1050;
-  transition: all 0.3s ease;
-}
 
-/* Glassmorphism Modal Card */
-.modal-card-glassmorphism {
-  background: var(--color-surface);
-  border-color: var(--color-border) !important;
-  backdrop-filter: blur(16px);
-  animation: modal-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes modal-enter {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.btn-close-modal {
-  background: var(--color-surface-hover);
-  color: var(--color-text-muted);
-  transition: all 0.2s ease;
-}
-
-.btn-close-modal:hover {
-  background: var(--color-border);
-  color: var(--color-text);
-}
-
-.thumbnail-dropzone {
-  cursor: pointer;
-  border-width: 2px;
-  border-style: dashed;
-}
-
-.thumbnail-dropzone:hover {
-  border-color: var(--color-purple) !important;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.border-dashed {
-  border-style: dashed !important;
-}
-
-.z-1050 {
-  z-index: 1050;
-}
 </style>

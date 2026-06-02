@@ -6,11 +6,13 @@ import BaseFooter from "../../components/layouts/footer.vue";
 import SkeletonLoader from "../../components/SkeletonLoader.vue";
 import { useBlogStore } from '../../stores/BlogStore';
 import { useAuthStore } from '../../stores/AuthStore';
+import { useCategoriesStore } from '../../stores/CategoriesStore';
 
 const route = useRoute();
 const router = useRouter();
 const blogStore = useBlogStore();
 const authStore = useAuthStore();
+const categoriesStore = useCategoriesStore();
 
 const activeSection = ref('');
 const scrollProgress = ref(0);
@@ -59,8 +61,8 @@ const scrollTo = (id) => {
 const loadBlogData = async (id) => {
   try {
     // Ensure categories are loaded so normalizeBlog can resolve category names
-    if (blogStore.categories.length === 0) {
-      await blogStore.fetchCategories().catch(() => {});
+    if (categoriesStore.categories.length === 0) {
+      await categoriesStore.fetchCategories().catch(() => {});
     }
 
     if (authStore.user?.role === 'admin') {

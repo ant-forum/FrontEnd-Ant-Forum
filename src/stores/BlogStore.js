@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "@/api/api";
+import { useCategoriesStore } from "./CategoriesStore";
 
 export const useBlogStore = defineStore("blog", () => {
   const blogs = ref([]);
@@ -13,7 +14,8 @@ export const useBlogStore = defineStore("blog", () => {
 
   // Fallback lists
   const drafts = ref([]); // internal helper for admin drafts
-  const categories = ref([]);
+  
+  const categoriesStore = useCategoriesStore();
 
   // Helper to normalize blog image paths, dates, authors, categories
   const normalizeBlog = (item) => {
@@ -51,8 +53,8 @@ export const useBlogStore = defineStore("blog", () => {
     if (item.category) {
       categoryName = typeof item.category === "object" ? (item.category.name || item.category.title) : item.category;
     } else if (item.category_id) {
-      // Look up from dynamically fetched categories first
-      const found = categories.value.find(c => c.id == item.category_id);
+      // Look up from dynamically fetched categories first in categoriesStore
+      const found = categoriesStore.categories.find(c => c.id == item.category_id);
       if (found) {
         categoryName = found.name || found.title || "General";
       }
@@ -352,29 +354,6 @@ export const useBlogStore = defineStore("blog", () => {
     }
   };
 
-  const fetchCategories = async () => {
-    isLoading.value = true;
-    try {
-      const res = await api.get("/api/categories/getAllCategories", { skipGlobalToast: true });
-      const rawData = res.data || res;
-      let list = [];
-      if (Array.isArray(rawData)) {
-        list = rawData;
-      } else if (Array.isArray(rawData.data)) {
-        list = rawData.data;
-      } else if (rawData.data && Array.isArray(rawData.data.data)) {
-        list = rawData.data.data;
-      }
-      categories.value = list;
-      return list;
-    } catch (err) {
-      console.error("[BlogStore] Fetch Categories failed:", err);
-      throw err;
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
   return {
     // state
     blogs,
@@ -384,7 +363,6 @@ export const useBlogStore = defineStore("blog", () => {
     page,
     hasMore,
     drafts,
-    categories,
 
     // actions
     fetchBlogs,
@@ -392,7 +370,6 @@ export const useBlogStore = defineStore("blog", () => {
     fetchBlogPreview,
     fetchOwnBlogs,
     deleteOwnBlog,
-    fetchCategories,
     fetchBlogsByUser,
     fetchBlogsByCategory,
 
