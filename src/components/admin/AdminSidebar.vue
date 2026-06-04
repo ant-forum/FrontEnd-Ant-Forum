@@ -61,6 +61,7 @@ const navigationCategories = ref([
     items: [
       { label: 'Profile', icon: 'bi bi-person-badge', path: '/admin/profile' },
       { label: 'Analytics', icon: 'bi bi-bar-chart', path: '/admin/analytics' },
+      { label: 'Activity', icon: 'bi bi-clock-history', path: '/admin/activity' },
       { label: 'Settings', icon: 'bi bi-gear', path: '/admin/settings' },
     ]
   }

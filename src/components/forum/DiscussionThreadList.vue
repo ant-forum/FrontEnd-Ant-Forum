@@ -79,7 +79,7 @@ async function shareThread(id) {
 }
 
 function toggleSave(d) {
-  d.saved = !d.saved;
+  forumStore.toggleSaveForum(d.id);
 }
 
 function handleVote(id, direction) {

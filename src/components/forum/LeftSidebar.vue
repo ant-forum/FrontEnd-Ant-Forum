@@ -28,6 +28,8 @@ const handleItemClick = (tabId) => {
     }
   } else if (tabId === 'profile') {
     router.push('/profile');
+  } else if (tabId === 'settings') {
+    router.push('/settings/privacy');
   } else if (tabId === 'projects') {
     router.push('/showcase');
   } else if (tabId === 'saves') {
@@ -70,6 +72,15 @@ const handleItemClick = (tabId) => {
         <span>Forum</span>
       </button>
 
+      <button
+        class="sidebar-menu-item"
+        :class="{ active: route.path === '/profile' }"
+        @click="handleItemClick('profile')"
+      >
+        <i class="bi bi-person-circle"></i>
+        <span>Profile</span>
+      </button>
+
       <button 
         class="sidebar-menu-item" 
         :class="{ active: route.path.startsWith('/showcase') }" 
@@ -81,20 +92,20 @@ const handleItemClick = (tabId) => {
 
       <button 
         class="sidebar-menu-item" 
-        :class="{ active: activeTab === 'contributions' }" 
-        @click="handleItemClick('contributions')"
-      >
-        <i class="bi bi-award"></i>
-        <span>Contributions</span>
-      </button>
-
-      <button 
-        class="sidebar-menu-item" 
         :class="{ active: activeTab === 'saves' || route.query.tab === 'saves' }" 
         @click="handleItemClick('saves')"
       >
         <i :class="['bi', activeTab === 'saves' || route.query.tab === 'saves' ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
         <span>Saved</span>
+      </button>
+
+      <button
+        class="sidebar-menu-item"
+        :class="{ active: route.path.startsWith('/settings') }"
+        @click="handleItemClick('settings')"
+      >
+        <i class="bi bi-gear"></i>
+        <span>Settings</span>
       </button>
     </div>
 

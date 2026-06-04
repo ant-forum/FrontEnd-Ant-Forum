@@ -7,6 +7,7 @@ import LeftSidebar from "../../components/forum/LeftSidebar.vue";
 import SkeletonLoader from "../../components/SkeletonLoader.vue";
 import { useBlogStore } from '../../stores/BlogStore';
 import { useAuthStore } from '../../stores/AuthStore';
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 
 const route = useRoute();
 const router = useRouter();
@@ -211,58 +212,8 @@ const handleImgError = (e) => {
             <!-- Hero Image -->
             <img :src="post.image" @error="handleImgError" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme" style="max-height: 400px;" alt="Hero Image">
 
-            <!-- Article Body -->
-            <div class="article-body text-adaptive lh-lg mb-5" style="white-space: pre-line;" v-html="post.content || post.description"></div>
-
-            <!-- Dev Console / Code Block -->
-            <div class="code-block-wrapper rounded-4 overflow-hidden my-5">
-              <div class="code-header bg-darker d-flex align-items-center px-4 py-3">
-                <span class="dot text-red opacity-75">●</span>
-                <span class="dot text-yellow opacity-75">●</span>
-                <span class="dot text-green opacity-75">●</span>
-                <span class="ms-3 text-muted font-sm">Dev Console</span>
-              </div>
-              <div class="p-4 bg-darker">
-                <pre class="mb-0"><code class="text-sm"><span class="text-pink">import</span> { ref, computed } <span class="text-pink">from</span> <span class="text-blue">'vue'</span>;
-<span class="text-pink">import</span> { defineStore } <span class="text-pink">from</span> <span class="text-blue">'pinia'</span>;
-
-<span class="text-pink">export const</span> <span class="text-green">useCounterStore</span> = defineStore(<span class="text-blue">'counter'</span>, () => {
-  <span class="text-pink">const</span> count = <span class="text-blue">ref</span>(<span class="text-warning">0</span>);
-  <span class="text-pink">const</span> name = <span class="text-blue">ref</span>(<span class="text-blue">'Eduardo'</span>);
-
-  <span class="text-pink">const</span> doubleCount = <span class="text-blue">computed</span>(() => count.value * <span class="text-warning">2</span>);
-
-  <span class="text-pink">function</span> <span class="text-purple">increment</span>() {
-    count.value++;
-  }
-
-  <span class="text-pink">function</span> <span class="text-purple">randomize</span>() {
-    count.value = Math.round(Math.random() * <span class="text-warning">100</span>);
-  }
-
-  <span class="text-pink">return</span> { count, name, doubleCount, increment, randomize };
-});</code></pre>
-              </div>
-            </div>
-
-            <!-- Share this Story - at the bottom of Dev Console, outside it -->
-            <div class="share-card p-4 rounded-4 bg-surface-hover border mb-5">
-              <h6 class="fw-bold mb-3 text-adaptive font-xs text-uppercase tracking-wide">Share this Story</h6>
-              <div class="d-flex gap-3">
-                <a href="#" class="share-btn rounded-4 text-decoration-none d-flex align-items-center justify-content-center">
-                  <i class="bi bi-twitter-x"></i>
-                </a>
-                <a href="#" class="share-btn rounded-4 text-decoration-none d-flex align-items-center justify-content-center">
-                  <i class="bi bi-linkedin"></i>
-                </a>
-                <a href="#" class="share-btn rounded-4 text-decoration-none d-flex align-items-center justify-content-center">
-                  <i class="bi bi-facebook"></i>
-                </a>
-                <a href="#" class="share-btn rounded-4 text-decoration-none d-flex align-items-center justify-content-center">
-                  <i class="bi bi-link-45deg"></i>
-                </a>
-              </div>
-            </div>
+          <!-- Article Body -->
+          <div class="article-body text-adaptive lh-lg mb-5" style="white-space: pre-line;" v-html="sanitizeHtml(post.content || post.description)"></div>
 
             <!-- Newsletter -->
             <div class="newsletter-section mt-5 p-5 rounded-4 text-center position-relative overflow-hidden border">

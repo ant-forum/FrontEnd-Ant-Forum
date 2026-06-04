@@ -8,21 +8,48 @@ import {
 let refreshAccessTokenHandler = null;
 let refreshRequest = null;
 
+export const AUTH_MODES = Object.freeze({
+  ACCESS: "access",
+  REFRESH: "refresh",
+  RECOVERY: "recovery",
+  NONE: "none",
+});
+
 export const setAuthRefreshHandler = (handler) => {
   refreshAccessTokenHandler = handler;
 };
 
-const isRefreshRequest = (config) =>
-  config?.url?.includes("/auth/refresh-token");
+const getAuthMode = (config) => config?.authMode || AUTH_MODES.ACCESS;
 
-const isLoginRequest = (config) => config?.url?.includes("/auth/login");
+const getErrorMessage = (error) =>
+  (
+    error?.response?.data?.message ||
+    error?.response?.data?.msg ||
+    error?.message ||
+    ""
+  )
+    .toString()
+    .toLowerCase();
+
+export const isSessionInvalidError = (error) => {
+  const status = error?.response?.status;
+  const message = getErrorMessage(error);
+
+  return (
+    status === 401 ||
+    status === 403 ||
+    message.includes("invalid refresh token") ||
+    message.includes("refresh token expired") ||
+    message.includes("token is required") ||
+    message.includes("invalid token or expired")
+  );
+};
 
 const canRefreshRequest = (config) =>
   Boolean(
     config &&
     !config._retry &&
-    !isRefreshRequest(config) &&
-    !isLoginRequest(config) &&
+    getAuthMode(config) === AUTH_MODES.ACCESS &&
     getStoredRefreshToken() &&
     refreshAccessTokenHandler,
   );
@@ -34,8 +61,18 @@ const api = axios.create({
   },
 });
 
-const setAuthorizationHeader = (config, token) => {
-  if (!token) return;
+const hasAuthorizationHeader = (config) => {
+  if (config.headers && typeof config.headers.has === "function") {
+    return config.headers.has("Authorization");
+  }
+
+  return Boolean(
+    config.headers?.Authorization || config.headers?.authorization,
+  );
+};
+
+const setAuthorizationHeader = (config, token, overwrite = false) => {
+  if (!token || (!overwrite && hasAuthorizationHeader(config))) return;
 
   if (config.headers && typeof config.headers.set === "function") {
     config.headers.set("Authorization", `Bearer ${token}`);
@@ -61,17 +98,17 @@ const retryRequestWithFreshToken = async (originalRequest) => {
     throw new Error("Unable to refresh access token");
   }
 
-  setAuthorizationHeader(originalRequest, token);
+  setAuthorizationHeader(originalRequest, token, true);
   return api(originalRequest);
 };
 
 // Request Interceptor: Attach token and handle Content-Type for FormData
 api.interceptors.request.use((config) => {
-  const token = isRefreshRequest(config)
-    ? getStoredRefreshToken()
-    : getStoredAccessToken();
-
-  setAuthorizationHeader(config, token);
+  if (getAuthMode(config) === AUTH_MODES.REFRESH) {
+    setAuthorizationHeader(config, getStoredRefreshToken());
+  } else if (getAuthMode(config) === AUTH_MODES.ACCESS) {
+    setAuthorizationHeader(config, getStoredAccessToken());
+  }
 
   // When sending FormData, let the browser/axios auto-set Content-Type
   // with the correct multipart boundary. Otherwise default to JSON.
