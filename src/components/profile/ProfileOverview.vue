@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps } from "vue";
+import { computed, defineEmits, defineProps } from "vue";
 
 const props = defineProps({
   profileName: { type: String, required: true },
@@ -11,6 +11,19 @@ const props = defineProps({
   profileAvatar: { type: String, required: true },
   defaultProjects: { type: Array, required: true },
   activityFeed: { type: Array, required: true },
+  canEdit: { type: Boolean, default: false },
+});
+
+const emit = defineEmits(["edit"]);
+
+const profileInitials = computed(() => {
+  return props.profileName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((name) => name[0])
+    .join("")
+    .toUpperCase() || "A";
 });
 </script>
 
@@ -23,7 +36,17 @@ const props = defineProps({
         <div class="d-flex flex-column flex-sm-row align-items-start gap-4">
           <!-- Big Avatar with Online Badge -->
           <div class="position-relative flex-shrink-0 profile-avatar-wrapper">
-            <img :src="profileAvatar" class="rounded-4 object-fit-cover shadow-sm" width="120" height="120" alt="Developer Avatar">
+            <img
+              v-if="profileAvatar"
+              :src="profileAvatar"
+              class="rounded-4 object-fit-cover shadow-sm"
+              width="120"
+              height="120"
+              alt="Developer avatar"
+            >
+            <div v-else class="profile-avatar-fallback rounded-4" aria-label="Developer avatar">
+              {{ profileInitials }}
+            </div>
             <span class="status-indicator-dot"></span>
           </div>
           
@@ -34,10 +57,14 @@ const props = defineProps({
                 <h3 class="fw-bold mb-2 profile-name">{{ profileName }}</h3>
                 <span class="role-badge-overview">{{ profileRole }}</span>
               </div>
+              <button v-if="canEdit" type="button" class="btn-edit-profile" @click="emit('edit')">
+                <i class="bi bi-pencil-square"></i>
+                <span>Edit Profile</span>
+              </button>
             </div>
             <!-- Description -->
             <p class="bio-text text-muted mb-0">
-              {{ profileBio }}
+              {{ profileBio || "Share your background, interests, and what you are building with the ANT Forum community." }}
             </p>
           </div>
         </div>
@@ -70,6 +97,16 @@ const props = defineProps({
               </div>
             </div>
           </div>
+          <div v-if="defaultProjects.length === 0" class="col-12">
+            <div class="empty-state-card">
+              <i class="bi bi-code-square"></i>
+              <div>
+                <h6>No featured projects yet</h6>
+                <p>Submit your first project to start building your developer showcase.</p>
+              </div>
+              <router-link to="/showcase/create">Submit project</router-link>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -90,55 +127,47 @@ const props = defineProps({
               <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ activity.meta }}</small>
             </div>
           </div>
+          <div v-if="activityFeed.length === 0" class="empty-state-card">
+            <i class="bi bi-clock-history"></i>
+            <div>
+              <h6>No recent activity</h6>
+              <p>Your forum participation and project updates will appear here.</p>
+            </div>
+          </div>
         </div>
       </div>
       
     </div>
     
-    <!-- Right Column: Vitals & Skills -->
+    <!-- Right Column: Profile Snapshot -->
     <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
-      <!-- Stack Proficiency -->
       <div class="dashboard-card-modern p-4">
-        <h6 class="themed-text fw-bold mb-4" style="font-size: 0.9rem; letter-spacing: 0.3px;">Stack Proficiency</h6>
-        
-        <div class="d-flex flex-column gap-3 mb-4">
-          <div class="proficiency-item">
-            <div class="d-flex justify-content-between mb-1">
-              <span class="proficiency-label">FRONTEND ARCH</span>
-              <span class="proficiency-percentage">95%</span>
-            </div>
-            <div class="proficiency-progress">
-              <div class="proficiency-progress-fill" style="width: 95%;"></div>
-            </div>
+        <h6 class="themed-text fw-bold mb-3 snapshot-heading">Profile Snapshot</h6>
+
+        <div class="snapshot-grid">
+          <div class="snapshot-item">
+            <strong>{{ defaultProjects.length }}</strong>
+            <span>Projects</span>
           </div>
-          <div class="proficiency-item">
-            <div class="d-flex justify-content-between mb-1">
-              <span class="proficiency-label">SYSTEMS DESIGN</span>
-              <span class="proficiency-percentage">88%</span>
-            </div>
-            <div class="proficiency-progress">
-              <div class="proficiency-progress-fill" style="width: 88%;"></div>
-            </div>
+          <div class="snapshot-item">
+            <strong>{{ activityFeed.length }}</strong>
+            <span>Activities</span>
           </div>
-          <div class="proficiency-item">
-            <div class="d-flex justify-content-between mb-1">
-              <span class="proficiency-label">DISTRIBUTED DBS</span>
-              <span class="proficiency-percentage">72%</span>
-            </div>
-            <div class="proficiency-progress">
-              <div class="proficiency-progress-fill" style="width: 72%;"></div>
-            </div>
+          <div class="snapshot-item">
+            <strong>{{ profileSkills.length }}</strong>
+            <span>Skills</span>
           </div>
         </div>
-        
+
         <hr class="my-3 border-slate">
-        
-        <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 0.5px;">LANGUAGES</h6>
-        <div class="d-flex flex-wrap gap-2">
+
+        <h6 class="text-muted text-uppercase fw-bold mb-3 skills-heading">Skills</h6>
+        <div v-if="profileSkills.length" class="d-flex flex-wrap gap-2">
           <span v-for="skill in profileSkills" :key="skill" class="language-badge">
             {{ skill }}
           </span>
         </div>
+        <p v-else class="empty-skills-copy">Add skills to help the community understand your strengths.</p>
       </div>
       
     </div>
@@ -182,6 +211,20 @@ const props = defineProps({
   transition: all var(--transition-base);
 }
 
+.profile-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-purple) 0%, var(--color-primary) 100%);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  box-shadow: 0 8px 20px -6px var(--color-purple-light);
+}
+
 .profile-avatar-wrapper:hover img {
   transform: scale(1.02);
   box-shadow: 0 12px 24px -4px var(--color-purple-light);
@@ -216,6 +259,28 @@ const props = defineProps({
   padding: 0.3rem 0.8rem;
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-purple-light) !important;
+}
+
+.btn-edit-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  color: var(--color-purple);
+  background: var(--color-purple-light);
+  border: 1px solid var(--color-purple-light);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: all var(--transition-base);
+}
+
+.btn-edit-profile:hover {
+  color: #ffffff;
+  background: var(--color-purple);
+  border-color: var(--color-purple);
+  transform: translateY(-1px);
 }
 
 .text-primary-purple {
@@ -309,30 +374,98 @@ const props = defineProps({
 }
 
 /* Side Info Section */
-.proficiency-label {
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: var(--color-text-muted);
+.snapshot-heading {
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
 }
 
-.proficiency-percentage {
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: var(--color-purple);
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
 
-.proficiency-progress {
-  height: 6px;
+.snapshot-item {
+  padding: 12px 6px;
+  text-align: center;
   background: var(--color-surface-hover);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
 }
 
-.proficiency-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-purple) 0%, var(--color-primary) 100%);
-  border-radius: var(--radius-pill);
-  box-shadow: 0 0 8px var(--color-purple-light);
+.snapshot-item strong,
+.snapshot-item span {
+  display: block;
+}
+
+.snapshot-item strong {
+  color: var(--color-purple);
+  font-size: 1.1rem;
+}
+
+.snapshot-item span {
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.skills-heading {
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+}
+
+.empty-skills-copy {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.83rem;
+  line-height: 1.5;
+}
+
+.empty-state-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+}
+
+.empty-state-card i {
+  flex-shrink: 0;
+  color: var(--color-purple);
+  font-size: 1.35rem;
+}
+
+.empty-state-card h6,
+.empty-state-card p {
+  margin: 0;
+}
+
+.empty-state-card h6 {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.empty-state-card p {
+  margin-top: 3px;
+  font-size: 0.82rem;
+}
+
+.empty-state-card a {
+  margin-left: auto;
+  color: var(--color-purple);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.empty-state-card a:hover {
+  text-decoration: underline;
 }
 
 .language-badge {
@@ -360,5 +493,17 @@ const props = defineProps({
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .empty-state-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .empty-state-card a {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 </style>

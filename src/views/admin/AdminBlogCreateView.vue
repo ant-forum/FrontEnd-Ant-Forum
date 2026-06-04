@@ -898,7 +898,10 @@ onBeforeUnmount(releaseThumbnailPreview);
 @media (min-width: 1200px) {
   .side-stack {
     position: sticky;
-    top: 1rem;
+    top: calc(76px + 1rem);
+    max-height: calc(100vh - 76px - 2rem);
+    overflow-y: auto;
+    padding-right: 0.15rem;
   }
 }
 

@@ -6,6 +6,7 @@ import BaseFooter from "../../components/layouts/footer.vue";
 import SkeletonLoader from "../../components/SkeletonLoader.vue";
 import { useBlogStore } from '../../stores/BlogStore';
 import { useAuthStore } from '../../stores/AuthStore';
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 
 const route = useRoute();
 const router = useRouter();
@@ -211,7 +212,7 @@ const handleImgError = (e) => {
           <img :src="post.image" @error="handleImgError" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme" style="max-height: 400px;" alt="Hero Image">
 
           <!-- Article Body -->
-          <div class="article-body text-adaptive lh-lg mb-5" style="white-space: pre-line;" v-html="post.content || post.description"></div>
+          <div class="article-body text-adaptive lh-lg mb-5" style="white-space: pre-line;" v-html="sanitizeHtml(post.content || post.description)"></div>
 
           <!-- Newsletter -->
           <div class="newsletter-section mt-5 p-5 rounded-4 text-center position-relative overflow-hidden border">

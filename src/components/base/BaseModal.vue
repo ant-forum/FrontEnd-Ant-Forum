@@ -13,7 +13,6 @@
               <div class="modal-title-row">
                 <i v-if="icon" :class="[icon, 'modal-icon', themeClass]"></i>
                 <div>
-                  <p v-if="kicker">{{ kicker }}</p>
                   <h2 :class="themeClass">{{ title }}</h2>
                 </div>
               </div>

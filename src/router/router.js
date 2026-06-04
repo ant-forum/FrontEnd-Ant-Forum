@@ -3,7 +3,6 @@ import { useAuthStore } from "../stores/AuthStore";
 
 
 import HomePage from '../views/HomePage.vue';
-import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
@@ -26,9 +25,9 @@ import AdminSettingsView from '../views/admin/AdminSettingsView.vue';
 import AdminTagsView from '../views/admin/AdminTagsView.vue';
 import AdminUsersView from '../views/admin/AdminUsersView.vue';
 import AdminReportsView from '../views/admin/AdminReportsView.vue';
+import AdminActivityView from '../views/admin/AdminActivityView.vue';
 import ProjectReviewManagement from '../views/admin/ProjectReviewManagement.vue';
 import ThreadModerationView from '../views/admin/ThreadModerationView.vue';
-// import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
 
 //this is new
@@ -92,16 +91,16 @@ const routes = [
     component: () => import("../views/blog/BlogDetail.vue"),
   },
   {
-    path: "/dashboard",
-    name: "Dashboard",
-    meta: { requiresAuth: true },
-    component: Dashboard,
-  },
-  {
     path: "/profile",
     name: "Profile",
     meta: { requiresAuth: true },
     component: Profile,
+  },
+  {
+    path: "/settings/:section?",
+    name: "UserSettings",
+    meta: { requiresAuth: true, title: "Settings" },
+    component: () => import("../views/settings/UserSettingsView.vue"),
   },
   {
     path: "/viewprofile/:username",
@@ -160,7 +159,7 @@ const routes = [
   {
     path: "/admin/profile",
     name: "AdminProfile",
-    meta: { requiresAuth: true, role: "admin", title: "Admin Profile" },
+    meta: { requiresAuth: true, role: "admin", title: "Admin Account" },
     component: () => import("../views/admin/AdminProfileView.vue"),
   },
   {
@@ -234,6 +233,12 @@ const routes = [
     name: "Analytics",
     meta: { requiresAuth: true, role: "admin" },
     component: AdminAnalyticsView,
+  },
+  {
+    path: "/admin/activity",
+    name: "AdminActivity",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminActivityView,
   },
   {
     path: "/admin/settings",

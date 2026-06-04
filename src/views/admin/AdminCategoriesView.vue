@@ -89,12 +89,34 @@
       <form class="taxonomy-form" @submit.prevent="saveCategory">
         <label>
           <span>Category Name</span>
-          <input v-model.trim="mForm.data.name" class="form-control" type="text" maxlength="50" placeholder="Example: Frontend" required>
+          <input
+            v-model.trim="mForm.data.name"
+            class="form-control"
+            :class="{ 'is-invalid': errors.categoryName }"
+            type="text"
+            maxlength="50"
+            placeholder="Example: Frontend"
+            @input="handleFormInput('categoryName')"
+          >
+          <small v-if="errors.categoryName" class="field-error">{{ errors.categoryName }}</small>
         </label>
         <label>
           <span>Description</span>
-          <textarea v-model.trim="mForm.data.description" class="form-control" rows="3" placeholder="Explain what belongs in this category" required></textarea>
+          <textarea
+            v-model.trim="mForm.data.description"
+            class="form-control"
+            :class="{ 'is-invalid': errors.categoryDescription }"
+            rows="3"
+            placeholder="Explain what belongs in this category"
+            @input="handleFormInput('categoryDescription')"
+          ></textarea>
+          <small v-if="errors.categoryDescription" class="field-error">{{ errors.categoryDescription }}</small>
         </label>
+
+        <div v-if="mForm.errorMessage" class="form-error-message">
+          <i class="bi bi-exclamation-circle"></i>
+          <span>{{ mForm.errorMessage }}</span>
+        </div>
 
         <div class="modal-actions">
           <button class="btn btn-light border" type="button" @click="closeFormModal">Cancel</button>
@@ -136,6 +158,7 @@ import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import AdminTaxonomyCards from '../../components/admin/AdminTaxonomyCards.vue';
 import BaseModal from '../../components/base/BaseModal.vue';
 import { useToast } from '../../composables/useToast';
+import { useRequiredValidator } from '../../composables/useRequiredValidator';
 import { useCategoriesStore } from '../../stores/CategoriesStore';
 import { useBlogStore } from '../../stores/BlogStore';
 
@@ -144,6 +167,7 @@ const { categories, isLoading } = storeToRefs(categoryStore);
 const blogStore = useBlogStore();
 const router = useRouter();
 const toast = useToast();
+const { errors, clearError, validateField } = useRequiredValidator();
 const DEFAULT_CATEGORY_TYPE = 'forum';
 
 const categoriesWithCount = computed(() => {
@@ -168,7 +192,9 @@ const mForm = reactive({
   isVisible: false,
   mode: 'create',
   item: null,
+  editId: null,
   isLoading: false,
+  errorMessage: '',
   data: {
     name: '',
     description: '',
@@ -205,17 +231,26 @@ onMounted(async () => {
 const openCreateModal = () => {
   mForm.mode = 'create';
   mForm.item = null;
+  mForm.editId = null;
+  mForm.errorMessage = '';
+  clearError('categoryName');
+  clearError('categoryDescription');
   mForm.data = { name: '', description: '', type: DEFAULT_CATEGORY_TYPE };
   mForm.isVisible = true;
 };
 
 const openEditModal = (category) => {
+  if (!category) return;
   mForm.mode = 'edit';
   mForm.item = category;
+  mForm.editId = category.id;
+  mForm.errorMessage = '';
+  clearError('categoryName');
+  clearError('categoryDescription');
   mForm.data = {
-    name: category.name,
-    description: category.description,
-    type: category.type,
+    name: category.name || '',
+    description: category.description || '',
+    type: category.type || DEFAULT_CATEGORY_TYPE,
   };
   mForm.isVisible = true;
 };
@@ -223,6 +258,44 @@ const openEditModal = (category) => {
 const closeFormModal = () => {
   mForm.isVisible = false;
   mForm.item = null;
+  mForm.editId = null;
+  mForm.errorMessage = '';
+  clearError('categoryName');
+  clearError('categoryDescription');
+};
+
+const clearFormError = () => {
+  mForm.errorMessage = '';
+};
+
+const handleFormInput = (field) => {
+  clearFormError();
+  clearError(field);
+};
+
+const getErrorMessage = (error) => {
+  const message =
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message ||
+    'Category request failed.';
+
+  if (String(message).toLowerCase().includes('already')) {
+    return 'This category name already exists. Please choose a different name.';
+  }
+
+  return message;
+};
+
+const isCategoryNameTaken = () => {
+  const formName = mForm.data.name.trim().toLowerCase();
+
+  return categories.value.some((category) => {
+    const sameName = String(category.name || '').trim().toLowerCase() === formName;
+    const sameCategory = String(category.id) === String(mForm.editId);
+
+    return sameName && !sameCategory;
+  });
 };
 
 const openDetailModal = async (category) => {
@@ -263,20 +336,67 @@ const closeDeleteModal = () => {
 };
 
 const saveCategory = async () => {
+  let successMessage = '';
+
   try {
     mForm.isLoading = true;
-    if (mForm.mode === 'edit') {
-      await categoryStore.updateCategory(mForm.item.id, mForm.data);
-      toast.success('Category updated successfully!');
-    } else {
-      await categoryStore.createCategory(mForm.data);
-      toast.success('Category created successfully!');
+    mForm.errorMessage = '';
+
+    const isNameValid = validateField('categoryName', mForm.data.name, 'Category name is required.');
+    const isDescriptionValid = validateField('categoryDescription', mForm.data.description, 'Description is required.');
+
+    if (!isNameValid || !isDescriptionValid) {
+      return;
     }
-    closeFormModal();
+
+    if (isCategoryNameTaken()) {
+      mForm.errorMessage = 'This category name already exists. Please choose a different name.';
+      return;
+    }
+
+    if (mForm.mode === 'edit') {
+      if (!mForm.editId) {
+        mForm.errorMessage = 'Please select a category to edit again.';
+        return;
+      }
+
+      const updatePayload = {
+        description: mForm.data.description,
+        type: mForm.data.type || DEFAULT_CATEGORY_TYPE,
+      };
+
+      const originalName = String(mForm.item?.name || '').trim();
+      const nextName = mForm.data.name.trim();
+
+      if (nextName !== originalName) {
+        updatePayload.name = nextName;
+      }
+
+      await categoryStore.updateCategory(mForm.editId, updatePayload);
+      successMessage = 'Category updated successfully!';
+    } else {
+      await categoryStore.createCategory({
+        ...mForm.data,
+        type: mForm.data.type || DEFAULT_CATEGORY_TYPE,
+      });
+      successMessage = 'Category created successfully!';
+    }
   } catch (error) {
     console.error('Failed to save category:', error);
+    mForm.errorMessage = getErrorMessage(error);
+    return;
   } finally {
     mForm.isLoading = false;
+  }
+
+  closeFormModal();
+  toast.success(successMessage);
+
+  try {
+    await categoryStore.fetchCategories();
+  } catch (error) {
+    console.error('Failed to refresh categories:', error);
+    toast.warning('Saved, but could not refresh categories.');
   }
 };
 
@@ -284,12 +404,21 @@ const deleteCategory = async () => {
   try {
     mDelete.isLoading = true;
     await categoryStore.deleteCategory(mDelete.item.id);
-    toast.success('Category deleted successfully!');
-    closeDeleteModal();
   } catch (error) {
     console.error('Failed to delete category:', error);
+    return;
   } finally {
     mDelete.isLoading = false;
+  }
+
+  closeDeleteModal();
+  toast.success('Category deleted successfully!');
+
+  try {
+    await categoryStore.fetchCategories();
+  } catch (error) {
+    console.error('Failed to refresh categories:', error);
+    toast.warning('Deleted, but could not refresh categories.');
   }
 };
 
@@ -368,6 +497,35 @@ const handleCategoryClick = (category) => {
 
 .delete-message strong {
   color: var(--color-text);
+}
+
+.form-error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 24%, var(--color-border));
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.field-error {
+  color: var(--color-danger) !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.taxonomy-form .form-control.is-invalid {
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-danger) 18%, transparent);
+}
+
+.taxonomy-form .form-control.is-invalid:focus {
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--color-danger) 24%, transparent);
 }
 
 .btn-danger {
