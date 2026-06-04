@@ -270,6 +270,21 @@ const routes = [
   },
 ];
 
+const userHomeRoute = { name: "HomePage" };
+const adminHomeRoute = { name: "AdminDashboard" };
+
+const safeLastPath = (path) => {
+  if (!path || typeof path !== "string") {
+    return null;
+  }
+
+  if (path.startsWith("/admin") || path.startsWith("/login")) {
+    return null;
+  }
+
+  return path;
+};
+
 
 const router = createRouter({
   history: createWebHistory(),
@@ -298,8 +313,8 @@ router.beforeEach(async (to, from) => {
   // 2. Redirect logged-in users away from login page to their dashboard
   if (to.name === "login" && isLoggedIn) {
     return userRole === "admin"
-      ? { name: "AdminDashboard" }
-      : { name: "Dashboard" };
+      ? adminHomeRoute
+      : userHomeRoute;
   }
 
   // 3. Enforce authentication and role constraints
@@ -318,14 +333,14 @@ router.beforeEach(async (to, from) => {
       }
       
       // Fallback reload redirect to their last successfully visited page
-      const lastPath = localStorage.getItem("ANT_LastPath");
+      const lastPath = safeLastPath(localStorage.getItem("ANT_LastPath"));
       if (lastPath && lastPath !== to.path) {
         return lastPath;
       }
       
       return userRole === "admin"
-        ? { name: "AdminDashboard" }
-        : { name: "Dashboard" };
+        ? adminHomeRoute
+        : userHomeRoute;
     }
   }
 
