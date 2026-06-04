@@ -120,10 +120,18 @@ watch(() => route.query.tab, (newTab) => {
   }
 });
 
+watch(() => route.query.q, (newQ) => {
+  searchQuery.value = newQ ? String(newQ) : '';
+});
+
 onMounted(async () => {
   loading.value = true;
   await forumStore.fetchDiscussions();
   loading.value = false;
+
+  if (route.query.q) {
+    searchQuery.value = String(route.query.q);
+  }
 
   window.addEventListener('keydown', handleGlobalKeydown);
 });

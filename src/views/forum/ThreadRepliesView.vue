@@ -5,11 +5,13 @@ import Navbar from '@/components/layouts/header.vue';
 import LeftSidebar from '@/components/forum/LeftSidebar.vue';
 import ForumSidebar from '@/components/forum/ForumSidebar.vue';
 import { useForumStore } from '@/stores/ForumStore';
+import { useAuthStore } from '@/stores/AuthStore';
 import MarkdownEditor from '@/components/forum/create/MarkdownEditor.vue';
 
 const route = useRoute();
 const router = useRouter();
 const forumStore = useForumStore();
+const authStore = useAuthStore();
 
 const loading = ref(true);
 const newReplyText = ref('');
@@ -114,30 +116,107 @@ const handleVote = (direction) => {
 };
 
 const handleLikeReply = (replyIndex) => {
-  if (discussion.value) {
-    forumStore.toggleLikeReply(discussion.value.id, replyIndex);
+  if (discussion.value && Array.isArray(discussion.value.replies)) {
+    const reply = discussion.value.replies[replyIndex];
+    if (reply && reply.id) {
+      forumStore.toggleLikeComment(reply.id);
+    } else {
+      forumStore.toggleLikeReply(discussion.value.id, replyIndex);
+    }
   }
 };
 
-const postReply = () => {
+const toggleSaveDiscussion = () => {
+  if (discussion.value) {
+    forumStore.toggleSaveForum(discussion.value.id);
+  }
+};
+
+const postReply = async () => {
   if (!newReplyText.value.trim()) return;
 
   const replyData = {
-    author: "@current_user",
-    timestamp: "Just now",
     body: newReplyText.value.trim(),
-    likes: 0,
-    likedByUser: false
   };
 
-  forumStore.postReply(discussion.value.id, replyData);
-  newReplyText.value = '';
+  try {
+    await forumStore.postReply(discussion.value.id, replyData);
+    newReplyText.value = '';
 
-  // Trigger smooth scroll to bottom and reload copy actions
-  nextTick(() => {
-    scrollToBottom();
-    setupCopyButtons();
-  });
+    // Trigger smooth scroll to bottom and reload copy actions
+    nextTick(() => {
+      scrollToBottom();
+      setupCopyButtons();
+    });
+  } catch (err) {
+    console.error("Failed to post reply:", err);
+  }
+};
+
+const canDeleteDiscussion = computed(() => {
+  if (!discussion.value || !authStore.user) return false;
+
+  const currentUserId = authStore.user.id;
+  const discussionUserId = discussion.value.user_id || discussion.value.userId;
+  if (currentUserId && discussionUserId && currentUserId == discussionUserId) return true;
+
+  const currentUsername = authStore.user.username;
+  const authorUsername = discussion.value.author?.username || discussion.value.author;
+  if (currentUsername && authorUsername) {
+    const cleanCurrent = currentUsername.replace('@', '').toLowerCase().trim();
+    const cleanAuthor = typeof authorUsername === 'string'
+      ? authorUsername.replace('@', '').toLowerCase().trim()
+      : (authorUsername.username || '').replace('@', '').toLowerCase().trim();
+    if (cleanCurrent === cleanAuthor) return true;
+  }
+
+  return false;
+});
+
+const canDeleteReply = (reply) => {
+  if (!authStore.user) return false;
+
+  const currentUserId = authStore.user.id;
+  const replyUserId = reply.user_id || reply.userId;
+  if (currentUserId && replyUserId && currentUserId == replyUserId) return true;
+
+  const currentUsername = authStore.user.username;
+  const replyUsername = reply.author?.username || reply.author;
+  if (currentUsername && replyUsername) {
+    const cleanCurrent = currentUsername.replace('@', '').toLowerCase().trim();
+    const cleanReply = typeof replyUsername === 'string'
+      ? replyUsername.replace('@', '').toLowerCase().trim()
+      : (replyUsername.username || '').replace('@', '').toLowerCase().trim();
+    if (cleanCurrent === cleanReply) return true;
+  }
+
+  return false;
+};
+
+const editDiscussion = () => {
+  router.push(`/forum/edit/${discussion.value.id}`);
+};
+
+const confirmDeleteDiscussion = async () => {
+  if (confirm("Are you sure you want to delete this discussion? This action cannot be undone.")) {
+    try {
+      await forumStore.deleteDiscussion(discussion.value.id);
+      router.push('/forum');
+    } catch (err) {
+      console.error("Failed to delete discussion:", err);
+    }
+  }
+};
+
+const deleteReply = async (replyId) => {
+  if (!replyId) return;
+  if (confirm("Are you sure you want to delete this reply?")) {
+    try {
+      await forumStore.deleteComment(replyId);
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+    }
+  }
 };
 
 const scrollToBottom = () => {
@@ -368,6 +447,18 @@ const setupCopyButtons = () => {
             </div>
             
             <div class="right-actions">
+              <button class="action-btn bookmark-btn" :class="{ 'is-saved': discussion.saved }" @click="toggleSaveDiscussion">
+                <i :class="[discussion.saved ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
+                <span>{{ discussion.saved ? 'Saved' : 'Save' }}</span>
+              </button>
+              <button v-if="canDeleteDiscussion" class="action-btn edit-btn" @click="editDiscussion">
+                <i class="bi bi-pencil-square"></i>
+                Edit
+              </button>
+              <button v-if="canDeleteDiscussion" class="action-btn delete-btn" @click="confirmDeleteDiscussion">
+                <i class="bi bi-trash"></i>
+                Delete
+              </button>
               <button class="action-btn" @click="scrollToBottom">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 Reply
@@ -406,6 +497,10 @@ const setupCopyButtons = () => {
                   <button class="like-btn" :class="{ active: reply.likedByUser }" @click="handleLikeReply(idx)">
                     <i :class="['bi', reply.likedByUser ? 'bi-heart-fill' : 'bi-heart']"></i>
                     <span>{{ reply.likes || 0 }} Likes</span>
+                  </button>
+                  <button v-if="canDeleteReply(reply)" class="delete-reply-btn" @click="deleteReply(reply.id)">
+                    <i class="bi bi-trash"></i>
+                    <span>Delete</span>
                   </button>
                 </div>
               </div>
@@ -880,6 +975,24 @@ const setupCopyButtons = () => {
   border-color: var(--color-primary);
 }
 
+.action-btn.bookmark-btn.is-saved {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.action-btn.edit-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.action-btn.delete-btn:hover {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
 /* Replies section */
 .replies-section {
   margin-top: 24px;
@@ -1018,6 +1131,30 @@ const setupCopyButtons = () => {
 }
 
 .like-btn i {
+  font-size: 14px;
+}
+
+.delete-reply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.delete-reply-btn:hover {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.delete-reply-btn i {
   font-size: 14px;
 }
 

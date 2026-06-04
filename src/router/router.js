@@ -254,6 +254,12 @@ const routes = [
     component: () => import("../views/forum/CreateDiscussionView.vue"),
   },
   {
+    path: "/forum/edit/:id",
+    name: "EditDiscussion",
+    meta: { requiresAuth: true },
+    component: () => import("../views/forum/CreateDiscussionView.vue"),
+  },
+  {
     path: "/forum/:id",
     name: "ThreadReplies",
     meta: { requiresAuth: true },

@@ -81,15 +81,6 @@ const handleItemClick = (tabId) => {
 
       <button 
         class="sidebar-menu-item" 
-        :class="{ active: activeTab === 'contributions' }" 
-        @click="handleItemClick('contributions')"
-      >
-        <i class="bi bi-award"></i>
-        <span>Contributions</span>
-      </button>
-
-      <button 
-        class="sidebar-menu-item" 
         :class="{ active: activeTab === 'saves' || route.query.tab === 'saves' }" 
         @click="handleItemClick('saves')"
       >
