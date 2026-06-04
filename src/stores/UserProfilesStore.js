@@ -86,31 +86,6 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
     }
   };
 
-  /**
-   * Delete User Profile
-   */
-  const deleteProfile = async () => {
-    try {
-      isLoading.value = true;
-      error.value = null;
-      const res = await api.delete("/api/delete/profile");
-      if (res.data && res.data.result === false) {
-        throw new Error(res.data.message || "Failed to delete profile");
-      }
-      
-      // Reset store state and logout user
-      profile.value = null;
-      await authStore.logout();
-      
-      return res.data;
-    } catch (err) {
-      error.value = err.response?.data?.message || err.message || "An error occurred";
-      throw err;
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
   return {
     profile,
     isLoading,
@@ -118,6 +93,5 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
     fetchProfile,
     updateProfile,
     uploadAvatar,
-    deleteProfile,
   };
 });

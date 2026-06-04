@@ -6,6 +6,7 @@ import LeftSidebar from '@/components/forum/LeftSidebar.vue';
 import ForumSidebar from '@/components/forum/ForumSidebar.vue';
 import { useForumStore } from '@/stores/ForumStore';
 import MarkdownEditor from '@/components/forum/create/MarkdownEditor.vue';
+import { sanitizeHtml } from '@/utils/sanitizeHtml';
 
 const route = useRoute();
 const router = useRouter();
@@ -330,7 +331,7 @@ const setupCopyButtons = () => {
             </div>
           </div>
 
-          <div class="thread-body" v-html="discussion.excerpt || discussion.body || 'No description provided.'">
+          <div class="thread-body" v-html="sanitizeHtml(discussion.excerpt || discussion.body || 'No description provided.')">
           </div>
 
           <!-- Codeblock if present -->
@@ -399,7 +400,7 @@ const setupCopyButtons = () => {
                     <span class="reply-time">{{ reply.timestamp || 'Just now' }}</span>
                   </div>
                 </div>
-                <div class="reply-body" v-html="reply.body">
+                <div class="reply-body" v-html="sanitizeHtml(reply.body)">
                 </div>
                 
                 <div class="reply-actions">
@@ -1332,4 +1333,3 @@ const setupCopyButtons = () => {
   border-left: 2px solid var(--color-border-soft);
 }
 </style>
-

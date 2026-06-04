@@ -30,12 +30,13 @@
         <div class="form-row">
           <div class="field-block">
             <label>Username</label>
-            <input 
-              v-model="form.username" 
-              class="form-control" 
-              :class="{ 'is-invalid': errors.username }" 
-              type="text" 
+            <input
+              v-model="form.username"
+              class="form-control"
+              :class="{ 'is-invalid': errors.username }"
+              type="text"
               placeholder="Enter username"
+              autocomplete="username"
               @input="handleInput('username')"
             >
             <div v-if="errors.username" class="invalid-feedback d-block">{{ errors.username }}</div>
@@ -43,12 +44,13 @@
 
           <div class="field-block">
             <label>Email Address</label>
-            <input 
-              v-model="form.email" 
-              class="form-control" 
-              :class="{ 'is-invalid': errors.email }" 
-              type="email" 
+            <input
+              v-model="form.email"
+              class="form-control"
+              :class="{ 'is-invalid': errors.email }"
+              type="email"
               placeholder="name@example.com"
+              autocomplete="email"
               @input="handleInput('email')"
             >
             <div v-if="errors.email" class="invalid-feedback d-block">{{ errors.email }}</div>
@@ -59,12 +61,13 @@
           <div class="field-block">
             <label>Password</label>
             <div class="password-wrapper">
-              <input 
-                v-model="form.password" 
-                class="form-control password-input" 
-                :class="{ 'is-invalid': errors.password }" 
-                :type="showPassword ? 'text' : 'password'" 
+              <input
+                v-model="form.password"
+                class="form-control password-input"
+                :class="{ 'is-invalid': errors.password }"
+                :type="showPassword ? 'text' : 'password'"
                 placeholder="Enter password (min 8 chars)"
+                autocomplete="new-password"
                 @input="handleInput('password')"
               >
               <button 

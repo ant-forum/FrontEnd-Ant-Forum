@@ -1,21 +1,21 @@
 <script setup>
-import { reactive, ref, computed, watch, onMounted, defineProps, defineEmits } from "vue";
+import { reactive, ref, computed, watch, onMounted, onBeforeUnmount, defineProps, defineEmits } from "vue";
+import BaseModal from "../base/BaseModal.vue";
 import { useUserProfilesStore } from "../../stores/UserProfilesStore";
 import { useToast } from "../../composables/useToast";
-import { useRouter } from "vue-router";
 
 const props = defineProps({
   user: { type: Object, required: true }
 });
 
-const emit = defineEmits(["saved"]);
+const emit = defineEmits(["saved", "cancel"]);
 
 const userProfilesStore = useUserProfilesStore();
 const toast = useToast();
-const router = useRouter();
 
 const successMessage = ref("");
 const errorMessage = ref("");
+const isProfileSaving = ref(false);
 
 // Form state
 const form = reactive({
@@ -24,43 +24,106 @@ const form = reactive({
 });
 
 // Avatar
-const avatarFile = ref(null);
+const fileInput = ref(null);
 const avatarPreview = ref("");
+const pendingAvatarFile = ref(null);
+const pendingAvatarPreview = ref("");
+const showAvatarConfirmModal = ref(false);
+const isAvatarUploading = ref(false);
+
+const revokePendingAvatarPreview = () => {
+  if (pendingAvatarPreview.value) {
+    URL.revokeObjectURL(pendingAvatarPreview.value);
+  }
+  pendingAvatarPreview.value = "";
+};
+
+const clearAvatarInput = () => {
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
+};
 
 const resetForm = () => {
   const u = userProfilesStore.profile || props.user || {};
   form.username = u.username || "";
   form.gender = u.gender || "male";
-  avatarFile.value = null;
   avatarPreview.value = u.profile_pic || u.avatar || u.avatarUrl || "";
 };
 
+const handleCancel = () => {
+  resetForm();
+  emit("cancel");
+};
+
 onMounted(resetForm);
+onBeforeUnmount(revokePendingAvatarPreview);
 
 // Watch for store changes or prop updates
 watch(() => userProfilesStore.profile, resetForm, { deep: true, immediate: true });
 
-// Handle avatar upload
+const openAvatarFilePicker = () => {
+  if (isProfileSaving.value || isAvatarUploading.value) return;
+  clearAvatarInput();
+  fileInput.value?.click();
+};
+
+// Handle avatar selection
 const handleAvatarChange = (e) => {
-  const file = e.target.files[0];
+  const file = e.target.files?.[0];
   if (!file) return;
 
   if (!file.type.startsWith("image/")) {
     toast.error("Only image files allowed");
+    clearAvatarInput();
     return;
   }
 
   if (file.size > 2 * 1024 * 1024) {
     toast.error("Max size is 2MB");
+    clearAvatarInput();
     return;
   }
 
-  if (avatarPreview.value && avatarPreview.value.startsWith("blob:")) {
-    URL.revokeObjectURL(avatarPreview.value);
-  }
+  revokePendingAvatarPreview();
+  pendingAvatarFile.value = file;
+  pendingAvatarPreview.value = URL.createObjectURL(file);
+  showAvatarConfirmModal.value = true;
+  clearAvatarInput();
+};
 
-  avatarFile.value = file;
-  avatarPreview.value = URL.createObjectURL(file);
+const closeAvatarConfirmModal = () => {
+  if (isAvatarUploading.value) return;
+
+  showAvatarConfirmModal.value = false;
+  pendingAvatarFile.value = null;
+  revokePendingAvatarPreview();
+  clearAvatarInput();
+};
+
+const confirmAvatarUpload = async () => {
+  if (!pendingAvatarFile.value || isAvatarUploading.value) return;
+
+  const usernameBeforeUpload = form.username;
+  const genderBeforeUpload = form.gender;
+
+  try {
+    isAvatarUploading.value = true;
+    await userProfilesStore.uploadAvatar(pendingAvatarFile.value);
+    form.username = usernameBeforeUpload;
+    form.gender = genderBeforeUpload;
+    toast.success("Profile picture updated.");
+    showAvatarConfirmModal.value = false;
+    pendingAvatarFile.value = null;
+    revokePendingAvatarPreview();
+    clearAvatarInput();
+  } catch (error) {
+    console.error("Avatar upload failed:", error);
+    const message = error.response?.data?.message || error.message || "Unable to update profile picture.";
+    toast.error(message);
+  } finally {
+    isAvatarUploading.value = false;
+  }
 };
 
 // Validation
@@ -70,18 +133,13 @@ const isValid = computed(() => {
 
 // Submit
 const handleSubmit = async () => {
-  if (!isValid.value || userProfilesStore.isLoading) return;
+  if (!isValid.value || isProfileSaving.value) return;
 
   errorMessage.value = "";
   successMessage.value = "";
 
   try {
-    // 1. If avatar changed, upload it first
-    if (avatarFile.value) {
-      await userProfilesStore.uploadAvatar(avatarFile.value);
-    }
-
-    // 2. Update profile details
+    isProfileSaving.value = true;
     await userProfilesStore.updateProfile({
       username: form.username,
       gender: form.gender,
@@ -98,23 +156,11 @@ const handleSubmit = async () => {
     console.error("Profile update failed:", error);
     errorMessage.value = error.response?.data?.message || error.message || "Unable to save profile. Please try again.";
     toast.error(errorMessage.value);
+  } finally {
+    isProfileSaving.value = false;
   }
 };
 
-// Delete account
-const handleDeleteProfile = async () => {
-  const confirmed = confirm("Are you sure you want to delete your profile? This action will permanently remove your account and cannot be undone.");
-  if (!confirmed) return;
-
-  try {
-    await userProfilesStore.deleteProfile();
-    toast.success("Your profile has been deleted successfully.");
-    router.push("/login");
-  } catch (error) {
-    console.error("Failed to delete profile:", error);
-    toast.error(error.message || "Failed to delete profile. Please try again.");
-  }
-};
 </script>
 
 <template>
@@ -127,24 +173,25 @@ const handleDeleteProfile = async () => {
         </div>
         <div class="d-flex gap-2">
           <button
+            type="button"
             class="btn btn-secondary px-4"
-            @click="resetForm"
-            :disabled="userProfilesStore.isLoading"
+            @click="handleCancel"
+            :disabled="isProfileSaving"
           >
-            Reset
+            Cancel
           </button>
           <button
             class="btn btn-primary px-4 d-flex align-items-center gap-2"
-            :disabled="!isValid || userProfilesStore.isLoading"
+            :disabled="!isValid || isProfileSaving"
             @click="handleSubmit"
           >
             <span
-              v-if="userProfilesStore.isLoading"
+              v-if="isProfileSaving"
               class="spinner-border spinner-border-sm"
               role="status"
               aria-hidden="true"
             ></span>
-            {{ userProfilesStore.isLoading ? "Saving..." : "Save Changes" }}
+            {{ isProfileSaving ? "Saving..." : "Save Changes" }}
           </button>
         </div>
       </div>
@@ -159,7 +206,13 @@ const handleDeleteProfile = async () => {
       <div class="row g-4 mt-2">
         <!-- Avatar Upload -->
         <div class="col-md-4 text-center border-end border-slate-subtle">
-          <div class="mb-3 d-inline-block position-relative avatar-preview-container">
+          <button
+            type="button"
+            class="mb-3 d-inline-block position-relative avatar-preview-container"
+            :disabled="isProfileSaving || isAvatarUploading"
+            aria-label="Choose profile picture"
+            @click="openAvatarFilePicker"
+          >
             <img
               :src="avatarPreview || 'https://via.placeholder.com/130'"
               class="rounded-circle"
@@ -170,19 +223,25 @@ const handleDeleteProfile = async () => {
             <div class="avatar-overlay d-flex align-items-center justify-content-center rounded-circle">
               <i class="bi bi-camera-fill text-white fs-4"></i>
             </div>
-          </div>
+          </button>
           <div class="px-2 mt-2">
             <label class="form-label text-muted small fw-bold d-block mb-2">Profile Picture</label>
             <div class="custom-file-upload">
-              <label class="btn btn-sm btn-outline-primary px-3 rounded-pill cursor-pointer">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary px-3 rounded-pill"
+                :disabled="isProfileSaving || isAvatarUploading"
+                @click="openAvatarFilePicker"
+              >
                 Choose Image
-                <input
-                  type="file"
-                  class="d-none"
-                  accept="image/*"
-                  @change="handleAvatarChange"
-                />
-              </label>
+              </button>
+              <input
+                ref="fileInput"
+                type="file"
+                class="d-none"
+                accept="image/*"
+                @change="handleAvatarChange"
+              />
             </div>
             <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">PNG, JPG up to 2MB</small>
           </div>
@@ -213,17 +272,49 @@ const handleDeleteProfile = async () => {
       </div>
     </div>
 
-    <!-- Danger Zone Card -->
-    <div class="danger-zone-card p-4">
-      <h5 class="fw-bold text-danger mb-2 d-flex align-items-center gap-2">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-        <span>Danger Zone</span>
-      </h5>
-      <p class="text-muted small mb-3">Permanently delete your user profile and all associated data. This action is irreversible.</p>
-      <button class="btn btn-danger-outline px-4 py-2 rounded-pill fw-bold" @click="handleDeleteProfile">
-        Delete Profile
-      </button>
-    </div>
+    <BaseModal
+      v-if="showAvatarConfirmModal"
+      title="Use this profile picture?"
+      icon="bi bi-camera-fill"
+      theme="primary"
+      @closeModal="closeAvatarConfirmModal"
+    >
+      <div class="avatar-confirm-body">
+        <img
+          :src="pendingAvatarPreview"
+          alt="Selected profile picture preview"
+          class="avatar-confirm-preview"
+        >
+        <p class="mb-1 fw-bold themed-text">Update your profile picture now?</p>
+        <small class="text-muted">
+          This uploads immediately after you confirm. You do not need to click Save Changes.
+        </small>
+      </div>
+
+      <template #footer>
+        <button
+          type="button"
+          class="btn btn-secondary px-4"
+          :disabled="isAvatarUploading"
+          @click="closeAvatarConfirmModal"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary px-4 d-inline-flex align-items-center gap-2"
+          :disabled="isAvatarUploading"
+          @click="confirmAvatarUpload"
+        >
+          <span
+            v-if="isAvatarUploading"
+            class="spinner-border spinner-border-sm"
+            aria-hidden="true"
+          ></span>
+          <span>{{ isAvatarUploading ? "Updating..." : "Confirm Picture" }}</span>
+        </button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -235,26 +326,6 @@ const handleDeleteProfile = async () => {
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
   transition: background-color var(--transition-slow), border-color var(--transition-slow);
-}
-
-.danger-zone-card {
-  background: var(--color-surface) !important;
-  border: 1px solid rgba(220, 53, 69, 0.25) !important;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  margin-top: 2rem;
-}
-
-.btn-danger-outline {
-  color: var(--color-danger, #dc3545);
-  border: 1.5px solid var(--color-danger, #dc3545);
-  background: transparent;
-  transition: all 0.2s ease;
-}
-
-.btn-danger-outline:hover {
-  background-color: var(--color-danger, #dc3545);
-  color: #ffffff;
 }
 
 .header-title {
@@ -273,7 +344,10 @@ const handleDeleteProfile = async () => {
 /* Avatar Experience */
 .avatar-preview-container {
   cursor: pointer;
+  background: transparent;
+  border: 0;
   overflow: hidden;
+  padding: 0;
 }
 
 .avatar-preview-container img {
@@ -301,6 +375,25 @@ const handleDeleteProfile = async () => {
 
 .avatar-preview-container:hover .avatar-overlay {
   opacity: 1;
+}
+
+.avatar-preview-container:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.avatar-confirm-body {
+  text-align: center;
+}
+
+.avatar-confirm-preview {
+  width: 168px;
+  height: 168px;
+  object-fit: cover;
+  border: 3px solid var(--color-surface);
+  border-radius: 50%;
+  box-shadow: 0 16px 34px -18px var(--color-primary);
+  margin-bottom: 1rem;
 }
 
 .cursor-pointer {

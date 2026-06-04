@@ -33,6 +33,14 @@ const props = defineProps({
           </div>
         </div>
       </div>
+      <div v-if="projects.length === 0" class="col-12">
+        <div class="empty-projects-card">
+          <i class="bi bi-code-square"></i>
+          <h5>Your showcase is ready for its first project</h5>
+          <p>Share what you have built and make it discoverable to the ANT Forum community.</p>
+          <router-link to="/showcase/create">Submit project</router-link>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -111,5 +119,48 @@ const props = defineProps({
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.empty-projects-card {
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.empty-projects-card i {
+  color: var(--color-purple);
+  font-size: 2rem;
+}
+
+.empty-projects-card h5 {
+  margin: 12px 0 6px;
+  color: var(--color-text);
+  font-weight: 800;
+}
+
+.empty-projects-card p {
+  max-width: 520px;
+  margin: 0 auto 16px;
+  font-size: 0.9rem;
+}
+
+.empty-projects-card a {
+  display: inline-flex;
+  padding: 9px 14px;
+  color: #ffffff;
+  background: var(--color-purple);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all var(--transition-base);
+}
+
+.empty-projects-card a:hover {
+  background: var(--color-primary);
+  transform: translateY(-1px);
 }
 </style>

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import Navbar from "../components/layouts/header.vue";
 import BaseFooter from "../components/layouts/footer.vue";
+import { sanitizeHtml } from "../utils/sanitizeHtml";
 
 // Active Tab: 'student' | 'teacher'
 const activeRole = ref('student');
@@ -132,7 +133,7 @@ const teacherSteps = [
                     </div>
                     <div>
                       <h5 class="fw-bold mb-2 themed-text">{{ step.title }}</h5>
-                      <p class="text-muted small mb-0" v-html="step.desc"></p>
+                      <p class="text-muted small mb-0" v-html="sanitizeHtml(step.desc)"></p>
                     </div>
                   </div>
                 </div>
@@ -186,7 +187,7 @@ app.mount('#app');
                     </div>
                     <div>
                       <h5 class="fw-bold mb-2 themed-text">{{ step.title }}</h5>
-                      <p class="text-muted small mb-0" v-html="step.desc"></p>
+                      <p class="text-muted small mb-0" v-html="sanitizeHtml(step.desc)"></p>
                     </div>
                   </div>
                 </div>
