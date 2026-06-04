@@ -1,15 +1,25 @@
 <script setup>
 import { ref, computed, nextTick, watch, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useForumStore } from "@/stores/ForumStore";
+import { useCategoriesStore } from "@/stores/CategoriesStore";
+import { useTagsStore } from "@/stores/TagsStore";
 import Navbar from "@/components/layouts/header.vue";
 import MarkdownEditor from "@/components/forum/create/MarkdownEditor.vue";
 import LeftSidebar from "@/components/forum/LeftSidebar.vue";
 import { useToast } from "@/composables/useToast.js";
 
 const router = useRouter();
+const route = useRoute();
 const forumStore = useForumStore();
+const categoriesStore = useCategoriesStore();
+const tagsStore = useTagsStore();
 const toast = useToast();
+
+const isEditMode = computed(() => route.name === "EditDiscussion");
+
+// Backend categories (fetched on mount)
+const backendCategories = ref([]);
 
 const isEditorFocused = ref(false);
 const isSubmitting = ref(false);
@@ -26,7 +36,7 @@ const form = ref({
 // Interactive Tag system
 const tagsList = ref([]);
 const tagInput = ref("");
-const suggestedTags = [
+const staticSuggestedTags = [
   "Vue.js",
   "React",
   "Pinia",
@@ -38,6 +48,13 @@ const suggestedTags = [
   "HTML",
   "MongoDB",
 ];
+
+const suggestedTags = computed(() => {
+  if (tagsStore.tags && tagsStore.tags.length > 0) {
+    return tagsStore.tags.map((t) => t.name);
+  }
+  return staticSuggestedTags;
+});
 
 const getTagColor = (tag) => {
   const lower = tag.toLowerCase().trim();
@@ -171,11 +188,42 @@ const getTemplate = (catId) => {
   return "";
 };
 
-const selectCategory = (categoryId) => {
-  form.value.category = categoryId;
+const staticCategoryMeta = {
+  question: { icon: "bi-question-circle", color: "blue", desc: "Get help with a technical problem" },
+  discussion: { icon: "bi-chat-dots", color: "purple", desc: "Share ideas, ask open questions, or debate" },
+  tutorial: { icon: "bi-book", color: "orange", desc: "Share a guide, walkthrough, or article" },
+  idea: { icon: "bi-lightbulb", color: "pink", desc: "Propose a new feature or design" },
+  showcase: { icon: "bi-rocket-takeoff", color: "purple", desc: "Show off your cool projects" }
+};
+
+const getCategoryMeta = (type) => {
+  const t = (type || "discussion").toLowerCase();
+  return staticCategoryMeta[t] || { icon: "bi-chat-dots", color: "purple", desc: "Topic category description" };
+};
+
+const displayedCategories = computed(() => {
+  if (backendCategories.value.length === 0) {
+    return categories;
+  }
+  return backendCategories.value.map(cat => {
+    const type = (cat.type || cat.name || "discussion").toLowerCase();
+    const meta = getCategoryMeta(type);
+    return {
+      id: cat.id,
+      type: type,
+      label: cat.name || cat.type || "Topic",
+      icon: meta.icon,
+      color: meta.color,
+      desc: cat.description || meta.desc
+    };
+  });
+});
+
+const selectCategory = (cat) => {
+  form.value.category = cat.id;
 
   if (!form.value.excerpt.trim()) {
-    form.value.excerpt = getTemplate(categoryId);
+    form.value.excerpt = getTemplate(cat.type);
   }
 };
 
@@ -295,17 +343,63 @@ const isFormReady = computed(() => {
   );
 });
 
-onMounted(() => {
+onMounted(async () => {
   checkDraft();
-  if (!form.value.title) {
-    nextTick(() => {
-      const titleInput = document.querySelector(".form-input");
-      if (titleInput) titleInput.focus();
-    });
+
+  // Fetch real categories from backend so we can resolve numeric IDs
+  try {
+    const fetched = await categoriesStore.fetchCategories();
+    if (fetched && fetched.length > 0) {
+      backendCategories.value = fetched;
+      if (!isEditMode.value) {
+        form.value.category = fetched[0].id; // Default category ID
+      }
+    }
+  } catch (err) {
+    console.warn('Could not fetch backend categories, will use fallback ID:', err);
+  }
+
+  // Fetch real tags from backend for suggestion pills
+  try {
+    await tagsStore.fetchTags();
+  } catch (err) {
+    console.warn('Could not fetch backend tags:', err);
+  }
+
+  if (isEditMode.value) {
+    try {
+      const discId = route.params.id;
+      const disc = await forumStore.fetchDiscussion(discId);
+      if (disc) {
+        form.value.title = disc.title || "";
+        form.value.excerpt = disc.body || disc.excerpt || "";
+        form.value.code = disc.code || "";
+        form.value.hasCode = disc.hasCode || false;
+
+        // Match category ID directly
+        if (disc.category_id) {
+          form.value.category = Number(disc.category_id);
+        } else {
+          form.value.category = 1;
+        }
+
+        // Tags
+        if (Array.isArray(disc.tags)) {
+          tagsList.value = disc.tags.map(t => typeof t === "string" ? { label: t, color: getTagColor(t) } : { label: t.label || t.name, color: t.color || getTagColor(t.label || t.name) });
+        }
+      }
+    } catch (err) {
+      toast.error("Failed to load discussion details for editing.");
+    }
+  } else {
+    if (!form.value.title) {
+      nextTick(() => {
+        const titleInput = document.querySelector(".form-input");
+        if (titleInput) titleInput.focus();
+      });
+    }
   }
 });
-
-
 
 const handleSubmit = async () => {
   if (!form.value.title.trim() || !form.value.excerpt.trim()) {
@@ -325,29 +419,44 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true;
 
-  const newDiscussion = {
-    title: form.value.title,
-    excerpt: form.value.excerpt,
-    category: form.value.category,
-    tags: tagsList.value,
-    code: form.value.hasCode ? form.value.code : null,
-    hasCode: form.value.hasCode,
-    votes: 0,
-    replies: [],
-    author: { name: 'Alex Chen', avatar: 'https://i.pravatar.cc/150?u=alex', username: '@alex' },
-    timestamp: "Just now",
-    createdAt: new Date().toISOString(),
-    saved: false,
-  };
+  try {
+    let resolvedCategoryId = Number(form.value.category) || 1;
 
-  await forumStore.createDiscussion(newDiscussion);
-
-  // Clean Autosaved Draft
-  localStorage.removeItem("ant_forum_discussion_draft");
-
-  isSubmitting.value = false;
-  toast.success("Discussion posted successfully!");
-  router.push("/forum");
+    if (isEditMode.value) {
+      await forumStore.updateDiscussion(route.params.id, {
+        title: form.value.title,
+        description: form.value.excerpt,
+        category_id: resolvedCategoryId,
+        excerpt: form.value.excerpt,
+        category: form.value.category,
+        tags: tagsList.value,
+        code: form.value.hasCode ? form.value.code : null,
+        hasCode: form.value.hasCode,
+      });
+      localStorage.removeItem("ant_forum_discussion_draft");
+      toast.success("Discussion updated successfully!");
+      router.push(`/forum/${route.params.id}`);
+    } else {
+      await forumStore.createDiscussion({
+        title: form.value.title,
+        description: form.value.excerpt,
+        category_id: resolvedCategoryId,
+        excerpt: form.value.excerpt,
+        category: form.value.category,
+        tags: tagsList.value,
+        code: form.value.hasCode ? form.value.code : null,
+        hasCode: form.value.hasCode,
+      });
+      localStorage.removeItem("ant_forum_discussion_draft");
+      toast.success("Discussion posted successfully!");
+      router.push("/forum");
+    }
+  } catch (error) {
+    console.error("[CreateDiscussion] Submit error:", error.response?.data || error.message);
+    toast.error(error.response?.data?.message || "Failed to save discussion. Please try again.");
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 </script>
 
@@ -368,10 +477,9 @@ const handleSubmit = async () => {
 
         <div class="header-content-wrapper">
           <div class="header-main">
-            <h1>Create a New Discussion</h1>
+            <h1>{{ isEditMode ? 'Edit Discussion' : 'Create a New Discussion' }}</h1>
             <p>
-              Share your ideas, ask questions, or write a tutorial to help the
-              Ant Forum community grow.
+              {{ isEditMode ? 'Update your discussion details below.' : 'Share your ideas, ask questions, or write a tutorial to help the Ant Forum community grow.' }}
             </p>
           </div>
           <div class="header-badge">
@@ -458,14 +566,14 @@ const handleSubmit = async () => {
 
               <div class="category-grid">
                 <div
-                  v-for="cat in categories"
+                  v-for="cat in displayedCategories"
                   :key="cat.id"
                   class="category-card"
                   :class="{
                     active: form.category === cat.id,
-                    [cat.id]: true,
+                    [cat.type]: true,
                   }"
-                  @click="selectCategory(cat.id)"
+                  @click="selectCategory(cat)"
                 >
                   <div class="category-icon-wrapper">
                     <i :class="cat.icon"></i>
@@ -660,7 +768,7 @@ const handleSubmit = async () => {
               >
                 <span v-if="isSubmitting" class="btn-spinner"></span>
                 <i v-else class="bi bi-send-fill"></i>
-                {{ isSubmitting ? "Posting..." : "Publish Discussion" }}
+                {{ isSubmitting ? (isEditMode ? "Saving..." : "Posting...") : (isEditMode ? "Save Changes" : "Publish Discussion") }}
               </button>
             </div>
           </form>
