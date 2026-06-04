@@ -4,12 +4,18 @@ export function useRequiredValidator() {
   const errors = reactive({});
 
   const validateField = (field, value, message) => {
+    if (typeof field !== "string" || field === "__proto__" || field === "constructor" || field === "prototype") {
+      return false;
+    }
     const isValid = typeof value === "string" ? value.trim() !== "" : !!value;
     errors[field] = isValid ? "" : message;
     return isValid;
   };
 
   const clearError = (field) => {
+    if (typeof field !== "string" || field === "__proto__" || field === "constructor" || field === "prototype") {
+      return;
+    }
     errors[field] = "";
   };
 

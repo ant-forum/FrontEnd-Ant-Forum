@@ -13,7 +13,6 @@
               <div class="modal-title-row">
                 <i v-if="icon" :class="[icon, 'modal-icon', themeClass]"></i>
                 <div>
-                  <p v-if="kicker">{{ kicker }}</p>
                   <h2 :class="themeClass">{{ title }}</h2>
                 </div>
               </div>
@@ -118,6 +117,10 @@ defineEmits(['closeModal']);
   margin: 0;
 }
 
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
 .modal-icon {
   font-size: 1.15rem;
 }
@@ -148,7 +151,9 @@ defineEmits(['closeModal']);
 }
 
 .modal-backdrop {
-  background-color: rgba(2, 6, 23, 0.72);
+  background-color: rgba(2, 6, 23, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .modal-enter-active,

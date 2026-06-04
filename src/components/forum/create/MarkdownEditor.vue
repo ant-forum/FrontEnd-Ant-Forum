@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
 import { useToast } from "@/composables/useToast.js";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 const props = defineProps({
   modelValue: {
@@ -537,7 +538,7 @@ const markdownToHtml = (markdown = "") => {
 };
 
 const previewContent = computed(() => {
-  return markdownToHtml(props.modelValue || "");
+  return sanitizeHtml(markdownToHtml(props.modelValue || ""));
 });
 
 const handleFocus = () => {
@@ -1147,7 +1148,10 @@ const handleBlur = () => {
 
 .editor-pane {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
+  height: 100%;
 }
 
 .split-layout .editor-pane:first-child {
@@ -1155,17 +1159,20 @@ const handleBlur = () => {
 }
 
 .editor-textarea {
-  width: 100%;
-  height: 100%;
-  border: none;
-  resize: none;
-  padding: 20px;
-  font-family: "JetBrains Mono", "Menlo", monospace;
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: var(--color-text);
-  background: transparent;
-  outline: none;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  flex: 1 !important;
+  border: none !important;
+  resize: none !important;
+  padding: 20px !important;
+  font-family: "JetBrains Mono", "Menlo", monospace !important;
+  font-size: 14.5px !important;
+  line-height: 1.6 !important;
+  color: var(--color-text) !important;
+  background: transparent !important;
+  outline: none !important;
 }
 
 /* Live Preview Panel */

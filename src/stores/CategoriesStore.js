@@ -4,11 +4,18 @@ import api from '@/api/api.js';
 
 const CATEGORY_COLORS = ['blue', 'green', 'purple', 'orange'];
 
-const categoryPayload = (category) => ({
-  name: category.name,
-  description: category.description,
-  type: category.type,
-});
+const categoryPayload = (category) => {
+  const payload = {
+    description: category.description,
+    type: category.type,
+  };
+
+  if (category.name !== undefined) {
+    payload.name = category.name;
+  }
+
+  return payload;
+};
 
 const ensureSuccess = (response) => {
   if (response.data.result === false) {
@@ -55,21 +62,18 @@ export const useCategoriesStore = defineStore('categories', () => {
   const createCategory = async (payload) => {
     const response = await api.post('/api/categories/createCategory', categoryPayload(payload));
     ensureSuccess(response);
-    await fetchCategories();
     return response.data.data;
   };
 
   const updateCategory = async (id, payload) => {
     const response = await api.put(`/api/categories/updateCategory/${id}`, categoryPayload(payload));
     ensureSuccess(response);
-    await fetchCategories();
     return response.data.data;
   };
 
   const deleteCategory = async (id) => {
     const response = await api.delete(`/api/categories/deleteCategory/${id}`);
     ensureSuccess(response);
-    categories.value = categories.value.filter((item) => String(item.id) !== String(id));
     return response.data;
   };
 

@@ -1,8 +1,11 @@
 <script setup>
-import { reactive, ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import Navbar from "../components/layouts/header.vue";
 import Footer from "../components/layouts/footer.vue";
+import LeftSidebar from "../components/forum/LeftSidebar.vue";
 import { useAuthStore } from "../stores/AuthStore";
+import BaseModal from "../components/base/BaseModal.vue";
 
 // Sub-components
 import ProfileOverview from "../components/profile/ProfileOverview.vue";
@@ -11,12 +14,35 @@ import ProfileSetting from "../components/profile/ProfileSetting.vue";
 
 // Stores
 const authStore = useAuthStore();
+const router = useRouter();
 import { useUserProfilesStore } from "../stores/UserProfilesStore";
 
 const userProfilesStore = useUserProfilesStore();
 
-// Tab state: 'profile' | 'projects' | 'settings'
 const activeTab = ref("profile");
+const showLogoutModal = ref(false);
+const isLoggingOut = ref(false);
+
+const openLogoutModal = () => {
+  showLogoutModal.value = true;
+};
+
+const closeLogoutModal = () => {
+  if (isLoggingOut.value) return;
+  showLogoutModal.value = false;
+};
+
+const confirmLogout = async () => {
+  isLoggingOut.value = true;
+
+  try {
+    await authStore.logout();
+    showLogoutModal.value = false;
+    await router.push("/login");
+  } finally {
+    isLoggingOut.value = false;
+  }
+};
 
 onMounted(async () => {
   try {
@@ -26,22 +52,24 @@ onMounted(async () => {
   }
 });
 
-const handleProfileSaved = () => {
-  // Switch tab back to profile overview dashboard
-  activeTab.value = "profile";
+const selectTab = (tab) => {
+  activeTab.value = tab;
 };
 
+const openProfileEditor = () => selectTab("edit");
+const handleProfileSaved = () => selectTab("profile");
+
 // Profile Dashboard Dynamic Data from AuthStore (which is globally synced and normalized)
-const profileName = computed(() => authStore.user?.username || "");
+const profileName = computed(() => authStore.user?.username || "ANT Developer");
 const profileRole = computed(() => {
   const role = authStore.user?.role || "Student";
   if (role.toLowerCase() === 'mentor') return 'Teacher';
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 });
-const profileBio = computed(() => "");
-const profileGithub = computed(() => "");
-const profileLinkedin = computed(() => "");
-const profileSkills = computed(() => []);
+const profileBio = computed(() => authStore.user?.bio || "");
+const profileGithub = computed(() => authStore.user?.github || "");
+const profileLinkedin = computed(() => authStore.user?.linkedin || "");
+const profileSkills = computed(() => Array.isArray(authStore.user?.skills) ? authStore.user.skills : []);
 const profileAvatar = computed(() => authStore.user?.profile_pic || authStore.user?.avatar || "");
 
 // Empty arrays since these are not part of the current API schema
@@ -52,82 +80,41 @@ const activityFeed = ref([]);
 
 <template>
   <Navbar />
-  
-  <div class="container profile-dashboard py-4">
-    <div class="row g-4">
-      
-      <!-- Left Sidebar Column -->
-      <aside class="col-lg-3 col-md-4">
-        <div class="sidebar-card-modern shadow-sm p-4">
-          <!-- Sidebar Header: User Info -->
-          <div class="sidebar-user-info d-flex align-items-center gap-3 mb-4">
-            <img :src="profileAvatar" class="rounded-circle border border-2 border-primary-subtle" width="48" height="48" alt="Profile avatar" style="object-fit: cover;">
-            <div class="user-meta overflow-hidden">
-              <h6 class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">{{ profileName }}</h6>
-              <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ profileRole }}</small>
-            </div>
+  <div class="profile-page">
+    <div class="profile-global-grid">
+      <LeftSidebar :active-tab="activeTab" />
+
+      <main class="profile-main-container">
+        <section class="profile-page-header">
+          <div>
+            <span class="profile-page-kicker">Developer console</span>
+            <h1>My Profile</h1>
+            <p>Manage your public profile and showcase projects.</p>
           </div>
-          
-          <!-- Navigation Menu -->
-          <nav class="sidebar-nav mb-4">
-            <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
-              <li>
-                <button 
-                  @click="activeTab = 'profile'" 
-                  class="nav-btn-modern" 
-                  :class="{ 'active': activeTab === 'profile' }"
-                >
-                  <i class="bi bi-person-fill fs-5"></i>
-                  <span>Profile</span>
-                </button>
-              </li>
-              <li>
-                <button 
-                  @click="activeTab = 'projects'" 
-                  class="nav-btn-modern" 
-                  :class="{ 'active': activeTab === 'projects' }"
-                >
-                  <i class="bi bi-folder-fill fs-5"></i>
-                  <span>Projects</span>
-                </button>
-              </li>
-              <li>
-                <button 
-                  @click="activeTab = 'settings'" 
-                  class="nav-btn-modern" 
-                  :class="{ 'active': activeTab === 'settings' }"
-                >
-                  <i class="bi bi-gear-fill fs-5"></i>
-                  <span>Settings</span>
-                </button>
-              </li>
-            </ul>
-          </nav>
-          
-          <hr class="my-4 border-slate">
-          
-          <!-- New Project Button -->
-          <router-link to="/showcase/create" class="btn btn-new-project w-100 py-2-5 mb-4 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2">
-            <span>New Project</span>
-          </router-link>
-          
-          <!-- Bottom actions sticking to bottom -->
-          <div class="sidebar-bottom d-flex flex-column gap-2">
-            <router-link to="/help" class="sidebar-link-btn text-decoration-none">
-              <i class="bi bi-question-circle fs-5"></i>
-              <span>Help</span>
-            </router-link>
-            <button @click="authStore.logout()" class="sidebar-link-btn bg-transparent border-0 text-start">
-              <i class="bi bi-box-arrow-right fs-5"></i>
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-      </aside>
-      
-      <!-- Main Content Column -->
-      <main class="col-lg-9 col-md-8">
-        
+        </section>
+
+        <nav class="profile-tabs" aria-label="Profile sections">
+          <button
+            type="button"
+            class="profile-tab"
+            :class="{ active: activeTab === 'profile' }"
+            @click="selectTab('profile')"
+          >
+            <i class="bi bi-person"></i>
+            <span>Overview</span>
+          </button>
+          <button
+            type="button"
+            class="profile-tab"
+            :class="{ active: activeTab === 'projects' }"
+            @click="selectTab('projects')"
+          >
+            <i class="bi bi-code-slash"></i>
+            <span>Projects</span>
+          </button>
+        </nav>
+
+        <section class="profile-tab-content">
         <!-- Tab 1: Profile Dashboard -->
         <div v-if="activeTab === 'profile'" class="fade-in-content">
           <ProfileOverview
@@ -140,6 +127,8 @@ const activityFeed = ref([]);
             :profileAvatar="profileAvatar"
             :defaultProjects="defaultProjects"
             :activityFeed="activityFeed"
+            canEdit
+            @edit="openProfileEditor"
           />
         </div>
         
@@ -149,134 +138,178 @@ const activityFeed = ref([]);
             :projects="[...defaultProjects, ...additionalProjects]"
           />
         </div>
-        
-        <!-- Tab 3: Settings (Edit Form) -->
-        <div v-else-if="activeTab === 'settings'" class="fade-in-content">
+
+        <div v-else-if="activeTab === 'edit'" class="fade-in-content">
           <ProfileSetting
             :user="authStore.user || {}"
             @saved="handleProfileSaved"
+            @cancel="handleProfileSaved"
           />
         </div>
         
+        </section>
       </main>
-      
     </div>
   </div>
-  
+
   <Footer />
+
+  <BaseModal
+    v-if="showLogoutModal"
+    title="Log out of ANT Forum?"
+    kicker=""
+    icon="bi bi-box-arrow-right"
+    theme="danger"
+    @closeModal="closeLogoutModal"
+  >
+    <p class="logout-modal-copy">
+      Are you sure you want to log out? You will need to sign in again to access your account.
+    </p>
+
+    <template #footer>
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        :disabled="isLoggingOut"
+        @click="closeLogoutModal"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger d-inline-flex align-items-center gap-2"
+        :disabled="isLoggingOut"
+        @click="confirmLogout"
+      >
+        <span v-if="isLoggingOut" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span>{{ isLoggingOut ? "Logging out..." : "Logout" }}</span>
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <style scoped>
-.profile-dashboard {
+.profile-page {
+  min-height: 100vh;
+}
+
+.profile-global-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 28px;
   max-width: 1280px;
   margin: 0 auto;
-  background-color: transparent;
-  min-height: 90vh;
-  font-family: var(--font-family-base);
-  color: var(--color-text) !important;
+  padding: 32px 24px 60px;
 }
 
-/* Sidebar */
-.sidebar-card-modern {
-  background: var(--color-surface) !important;
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl);
+.profile-main-container {
+  min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+.profile-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
   box-shadow: var(--shadow-sm);
-  transition: background-color var(--transition-slow), border-color var(--transition-slow);
-  color: var(--color-text) !important;
+  font-family: var(--font-family-base);
 }
 
-.sidebar-user-info {
-  background: var(--color-surface-hover) !important;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border) !important;
-  padding: 0.75rem;
+.profile-page-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-purple);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.sidebar-nav {
-  width: 100%;
+.profile-page-header h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1.7rem, 3vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
 }
 
-.nav-btn-modern {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: 0.8rem var(--spacing-md);
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted) !important;
-  font-weight: 700;
-  font-size: 0.9rem;
-  border-radius: var(--radius-md);
-  text-align: left;
-  transition: all var(--transition-base);
-}
-
-.nav-btn-modern:hover {
-  background: var(--color-surface-hover) !important;
-  color: var(--color-text) !important;
-  transform: translateX(2px);
-}
-
-.nav-btn-modern.active {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
-  color: #ffffff;
-  box-shadow: 0 8px 20px -6px var(--color-primary-light);
-}
-
-.border-slate {
-  border-color: var(--color-border);
-}
-
-.btn-new-project {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  font-weight: 700;
-  box-shadow: 0 6px 16px -4px var(--color-primary-light);
-  transition: all var(--transition-base);
-}
-
-.btn-new-project:hover {
-  background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-purple-hover, #6d28d9) 100%);
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -2px var(--color-primary-light);
-}
-
-.sidebar-bottom {
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--spacing-md);
-}
-
-.sidebar-link-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: 0.65rem var(--spacing-md);
+.profile-page-header p {
+  margin: 6px 0 0;
   color: var(--color-text-muted);
-  font-weight: 600;
-  font-size: 0.9rem;
-  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+}
+
+.logout-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.87rem;
+  font-weight: 700;
   transition: all var(--transition-base);
-  text-decoration: none;
 }
 
-.sidebar-link-btn:hover {
+.logout-button:hover {
+  color: var(--color-danger, #dc3545);
   background: var(--color-surface-hover);
-  color: var(--color-primary);
-  transform: translateX(2px);
+  border-color: rgba(220, 53, 69, 0.35);
 }
 
-.py-2-5 {
-  padding-top: 0.65rem;
-  padding-bottom: 0.65rem;
+.profile-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 20px;
+  padding: 6px;
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: all var(--transition-base);
+}
+
+.profile-tab:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.profile-tab.active {
+  color: var(--color-purple);
+  background: var(--color-purple-light);
+}
+
+.profile-tab-content {
+  margin-top: 24px;
+}
+
+.logout-modal-copy {
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
 /* Fade in animation */
@@ -287,5 +320,23 @@ const activityFeed = ref([]);
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1024px) {
+  .profile-global-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-global-grid {
+    padding: 20px 16px 40px;
+  }
+
+  .profile-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 20px;
+  }
 }
 </style>

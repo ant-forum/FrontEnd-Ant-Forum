@@ -1,24 +1,42 @@
 <template>
   <AdminPageShell
-    title="Create Blog"
+    :title="route.query.id ? 'Edit Blog' : 'Create Blog'"
     kicker="Admin Publishing"
-    subtitle="Write and prepare an official long-form article for the ANT Forum community."
+    :subtitle="route.query.id ? 'Edit and refine your existing article.' : 'Write and prepare an official long-form article for the ANT Forum community.'"
     :breadcrumbs="[
       { label: 'Blog Management', to: '/admin/blogs' },
-      { label: 'Create Blog' }
+      { label: route.query.id ? 'Edit Blog' : 'Create Blog' }
     ]"
   >
-    <template #actions>
+    <template #before-title>
       <router-link class="btn btn-light border back-link" to="/admin/blogs">
         <i class="bi bi-arrow-left"></i>
         <span>Back to Blogs</span>
       </router-link>
     </template>
 
-    <div class="composer-toolbar">
+    <router-link
+      v-if="form.status === 'draft' && !saved"
+      to="/admin/blogs?tab=draft"
+      class="composer-toolbar clickable-toolbar-banner"
+      title="Click to view all drafts in the Blog Management dashboard"
+    >
       <div class="composer-state">
-        <span class="status-badge">{{ saved ? 'Saved' : form.status }}</span>
-        <span>{{ saved ? 'Your latest draft changes are saved.' : 'Create a clear article, then save it as a draft or publish it.' }}</span>
+        <span class="status-badge draft">{{ statusBadgeLabel }}</span>
+        <span class="state-message">
+          You are editing a local draft. You have <strong>{{ blogStore.drafts.length }}</strong> drafts ready to be published.
+        </span>
+      </div>
+      <div class="toolbar-notes">
+        <span class="action-hint">View all drafts <i class="bi bi-arrow-right"></i></span>
+      </div>
+    </router-link>
+
+    <!-- Normal non-clickable toolbar when not draft or when saved -->
+    <div v-else class="composer-toolbar">
+      <div class="composer-state">
+        <span :class="['status-badge', saved ? 'saved' : form.status]">{{ statusBadgeLabel }}</span>
+        <p class="state-message">{{ statusMessage }}</p>
       </div>
       <div class="toolbar-notes">
         <span><i class="bi bi-type-h2"></i> Headings</span>
@@ -27,7 +45,19 @@
       </div>
     </div>
 
-    <section class="blog-editor-grid">
+    <!-- Premium Loader Overlay when fetching draft -->
+    <div v-if="isEditLoading" class="editor-loading-overlay">
+      <div class="loader-content">
+        <div class="d-flex gap-2 justify-content-center">
+          <div class="spinner-grow text-primary" role="status"></div>
+          <div class="spinner-grow text-purple" role="status"></div>
+          <div class="spinner-grow text-info" role="status"></div>
+        </div>
+        <p class="loading-text">Loading your draft workspace...</p>
+      </div>
+    </div>
+
+    <section v-else class="blog-editor-grid">
       <form id="blog-post-form" class="editor-column" @submit.prevent="savePost">
         <section class="admin-panel article-header-panel">
           <div class="panel-heading">
@@ -100,10 +130,9 @@
             <div class="field-block">
               <label for="blog-category">Category</label>
               <select id="blog-category" v-model="form.category_id" class="form-select">
-                <option value="1">Announcements</option>
-                <option value="2">Guides</option>
-                <option value="3">Policy</option>
-                <option value="4">Showcase</option>
+                <option v-for="cat in blogStore.categories" :key="cat.id" :value="cat.id.toString()">
+                  {{ cat.name || cat.title }}
+                </option>
               </select>
             </div>
 
@@ -118,9 +147,10 @@
           </div>
 
           <div class="publish-actions">
-            <button class="btn btn-light border" type="button" @click="resetForm">Clear</button>
-            <button class="btn btn-primary" type="submit" form="blog-post-form">
-              <i class="bi bi-send-check"></i>
+            <button class="btn btn-light border" type="button" @click="resetForm" :disabled="blogStore.isLoading || !hasChanges">Clear</button>
+            <button class="btn btn-primary" type="submit" form="blog-post-form" :disabled="blogStore.isLoading || !hasChanges">
+              <span v-if="blogStore.isLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+              <i v-else class="bi bi-send-check"></i>
               <span>{{ saveButtonLabel }}</span>
             </button>
           </div>
@@ -136,7 +166,7 @@
           <div v-else class="preview-cover empty">
             <i class="bi bi-image"></i>
           </div>
-          <span class="status-badge">{{ form.status }}</span>
+          <span :class="['status-badge', form.status]">{{ statusBadgeLabel }}</span>
           <h2>{{ form.title || 'Your article title' }}</h2>
           <p>{{ previewText }}</p>
           <div class="preview-meta">
@@ -187,13 +217,25 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import MarkdownEditor from '../../components/forum/create/MarkdownEditor.vue';
+import { useBlogStore } from '../../stores/BlogStore.js';
+import { useToast } from '../../composables/useToast.js';
+import { useUnsavedChangesGuard } from '../../composables/useUnsavedChangesGuard.js';
+
+const blogStore = useBlogStore();
+const router = useRouter();
+const route = useRoute();
+const toast = useToast();
 
 const saved = ref(false);
 const thumbnailInputRef = ref(null);
 const thumbnailPreview = ref('');
+const selectedFile = ref(null);
+const isEditLoading = ref(!!route.query.id);
+const isInitializing = ref(true);
 
 const form = reactive({
   title: '',
@@ -202,13 +244,76 @@ const form = reactive({
   thumbnail: '',
   status: 'draft',
 });
+const serializeForm = () => JSON.stringify(form);
+const formSnapshot = ref(serializeForm());
+const hasChanges = computed(() => !isInitializing.value && (serializeForm() !== formSnapshot.value || Boolean(selectedFile.value)));
+useUnsavedChangesGuard(hasChanges, 'You have unsaved blog changes. Leave this page and discard them?');
 
-const categories = {
-  1: 'Announcements',
-  2: 'Guides',
-  3: 'Policy',
-  4: 'Showcase',
-};
+const statusBadgeLabel = computed(() => {
+  if (saved.value) return 'Saved';
+  if (form.status === 'draft') return 'Draft';
+  if (form.status === 'published') return 'Publishing';
+  if (form.status === 'scheduled') return 'Scheduled';
+  return form.status;
+});
+
+const statusMessage = computed(() => {
+  if (saved.value) return 'All latest draft changes have been successfully saved to the database.';
+  if (form.status === 'draft') {
+    return 'You are editing a local draft. Your changes will not be visible to the community until you publish.';
+  }
+  if (form.status === 'published') {
+    return 'Ready to publish: This article will become immediately visible to all community members upon submission.';
+  }
+  if (form.status === 'scheduled') {
+    return 'Scheduled: This article will be queued for future release based on your calendar and date settings.';
+  }
+  return 'Prepare your official long-form article for the community.';
+});
+
+onMounted(async () => {
+  try {
+    await blogStore.fetchCategories();
+    if (blogStore.categories.length > 0) {
+      form.category_id = blogStore.categories[0].id.toString();
+    }
+  } catch (err) {
+    console.error('Failed to load categories:', err);
+  }
+  try {
+    await blogStore.fetchAllBlogs();
+  } catch (err) {
+    console.error('Failed to load blogs:', err);
+  }
+
+  // Load for editing if query parameter 'id' is present
+  const editId = route.query.id;
+  if (editId) {
+    isEditLoading.value = true;
+    try {
+      const blogData = await blogStore.fetchBlogById(editId);
+      if (blogData) {
+        form.title = blogData.title || '';
+        form.description = blogData.description || '';
+        form.category_id = blogData.category_id ? blogData.category_id.toString() : '2';
+        form.status = blogData.status || 'draft';
+        if (blogData.thumbnail || blogData.image) {
+          thumbnailPreview.value = blogData.thumbnail || blogData.image;
+          // Set to a truthy value so preview is showing, but selectedFile is null unless replaced
+          form.thumbnail = blogData.thumbnail || blogData.image;
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load blog for editing:', err);
+      toast.error('Failed to load blog details.');
+    } finally {
+      isEditLoading.value = false;
+    }
+  }
+
+  formSnapshot.value = serializeForm();
+  isInitializing.value = false;
+});
 
 const previewText = computed(() => {
   const text = form.description
@@ -224,7 +329,11 @@ const descriptionWordCount = computed(() => {
   return text ? text.split(/\s+/).length : 0;
 });
 
-const categoryLabel = computed(() => categories[form.category_id] || 'Uncategorized');
+const categoryLabel = computed(() => {
+  const found = blogStore.categories.find(c => c.id.toString() === form.category_id.toString());
+  return found ? (found.name || found.title) : 'Guides';
+});
+
 const hasClearTitle = computed(() => form.title.trim().length >= 8);
 const hasUsefulDescription = computed(() => descriptionWordCount.value >= 40);
 
@@ -249,19 +358,65 @@ const releaseThumbnailPreview = () => {
 const handleThumbnail = (event) => {
   releaseThumbnailPreview();
   const file = event.target.files?.[0];
-  form.thumbnail = file?.name || '';
-  if (file) thumbnailPreview.value = URL.createObjectURL(file);
+  if (file) {
+    selectedFile.value = file;
+    form.thumbnail = file.name;
+    thumbnailPreview.value = URL.createObjectURL(file);
+  } else {
+    selectedFile.value = null;
+    form.thumbnail = '';
+    thumbnailPreview.value = '';
+  }
 };
 
-const savePost = () => {
-  saved.value = true;
+const savePost = async () => {
+  if (!form.title.trim()) {
+    toast.error('Please enter a blog title.');
+    return;
+  }
+  if (!form.description.trim()) {
+    toast.error('Please enter the blog content.');
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('title', form.title);
+    formData.append('description', form.description);
+    formData.append('category_id', form.category_id);
+    formData.append('status', form.status);
+    
+    if (selectedFile.value) {
+      formData.append('thumbnail', selectedFile.value);
+    }
+
+    if (route.query.id) {
+      await blogStore.updateBlog(route.query.id, formData);
+      toast.success('Blog updated successfully!');
+    } else {
+      await blogStore.createBlog(formData);
+      toast.success('Blog created successfully!');
+    }
+    
+    formSnapshot.value = serializeForm();
+    selectedFile.value = null;
+    saved.value = true;
+
+    setTimeout(() => {
+      router.push('/admin/blogs');
+    }, 800);
+  } catch (err) {
+    console.error('Failed to save blog:', err);
+    toast.error(err.message || 'Failed to save blog.');
+  }
 };
 
 const resetForm = () => {
   releaseThumbnailPreview();
+  selectedFile.value = null;
   form.title = '';
   form.description = '';
-  form.category_id = '2';
+  form.category_id = blogStore.categories.length > 0 ? blogStore.categories[0].id.toString() : '2';
   form.thumbnail = '';
   form.status = 'draft';
   saved.value = false;
@@ -279,6 +434,10 @@ onBeforeUnmount(releaseThumbnailPreview);
   gap: 0.45rem;
 }
 
+.back-link {
+  margin-bottom: 1rem;
+}
+
 .composer-toolbar,
 .composer-state,
 .toolbar-notes,
@@ -290,22 +449,133 @@ onBeforeUnmount(releaseThumbnailPreview);
 }
 
 .composer-toolbar {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.5rem;
   margin-bottom: 1rem;
-  padding: 0.85rem 1rem;
+  padding: 0.75rem 1.25rem;
   color: var(--color-text-muted);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-size: 0.82rem;
+  border-radius: 10px;
+  font-size: 0.84rem;
 }
 
-.composer-state,
-.toolbar-notes,
+.clickable-toolbar-banner {
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-color: rgba(139, 92, 246, 0.3) !important;
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.08) 0%, var(--color-surface) 100%) !important;
+}
+
+.clickable-toolbar-banner:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-purple) !important;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15) !important;
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.12) 0%, var(--color-surface-hover) 100%) !important;
+}
+
+.clickable-toolbar-banner .state-message strong {
+  color: var(--color-purple);
+  background: rgba(139, 92, 246, 0.15);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  margin: 0 0.15rem;
+}
+
+.action-hint {
+  color: var(--color-purple);
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: transform 0.2s ease;
+}
+
+.clickable-toolbar-banner:hover .action-hint {
+  transform: translateX(4px);
+}
+
+.composer-state {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.state-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.state-message {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar-notes {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
 .preview-meta {
   gap: 0.65rem;
   flex-wrap: wrap;
+}
+
+.editor-loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 3rem;
+}
+
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.loader-content .spinner-grow {
+  width: 1.25rem;
+  height: 1.25rem;
+  animation-duration: 0.75s;
+}
+
+.text-purple {
+  color: var(--color-purple) !important;
+}
+
+.loading-text {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-top: 1rem;
+  animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 .toolbar-notes span {
@@ -506,7 +776,38 @@ onBeforeUnmount(releaseThumbnailPreview);
   margin-top: 0;
 }
 
-.status-badge,
+.status-badge {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.28rem 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.status-badge.draft {
+  color: var(--color-purple);
+  background: var(--color-purple-light);
+}
+
+.status-badge.published {
+  color: var(--color-success);
+  background: var(--color-success-light);
+}
+
+.status-badge.scheduled {
+  color: var(--color-warning);
+  background: var(--color-warning-light);
+}
+
+.status-badge.saved {
+  color: var(--color-success);
+  background: var(--color-success-light);
+}
+
 .readiness-heading strong {
   display: inline-flex;
   width: fit-content;
@@ -597,7 +898,10 @@ onBeforeUnmount(releaseThumbnailPreview);
 @media (min-width: 1200px) {
   .side-stack {
     position: sticky;
-    top: 1rem;
+    top: calc(76px + 1rem);
+    max-height: calc(100vh - 76px - 2rem);
+    overflow-y: auto;
+    padding-right: 0.15rem;
   }
 }
 
@@ -607,12 +911,41 @@ onBeforeUnmount(releaseThumbnailPreview);
   }
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 991.98px) {
   .composer-toolbar {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 1rem;
   }
 
+  .composer-state {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .state-header {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .state-message {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .toolbar-notes {
+    margin-top: 0.25rem;
+    justify-content: space-between;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.75rem;
+    width: 100%;
+  }
+}
+
+@media (max-width: 767.98px) {
   .toolbar-notes {
     display: none;
   }

@@ -13,6 +13,7 @@
       :items="tags"
       :is-loading="isLoading"
       show-view
+      show-search
       @create="openCreateModal"
       @view="openDetailModal"
       @edit="openEditModal"
@@ -55,18 +56,39 @@
       v-if="mForm.isVisible"
       :title="mForm.mode === 'edit' ? 'Edit Tag' : 'Create Tag'"
       icon="bi bi-tag"
-      kicker="Forum Taxonomy"
+      kicker=""
       @closeModal="closeFormModal"
     >
       <form class="taxonomy-form" @submit.prevent="saveTag">
         <label>
           <span>Tag Name</span>
-          <input v-model.trim="mForm.data.name" class="form-control" type="text" maxlength="40" placeholder="Example: Vue" required>
+          <input
+            v-model.trim="mForm.data.name"
+            class="form-control"
+            :class="{ 'is-invalid': errors.tagName }"
+            type="text"
+            maxlength="40"
+            placeholder="Example: Vue"
+            @input="handleFormInput('tagName')"
+          >
+          <small v-if="errors.tagName" class="field-error">{{ errors.tagName }}</small>
         </label>
         <label>
           <span>Description</span>
-          <textarea v-model.trim="mForm.data.description" class="form-control" rows="3" placeholder="Explain when this tag should be used" required></textarea>
+          <textarea
+            v-model.trim="mForm.data.description"
+            class="form-control"
+            :class="{ 'is-invalid': errors.tagDescription }"
+            rows="3"
+            placeholder="Explain when this tag should be used"
+            @input="handleFormInput('tagDescription')"
+          ></textarea>
+          <small v-if="errors.tagDescription" class="field-error">{{ errors.tagDescription }}</small>
         </label>
+        <div v-if="mForm.errorMessage" class="form-error-message">
+          <i class="bi bi-exclamation-circle"></i>
+          <span>{{ mForm.errorMessage }}</span>
+        </div>
         <div class="modal-actions">
           <button class="btn btn-light border" type="button" @click="closeFormModal">Cancel</button>
           <button class="btn btn-primary" type="submit" :disabled="mForm.isLoading">
@@ -82,7 +104,7 @@
       title="Delete Tag?"
       icon="bi bi-trash"
       theme="danger"
-      kicker="Confirm Action"
+      kicker=""
       @closeModal="closeDeleteModal"
     >
       <p class="delete-message">
@@ -107,11 +129,13 @@ import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import AdminTaxonomyCards from '../../components/admin/AdminTaxonomyCards.vue';
 import BaseModal from '../../components/base/BaseModal.vue';
 import { useToast } from '../../composables/useToast';
+import { useRequiredValidator } from '../../composables/useRequiredValidator';
 import { useTagsStore } from '../../stores/TagsStore';
 
 const tagStore = useTagsStore();
 const { tags, isLoading } = storeToRefs(tagStore);
 const toast = useToast();
+const { errors, clearError, validateField } = useRequiredValidator();
 
 const metrics = computed(() => [
   { label: 'Tags', value: tags.value.length, change: 'Loaded from API', icon: 'bi-tags', className: 'blue' },
@@ -124,7 +148,9 @@ const mForm = reactive({
   isVisible: false,
   mode: 'create',
   item: null,
+  editId: null,
   isLoading: false,
+  errorMessage: '',
   data: {
     name: '',
     description: '',
@@ -154,20 +180,70 @@ onMounted(async () => {
 const openCreateModal = () => {
   mForm.mode = 'create';
   mForm.item = null;
+  mForm.editId = null;
+  mForm.errorMessage = '';
+  clearError('tagName');
+  clearError('tagDescription');
   mForm.data = { name: '', description: '' };
   mForm.isVisible = true;
 };
 
 const openEditModal = (tag) => {
+  if (!tag) return;
   mForm.mode = 'edit';
   mForm.item = tag;
-  mForm.data = { ...tag };
+  mForm.editId = tag.id;
+  mForm.errorMessage = '';
+  clearError('tagName');
+  clearError('tagDescription');
+  mForm.data = {
+    name: tag.name || '',
+    description: tag.description || '',
+  };
   mForm.isVisible = true;
 };
 
 const closeFormModal = () => {
   mForm.isVisible = false;
   mForm.item = null;
+  mForm.editId = null;
+  mForm.errorMessage = '';
+  clearError('tagName');
+  clearError('tagDescription');
+};
+
+const clearFormError = () => {
+  mForm.errorMessage = '';
+};
+
+const handleFormInput = (field) => {
+  clearFormError();
+  clearError(field);
+};
+
+const getErrorMessage = (error) => {
+  const message =
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message ||
+    'Tag request failed.';
+
+  if (String(message).toLowerCase().includes('already')) {
+    return 'This tag name already exists. Please choose a different name.';
+  }
+
+  return message;
+};
+
+const isTagNameTaken = () => {
+  const formName = mForm.data.name.trim().toLowerCase();
+
+  return tags.value.some((tag) => {
+    const sameName = String(tag.name || '').trim().toLowerCase() === formName;
+    const sameTag = String(tag.id) === String(mForm.editId);
+
+    return sameName && !sameTag;
+  });
 };
 
 const openDetailModal = async (tag) => {
@@ -205,20 +281,63 @@ const closeDeleteModal = () => {
 };
 
 const saveTag = async () => {
+  let successMessage = '';
+
   try {
     mForm.isLoading = true;
+    mForm.errorMessage = '';
+
+    const isNameValid = validateField('tagName', mForm.data.name, 'Tag name is required.');
+    const isDescriptionValid = validateField('tagDescription', mForm.data.description, 'Description is required.');
+
+    if (!isNameValid || !isDescriptionValid) {
+      return;
+    }
+
+    if (isTagNameTaken()) {
+      mForm.errorMessage = 'This tag name already exists. Please choose a different name.';
+      return;
+    }
+
     if (mForm.mode === 'edit') {
-      await tagStore.updateTag(mForm.item.id, mForm.data);
-      toast.success('Tag updated successfully!');
+      if (!mForm.editId) {
+        mForm.errorMessage = 'Please select a tag to edit again.';
+        return;
+      }
+
+      const updatePayload = {
+        description: mForm.data.description,
+      };
+
+      const originalName = String(mForm.item?.name || '').trim();
+      const nextName = mForm.data.name.trim();
+
+      if (nextName !== originalName) {
+        updatePayload.name = nextName;
+      }
+
+      await tagStore.updateTag(mForm.editId, updatePayload);
+      successMessage = 'Tag updated successfully!';
     } else {
       await tagStore.createTag(mForm.data);
-      toast.success('Tag created successfully!');
+      successMessage = 'Tag created successfully!';
     }
-    closeFormModal();
   } catch (error) {
     console.error('Failed to save tag:', error);
+    mForm.errorMessage = getErrorMessage(error);
+    return;
   } finally {
     mForm.isLoading = false;
+  }
+
+  closeFormModal();
+  toast.success(successMessage);
+
+  try {
+    await tagStore.fetchTags();
+  } catch (error) {
+    console.error('Failed to refresh tags:', error);
+    toast.warning('Saved, but could not refresh tags.');
   }
 };
 
@@ -226,12 +345,21 @@ const deleteTag = async () => {
   try {
     mDelete.isLoading = true;
     await tagStore.deleteTag(mDelete.item.id);
-    toast.success('Tag deleted successfully!');
-    closeDeleteModal();
   } catch (error) {
     console.error('Failed to delete tag:', error);
+    return;
   } finally {
     mDelete.isLoading = false;
+  }
+
+  closeDeleteModal();
+  toast.success('Tag deleted successfully!');
+
+  try {
+    await tagStore.fetchTags();
+  } catch (error) {
+    console.error('Failed to refresh tags:', error);
+    toast.warning('Deleted, but could not refresh tags.');
   }
 };
 </script>
@@ -306,6 +434,35 @@ const deleteTag = async () => {
 
 .delete-message strong {
   color: var(--color-text);
+}
+
+.form-error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 24%, var(--color-border));
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.field-error {
+  color: var(--color-danger) !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.taxonomy-form .form-control.is-invalid {
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-danger) 18%, transparent);
+}
+
+.taxonomy-form .form-control.is-invalid:focus {
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--color-danger) 24%, transparent);
 }
 
 .btn-danger {

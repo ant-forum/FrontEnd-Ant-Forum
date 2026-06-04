@@ -3,7 +3,6 @@ import { useAuthStore } from "../stores/AuthStore";
 
 
 import HomePage from '../views/HomePage.vue';
-import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
@@ -25,9 +24,10 @@ import AdminCreateUserView from '../views/admin/AdminCreateUserView.vue';
 import AdminSettingsView from '../views/admin/AdminSettingsView.vue';
 import AdminTagsView from '../views/admin/AdminTagsView.vue';
 import AdminUsersView from '../views/admin/AdminUsersView.vue';
+import AdminReportsView from '../views/admin/AdminReportsView.vue';
+import AdminActivityView from '../views/admin/AdminActivityView.vue';
 import ProjectReviewManagement from '../views/admin/ProjectReviewManagement.vue';
 import ThreadModerationView from '../views/admin/ThreadModerationView.vue';
-// import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
 
 //this is new
@@ -91,16 +91,16 @@ const routes = [
     component: () => import("../views/blog/BlogDetail.vue"),
   },
   {
-    path: "/dashboard",
-    name: "Dashboard",
-    meta: { requiresAuth: true },
-    component: Dashboard,
-  },
-  {
     path: "/profile",
     name: "Profile",
     meta: { requiresAuth: true },
     component: Profile,
+  },
+  {
+    path: "/settings/:section?",
+    name: "UserSettings",
+    meta: { requiresAuth: true, title: "Settings" },
+    component: () => import("../views/settings/UserSettingsView.vue"),
   },
   {
     path: "/viewprofile/:username",
@@ -157,6 +157,12 @@ const routes = [
     component: AdminDashboard,
   },
   {
+    path: "/admin/profile",
+    name: "AdminProfile",
+    meta: { requiresAuth: true, role: "admin", title: "Admin Account" },
+    component: () => import("../views/admin/AdminProfileView.vue"),
+  },
+  {
     path: "/admin/users",
     name: "UserManagement",
     meta: { requiresAuth: true, role: "admin" },
@@ -187,6 +193,12 @@ const routes = [
     component: ThreadModerationView,
   },
   {
+    path: "/admin/reports",
+    name: "ReportManagement",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminReportsView,
+  },
+  {
     path: "/admin/blogs",
     name: "BlogManagement",
     meta: { requiresAuth: true, role: "admin" },
@@ -205,6 +217,12 @@ const routes = [
     component: AdminCategoriesView,
   },
   {
+    path: "/admin/categories/:id",
+    name: "CategoryDetail",
+    meta: { requiresAuth: true, role: "admin" },
+    component: () => import("../views/admin/AdminCategoryDetailView.vue"),
+  },
+  {
     path: "/admin/tags",
     name: "TagManagement",
     meta: { requiresAuth: true, role: "admin" },
@@ -215,6 +233,12 @@ const routes = [
     name: "Analytics",
     meta: { requiresAuth: true, role: "admin" },
     component: AdminAnalyticsView,
+  },
+  {
+    path: "/admin/activity",
+    name: "AdminActivity",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminActivityView,
   },
   {
     path: "/admin/settings",
@@ -235,6 +259,12 @@ const routes = [
     component: () => import("../views/forum/CreateDiscussionView.vue"),
   },
   {
+    path: "/forum/edit/:id",
+    name: "EditDiscussion",
+    meta: { requiresAuth: true },
+    component: () => import("../views/forum/CreateDiscussionView.vue"),
+  },
+  {
     path: "/forum/:id",
     name: "ThreadReplies",
     meta: { requiresAuth: true },
@@ -245,6 +275,21 @@ const routes = [
     redirect: "/404",
   },
 ];
+
+const userHomeRoute = { name: "HomePage" };
+const adminHomeRoute = { name: "AdminDashboard" };
+
+const safeLastPath = (path) => {
+  if (!path || typeof path !== "string") {
+    return null;
+  }
+
+  if (path.startsWith("/admin") || path.startsWith("/login")) {
+    return null;
+  }
+
+  return path;
+};
 
 
 const router = createRouter({
@@ -274,8 +319,8 @@ router.beforeEach(async (to, from) => {
   // 2. Redirect logged-in users away from login page to their dashboard
   if (to.name === "login" && isLoggedIn) {
     return userRole === "admin"
-      ? { name: "AdminDashboard" }
-      : { name: "Dashboard" };
+      ? adminHomeRoute
+      : userHomeRoute;
   }
 
   // 3. Enforce authentication and role constraints
@@ -294,14 +339,14 @@ router.beforeEach(async (to, from) => {
       }
       
       // Fallback reload redirect to their last successfully visited page
-      const lastPath = localStorage.getItem("ANT_LastPath");
+      const lastPath = safeLastPath(localStorage.getItem("ANT_LastPath"));
       if (lastPath && lastPath !== to.path) {
         return lastPath;
       }
       
       return userRole === "admin"
-        ? { name: "AdminDashboard" }
-        : { name: "Dashboard" };
+        ? adminHomeRoute
+        : userHomeRoute;
     }
   }
 

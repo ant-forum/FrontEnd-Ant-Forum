@@ -1,5 +1,5 @@
 <template>
-  <div :class="['metric-card p-4 rounded-4 border bg-surface shadow-sm d-flex justify-content-between align-items-center h-100 transition-all', active ? 'border-purple active-card' : '']">
+  <div :class="['metric-card p-4 rounded-4 border bg-surface shadow-sm d-flex justify-content-between align-items-start h-100 transition-all', active ? 'border-purple active-card' : '']">
     <div class="d-flex flex-column justify-content-between h-100">
       <div>
         <p class="text-muted-color text-uppercase fw-bold small mb-1" style="letter-spacing: 0.5px;">{{ label }}</p>
@@ -12,7 +12,7 @@
         </slot>
       </div>
     </div>
-    <div class="d-flex align-items-center ms-3">
+    <div class="stat-card-icon-wrap d-flex align-items-center ms-3">
       <div :class="['icon-box rounded-circle p-3', bgClass || iconBgClass]">
         <i :class="['bi', mainIcon || icon, iconClass || iconColorClass, 'fs-4']"></i>
       </div>
@@ -97,6 +97,11 @@ watch(() => props.value, animateValue);
   min-height: 140px;
   background-color: var(--color-surface);
   border-color: var(--color-border) !important;
+}
+
+.stat-card-icon-wrap {
+  align-self: flex-start;
+  margin-top: 0.25rem;
 }
 
 .bg-surface {

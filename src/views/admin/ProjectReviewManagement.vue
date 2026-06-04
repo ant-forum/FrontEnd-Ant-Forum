@@ -10,13 +10,16 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import AdminProjectList from '../../components/admin/AdminProjectList.vue';
+import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
 
-const metrics = [
-  { label: 'Student Projects', value: '76', change: '+9 this month', icon: 'bi-folder2', className: 'blue' },
-  { label: 'In Review', value: '12', change: 'Needs action', icon: 'bi-hourglass-split', className: 'orange' },
-  { label: 'Published', value: '48', change: '+6 this week', icon: 'bi-cloud-check', className: 'green' },
-  { label: 'Total Likes', value: '2.4k', change: 'Across projects', icon: 'bi-heart', className: 'purple' },
-];
+const adminStore = useAdminOperationsStore();
+const metrics = computed(() => [
+  { label: 'Student Projects', value: String(adminStore.projects.length), change: 'Frontend review dataset', icon: 'bi-folder2', className: 'blue' },
+  { label: 'In Review', value: String(adminStore.pendingProjects.length), change: 'Needs action', icon: 'bi-hourglass-split', className: 'orange' },
+  { label: 'Published', value: String(adminStore.publishedProjects.length), change: 'Approved work', icon: 'bi-cloud-check', className: 'green' },
+  { label: 'Total Likes', value: String(adminStore.totalProjectLikes), change: 'Across projects', icon: 'bi-heart', className: 'purple' },
+]);
 </script>

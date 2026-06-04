@@ -1,7 +1,6 @@
 <script setup>
 import NetworkStatus from './NetworkStatus.vue';
 import TrendingTags from './TrendingTags.vue';
-import TopContributors from './TopContributors.vue';
 </script>
 
 <template>
@@ -11,9 +10,6 @@ import TopContributors from './TopContributors.vue';
     </div>
     <div class="sidebar-card">
       <TrendingTags />
-    </div>
-    <div class="sidebar-card">
-      <TopContributors />
     </div>
   </aside>
 </template>

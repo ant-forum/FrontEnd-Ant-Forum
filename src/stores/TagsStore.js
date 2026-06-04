@@ -4,10 +4,17 @@ import api from '@/api/api.js';
 
 const TAG_COLORS = ['green', 'blue', 'orange', 'purple'];
 
-const tagPayload = (tag) => ({
-  name: tag.name,
-  description: tag.description,
-});
+const tagPayload = (tag) => {
+  const payload = {
+    description: tag.description,
+  };
+
+  if (tag.name !== undefined) {
+    payload.name = tag.name;
+  }
+
+  return payload;
+};
 
 const ensureSuccess = (response) => {
   if (response.data.result === false) {
@@ -54,21 +61,18 @@ export const useTagsStore = defineStore('tags', () => {
   const createTag = async (payload) => {
     const response = await api.post('/api/tags/createTag', tagPayload(payload));
     ensureSuccess(response);
-    await fetchTags();
     return response.data.data;
   };
 
   const updateTag = async (id, payload) => {
     const response = await api.put(`/api/tags/updateTag/${id}`, tagPayload(payload));
     ensureSuccess(response);
-    await fetchTags();
     return response.data.data;
   };
 
   const deleteTag = async (id) => {
     const response = await api.delete(`/api/tags/deleteTag/${id}`);
     ensureSuccess(response);
-    tags.value = tags.value.filter((item) => String(item.id) !== String(id));
     return response.data;
   };
 
