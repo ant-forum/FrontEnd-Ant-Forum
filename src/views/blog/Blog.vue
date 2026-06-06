@@ -31,7 +31,9 @@ const activeCategories = computed(() => {
 });
 
 const categories = computed(() => {
-  return ['All', ...activeCategories.value.map(c => c.name || c.title)];
+  const categoryNames = activeCategories.value.map(c => c.name || c.title);
+  const uniqueCategoryNames = [...new Set(categoryNames)];
+  return ['All', ...uniqueCategoryNames];
 });
 const allTags = computed(() => {
   const tagsSet = new Set();

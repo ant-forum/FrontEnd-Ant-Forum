@@ -55,7 +55,7 @@ const canRefreshRequest = (config) =>
   );
 
 const api = axios.create({
-  baseURL: import.meta.env.DEV ? "https://ant-forum.khei.work.gd" : import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.DEV ? "" : import.meta.env.VITE_API_BASE_URL,
   headers: {
     Accept: "application/json",
   },
