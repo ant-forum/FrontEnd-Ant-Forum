@@ -107,12 +107,12 @@
             <div>
               <p class="section-kicker">Article Body</p>
               <h2>Write the full blog post</h2>
-              <p>Use headings, text styles, links, inline images, lists, quotes, and code blocks from the toolbar.</p>
+              <p>Write directly in the final article view with headings, links, images, lists, tables, quotes, and code blocks.</p>
             </div>
             <span class="field-counter">{{ descriptionWordCount }} words</span>
           </div>
 
-          <MarkdownEditor
+          <RichTextEditor
             v-model="form.description"
             class="blog-markdown-editor"
             placeholder="Introduce the topic, add clear sections, insert supporting images, and include code blocks where they help..."
@@ -214,16 +214,47 @@
       </aside>
     </section>
   </AdminPageShell>
+
+  <BaseModal
+    v-if="showLeaveModal"
+    title="Discard Unsaved Changes?"
+    icon="bi bi-exclamation-triangle"
+    theme="primary"
+    @closeModal="cancelLeave"
+  >
+    <p class="leave-modal-text">{{ leaveMessage }}</p>
+    <p class="leave-modal-note">Your latest title, cover, and article body edits have not been saved yet.</p>
+
+    <template #footer>
+      <button class="btn btn-light border" type="button" @click="cancelLeave">
+        Keep Editing
+      </button>
+      <button class="btn btn-danger" type="button" @click="confirmLeave">
+        Discard Changes
+      </button>
+    </template>
+  </BaseModal>
+
+  <ImageCropModal
+    v-if="isCoverCropOpen"
+    :source="coverCropSource"
+    @confirm="confirmCoverCrop"
+    @cancel="cancelCoverCrop"
+  />
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
-import MarkdownEditor from '../../components/forum/create/MarkdownEditor.vue';
+import BaseModal from '../../components/base/BaseModal.vue';
+import ImageCropModal from '../../components/base/ImageCropModal.vue';
+import RichTextEditor from '../../components/forum/create/RichTextEditor.vue';
 import { useBlogStore } from '../../stores/BlogStore.js';
+import { useImageCropper } from '../../composables/useImageCropper.js';
 import { useToast } from '../../composables/useToast.js';
 import { useUnsavedChangesGuard } from '../../composables/useUnsavedChangesGuard.js';
+import { htmlToPlainText } from '../../utils/richContent.js';
 
 const blogStore = useBlogStore();
 const router = useRouter();
@@ -236,6 +267,19 @@ const thumbnailPreview = ref('');
 const selectedFile = ref(null);
 const isEditLoading = ref(!!route.query.id);
 const isInitializing = ref(true);
+const {
+  cropSource: coverCropSource,
+  isCropModalOpen: isCoverCropOpen,
+  openCropper: openCoverCropper,
+  confirmCrop: confirmCoverCrop,
+  cancelCrop: cancelCoverCrop,
+} = useImageCropper({
+  title: 'Crop Cover Image',
+  aspectRatio: 'original',
+  outputWidth: 1200,
+  outputType: 'image/jpeg',
+  shape: 'rect',
+});
 
 const form = reactive({
   title: '',
@@ -247,7 +291,16 @@ const form = reactive({
 const serializeForm = () => JSON.stringify(form);
 const formSnapshot = ref(serializeForm());
 const hasChanges = computed(() => !isInitializing.value && (serializeForm() !== formSnapshot.value || Boolean(selectedFile.value)));
-useUnsavedChangesGuard(hasChanges, 'You have unsaved blog changes. Leave this page and discard them?');
+const {
+  showLeaveModal,
+  message: leaveMessage,
+  confirmLeave,
+  cancelLeave,
+} = useUnsavedChangesGuard(
+  hasChanges,
+  'You have unsaved blog changes. Leave this page and discard them?',
+  { useModal: true },
+);
 
 const statusBadgeLabel = computed(() => {
   if (saved.value) return 'Saved';
@@ -316,16 +369,13 @@ onMounted(async () => {
 });
 
 const previewText = computed(() => {
-  const text = form.description
-    .replace(/[#*_`>-]/g, '')
-    .replace(/\n+/g, ' ')
-    .trim();
+  const text = htmlToPlainText(form.description);
 
   return text || 'Your introduction will appear here as you start writing.';
 });
 
 const descriptionWordCount = computed(() => {
-  const text = form.description.trim();
+  const text = htmlToPlainText(form.description);
   return text ? text.split(/\s+/).length : 0;
 });
 
@@ -351,21 +401,44 @@ const saveButtonLabel = computed(() => {
 });
 
 const releaseThumbnailPreview = () => {
-  if (thumbnailPreview.value) URL.revokeObjectURL(thumbnailPreview.value);
+  if (thumbnailPreview.value?.startsWith('blob:')) {
+    URL.revokeObjectURL(thumbnailPreview.value);
+  }
   thumbnailPreview.value = '';
 };
 
-const handleThumbnail = (event) => {
-  releaseThumbnailPreview();
+const handleThumbnail = async (event) => {
   const file = event.target.files?.[0];
-  if (file) {
-    selectedFile.value = file;
-    form.thumbnail = file.name;
-    thumbnailPreview.value = URL.createObjectURL(file);
-  } else {
+  event.target.value = '';
+
+  if (!file) {
+    if (!thumbnailPreview.value) {
+      selectedFile.value = null;
+      form.thumbnail = '';
+    }
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    toast.error('Please choose an image file.');
+    return;
+  }
+
+  const cropped = await openCoverCropper(file);
+  if (!cropped) return;
+
+  releaseThumbnailPreview();
+  selectedFile.value = cropped.file;
+  form.thumbnail = cropped.file.name;
+  thumbnailPreview.value = cropped.previewUrl;
+};
+
+const clearThumbnail = () => {
+  releaseThumbnailPreview();
+  if (thumbnailInputRef.value) thumbnailInputRef.value.value = '';
+  if (!route.query.id) {
     selectedFile.value = null;
     form.thumbnail = '';
-    thumbnailPreview.value = '';
   }
 };
 
@@ -412,7 +485,7 @@ const savePost = async () => {
 };
 
 const resetForm = () => {
-  releaseThumbnailPreview();
+  clearThumbnail();
   selectedFile.value = null;
   form.title = '';
   form.description = '';
