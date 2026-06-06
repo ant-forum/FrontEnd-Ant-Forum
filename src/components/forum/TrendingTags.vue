@@ -1,11 +1,9 @@
 <script setup>
 import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useTagsStore } from '@/stores/TagsStore';
 import { useForumStore } from '@/stores/ForumStore';
 
 const router = useRouter();
-const tagsStore = useTagsStore();
 const forumStore = useForumStore();
 
 onMounted(async () => {
@@ -16,7 +14,7 @@ onMounted(async () => {
   }
   
   try {
-    await tagsStore.fetchTags();
+    await forumStore.fetchTags();
   } catch (err) {
     console.warn('TrendingTags: failed to fetch tags', err);
   }
@@ -58,8 +56,8 @@ const tags = computed(() => {
   }
 
   // Fallback to database tags if no tags are used in discussions yet
-  if (tagsStore.tags && tagsStore.tags.length > 0) {
-    return tagsStore.tags.slice(0, 8).map(t => ({
+  if (forumStore.tags && forumStore.tags.length > 0) {
+    return forumStore.tags.slice(0, 8).map(t => ({
       id: t.id,
       name: t.name.startsWith('#') ? t.name : `#${t.name}`
     }));

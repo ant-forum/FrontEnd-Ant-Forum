@@ -1,31 +1,107 @@
 <script setup>
-const avatars = [
-  { initials: 'AM', color: '#8b5cf6', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100' },
-  { initials: 'SK', color: '#ec4899', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100' },
-  { initials: 'JL', color: '#10b981', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100' }
-];
-const memberCount = 42;
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useForumStore } from '@/stores/ForumStore';
+
+const router = useRouter();
+const forumStore = useForumStore();
+
+const featuredThread = computed(() => {
+  if (!forumStore.discussions || forumStore.discussions.length === 0) {
+    return null;
+  }
+  // Find top voted discussion
+  return [...forumStore.discussions].sort((a, b) => (b.votes || 0) - (a.votes || 0))[0];
+});
+
+const participantsAvatars = computed(() => {
+  const list = [];
+  if (featuredThread.value && Array.isArray(featuredThread.value.replies)) {
+    const uniqueAuthors = new Set();
+    featuredThread.value.replies.forEach(r => {
+      const name = typeof r.author === 'object' ? (r.author.username || r.author.name) : r.author;
+      if (name && !uniqueAuthors.has(name)) {
+        uniqueAuthors.add(name);
+        const initials = name.replace('@', '').trim().slice(0, 2).toUpperCase();
+        list.push({ initials, name });
+      }
+    });
+  }
+  return list.slice(0, 3);
+});
+
+const remainingCount = computed(() => {
+  if (featuredThread.value && Array.isArray(featuredThread.value.replies)) {
+    if (featuredThread.value.replies.length === 0) return 0;
+    return Math.max(0, featuredThread.value.replies.length - participantsAvatars.value.length);
+  }
+  return 42; // Fallback
+});
+
+const activeAvatars = computed(() => {
+  const list = participantsAvatars.value;
+  if (list.length > 0) {
+    return list.map(item => {
+      const name = item.name;
+      const gradients = [
+        'linear-gradient(135deg, #3b82f6, #2563eb)', // Blue
+        'linear-gradient(135deg, #10b981, #059669)', // Emerald
+        'linear-gradient(135deg, #f59e0b, #d97706)', // Amber
+        'linear-gradient(135deg, #ec4899, #db2777)', // Pink
+        'linear-gradient(135deg, #8b5cf6, #7c3aed)', // Purple
+        'linear-gradient(135deg, #06b6d4, #0891b2)', // Cyan
+      ];
+      let sum = 0;
+      for (let i = 0; i < name.length; i++) {
+        sum += name.charCodeAt(i);
+      }
+      const grad = gradients[sum % gradients.length];
+      return {
+        initials: item.initials,
+        name: name,
+        style: { background: grad, color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }
+      };
+    });
+  }
+  return [
+    { initials: 'AM', color: '#8b5cf6', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100' },
+    { initials: 'SK', color: '#ec4899', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100' },
+    { initials: 'JL', color: '#10b981', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100' }
+  ];
+});
+
+const joinDiscussion = () => {
+  if (featuredThread.value) {
+    router.push(`/forum/${featuredThread.value.id}`);
+  }
+};
 </script>
 
 <template>
   <div class="featured-section">
     <div class="featured-content">
       <span class="featured-badge">
-        Weekly Challenge
+        {{ featuredThread ? 'Featured Thread' : 'Weekly Challenge' }}
       </span>
 
-      <h1 class="featured-title">
+      <h1 class="featured-title" v-if="featuredThread">
+        {{ featuredThread.title }}
+      </h1>
+      <h1 class="featured-title" v-else>
         Optimize React Server Components for<br>High-Traffic Dashboards
       </h1>
 
-      <p class="featured-description">
+      <p class="featured-description" v-if="featuredThread">
+        {{ featuredThread.excerpt || featuredThread.description || 'Join the community in dissecting this topic and sharing benchmarks!' }}
+      </p>
+      <p class="featured-description" v-else>
         Join the core engineering team in dissecting the latest patterns for data
         fetching and streaming in next-gen web applications. Share your
         benchmarks and earn ecosystem reputation points.
       </p>
 
       <div class="featured-actions">
-        <button class="join-btn">
+        <button class="join-btn" @click="joinDiscussion">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
             <polygon points="5,3 19,12 5,21"/>
           </svg>
@@ -35,15 +111,18 @@ const memberCount = 42;
         <div class="participants">
           <div class="avatars">
             <div
-              v-for="(avatar, index) in avatars"
+              v-for="(avatar, index) in activeAvatars"
               :key="index"
               class="avatar"
+              :style="avatar.style"
+              :title="avatar.name"
             >
-              <img :src="avatar.image" :alt="avatar.initials">
+              <img v-if="avatar.image" :src="avatar.image" :alt="avatar.initials">
+              <span v-else>{{ avatar.initials }}</span>
             </div>
-            <!-- +42 bubble exactly like screenshot -->
-            <div class="avatar more-bubble">
-              +{{ memberCount }}
+            <!-- + bubble exactly like screenshot -->
+            <div v-if="remainingCount > 0" class="avatar more-bubble">
+              +{{ remainingCount }}
             </div>
           </div>
         </div>
