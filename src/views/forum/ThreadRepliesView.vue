@@ -127,6 +127,12 @@ const handleLikeReply = (replyIndex) => {
   }
 };
 
+const handleLike = () => {
+  if (discussion.value) {
+    forumStore.toggleLikeDiscussion(discussion.value.id);
+  }
+};
+
 const toggleSaveDiscussion = () => {
   if (discussion.value) {
     forumStore.toggleSaveForum(discussion.value.id);
@@ -300,6 +306,22 @@ const setupCopyButtons = () => {
     });
   });
 };
+
+function getAvatarUrl(author) {
+  if (!author || typeof author !== 'object') return null;
+  let pic = author.profile_pic || author.avatar || author.avatarUrl;
+  if (!pic) return null;
+
+  if (typeof pic === 'string') {
+    if (!pic.startsWith('http') && !pic.startsWith('data:')) {
+      if (!pic.startsWith('/')) {
+        pic = `/${pic}`;
+      }
+    }
+    return pic;
+  }
+  return null;
+}
 </script>
 
 <template>
@@ -401,7 +423,8 @@ const setupCopyButtons = () => {
             
             <div class="thread-meta">
               <div class="thread-avatar" :style="getAvatarStyle(discussion.author)" @click="goToProfile(discussion.author)">
-                {{ getAvatarInitials(discussion.author) }}
+                <img v-if="getAvatarUrl(discussion.author)" :src="getAvatarUrl(discussion.author)" alt="avatar" class="avatar-img" />
+                <span v-else>{{ getAvatarInitials(discussion.author) }}</span>
               </div>
               <div class="thread-user-info">
                 <span class="author" @click="goToProfile(discussion.author)">{{ getAvatarName(discussion.author) }}</span>
@@ -448,6 +471,10 @@ const setupCopyButtons = () => {
             </div>
             
             <div class="right-actions">
+              <button class="action-btn like-btn" :class="{ active: discussion.likedByUser }" @click="handleLike">
+                <i :class="[discussion.likedByUser ? 'bi-heart-fill text-danger' : 'bi-heart']"></i>
+                <span>{{ discussion.likes || 0 }} Likes</span>
+              </button>
               <button class="action-btn bookmark-btn" :class="{ 'is-saved': discussion.saved }" @click="toggleSaveDiscussion">
                 <i :class="[discussion.saved ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
                 <span>{{ discussion.saved ? 'Saved' : 'Save' }}</span>
@@ -484,7 +511,8 @@ const setupCopyButtons = () => {
               <div v-else v-for="(reply, idx) in discussion.replies" :key="idx" class="reply-card">
                 <div class="reply-header">
                   <div class="reply-avatar" :style="getAvatarStyle(reply.author)" @click="goToProfile(reply.author)">
-                    {{ getAvatarInitials(reply.author) }}
+                    <img v-if="getAvatarUrl(reply.author)" :src="getAvatarUrl(reply.author)" alt="avatar" class="avatar-img" />
+                    <span v-else>{{ getAvatarInitials(reply.author) }}</span>
                   </div>
                   <div class="reply-user-info">
                     <span class="reply-author" @click="goToProfile(reply.author)">{{ getAvatarName(reply.author) }}</span>
@@ -1468,5 +1496,16 @@ const setupCopyButtons = () => {
   flex-direction: column;
   padding-left: 20px;
   border-left: 2px solid var(--color-border-soft);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.reply-avatar, .thread-avatar {
+  overflow: hidden;
 }
 </style>

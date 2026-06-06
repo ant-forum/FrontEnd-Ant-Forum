@@ -82,6 +82,10 @@ function toggleSave(d) {
   forumStore.toggleSaveForum(d.id);
 }
 
+function toggleLike(d) {
+  forumStore.toggleLikeDiscussion(d.id);
+}
+
 function handleVote(id, direction) {
   forumStore.toggleVoteDiscussion(id, direction);
 }
@@ -137,9 +141,14 @@ function handleVote(id, direction) {
 
         <!-- Footer Row -->
         <div class="thread-footer">
+          <button class="foot-btn like" :class="{ 'is-liked': d.likedByUser }" @click.stop="toggleLike(d)">
+            <i :class="[d.likedByUser ? 'bi-heart-fill text-danger' : 'bi-heart']"></i>
+            <span>{{ d.likes || 0 }} {{ (d.likes === 1) ? 'Like' : 'Likes' }}</span>
+          </button>
+
           <button class="foot-btn replies" @click.stop="$router.push(`/forum/${d.id}`)">
-            <i class="bi bi-chat-left"></i>
             <span>{{ Array.isArray(d.replies) ? d.replies.length : (typeof d.replies === 'number' ? d.replies : 0) }} Replies</span>
+            <i class="bi bi-chat-left"></i>
           </button>
 
           <button class="foot-btn bookmark" :class="{ 'is-saved': d.saved }" @click.stop="toggleSave(d)">
@@ -394,6 +403,11 @@ function handleVote(id, direction) {
 
 .foot-btn.bookmark.is-saved {
   color: var(--color-primary);
+  font-weight: 600;
+}
+
+.foot-btn.like.is-liked {
+  color: #ef4444;
   font-weight: 600;
 }
 
