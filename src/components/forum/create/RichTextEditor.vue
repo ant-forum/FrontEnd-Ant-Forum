@@ -31,6 +31,14 @@ const showImageModal = ref(false);
 const isDraggingImage = ref(false);
 const linkUrl = ref("");
 const lastEmitted = ref("");
+const activeStates = ref({
+  bold: false,
+  italic: false,
+  strikeThrough: false,
+  underline: false,
+  superscript: false,
+  subscript: false,
+});
 const {
   cropSource: blogImageCropSource,
   isCropModalOpen: isBlogImageCropOpen,
@@ -81,6 +89,16 @@ const runCommand = async (command, value = null) => {
   await focusEditor();
   document.execCommand(command, false, value);
   emitContent();
+  checkActiveStates();
+};
+
+const checkActiveStates = () => {
+  activeStates.value.bold = document.queryCommandState('bold');
+  activeStates.value.italic = document.queryCommandState('italic');
+  activeStates.value.strikeThrough = document.queryCommandState('strikeThrough');
+  activeStates.value.underline = document.queryCommandState('underline');
+  activeStates.value.superscript = document.queryCommandState('superscript');
+  activeStates.value.subscript = document.queryCommandState('subscript');
 };
 
 const closeMenus = () => {
@@ -132,6 +150,25 @@ const insertTable = (rows = 3, cols = 2) => {
   }).join("");
 
   insertHtml(`<table><tbody>${body}</tbody></table><p><br></p>`);
+};
+
+const insertCodeBlock = async () => {
+  await focusEditor();
+  const selection = window.getSelection();
+  const text = selection.toString() || "Code block content...";
+  await insertHtml(`<pre><code>${escapeHtml(text)}</code></pre><p><br></p>`);
+};
+
+const toggleInlineCode = async () => {
+  await focusEditor();
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return;
+  const text = selection.toString();
+  if (text) {
+    await insertHtml(`<code>${escapeHtml(text)}</code>`);
+  } else {
+    await insertHtml(`<code>&nbsp;</code>&nbsp;`);
+  }
 };
 
 const openLinkPopup = async () => {
@@ -250,7 +287,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="rich-editor" :class="{ focused: isFocused }">
+  <div class="rich-editor" :class="{ focused: isFocused }" v-bind="$attrs">
     <input
       ref="imageInputRef"
       type="file"
@@ -358,7 +395,7 @@ onMounted(() => {
           type="button"
           class="toolbar-btn"
           title="Code block"
-          @mousedown.prevent="formatBlock('pre')"
+          @mousedown.prevent="insertCodeBlock"
         >
           <i class="bi bi-braces"></i>
         </button>
@@ -368,6 +405,7 @@ onMounted(() => {
         <button
           type="button"
           class="toolbar-btn"
+          :class="{ 'active': activeStates.bold }"
           title="Bold"
           @mousedown.prevent="runCommand('bold')"
         >
@@ -376,6 +414,7 @@ onMounted(() => {
         <button
           type="button"
           class="toolbar-btn"
+          :class="{ 'active': activeStates.italic }"
           title="Italic"
           @mousedown.prevent="runCommand('italic')"
         >
@@ -384,6 +423,7 @@ onMounted(() => {
         <button
           type="button"
           class="toolbar-btn"
+          :class="{ 'active': activeStates.strikeThrough }"
           title="Strikethrough"
           @mousedown.prevent="runCommand('strikeThrough')"
         >
@@ -393,13 +433,14 @@ onMounted(() => {
           type="button"
           class="toolbar-btn"
           title="Inline code"
-          @mousedown.prevent="runCommand('fontName', 'monospace')"
+          @mousedown.prevent="toggleInlineCode"
         >
           <i class="bi bi-code-slash"></i>
         </button>
         <button
           type="button"
           class="toolbar-btn"
+          :class="{ 'active': activeStates.underline }"
           title="Underline"
           @mousedown.prevent="runCommand('underline')"
         >
@@ -424,6 +465,7 @@ onMounted(() => {
         <button
           type="button"
           class="toolbar-btn math-btn"
+          :class="{ 'active': activeStates.superscript }"
           title="Superscript"
           @mousedown.prevent="runCommand('superscript')"
         >
@@ -432,6 +474,7 @@ onMounted(() => {
         <button
           type="button"
           class="toolbar-btn math-btn"
+          :class="{ 'active': activeStates.subscript }"
           title="Subscript"
           @mousedown.prevent="runCommand('subscript')"
         >
@@ -537,10 +580,6 @@ onMounted(() => {
           <span>Add</span>
         </button>
       </div>
-
-      <button type="button" class="toolbar-btn theme-btn" title="Theme">
-        <i class="bi bi-moon-stars"></i>
-      </button>
     </div>
 
     <div v-if="showLinkPopup" class="link-popup-panel">
@@ -579,6 +618,9 @@ onMounted(() => {
       @focus="handleFocus"
       @blur="handleBlur"
       @paste="handlePaste"
+      @keyup="checkActiveStates"
+      @mouseup="checkActiveStates"
+      @click="checkActiveStates"
     ></div>
 
     <div class="rich-status">
@@ -628,13 +670,17 @@ onMounted(() => {
 <style scoped>
 .rich-editor {
   overflow: hidden;
-  background: #111113;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+[data-theme='dark'] .rich-editor {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
 .rich-editor.focused {
@@ -646,77 +692,84 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  min-height: 58px;
-  padding: 0.55rem 1.15rem;
-  background: #111113;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.45rem 1rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .toolbar-left {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 0.18rem;
+  gap: 0.25rem;
   width: 100%;
 }
 
 .toolbar-btn {
-  min-width: 38px;
-  height: 38px;
+  min-width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.32rem;
-  color: #a1a1aa;
+  gap: 0.25rem;
+  color: var(--color-text-muted);
   background: transparent;
-  border: 0;
-  border-radius: 9px;
-  font-size: 1.18rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 1rem;
   transition:
     background 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .toolbar-btn:hover,
 .toolbar-btn:focus-visible {
-  color: #f4f4f5;
-  background: rgba(255, 255, 255, 0.075);
+  color: var(--color-text);
+  background: var(--color-surface-hover);
   outline: none;
+}
+
+.toolbar-btn.active {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .text-btn {
   width: auto;
-  gap: 0.35rem;
-  padding: 0 0.55rem;
-  font-size: 1.15rem;
-  font-weight: 650;
+  gap: 0.25rem;
+  padding: 0 0.45rem;
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
 .split-btn {
-  padding: 0 0.35rem;
+  padding: 0 0.3rem;
 }
 
 .mini-chevron {
-  font-size: 0.68rem;
-  margin-left: -0.15rem;
+  font-size: 0.6rem;
+  margin-left: -0.1rem;
 }
 
 .math-btn {
-  font-size: 0.93rem;
+  font-size: 0.85rem;
   font-weight: 800;
 }
 
 .add-media-btn {
   width: auto;
-  padding: 0 0.65rem;
-  font-size: 1rem;
+  padding: 0 0.5rem;
+  font-size: 0.9rem;
   font-weight: 750;
 }
 
 .add-media-btn span {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .theme-btn {
@@ -724,10 +777,10 @@ onMounted(() => {
 }
 
 .toolbar-divider {
-  width: 1px;
-  height: 31px;
-  margin: 0 0.45rem;
-  background: rgba(255, 255, 255, 0.1);
+  width: 1.5px;
+  height: 18px;
+  margin: 0 0.25rem;
+  background: var(--color-border);
 }
 
 .toolbar-popover-wrapper {
@@ -737,50 +790,55 @@ onMounted(() => {
 .toolbar-dropdown {
   position: absolute;
   z-index: 20;
-  top: calc(100% + 8px);
+  top: calc(100% + 6px);
   left: 0;
-  min-width: 160px;
-  padding: 0.45rem;
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+  min-width: 150px;
+  padding: 0.35rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='dark'] .toolbar-dropdown {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
 }
 
 .toolbar-dropdown button {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 0.65rem;
-  color: #e4e4e7;
+  gap: 0.4rem;
+  padding: 0.45rem 0.55rem;
+  color: var(--color-text-muted);
   background: transparent;
   border: 0;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
   font-weight: 700;
   text-align: left;
 }
 
 .toolbar-dropdown button:hover {
-  background: rgba(255, 255, 255, 0.075);
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .table-dropdown {
-  min-width: 130px;
+  min-width: 120px;
 }
 
 .link-popup-panel {
-  padding: 0.85rem 1rem;
-  background: #111113;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .link-popup-panel label {
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
   color: var(--color-text-muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -796,15 +854,15 @@ onMounted(() => {
   color: var(--color-text);
   background: var(--color-input-bg);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.55rem 0.7rem;
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
 }
 
 .btn-save-link,
 .btn-cancel-link {
   border: 0;
-  border-radius: 8px;
-  padding: 0 0.8rem;
+  border-radius: 6px;
+  padding: 0 0.7rem;
   font-weight: 800;
 }
 
@@ -820,9 +878,9 @@ onMounted(() => {
 
 .rich-editable {
   min-height: 520px;
-  padding: 2.35rem;
-  color: #f4f4f5;
-  background: #111113;
+  padding: 3rem 2.5rem;
+  color: var(--color-text);
+  background: var(--color-surface);
   outline: none;
   overflow-x: auto;
   font-size: 1rem;
@@ -831,7 +889,7 @@ onMounted(() => {
 
 .rich-editable:empty::before {
   content: attr(data-placeholder);
-  color: #71717a;
+  color: var(--color-text-muted);
   pointer-events: none;
 }
 
@@ -846,7 +904,7 @@ onMounted(() => {
 .rich-editable :deep(h1) {
   font-size: 2rem;
   margin: 0 0 1rem;
-  color: #fff;
+  color: var(--color-text);
 }
 .rich-editable :deep(h2) {
   font-size: 1.55rem;
@@ -874,9 +932,9 @@ onMounted(() => {
 
 .rich-editable :deep(pre) {
   padding: 1rem;
-  color: #e5e7eb;
-  background: #020617;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   overflow-x: auto;
   line-height: 1.6;
@@ -943,8 +1001,8 @@ onMounted(() => {
   gap: 0.85rem;
   padding: 0.75rem 1rem;
   color: var(--color-text-muted);
-  background: #111113;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   font-size: 0.82rem;
   font-weight: 700;
 }
