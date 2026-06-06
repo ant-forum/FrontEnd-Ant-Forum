@@ -139,7 +139,7 @@
             
             <div class="card-body">
               <h4 class="title-text">{{ post.title }}</h4>
-              <p class="description-text">{{ post.description }}</p>
+              <p class="description-text">{{ post.excerpt || post.description }}</p>
               
               <div class="card-footer-meta">
                 <img :src="post.author_avatar || 'https://i.pravatar.cc/150?u=author'" class="rounded-circle object-fit-cover author-avatar" width="30" height="30">
@@ -271,7 +271,7 @@ const visiblePosts = computed(() => {
   if (!needle) return list;
   return list.filter(p => 
     (p.title || '').toLowerCase().includes(needle) ||
-    (p.description || '').toLowerCase().includes(needle)
+    (p.excerpt || p.description || '').toLowerCase().includes(needle)
   );
 });
 
