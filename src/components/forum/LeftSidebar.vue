@@ -2,6 +2,11 @@
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
+// Disable automatic attribute inheritance
+defineOptions({
+  inheritAttrs: false
+});
+
 const props = defineProps({
   activeTab: {
     type: String,
@@ -54,7 +59,7 @@ const handleItemClick = (tabId) => {
     <div v-if="isDrawerMobileOpen" class="sidebar-mobile-backdrop" @click="isDrawerMobileOpen = false"></div>
   </transition>
 
-  <aside class="left-sidebar-navigation" :class="{ 'mobile-open': isDrawerMobileOpen }">
+  <aside class="left-sidebar-navigation" :class="{ 'mobile-open': isDrawerMobileOpen }" v-bind="$attrs">
     <!-- Dev Console Header -->
     <div class="sidebar-header">
       <h2 class="sidebar-title">Dev Console</h2>
