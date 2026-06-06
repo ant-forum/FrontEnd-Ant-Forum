@@ -36,17 +36,33 @@ const categories = [
 ];
 
 const filteredDiscussions = computed(() => {
-  let list = [...forumStore.allDiscussions];
+  let list = Array.isArray(forumStore.allDiscussions) ? [...forumStore.allDiscussions] : [];
 
   // 1. Search Query filter
-  if (searchQuery.value.trim()) {
+  if (searchQuery.value && typeof searchQuery.value === 'string' && searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase().trim();
-    list = list.filter(d => 
-      d.title.toLowerCase().includes(q) ||
-      d.excerpt.toLowerCase().includes(q) ||
-      (d.author && d.author.toLowerCase().includes(q)) ||
-      (d.tags && d.tags.some(t => t.label.toLowerCase().includes(q)))
-    );
+    list = list.filter(d => {
+      if (!d) return false;
+      const title = (d.title || '').toString().toLowerCase();
+      const excerpt = (d.excerpt || d.description || d.body || '').toString().toLowerCase();
+      
+      let authorName = '';
+      if (d.author) {
+        if (typeof d.author === 'object') {
+          authorName = (d.author.username || d.author.name || '').toString().toLowerCase();
+        } else {
+          authorName = d.author.toString().toLowerCase();
+        }
+      }
+
+      const matchesTags = d.tags && Array.isArray(d.tags) && d.tags.some(t => {
+        if (!t) return false;
+        const label = typeof t === 'object' ? (t.label || t.name || '') : t;
+        return (label || '').toString().toLowerCase().includes(q);
+      });
+
+      return title.includes(q) || excerpt.includes(q) || authorName.includes(q) || matchesTags;
+    });
   }
 
   // 1.5 Saves filter
@@ -93,6 +109,7 @@ const handleSidebarSelect = (tabId) => {
   if (tabId === 'saves') {
     showSavedOnly.value = true;
     selectedCategory.value = 'all';
+    forumStore.fetchBookmarks().catch(() => {});
   } else if (tabId === 'questions') {
     showSavedOnly.value = false;
     selectedCategory.value = 'question';
@@ -127,6 +144,9 @@ watch(() => route.query.q, (newQ) => {
 onMounted(async () => {
   loading.value = true;
   await forumStore.fetchDiscussions();
+  if (route.query.tab === 'saves') {
+    await forumStore.fetchBookmarks().catch(() => {});
+  }
   loading.value = false;
 
   if (route.query.q) {

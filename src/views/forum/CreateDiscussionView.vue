@@ -2,8 +2,6 @@
 import { ref, computed, nextTick, watch, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useForumStore } from "@/stores/ForumStore";
-import { useCategoriesStore } from "@/stores/CategoriesStore";
-import { useTagsStore } from "@/stores/TagsStore";
 import Navbar from "@/components/layouts/header.vue";
 import MarkdownEditor from "@/components/forum/create/MarkdownEditor.vue";
 import LeftSidebar from "@/components/forum/LeftSidebar.vue";
@@ -12,8 +10,6 @@ import { useToast } from "@/composables/useToast.js";
 const router = useRouter();
 const route = useRoute();
 const forumStore = useForumStore();
-const categoriesStore = useCategoriesStore();
-const tagsStore = useTagsStore();
 const toast = useToast();
 
 const isEditMode = computed(() => route.name === "EditDiscussion");
@@ -50,8 +46,8 @@ const staticSuggestedTags = [
 ];
 
 const suggestedTags = computed(() => {
-  if (tagsStore.tags && tagsStore.tags.length > 0) {
-    return tagsStore.tags.map((t) => t.name);
+  if (forumStore.tags && forumStore.tags.length > 0) {
+    return forumStore.tags.map((t) => t.name);
   }
   return staticSuggestedTags;
 });
@@ -348,7 +344,7 @@ onMounted(async () => {
 
   // Fetch real categories from backend so we can resolve numeric IDs
   try {
-    const fetched = await categoriesStore.fetchCategories();
+    const fetched = await forumStore.fetchCategories();
     if (fetched && fetched.length > 0) {
       backendCategories.value = fetched;
       if (!isEditMode.value) {
@@ -361,7 +357,7 @@ onMounted(async () => {
 
   // Fetch real tags from backend for suggestion pills
   try {
-    await tagsStore.fetchTags();
+    await forumStore.fetchTags();
   } catch (err) {
     console.warn('Could not fetch backend tags:', err);
   }
@@ -369,7 +365,8 @@ onMounted(async () => {
   if (isEditMode.value) {
     try {
       const discId = route.params.id;
-      const disc = await forumStore.fetchDiscussion(discId);
+      await forumStore.fetchDiscussion(discId);
+      const disc = forumStore.discussion;
       if (disc) {
         form.value.title = disc.title || "";
         form.value.excerpt = disc.body || disc.excerpt || "";
