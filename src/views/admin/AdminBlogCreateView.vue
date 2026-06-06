@@ -969,10 +969,14 @@ onBeforeUnmount(releaseThumbnailPreview);
 }
 
 @media (min-width: 1200px) {
+  :deep(.admin-main) {
+    overflow: visible !important;
+  }
+
   .side-stack {
     position: sticky;
-    top: calc(76px + 1rem);
-    max-height: calc(100vh - 76px - 2rem);
+    top: calc(76px + 1.25rem);
+    max-height: calc(100vh - 76px - 2.5rem);
     overflow-y: auto;
     padding-right: 0.15rem;
   }
