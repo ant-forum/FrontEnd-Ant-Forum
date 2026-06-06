@@ -1,15 +1,16 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import Navbar from '../../components/layouts/header.vue';
 import BaseFooter from '../../components/layouts/footer.vue';
 import LeftSidebar from '../../components/forum/LeftSidebar.vue';
+import { useProjectStore } from '../../stores/ProjectStore.js';
 
 const router = useRouter();
 const route = useRoute();
+const projectStore = useProjectStore();
 
 const filterTab = ref('latest');
-const loading = ref(false);
 const searchLoading = ref(false);
 const searchQuery = ref('');
 const selectedTag = ref('All');
@@ -18,47 +19,17 @@ const activeTab = ref('projects');
 const availableTags = ['All', 'VUE.JS', 'NODE.JS', 'REACT', 'D3.JS', 'TYPESCRIPT', 'REDIS', 'GRAPHQL', 'TAILWIND'];
 const filters = ['Latest', 'Top Rated', 'Most Viewed'];
 
-const projects = ref([
-  {
-    id: 1,
-    title: 'Nexus Analytics Dashboard',
-    description: 'A high-performance data visualization engine built for real-time tracking.',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600',
-    tags: ['VUE.JS', 'D3.JS', 'TYPESCRIPT'],
-    stars: 1200,
-    views: 8400,
-    createdAt: new Date(Date.now() - 86400000),
-    authors: ['https://i.pravatar.cc/150?u=1', 'https://i.pravatar.cc/150?u=2']
-  },
-  {
-    id: 2,
-    title: 'Aether OS Gateway',
-    description: 'Microservices API gateway designed for low-latency financial systems.',
-    image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&q=80&w=600',
-    tags: ['NODE.JS', 'REDIS', 'GRAPHQL'],
-    stars: 950,
-    views: 12000,
-    createdAt: new Date(Date.now() - 172800000),
-    authors: ['https://i.pravatar.cc/150?u=3']
-  },
-  {
-    id: 3,
-    title: 'Lumina Design System',
-    description: 'A comprehensive suite of accessible React components for scale.',
-    image: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=600',
-    tags: ['REACT', 'TAILWIND', 'STORYBOOK'],
-    stars: 2100,
-    views: 5600,
-    createdAt: new Date(Date.now() - 259200000),
-    authors: ['https://i.pravatar.cc/150?u=4', 'https://i.pravatar.cc/150?u=5', 'https://i.pravatar.cc/150?u=6']
-  }
-]);
+const projects = computed(() => projectStore.projects);
+const loading = computed(() => projectStore.isLoading);
 
 const filteredProjects = computed(() => {
   let result = [...projects.value];
 
   if (selectedTag.value !== 'All') {
-    result = result.filter(p => p.tags.includes(selectedTag.value));
+    const selectedTagLower = selectedTag.value.toLowerCase();
+    result = result.filter(p => 
+      p.tags.some(tag => tag.toLowerCase().includes(selectedTagLower))
+    );
   }
 
   if (searchQuery.value) {
@@ -72,7 +43,7 @@ const filteredProjects = computed(() => {
   if (filterTab.value === 'latest') {
     result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   } else if (filterTab.value === 'top rated') {
-    result.sort((a, b) => b.stars - a.stars);
+    result.sort((a, b) => b.average_rating - a.average_rating);
   } else if (filterTab.value === 'most viewed') {
     result.sort((a, b) => b.views - a.views);
   }
@@ -80,9 +51,13 @@ const filteredProjects = computed(() => {
   return result;
 });
 
-const formatNumber = (num) => {
-  if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
-  return num;
+const formatNumber = (num, isRating = false) => {
+  const n = Number(num) || 0;
+  if (isRating) {
+    return n.toFixed(1);
+  }
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return n;
 };
 
 const handleSearchInput = () => {
@@ -97,6 +72,10 @@ const clearFilters = () => {
   selectedTag.value = 'All';
   filterTab.value = 'latest';
 };
+
+onMounted(() => {
+  projectStore.fetchProjects();
+});
 </script>
 
 <template>
@@ -216,13 +195,13 @@ const clearFilters = () => {
 
                 <div class="project-footer">
                   <div class="project-meta">
-                    <span class="meta-item"><i class="bi bi-star-fill"></i> {{ formatNumber(project.stars) }}</span>
+                    <span class="meta-item"><i class="bi bi-star-fill"></i> {{ formatNumber(project.average_rating, true) }}</span>
                     <span class="meta-item"><i class="bi bi-eye"></i> {{ formatNumber(project.views) }}</span>
                   </div>
                   <div class="author-avatars">
                     <div class="avatar-stack">
-                      <img v-for="(avatar, idx) in project.authors.slice(0, 3)" :key="idx" 
-                           :src="avatar" class="stack-avatar" 
+                      <img v-for="(author, idx) in project.authors.slice(0, 3)" :key="idx" 
+                           :src="author.avatar" class="stack-avatar" 
                            width="28" height="28" :style="{ zIndex: 10 - idx }">
                       <div v-if="project.authors.length > 3" class="stack-more" 
                            style="width: 28px; height: 28px; z-index: 0;">+{{ project.authors.length - 3 }}</div>
