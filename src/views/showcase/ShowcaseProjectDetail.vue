@@ -1,29 +1,40 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import Navbar from '../../components/layouts/header.vue';
 import BaseFooter from '../../components/layouts/footer.vue';
+import { useProjectStore } from '../../stores/ProjectStore.js';
 
-const project = ref({
-  id: 1,
-  title: 'Nexus Analytics',
-  description: 'Real-time telemetry and visualization engine for enterprise-scale data.',
-  longDescription: 'Nexus Analytics is a high-performance framework designed for sub-50ms telemetry ingestion and real-time visualization of high-cardinality datasets. It provides engineers with deep insights into system performance through an intuitive and responsive interface.',
-  lead: 'Sarah Jenkins',
-  leadAvatar: 'https://i.pravatar.cc/150?u=sarah',
-  tags: ['VUE.JS', 'D3.JS', 'TYPESCRIPT', 'POSTGRESQL'],
-  stats: {
-    stars: '1.2k',
-    forks: '342',
-    contributors: '12'
-  }
+const route = useRoute();
+const projectStore = useProjectStore();
+
+const loading = ref(true);
+
+const project = computed(() => projectStore.project || {
+  id: null,
+  title: 'Loading...',
+  description: '',
+  longDescription: '',
+  lead: '',
+  leadAvatar: '',
+  tags: [],
+  stats: { stars: '0', forks: '0', contributors: '0' }
 });
 
-const technicalSpecs = [
+const technicalSpecs = computed(() => [
   { label: 'Frontend', value: 'Vue 3, Pinia' },
-  { label: 'Visualization', value: 'D3.js, Three.js' },
-  { label: 'Database', value: 'PostgreSQL' },
-  { label: 'Infrastructure', value: 'AWS EKS' }
-];
+  { label: 'Tags', value: project.value.tags?.join(', ') || 'N/A' },
+  { label: 'Link', value: project.value.link || 'Not provided' },
+  { label: 'Created At', value: new Date(project.value.createdAt).toLocaleDateString() || 'N/A' }
+]);
+
+onMounted(async () => {
+  const projectId = route.params.id;
+  if (projectId) {
+    await projectStore.fetchProject(projectId);
+  }
+  loading.value = false;
+});
 </script>
 
 <template>
@@ -38,74 +49,97 @@ const technicalSpecs = [
         </router-link>
       </nav>
 
-      <!-- Project Header -->
-      <section class="project-header mb-5">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <div class="project-icon bg-primary-light text-primary rounded-4 d-flex align-items-center justify-content-center">
-            <i class="bi bi-layers-fill fs-2"></i>
-          </div>
-          <h1 class="fw-bold mb-0 text-adaptive">{{ project.title }}</h1>
+      <!-- Loading State -->
+      <div v-if="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="lead text-muted mb-4">{{ project.description }}</p>
-        
-        <div class="d-flex flex-wrap gap-2 mb-4">
-          <span v-for="tag in project.tags" :key="tag" class="minimal-tag">{{ tag }}</span>
-        </div>
+        <p class="text-muted mt-3">Loading project details...</p>
+      </div>
 
-        <div class="d-flex gap-3">
-          <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">Live Demo</button>
-          <button class="btn btn-outline-adaptive rounded-pill px-4 py-2 fw-bold shadow-sm">Source Code</button>
-        </div>
-      </section>
-
-      <!-- Main Image/Visual -->
-      <section class="project-visual mb-5">
-        <div class="visual-placeholder rounded-5 bg-surface-hover border d-flex align-items-center justify-content-center">
-          <i class="bi bi-image text-muted opacity-25 fs-1"></i>
-        </div>
-      </section>
-
-      <!-- About Section -->
-      <section class="project-about mb-5">
-        <h4 class="fw-bold mb-3 text-adaptive">About the Project</h4>
-        <p class="text-muted lh-lg">{{ project.longDescription }}</p>
-      </section>
-
-      <!-- Details Grid -->
-      <section class="project-details row g-4 mb-5">
-        <div class="col-md-6">
-          <h5 class="fw-bold mb-3 small text-uppercase tracking-wider text-adaptive">Technical Stack</h5>
-          <div class="d-flex flex-column gap-2">
-            <div v-for="spec in technicalSpecs" :key="spec.label" class="d-flex justify-content-between border-bottom-theme pb-2">
-              <span class="text-muted small">{{ spec.label }}</span>
-              <span class="fw-semibold small text-adaptive">{{ spec.value }}</span>
+      <template v-else>
+        <!-- Project Header -->
+        <section class="project-header mb-5">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="project-icon bg-primary-light text-primary rounded-4 d-flex align-items-center justify-content-center">
+              <i class="bi bi-layers-fill fs-2"></i>
             </div>
+            <h1 class="fw-bold mb-0 text-adaptive">{{ project.title }}</h1>
           </div>
-        </div>
-        <div class="col-md-6">
-          <h5 class="fw-bold mb-3 small text-uppercase tracking-wider text-adaptive">Project Stats</h5>
-          <div class="row g-3">
-            <div v-for="(val, key) in project.stats" :key="key" class="col-4">
-              <div class="text-center p-3 rounded-4 bg-surface-hover border">
-                <div class="fw-bold h5 mb-0 text-adaptive">{{ val }}</div>
-                <div class="text-muted xx-small text-uppercase">{{ key }}</div>
+          <p class="lead text-muted mb-4">{{ project.description }}</p>
+          
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            <span v-for="tag in project.tags" :key="tag" class="minimal-tag">{{ tag }}</span>
+          </div>
+
+          <div class="d-flex gap-3">
+            <a v-if="project.link" :href="project.link" target="_blank" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">Live Demo</a>
+            <button v-else class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" disabled>No Demo</button>
+          </div>
+        </section>
+
+        <!-- Main Image/Visual -->
+        <section class="project-visual mb-5">
+          <img v-if="project.thumbnail" :src="project.thumbnail" :alt="project.title" class="visual-placeholder rounded-5 object-cover w-100 border">
+          <div v-else class="visual-placeholder rounded-5 bg-surface-hover border d-flex align-items-center justify-content-center">
+            <i class="bi bi-image text-muted opacity-25 fs-1"></i>
+          </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="project-about mb-5">
+          <h4 class="fw-bold mb-3 text-adaptive">About the Project</h4>
+          <p class="text-muted lh-lg">{{ project.description }}</p>
+        </section>
+
+        <!-- Details Grid -->
+        <section class="project-details row g-4 mb-5">
+          <div class="col-md-6">
+            <h5 class="fw-bold mb-3 small text-uppercase tracking-wider text-adaptive">Project Details</h5>
+            <div class="d-flex flex-column gap-2">
+              <div v-for="spec in technicalSpecs" :key="spec.label" class="d-flex justify-content-between border-bottom-theme pb-2">
+                <span class="text-muted small">{{ spec.label }}</span>
+                <span class="fw-semibold small text-adaptive">{{ spec.value }}</span>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- Lead Section -->
-      <section class="project-lead pt-5 border-top-theme">
-        <div class="d-flex align-items-center gap-3">
-          <img :src="project.leadAvatar" class="rounded-circle border border-2 border-surface shadow-sm" width="56" height="56" alt="Lead">
-          <div>
-            <div class="text-muted xx-small text-uppercase fw-bold">Project Lead</div>
-            <div class="fw-bold text-adaptive">{{ project.lead }}</div>
+          <div class="col-md-6">
+            <h5 class="fw-bold mb-3 small text-uppercase tracking-wider text-adaptive">Project Stats</h5>
+            <div class="row g-3">
+              <div class="col-4">
+                <div class="text-center p-3 rounded-4 bg-surface-hover border">
+                  <div class="fw-bold h5 mb-0 text-adaptive">{{ project.average_rating?.toFixed(1) || '0.0' }}</div>
+                  <div class="text-muted xx-small text-uppercase">rating</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="text-center p-3 rounded-4 bg-surface-hover border">
+                  <div class="fw-bold h5 mb-0 text-adaptive">{{ project.views || '0' }}</div>
+                  <div class="text-muted xx-small text-uppercase">views</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="text-center p-3 rounded-4 bg-surface-hover border">
+                  <div class="fw-bold h5 mb-0 text-adaptive">{{ project.tags?.length || '0' }}</div>
+                  <div class="text-muted xx-small text-uppercase">tags</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <button class="btn btn-sm btn-outline-adaptive rounded-pill px-3 ms-auto fw-bold">Contact</button>
-        </div>
-      </section>
+        </section>
+
+        <!-- Author Section -->
+        <section v-if="project.author" class="project-lead pt-5 border-top-theme">
+          <div class="d-flex align-items-center gap-3">
+            <img :src="project.author.avatar" class="rounded-circle border border-2 border-surface shadow-sm" width="56" height="56" alt="Author">
+            <div>
+              <div class="text-muted xx-small text-uppercase fw-bold">Project Author</div>
+              <div class="fw-bold text-adaptive">{{ project.author.name }}</div>
+              <div class="text-muted small">{{ project.author.username }}</div>
+            </div>
+          </div>
+        </section>
+      </template>
     </main>
 
     <BaseFooter />
