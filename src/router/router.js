@@ -163,6 +163,12 @@ const routes = [
     component: () => import("../views/admin/AdminProfileView.vue"),
   },
   {
+    path: "/admin/profile/edit",
+    name: "AdminProfileEdit",
+    meta: { requiresAuth: true, role: "admin", title: "Edit Admin Account" },
+    component: () => import("../views/admin/AdminProfileEditView.vue"),
+  },
+  {
     path: "/admin/users",
     name: "UserManagement",
     meta: { requiresAuth: true, role: "admin" },

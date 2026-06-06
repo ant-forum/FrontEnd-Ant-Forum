@@ -212,6 +212,11 @@ const validateForm = () => {
   return emailValid && passwordValid;
 };
 
+const getPostLoginRoute = () => {
+  const userRole = String(authStore.user?.role || "").toLowerCase();
+  return userRole === "admin" ? { name: "AdminDashboard" } : { name: "HomePage" };
+};
+
 async function handleSignIn() {
   if (!validateForm()) return;
   loading.value = true;
@@ -224,7 +229,7 @@ async function handleSignIn() {
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
     toast.success("Welcome back! Login successful");
-    router.push("/");
+    router.push(getPostLoginRoute());
   } catch (error) {
     console.error("Login failed:", error);
     if (error && error.error) {

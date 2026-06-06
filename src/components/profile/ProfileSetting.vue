@@ -1,7 +1,9 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted, onBeforeUnmount, defineProps, defineEmits } from "vue";
 import BaseModal from "../base/BaseModal.vue";
+import ImageCropModal from "../base/ImageCropModal.vue";
 import { useUserProfilesStore } from "../../stores/UserProfilesStore";
+import { useImageCropper } from "../../composables/useImageCropper";
 import { useToast } from "../../composables/useToast";
 
 const props = defineProps({
@@ -30,9 +32,23 @@ const pendingAvatarFile = ref(null);
 const pendingAvatarPreview = ref("");
 const showAvatarConfirmModal = ref(false);
 const isAvatarUploading = ref(false);
+const {
+  cropSource: avatarCropSource,
+  isCropModalOpen: isAvatarCropOpen,
+  openCropper: openAvatarCropper,
+  confirmCrop: confirmAvatarCrop,
+  cancelCrop: cancelAvatarCrop,
+} = useImageCropper({
+  title: "Crop Profile Picture",
+  aspectRatio: 1,
+  outputWidth: 512,
+  outputHeight: 512,
+  outputType: "image/jpeg",
+  shape: "circle",
+});
 
 const revokePendingAvatarPreview = () => {
-  if (pendingAvatarPreview.value) {
+  if (pendingAvatarPreview.value?.startsWith("blob:")) {
     URL.revokeObjectURL(pendingAvatarPreview.value);
   }
   pendingAvatarPreview.value = "";
@@ -69,7 +85,7 @@ const openAvatarFilePicker = () => {
 };
 
 // Handle avatar selection
-const handleAvatarChange = (e) => {
+const handleAvatarChange = async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
@@ -85,11 +101,14 @@ const handleAvatarChange = (e) => {
     return;
   }
 
-  revokePendingAvatarPreview();
-  pendingAvatarFile.value = file;
-  pendingAvatarPreview.value = URL.createObjectURL(file);
-  showAvatarConfirmModal.value = true;
   clearAvatarInput();
+  const cropped = await openAvatarCropper(file);
+  if (!cropped) return;
+
+  revokePendingAvatarPreview();
+  pendingAvatarFile.value = cropped.file;
+  pendingAvatarPreview.value = cropped.previewUrl;
+  showAvatarConfirmModal.value = true;
 };
 
 const closeAvatarConfirmModal = () => {
@@ -315,6 +334,13 @@ const handleSubmit = async () => {
         </button>
       </template>
     </BaseModal>
+
+    <ImageCropModal
+      v-if="isAvatarCropOpen"
+      :source="avatarCropSource"
+      @confirm="confirmAvatarCrop"
+      @cancel="cancelAvatarCrop"
+    />
   </div>
 </template>
 

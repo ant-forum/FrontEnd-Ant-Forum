@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/api";
+import { htmlToPlainText } from "@/utils/richContent";
 
 const ensureSuccess = (response) => {
   if (response.data && response.data.result === false) {
@@ -84,18 +85,21 @@ export const useBlogStore = defineStore('blog', () => {
       dateStr = item.date;
     }
 
+    const plainDescription = htmlToPlainText(item.description || item.content || '');
+
     return {
       ...item,
       id: item.id,
       title: item.title || '',
       description: item.description || '',
+      excerpt: plainDescription,
       category: categoryName,
       category_id: item.category_id,
       image: image || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800',
       date: dateStr,
       author: authorName,
       author_avatar: authorAvatar,
-      readTime: item.readTime || `${Math.max(3, Math.ceil((item.description || '').split(' ').length / 200))} min`,
+      readTime: item.readTime || `${Math.max(3, Math.ceil(plainDescription.split(' ').length / 200))} min`,
       views: item.views || 0,
       likes: item.likes || 0,
       status: item.status || 'published',

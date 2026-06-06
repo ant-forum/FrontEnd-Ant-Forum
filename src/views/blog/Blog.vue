@@ -31,7 +31,9 @@ const activeCategories = computed(() => {
 });
 
 const categories = computed(() => {
-  return ['All', ...activeCategories.value.map(c => c.name || c.title)];
+  const categoryNames = activeCategories.value.map(c => c.name || c.title);
+  const uniqueCategoryNames = [...new Set(categoryNames)];
+  return ['All', ...uniqueCategoryNames];
 });
 const allTags = computed(() => {
   const tagsSet = new Set();
@@ -95,7 +97,7 @@ const filteredPosts = computed(() => {
     const query = searchQuery.value.toLowerCase();
     result = result.filter(p => 
       p.title.toLowerCase().includes(query) || 
-      p.description.toLowerCase().includes(query)
+      (p.excerpt || p.description || '').toLowerCase().includes(query)
     );
   }
 
@@ -335,7 +337,7 @@ const formatNumber = (num) => {
                     <span v-for="tag in post.tags" :key="tag" class="text-xxs text-muted">#{{ tag }}</span>
                   </div>
                   
-                  <p class="text-muted text-sm mb-4 line-clamp-2">{{ post.description }}</p>
+                  <p class="text-muted text-sm mb-4 line-clamp-2">{{ post.excerpt || post.description }}</p>
                   
                   <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
                     <div class="author-info d-flex align-items-center gap-2">
