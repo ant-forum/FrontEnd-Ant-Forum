@@ -8,6 +8,7 @@ import { useForumStore } from '@/stores/ForumStore';
 import { useAuthStore } from '@/stores/AuthStore';
 import MarkdownEditor from '@/components/forum/create/MarkdownEditor.vue';
 import { markdownToHtml } from '@/utils/markdown';
+import { resolveMediaUrl } from '@/utils/mediaUrl';
 
 const route = useRoute();
 const router = useRouter();
