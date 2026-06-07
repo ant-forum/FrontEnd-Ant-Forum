@@ -98,7 +98,7 @@
             <h3>{{ post.title }}</h3>
             <p class="post-desc">{{ post.excerpt || post.description }}</p>
             <div class="post-meta">
-              <span><strong>Category:</strong> {{ post.category }} (ID: {{ post.category_id }})</span>
+              <span><strong>Category:</strong> {{ post.category }}</span>
               <span class="mx-1">•</span>
               <span><i class="bi bi-calendar3"></i> {{ post.date || 'Recent' }}</span>
               <span v-if="post.author" class="mx-1">•</span>

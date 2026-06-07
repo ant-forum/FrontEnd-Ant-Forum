@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
@@ -17,6 +17,9 @@ const searchQuery = ref('');
 const selectedCategory = ref('All');
 const sortBy = ref('latest');
 const showDrafts = ref(false);
+const initialLoading = ref(true);
+const BLOGS_PER_PAGE = 6;
+const visibleBlogCount = ref(BLOGS_PER_PAGE);
 
 const fallbackCategories = [
   { id: 1, name: 'Frontend' },
@@ -92,16 +95,21 @@ const form = ref({
 });
 
 onMounted(async () => {
+  initialLoading.value = true;
   try {
-    await blogStore.fetchCategories();
-  } catch (err) {
-    console.error("Failed to fetch categories:", err);
-  }
+    try {
+      await blogStore.fetchCategories();
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
 
-  if (authStore.user?.role === 'admin') {
-    await blogStore.fetchAllBlogs();
-  } else {
-    await blogStore.fetchBlogs();
+    if (authStore.user?.role === 'admin') {
+      await blogStore.fetchAllBlogs();
+    } else {
+      await blogStore.fetchBlogs();
+    }
+  } finally {
+    initialLoading.value = false;
   }
 });
 
@@ -143,6 +151,27 @@ const filteredPosts = computed(() => {
 
   return result;
 });
+
+const visiblePosts = computed(() => filteredPosts.value.slice(0, visibleBlogCount.value));
+const canShowMore = computed(() => {
+  return visibleBlogCount.value < filteredPosts.value.length || (blogStore.hasMore && !showDrafts.value);
+});
+
+watch([searchQuery, selectedCategory, selectedTag, sortBy, showDrafts], () => {
+  visibleBlogCount.value = BLOGS_PER_PAGE;
+});
+
+const loadMorePosts = async () => {
+  if (visibleBlogCount.value < filteredPosts.value.length) {
+    visibleBlogCount.value += BLOGS_PER_PAGE;
+    return;
+  }
+
+  if (blogStore.hasMore && !showDrafts.value) {
+    await blogStore.loadMore();
+    visibleBlogCount.value += BLOGS_PER_PAGE;
+  }
+};
 
 const openCreateModal = () => {
   isEditing.value = false;
@@ -196,7 +225,7 @@ const submitForm = async () => {
   const formData = new FormData();
   const content = form.value.description;
   formData.append('title', form.value.title);
-  formData.append('description', createPlainTextExcerpt(content));
+  formData.append('description', createPlainTextExcerpt(content, 180));
   formData.append('content', content);
   formData.append('category_id', form.value.category_id);
   formData.append('status', form.value.status);
@@ -358,12 +387,30 @@ const formatNumber = (num) => {
           <h4 class="fw-bold mb-0">
             {{ selectedCategory === 'All' ? 'Latest Publications' : selectedCategory + ' Articles' }}
           </h4>
-          <div class="text-muted text-sm">{{ filteredPosts.length }} Articles found</div>
+          <div class="text-muted text-sm">
+            {{ initialLoading ? 'Loading articles...' : filteredPosts.length + ' Articles found' }}
+          </div>
         </div>
 
         <!-- Blog Grid -->
         <div class="blog-grid">
-          <div v-if="filteredPosts.length === 0" class="col-12 text-center py-5">
+          <template v-if="initialLoading">
+            <article v-for="index in 4" :key="'skeleton-' + index" class="blog-card blog-card-skeleton" aria-hidden="true">
+              <div class="skeleton-media skeleton-shimmer"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-line-sm skeleton-shimmer"></div>
+                <div class="skeleton-line skeleton-line-lg skeleton-shimmer"></div>
+                <div class="skeleton-line skeleton-line-md skeleton-shimmer"></div>
+                <div class="skeleton-line skeleton-line-xs skeleton-shimmer"></div>
+                <div class="skeleton-author">
+                  <div class="skeleton-avatar skeleton-shimmer"></div>
+                  <div class="skeleton-line skeleton-line-author skeleton-shimmer"></div>
+                </div>
+              </div>
+            </article>
+          </template>
+
+          <div v-else-if="filteredPosts.length === 0" class="blog-empty-state text-center py-5">
             <div class="empty-state-card">
               <div class="empty-icon-wrap">
                 <i class="bi bi-journal-x"></i>
@@ -373,9 +420,9 @@ const formatNumber = (num) => {
             </div>
           </div>
           
-          <div v-for="post in filteredPosts" :key="post.id" class="blog-card">
+          <div v-for="post in visiblePosts" :key="post.id" class="blog-card">
             <router-link :to="'/blog/' + post.id" class="text-decoration-none h-100 d-block">
-              <article class="h-100 overflow-hidden bg-surface transition-up">
+              <article class="blog-card-surface h-100 transition-up">
                 <div class="post-image-container position-relative overflow-hidden">
                   <img :src="post.image" @error="handleImgError" class="post-img-zoom" alt="Article">
                   <div class="post-category-tag position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill bg-surface-blur backdrop-blur-sm">
@@ -386,10 +433,10 @@ const formatNumber = (num) => {
                 <div class="post-content p-4 d-flex flex-column">
                   <div class="d-flex align-items-center gap-2 text-muted text-xs mb-3 fw-medium">
                     <i class="bi bi-calendar3"></i> {{ post.date }} 
-                    <span class="mx-1">•</span>
-                    <i class="bi bi-eye"></i> {{ formatNumber(post.views) }}
-                    <span class="mx-1">•</span>
-                    <i class="bi bi-heart"></i> {{ post.likes }}
+                    <!-- <span class="mx-1">•</span> -->
+                    <!-- <i class="bi bi-eye"></i> {{ formatNumber(post.views) }} -->
+                    <!-- <span class="mx-1">•</span> -->
+                    <!-- <i class="bi bi-heart"></i> {{ post.likes }} -->
                   </div>
                   <h5 class="fw-bold mb-2 blog-title line-clamp-2">{{ post.title }}</h5>
                   
@@ -401,9 +448,9 @@ const formatNumber = (num) => {
                   <p class="text-muted text-sm mb-4 line-clamp-2">{{ post.excerpt || post.description }}</p>
                   
                   <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
-                    <div class="author-info d-flex align-items-center gap-2">
+                    <div class="author-info d-flex align-items-center gap-2 min-w-0">
                       <img :src="post.author_avatar" class="author-avatar" width="28" height="28">
-                      <span class="text-sm fw-bold">{{ post.author }}</span>
+                      <span class="text-sm fw-bold text-truncate">{{ post.author }}</span>
                     </div>
                     
                     <div class="read-more-link text-purple text-sm fw-bold">
@@ -417,9 +464,9 @@ const formatNumber = (num) => {
         </div>
 
         <!-- Load More Button -->
-        <div v-if="blogStore.hasMore && !showDrafts" class="d-flex justify-content-center mt-5">
+        <div v-if="canShowMore" class="d-flex justify-content-center mt-5">
           <button 
-            @click="blogStore.loadMore()" 
+            @click="loadMorePosts" 
             :disabled="blogStore.isLoading" 
             class="btn-purple rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2"
           >
@@ -989,39 +1036,158 @@ const formatNumber = (num) => {
 }
 
 .blog-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
+  min-width: 0;
+  border-radius: 18px;
+  transform: translateY(0);
+  transition:
+    transform 260ms ease,
+    filter 260ms ease;
 }
 
 .blog-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  filter: drop-shadow(0 18px 28px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.14)) 72%, transparent));
+}
+
+.blog-card-surface {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, var(--color-purple) 4%), var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
+  border-radius: inherit;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.12)) 50%, transparent);
+  transition:
+    border-color 260ms ease,
+    box-shadow 260ms ease,
+    background 260ms ease;
+}
+
+.blog-card:hover .blog-card-surface {
+  border-color: color-mix(in srgb, var(--color-purple) 42%, var(--color-border));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 42%, transparent);
 }
 
 .post-image-container {
   height: 220px;
+  background: var(--color-surface-hover);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
 }
 
 .post-img-zoom {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s ease;
+  transform: scale(1);
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms ease;
 }
 
 .blog-card:hover .post-img-zoom {
-  transform: scale(1.05);
+  transform: scale(1.035);
+  filter: saturate(1.04) contrast(1.02);
+}
+
+.post-category-tag {
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.12)) 38%, transparent);
+}
+
+.post-content {
+  min-height: 300px;
 }
 
 .blog-title {
   font-size: 1.25rem;
   line-height: 1.4;
-  transition: color 0.2s;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  transition: color 220ms ease;
 }
 
 .blog-card:hover .blog-title {
   color: var(--color-purple);
+}
+
+.read-more-link {
+  transition: transform 220ms ease, color 220ms ease;
+}
+
+.blog-card:hover .read-more-link {
+  transform: translateX(3px);
+}
+
+.blog-card-skeleton {
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.12)) 50%, transparent);
+}
+
+.skeleton-media {
+  height: 220px;
+  border-radius: 20px 20px 0 0;
+}
+
+.skeleton-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+}
+
+.skeleton-line,
+.skeleton-avatar,
+.skeleton-media {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 0%,
+    color-mix(in srgb, var(--color-surface-hover) 72%, var(--color-text-muted) 28%) 48%,
+    var(--color-surface-hover) 100%
+  );
+  background-size: 220% 100%;
+}
+
+.skeleton-shimmer {
+  animation: blogSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 13px;
+  border-radius: 999px;
+}
+
+.skeleton-line-sm { width: 38%; }
+.skeleton-line-lg { width: 88%; height: 22px; }
+.skeleton-line-md { width: 72%; height: 18px; }
+.skeleton-line-xs { width: 52%; }
+.skeleton-line-author { width: 92px; }
+
+.skeleton-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--color-border);
+  margin-top: 10px;
+  padding-top: 18px;
+}
+
+.skeleton-avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+@keyframes blogSkeletonShimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
 }
 
 .bg-surface {
@@ -1067,8 +1233,15 @@ const formatNumber = (num) => {
 }
 
 /* Empty State */
+.blog-empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+}
+
 .empty-state-card {
   padding: 60px 40px;
+  width: min(100%, 520px);
 }
 
 .empty-icon-wrap {

@@ -160,6 +160,21 @@ const handleImgError = (e) => {
           <!-- Main Content -->
           <article class="col-12">
             <div class="blog-main-card p-4 p-md-5 rounded-4 mb-5 border border-theme bg-surface shadow-sm">
+              <div class="blog-author-row d-flex align-items-center mb-4">
+                <img :src="post.author_avatar" class="rounded-circle me-3 border border-theme object-fit-cover" width="48" height="48" alt="Author">
+                <div class="min-w-0">
+                  <h6 class="mb-0 fw-bold text-adaptive byline-title">
+                    {{ post.author }}
+                  </h6>
+                  <div class="text-muted font-sm d-flex align-items-center mt-1 blog-post-meta">
+                    <span class="d-inline-flex align-items-center gap-1">
+                      <i class="bi bi-clock-history"></i>
+                      {{ post.postedAt || post.date }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <!-- Metadata -->
               <div class="mb-4">
                 <span v-for="tag in post.tags" :key="tag" class="badge bg-purple-light text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3 me-2 text-uppercase">
@@ -174,16 +189,6 @@ const handleImgError = (e) => {
                 {{ post.title }}
               </h1>
 
-              <div class="d-flex align-items-center mb-5">
-                <img :src="post.author_avatar" class="rounded-circle me-3 border border-theme object-fit-cover" width="48" height="48" alt="Author">
-                <div>
-                  <h6 class="mb-0 fw-bold text-adaptive">{{ post.author }}</h6>
-                  <div class="text-muted font-sm d-flex align-items-center mt-1">
-                    {{ post.date }} &nbsp;&bull;&nbsp; {{ post.readTime }} read
-                  </div>
-                </div>
-              </div>
-
               <!-- Hero Image -->
               <img :src="post.image" @error="handleImgError" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme" style="max-height: 400px;" alt="Hero Image">
 
@@ -192,7 +197,7 @@ const handleImgError = (e) => {
             </div>
 
             <!-- Newsletter -->
-            <div class="newsletter-section mt-5 p-5 rounded-4 text-center position-relative overflow-hidden border">
+            <!-- <div class="newsletter-section mt-5 p-5 rounded-4 text-center position-relative overflow-hidden border">
               <div class="newsletter-gradient position-absolute top-0 start-0 w-100 h-100"></div>
               <div class="position-relative z-3">
                 <div class="d-flex justify-content-center mb-3">
@@ -214,7 +219,7 @@ const handleImgError = (e) => {
                   <button class="btn btn-dark btn-lg rounded-pill-end px-4 shadow-sm" type="button">Subscribe</button>
                 </form>
               </div>
-            </div>
+            </div> -->
 
             <hr class="my-5 border-theme">
 
@@ -335,6 +340,10 @@ const handleImgError = (e) => {
   letter-spacing: -0.03em;
   line-height: 1.15;
   font-size: clamp(2rem, 4vw, 2.8rem);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .blog-main-card {
@@ -342,6 +351,25 @@ const handleImgError = (e) => {
   border: 1px solid var(--color-border) !important;
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--transition-base);
+  overflow: hidden;
+}
+
+.blog-author-row {
+  min-width: 0;
+}
+
+.byline-title {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.blog-post-meta {
+  flex-wrap: wrap;
+  gap: 0.25rem 0.45rem;
+}
+
+.meta-dot {
+  color: var(--color-text-muted);
 }
 
 /* Article Body */

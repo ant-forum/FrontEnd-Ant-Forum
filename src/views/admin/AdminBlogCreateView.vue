@@ -456,7 +456,7 @@ const savePost = async () => {
     const formData = new FormData();
     const content = form.description;
     formData.append('title', form.title);
-    formData.append('description', createPlainTextExcerpt(content));
+    formData.append('description', createPlainTextExcerpt(content, 180));
     formData.append('content', content);
     formData.append('category_id', form.category_id);
     formData.append('status', form.status);
