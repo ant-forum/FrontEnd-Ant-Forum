@@ -89,6 +89,11 @@ function toggleLike(d) {
 function handleVote(id, direction) {
   forumStore.toggleVoteDiscussion(id, direction);
 }
+
+function selectTag(tagName) {
+  const cleanTag = tagName.replace('#', '').trim();
+  router.push({ path: '/forum', query: { q: cleanTag } });
+}
 </script>
 
 <template>
@@ -113,7 +118,7 @@ function handleVote(id, direction) {
         <!-- Meta Row: Tags on left, posted info on right -->
         <div class="thread-meta">
           <div class="thread-tags">
-            <span v-for="tag in d.tags" :key="tag.label" class="tag-chip" :style="getTagStyle(tag.label, tag.color)">
+            <span v-for="tag in d.tags" :key="tag.label" class="tag-chip" :style="getTagStyle(tag.label, tag.color)" @click.stop="selectTag(tag.label)" style="cursor: pointer;">
               {{ tag.label }}
             </span>
           </div>
@@ -274,6 +279,13 @@ function handleVote(id, direction) {
   font-size: 11.5px;
   font-weight: 600;
   border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-chip:hover {
+  filter: brightness(0.85);
+  transform: translateY(-1px);
 }
 
 .thread-time {

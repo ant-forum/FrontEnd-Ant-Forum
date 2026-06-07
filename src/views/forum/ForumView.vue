@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import Navbar from '@/components/layouts/header.vue';
 import BaseFooter from '@/components/layouts/footer.vue';
 import FeaturedDiscussion from '@/components/forum/FeaturedDiscussion.vue';
@@ -8,10 +8,13 @@ import DiscussionThreadList from '@/components/forum/DiscussionThreadList.vue';
 import ForumSidebar from '@/components/forum/ForumSidebar.vue';
 import LeftSidebar from '@/components/forum/LeftSidebar.vue';
 import { useForumStore } from '@/stores/ForumStore';
+import { useTagsStore } from '@/stores/TagsStore';
 
 const route = useRoute();
+const router = useRouter();
 
 const forumStore = useForumStore();
+const tagsStore = useTagsStore();
 
 const filterTab = ref('latest');
 const loading = ref(false);
@@ -57,11 +60,16 @@ const filteredDiscussions = computed(() => {
 
       const matchesTags = d.tags && Array.isArray(d.tags) && d.tags.some(t => {
         if (!t) return false;
-        const label = typeof t === 'object' ? (t.label || t.name || '') : t;
-        return (label || '').toString().toLowerCase().includes(q);
+        const label = typeof t === 'object' ? (t.label || t.name || '') : String(t);
+        return label.toLowerCase().includes(q);
       });
 
-      return title.includes(q) || excerpt.includes(q) || authorName.includes(q) || matchesTags;
+      const categoryId = (d.category || '').toString().toLowerCase();
+      const categoryObj = categories.find(c => c.id === categoryId);
+      const categoryLabel = categoryObj ? categoryObj.label.toLowerCase() : '';
+      const matchesCategory = categoryId.includes(q) || categoryLabel.includes(q);
+
+      return title.includes(q) || excerpt.includes(q) || authorName.includes(q) || matchesTags || matchesCategory;
     });
   }
 
@@ -86,7 +94,11 @@ const filteredDiscussions = computed(() => {
   } else if (filterTab.value === 'top rated') {
     list.sort((a, b) => (b.votes || 0) - (a.votes || 0));
   } else if (filterTab.value === 'unanswered') {
-    list = list.filter(d => !d.replies || d.replies.length === 0);
+    list = list.filter(d => {
+      const repliesCount = d.replies !== undefined ? Number(d.replies) : 0;
+      const likesCount = d.likes !== undefined ? Number(d.likes) : 0;
+      return repliesCount === 0 && likesCount === 0;
+    });
   }
   return list;
 });
@@ -97,6 +109,32 @@ const handleSearchInput = () => {
   const bounce = setTimeout(() => {
     searchLoading.value = false;
   }, 350);
+};
+
+const submitSearch = () => {
+  const qVal = searchQuery.value.trim();
+  router.push({ path: '/forum', query: { q: qVal || undefined } });
+};
+
+const showSuggestions = ref(false);
+
+const matchingSuggestedTags = computed(() => {
+  if (!searchQuery.value || !tagsStore.tags) return [];
+  const q = searchQuery.value.toLowerCase().replace('#', '').trim();
+  if (!q) return [];
+  return tagsStore.tags.filter(t => t.name.toLowerCase().includes(q)).slice(0, 5);
+});
+
+const selectSuggestedTag = (tagName) => {
+  const cleanTag = tagName.replace('#', '').trim();
+  router.push({ path: '/forum', query: { q: cleanTag } });
+  showSuggestions.value = false;
+};
+
+const handleSearchBlur = () => {
+  setTimeout(() => {
+    showSuggestions.value = false;
+  }, 200);
 };
 
 const handleSidebarSelect = (tabId) => {
@@ -137,20 +175,46 @@ watch(() => route.query.tab, (newTab) => {
   }
 });
 
-watch(() => route.query.q, (newQ) => {
+watch(() => route.query.q, async (newQ) => {
+  const qVal = newQ ? String(newQ).replace('#', '').trim() : '';
   searchQuery.value = newQ ? String(newQ) : '';
-});
+  
+  loading.value = true;
+  try {
+    if (!tagsStore.tags || tagsStore.tags.length === 0) {
+      await tagsStore.fetchTags();
+    }
+    if (qVal) {
+      const matchedTag = tagsStore.tags && tagsStore.tags.find(t => t.name.toLowerCase() === qVal.toLowerCase());
+      if (matchedTag) {
+        await forumStore.fetchDiscussionsByTagName(matchedTag.name);
+      } else {
+        await forumStore.fetchDiscussions();
+      }
+    } else {
+      await forumStore.fetchDiscussions();
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+}, { immediate: true });
 
 onMounted(async () => {
   loading.value = true;
-  await forumStore.fetchDiscussions();
-  if (route.query.tab === 'saves') {
-    await forumStore.fetchBookmarks().catch(() => {});
-  }
-  loading.value = false;
+  try {
+    await tagsStore.fetchTags();
+  } catch (e) {}
 
-  if (route.query.q) {
-    searchQuery.value = String(route.query.q);
+  try {
+    if (route.query.tab === 'saves') {
+      await forumStore.fetchBookmarks().catch(() => {});
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    loading.value = false;
   }
 
   window.addEventListener('keydown', handleGlobalKeydown);
@@ -209,13 +273,31 @@ const clearFilters = () => {
               placeholder="Search discussions, tags, or authors..."
               class="search-bar"
               @input="handleSearchInput"
+              @focus="showSuggestions = true"
+              @blur="handleSearchBlur"
+              @keydown.enter="submitSearch"
             />
-            <button class="search-btn" @click="handleSearchInput" title="Search">
+            <button class="search-btn" @click="submitSearch" title="Search">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
             </button>
+          </div>
+
+          <!-- Tag Suggestions Dropdown -->
+          <div v-if="showSuggestions && matchingSuggestedTags.length > 0" class="search-suggestions-dropdown">
+            <div class="suggestions-header">Suggested Tags</div>
+            <div class="suggestions-list">
+              <button
+                v-for="tag in matchingSuggestedTags"
+                :key="tag.id"
+                class="suggestion-item"
+                @mousedown.prevent="selectSuggestedTag(tag.name)"
+              >
+                #{{ tag.name }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -700,5 +782,59 @@ const clearFilters = () => {
   .tabs-group { width: 100%; justify-content: center; }
   .tab-btn { flex: 1; text-align: center; }
   .create-btn { justify-content: center; }
+}
+
+.forum-search-section {
+  position: relative;
+}
+
+.search-suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  margin-top: 8px;
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.suggestions-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestion-item {
+  padding: 6px 12px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.suggestion-item:hover {
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  border-color: var(--color-purple);
 }
 </style>
