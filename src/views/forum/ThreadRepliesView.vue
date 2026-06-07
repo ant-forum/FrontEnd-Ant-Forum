@@ -8,6 +8,7 @@ import { useForumStore } from '@/stores/ForumStore';
 import { useAuthStore } from '@/stores/AuthStore';
 import MarkdownEditor from '@/components/forum/create/MarkdownEditor.vue';
 import { sanitizeHtml } from '@/utils/sanitizeHtml';
+import { resolveMediaUrl } from '@/utils/mediaUrl';
 
 const route = useRoute();
 const router = useRouter();
@@ -309,18 +310,8 @@ const setupCopyButtons = () => {
 
 function getAvatarUrl(author) {
   if (!author || typeof author !== 'object') return null;
-  let pic = author.profile_pic || author.avatar || author.avatarUrl;
-  if (!pic) return null;
-
-  if (typeof pic === 'string') {
-    if (!pic.startsWith('http') && !pic.startsWith('data:')) {
-      if (!pic.startsWith('/')) {
-        pic = `/${pic}`;
-      }
-    }
-    return pic;
-  }
-  return null;
+  const pic = author.profile_pic || author.avatar || author.avatarUrl;
+  return resolveMediaUrl(pic);
 }
 </script>
 

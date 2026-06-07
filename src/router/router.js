@@ -43,7 +43,7 @@ const routes = [
     path: "/",
     name: "HomePage",
     component: HomePage,
-    meta: { requiresAuth: true },
+    meta: { public: true },
   },
   {
     path: "/loading",
@@ -332,7 +332,10 @@ router.beforeEach(async (to, from) => {
   // 3. Enforce authentication and role constraints
   if (to.meta.requiresAuth) {
     if (!isLoggedIn) {
-      return { name: "login" };
+      return {
+        name: "login",
+        query: { redirect: to.fullPath },
+      };
     }
 
     // Role verification guard
