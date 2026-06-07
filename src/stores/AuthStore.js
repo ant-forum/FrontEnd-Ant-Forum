@@ -1,65 +1,86 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import api, { setAuthRefreshHandler } from "@/api/api";
+import api, {
+  AUTH_MODES,
+  isSessionInvalidError,
+  setAuthRefreshHandler,
+} from "@/api/api";
 import { useNotificationStore } from "./NotificationStore";
 import {
-  clearStoredTokens,
   getRememberPreference,
   getStoredAccessToken,
   getStoredRefreshSession,
   saveStoredTokens,
   setRememberPreference,
 } from "@/utils/authStorage";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
+import { extractProfilePayload, normalizeProfileRecord, normalizeSkills } from "@/utils/profileFields";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const isRemembered = ref(getRememberPreference());
   const token = ref(getStoredAccessToken());
   const refreshToken = ref(getStoredRefreshSession().refreshToken);
+  let refreshTimerId = null;
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
 
-  const normalizeAvatar = (avatarPath) => {
-    if (!avatarPath) return null;
-    let path = avatarPath;
-    if (path.includes("localhost:3000")) {
-      path = path.replace(/https?:\/\/localhost:3000/, "");
+  const clearRefreshTimer = () => {
+    if (refreshTimerId !== null) {
+      window.clearTimeout(refreshTimerId);
+      refreshTimerId = null;
     }
-    const base = import.meta.env.VITE_API_BASE_URL || "";
-    if (base) {
-      const cleanBase = base.replace(/https?:\/\//, "").replace(/\/$/, "");
-      const baseRegex = new RegExp(`https?:\\/\\/${cleanBase}`, "i");
-      path = path.replace(baseRegex, "");
-    }
+  };
 
-    // Strip any /public/ or public/ prefixes
-    if (path.includes("/public/")) {
-      path = path.replace("/public/", "/");
-    } else if (path.startsWith("public/")) {
-      path = path.replace("public/", "");
-    }
+  const getTokenExpiry = (accessToken) => {
+    try {
+      const payload = accessToken.split(".")[1];
+      if (!payload) return null;
 
-    if (!path.startsWith("http") && !path.startsWith("data:")) {
-      if (!path.startsWith("/")) {
-        path = `/${path}`;
+      const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+      const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+      const decoded = JSON.parse(window.atob(paddedBase64));
+      return Number.isFinite(decoded.exp) ? decoded.exp * 1000 : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const scheduleAccessTokenRefresh = (accessToken) => {
+    clearRefreshTimer();
+
+    const expiresAt = getTokenExpiry(accessToken);
+    if (!expiresAt || !refreshToken.value) return;
+
+    const refreshEarlyMs = 60 * 1000;
+    const delay = Math.max(expiresAt - Date.now() - refreshEarlyMs, 0);
+
+    refreshTimerId = setTimeout(async () => {
+      refreshTimerId = null;
+      try {
+        await refreshAccessToken();
+      } catch (err) {
+        if (!isSessionInvalidError(err)) {
+          refreshTimerId = setTimeout(
+            () => scheduleAccessTokenRefresh(token.value),
+            30 * 1000,
+          );
+        }
       }
-    }
-    return path;
+    }, delay);
   };
 
   const setUser = (newUser) => {
-    if (newUser) {
-      if (newUser.profile_pic) {
-        newUser.profile_pic = normalizeAvatar(newUser.profile_pic);
-      }
-      if (newUser.avatar) {
-        newUser.avatar = normalizeAvatar(newUser.avatar);
-      }
-      if (newUser.avatarUrl) {
-        newUser.avatarUrl = normalizeAvatar(newUser.avatarUrl);
-      }
+    if (!newUser) {
+      user.value = null;
+      return;
     }
-    user.value = newUser;
+
+    user.value = {
+      ...newUser,
+      profile_pic: resolveMediaUrl(newUser.profile_pic),
+      skills: normalizeSkills(newUser.skills),
+    };
   };
 
   const setTokens = (
@@ -72,8 +93,10 @@ export const useAuthStore = defineStore("auth", () => {
 
     if (newAccessToken && newRefreshToken) {
       saveStoredTokens(newAccessToken, newRefreshToken, remember);
+      scheduleAccessTokenRefresh(newAccessToken);
     } else {
-      clearStoredTokens();
+      saveStoredTokens(null, null, remember);
+      clearRefreshTimer();
     }
   };
 
@@ -94,6 +117,7 @@ export const useAuthStore = defineStore("auth", () => {
   const getUserProfile = (data) => {
     const userProfile = { ...data };
     delete userProfile.token;
+    delete userProfile.accessToken;
     delete userProfile.refresh_token;
     delete userProfile.refreshToken;
     return userProfile;
@@ -105,18 +129,29 @@ export const useAuthStore = defineStore("auth", () => {
       const res = await api.post(
         "/auth/login",
         { email, password },
-        { skipGlobalToast: true },
+        { skipGlobalToast: true, authMode: AUTH_MODES.NONE },
       );
-      const data = res.data?.data;
+      const data = res.data?.data || res.data;
+      const accessToken = data?.accessToken || data?.token;
+      const newRefreshToken = data?.refreshToken || data?.refresh_token;
 
-      if (!data?.token || !data?.refresh_token) {
+      if (!accessToken || !newRefreshToken) {
         throw res.data;
       }
 
       isRemembered.value = remember;
       setRememberPreference(remember);
-      setTokens(data.token, data.refresh_token, remember);
-      setUser(getUserProfile(data));
+      setTokens(accessToken, newRefreshToken, remember);
+      setUser(data.user || getUserProfile(data));
+
+      try {
+        await fetchProfile();
+      } catch (profileError) {
+        if (!token.value || !user.value) {
+          throw profileError;
+        }
+      }
+
       return res.data;
     } catch (err) {
       throw err.response?.data || err;
@@ -124,28 +159,25 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   const requestNewAccessToken = async () => {
-    const persistedSession = getStoredRefreshSession();
-    if (!persistedSession.refreshToken) {
-      throw new Error("No refresh token available");
-    }
-
-    refreshToken.value = persistedSession.refreshToken;
     const res = await api.post(
       "/auth/refresh-token",
       {},
-      { skipGlobalToast: true },
+      { skipGlobalToast: true, authMode: AUTH_MODES.REFRESH },
     );
-    const data = res.data?.data;
-    const newRefreshToken = data?.refresh_token;
+    const data = res.data?.data || res.data;
+    const accessToken = data?.accessToken || data?.token;
+    const newRefreshToken =
+      data?.refreshToken || data?.refresh_token || refreshToken.value;
 
-    if (!data?.token || !newRefreshToken) {
+    if (!accessToken || !newRefreshToken) {
       throw new Error(
         "Invalid token refresh response from /auth/refresh-token",
       );
     }
 
-    setTokens(data.token, newRefreshToken, persistedSession.remember);
-    return data.token;
+    setTokens(accessToken, newRefreshToken);
+    console.log("Access token refreshed at:", new Date().toISOString());
+    return accessToken;
   };
 
   const refreshAccessToken = async () => {
@@ -153,23 +185,31 @@ export const useAuthStore = defineStore("auth", () => {
       const accToken = await requestNewAccessToken();
       return accToken;
     } catch (err) {
-      clearSession();
+      if (isSessionInvalidError(err)) {
+        clearSession();
+      }
       throw err;
     }
   };
 
   setAuthRefreshHandler(refreshAccessToken);
+  scheduleAccessTokenRefresh(token.value);
 
   const fetchProfile = async () => {
     try {
       const res = await api.get("/api/get/profile");
       if (res.data && res.data.result !== false) {
-        setUser(res.data.user || res.data.data || res.data);
+        const fetchedProfile = normalizeProfileRecord(extractProfilePayload(res.data));
+        if (fetchedProfile) {
+          setUser(fetchedProfile);
+        }
         return res.data;
       }
-      clearSession();
+      throw new Error(res.data?.message || "Failed to fetch profile");
     } catch (err) {
-      clearSession();
+      if (isSessionInvalidError(err)) {
+        clearSession();
+      }
       throw err.response?.data || err.message || err;
     }
   };
@@ -194,7 +234,7 @@ export const useAuthStore = defineStore("auth", () => {
       const res = await api.post(
         "/api/forgot-password",
         { email },
-        { skipGlobalToast: true },
+        { skipGlobalToast: true, authMode: AUTH_MODES.NONE },
       );
       return res.data;
     } catch (err) {
@@ -206,7 +246,10 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const resetToken = sessionStorage.getItem("ANT_ResetToken");
       const payload = { otp: otpCode };
-      const config = { skipGlobalToast: true };
+      const config = {
+        skipGlobalToast: true,
+        authMode: resetToken ? AUTH_MODES.RECOVERY : AUTH_MODES.NONE,
+      };
       if (resetToken) {
         payload.resetToken = resetToken;
         config.headers = {
@@ -224,7 +267,10 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const token =
         verifiedToken || sessionStorage.getItem("ANT_VerifiedToken");
-      const config = { skipGlobalToast: true };
+      const config = {
+        skipGlobalToast: true,
+        authMode: token ? AUTH_MODES.RECOVERY : AUTH_MODES.NONE,
+      };
       if (token) {
         config.headers = {
           Authorization: `Bearer ${token}`,
@@ -249,6 +295,7 @@ export const useAuthStore = defineStore("auth", () => {
     token,
     refreshToken,
     isAuthenticated,
+    setUser,
     login,
     fetchProfile,
     refreshAccessToken,

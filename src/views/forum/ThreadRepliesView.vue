@@ -314,18 +314,8 @@ const setupCopyButtons = () => {
 
 function getAvatarUrl(author) {
   if (!author || typeof author !== 'object') return null;
-  let pic = author.profile_pic || author.avatar || author.avatarUrl;
-  if (!pic) return null;
-
-  if (typeof pic === 'string') {
-    if (!pic.startsWith('http') && !pic.startsWith('data:')) {
-      if (!pic.startsWith('/')) {
-        pic = `/${pic}`;
-      }
-    }
-    return pic;
-  }
-  return null;
+  const pic = author.profile_pic || author.avatar || author.avatarUrl;
+  return resolveMediaUrl(pic);
 }
 </script>
 
@@ -1522,4 +1512,3 @@ function getAvatarUrl(author) {
   overflow: hidden;
 }
 </style>
-

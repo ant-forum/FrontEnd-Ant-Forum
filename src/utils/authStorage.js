@@ -42,7 +42,9 @@ export const clearStoredTokens = () => {
 export const saveStoredTokens = (accessToken, refreshToken, remember) => {
   clearStoredTokens();
 
-  const storage = remember ? localStorage : sessionStorage;
-  storage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  storage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  if (accessToken && refreshToken) {
+    const storage = remember ? localStorage : sessionStorage;
+    storage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    storage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
 };

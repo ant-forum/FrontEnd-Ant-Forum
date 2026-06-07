@@ -96,7 +96,7 @@
           </span>
           <div>
             <h3>{{ post.title }}</h3>
-            <p class="post-desc">{{ post.description }}</p>
+            <p class="post-desc">{{ post.excerpt || post.description }}</p>
             <div class="post-meta">
               <span><strong>Category:</strong> {{ post.category }} (ID: {{ post.category_id }})</span>
               <span class="mx-1">•</span>
@@ -266,7 +266,7 @@ const visiblePosts = computed(() => {
   if (!needle) return items;
   return items.filter((post) => 
     (post.title || '').toLowerCase().includes(needle) || 
-    (post.description || '').toLowerCase().includes(needle)
+    (post.excerpt || post.description || '').toLowerCase().includes(needle)
   );
 });
 const hasActiveFilters = computed(() => Boolean(search.value) || activeTab.value !== 'all' || Boolean(route.query.category_id));

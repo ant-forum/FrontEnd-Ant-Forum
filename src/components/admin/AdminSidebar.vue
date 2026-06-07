@@ -56,14 +56,6 @@ const navigationCategories = ref([
       { label: 'Reports', icon: 'bi bi-flag', path: '/admin/reports' },
     ]
   },
-  {
-    title: 'System',
-    items: [
-      { label: 'Profile', icon: 'bi bi-person-badge', path: '/admin/profile' },
-      { label: 'Analytics', icon: 'bi bi-bar-chart', path: '/admin/analytics' },
-      { label: 'Settings', icon: 'bi bi-gear', path: '/admin/settings' },
-    ]
-  }
 ]);
 
 const isRouteActive = (itemPath) => {

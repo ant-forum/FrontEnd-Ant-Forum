@@ -169,7 +169,7 @@
 
 <script setup>
 import { ref, reactive } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useToast } from "../../composables/useToast.js";
 import { useAuthStore } from "../../stores/AuthStore.js";
 import { useRequiredValidator } from "../../composables/useRequiredValidator.js";
@@ -178,6 +178,7 @@ const showPass = ref(false);
 const loading = ref(false);
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 
 const form = reactive({ email: "", password: "", remember: false });
@@ -212,6 +213,20 @@ const validateForm = () => {
   return emailValid && passwordValid;
 };
 
+const getPostLoginRoute = () => {
+  const redirectPath = typeof route.query.redirect === "string" ? route.query.redirect : "";
+  if (
+    redirectPath.startsWith("/") &&
+    !redirectPath.startsWith("//") &&
+    redirectPath !== "/login"
+  ) {
+    return redirectPath;
+  }
+
+  const userRole = String(authStore.user?.role || "").toLowerCase();
+  return userRole === "admin" ? { name: "AdminDashboard" } : { name: "HomePage" };
+};
+
 async function handleSignIn() {
   if (!validateForm()) return;
   loading.value = true;
@@ -224,7 +239,7 @@ async function handleSignIn() {
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
     toast.success("Welcome back! Login successful");
-    router.push("/");
+    router.push(getPostLoginRoute());
   } catch (error) {
     console.error("Login failed:", error);
     if (error && error.error) {

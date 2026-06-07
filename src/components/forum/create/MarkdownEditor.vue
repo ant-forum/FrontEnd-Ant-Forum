@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
 import { useToast } from "@/composables/useToast.js";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 const props = defineProps({
   modelValue: {
@@ -537,7 +538,7 @@ const markdownToHtml = (markdown = "") => {
 };
 
 const previewContent = computed(() => {
-  return markdownToHtml(props.modelValue || "");
+  return sanitizeHtml(markdownToHtml(props.modelValue || ""));
 });
 
 const handleFocus = () => {

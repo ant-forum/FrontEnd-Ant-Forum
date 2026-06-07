@@ -1,12 +1,15 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useDarkMode } from '../../composables/useDarkMode';
 import { useAuthStore } from '../../stores/AuthStore';
 import { useNotificationStore } from '../../stores/NotificationStore';
 import NotificationDropdown from '../notification/NotificationDropdown.vue';
+import AccountDropdown from './AccountDropdown.vue';
+import BaseModal from '../base/BaseModal.vue';
 
 const route = useRoute();
+const router = useRouter();
 const { isDark, toggleDarkMode } = useDarkMode();
 const authStore = useAuthStore();
 const notificationStore = useNotificationStore();
@@ -14,12 +17,63 @@ const notificationStore = useNotificationStore();
 const activeLink = ref(route.name || 'Forum');
 const isMobileMenuOpen = ref(false);
 const isNotificationOpen = ref(false);
+const isAccountMenuOpen = ref(false);
+const showLogoutModal = ref(false);
+const isLoggingOut = ref(false);
 
 const navLinks = [
   { name: 'Forum', path: '/forum' },
   { name: 'Showcase', path: '/showcase' },
   { name: 'Blog', path: '/blog' }
 ];
+
+const navTarget = (link) => {
+  if (authStore.isAuthenticated) return link.path;
+  return { name: 'login', query: { redirect: link.path } };
+};
+
+const isNavActive = (link) => authStore.isAuthenticated && route.path.startsWith(link.path);
+
+const toggleNotificationMenu = () => {
+  isAccountMenuOpen.value = false;
+  isNotificationOpen.value = !isNotificationOpen.value;
+};
+
+const toggleAccountMenu = () => {
+  isNotificationOpen.value = false;
+  isAccountMenuOpen.value = !isAccountMenuOpen.value;
+};
+
+const openLogoutModal = () => {
+  isAccountMenuOpen.value = false;
+  showLogoutModal.value = true;
+};
+
+const closeLogoutModal = () => {
+  if (isLoggingOut.value) return;
+  showLogoutModal.value = false;
+};
+
+const confirmLogout = async () => {
+  isLoggingOut.value = true;
+
+  try {
+    await authStore.logout();
+    showLogoutModal.value = false;
+    await router.push('/login');
+  } finally {
+    isLoggingOut.value = false;
+  }
+};
+
+watch(
+  () => route.fullPath,
+  () => {
+    isMobileMenuOpen.value = false;
+    isNotificationOpen.value = false;
+    isAccountMenuOpen.value = false;
+  },
+);
 
 onMounted(() => {
   if (authStore.isAuthenticated) {
@@ -44,9 +98,9 @@ onMounted(() => {
           <router-link 
             v-for="link in navLinks" 
             :key="link.name" 
-            :to="link.path" 
+            :to="navTarget(link)" 
             class="nav-link-modern" 
-            :class="{ 'active': route.path.startsWith(link.path) }"
+            :class="{ 'active': isNavActive(link) }"
           >
             {{ link.name }}
           </router-link>
@@ -63,7 +117,7 @@ onMounted(() => {
           <!-- Only show notification bell when logged in -->
           <div v-if="authStore.isAuthenticated" class="position-relative d-flex align-items-center justify-content-center">
             <button 
-              @click="isNotificationOpen = !isNotificationOpen" 
+              @click="toggleNotificationMenu"
               class="btn btn-icon-modern btn-bell-toggle position-relative" 
               title="Notifications"
             >
@@ -81,20 +135,38 @@ onMounted(() => {
         </div>
 
         <!-- Authenticated Profile Pill -->
-        <router-link 
+        <div
           v-if="authStore.isAuthenticated" 
-          to="/profile" 
-          class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 border rounded-pill shadow-sm cursor-pointer text-decoration-none"
+          class="position-relative"
         >
-          <img 
-            :src="authStore.user?.profile_pic || '/charles_leclerc.png'" 
-            class="rounded-circle border border-2 border-primary-subtle object-fit-cover" 
-            width="32" 
-            height="32" 
-            alt="User"
+          <button
+            type="button"
+            class="user-profile-pill btn-account-toggle d-flex align-items-center gap-2 ps-1 pe-2 py-1 border rounded-pill shadow-sm cursor-pointer"
+            aria-haspopup="menu"
+            :aria-expanded="isAccountMenuOpen"
+            title="Account menu"
+            @click="toggleAccountMenu"
           >
-          <span class="small fw-bold d-none d-xl-block">{{ authStore.user?.username}}</span>
-        </router-link>
+            <img
+              :src="authStore.user?.profile_pic || '/charles_leclerc.png'"
+              class="rounded-circle border border-2 border-primary-subtle object-fit-cover"
+              width="32"
+              height="32"
+              alt="User"
+            >
+            <span class="small fw-bold d-none d-xl-block">{{ authStore.user?.username }}</span>
+            <!-- <i :class="['bi', isAccountMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down', 'account-toggle-chevron']"></i> -->
+          </button>
+
+          <transition name="account-menu">
+            <AccountDropdown
+              v-if="isAccountMenuOpen"
+              :user="authStore.user || {}"
+              @close="isAccountMenuOpen = false"
+              @logout="openLogoutModal"
+            />
+          </transition>
+        </div>
 
         <!-- Guest / Unauthenticated Profile Pill -->
         <router-link 
@@ -121,9 +193,9 @@ onMounted(() => {
           <router-link 
             v-for="link in navLinks" 
             :key="link.name" 
-            :to="link.path" 
+            :to="navTarget(link)" 
             class="mobile-nav-link" 
-            :class="{ 'active': route.path.startsWith(link.path) }"
+            :class="{ 'active': isNavActive(link) }"
             @click="isMobileMenuOpen = false"
           >
             {{ link.name }}
@@ -132,6 +204,39 @@ onMounted(() => {
       </div>
     </transition>
   </header>
+
+  <BaseModal
+    v-if="showLogoutModal"
+    title="Log out of ANT Forum?"
+    kicker=""
+    icon="bi bi-box-arrow-right"
+    theme="danger"
+    @closeModal="closeLogoutModal"
+  >
+    <p class="logout-modal-copy">
+      Are you sure you want to log out? You will need to sign in again to access your account.
+    </p>
+
+    <template #footer>
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        :disabled="isLoggingOut"
+        @click="closeLogoutModal"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger d-inline-flex align-items-center gap-2"
+        :disabled="isLoggingOut"
+        @click="confirmLogout"
+      >
+        <span v-if="isLoggingOut" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span>{{ isLoggingOut ? "Logging out..." : "Logout" }}</span>
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <style scoped>
@@ -140,6 +245,11 @@ onMounted(() => {
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
   z-index: 1000;
+}
+
+.logout-modal-copy {
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
 .flex-1 {
@@ -214,6 +324,11 @@ onMounted(() => {
   background-color: var(--color-surface) !important;
   border-color: var(--color-border) !important;
   color: var(--color-text) !important;
+}
+
+.account-toggle-chevron {
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
 }
 
 .user-profile-pill:hover {
@@ -309,5 +424,16 @@ onMounted(() => {
 .slide-fade-menu-enter-from, .slide-fade-menu-leave-to {
   transform: translateY(-10px);
   opacity: 0;
+}
+
+.account-menu-enter-active,
+.account-menu-leave-active {
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.account-menu-enter-from,
+.account-menu-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 </style>
