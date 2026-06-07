@@ -43,7 +43,7 @@ const routes = [
     path: "/",
     name: "HomePage",
     component: HomePage,
-    meta: { requiresAuth: true },
+    meta: { public: true },
   },
   {
     path: "/loading",
@@ -161,6 +161,12 @@ const routes = [
     name: "AdminProfile",
     meta: { requiresAuth: true, role: "admin", title: "Admin Account" },
     component: () => import("../views/admin/AdminProfileView.vue"),
+  },
+  {
+    path: "/admin/profile/edit",
+    name: "AdminProfileEdit",
+    meta: { requiresAuth: true, role: "admin", title: "Edit Admin Account" },
+    component: () => import("../views/admin/AdminProfileEditView.vue"),
   },
   {
     path: "/admin/users",
@@ -326,7 +332,10 @@ router.beforeEach(async (to, from) => {
   // 3. Enforce authentication and role constraints
   if (to.meta.requiresAuth) {
     if (!isLoggedIn) {
-      return { name: "login" };
+      return {
+        name: "login",
+        query: { redirect: to.fullPath },
+      };
     }
 
     // Role verification guard

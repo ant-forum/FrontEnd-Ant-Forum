@@ -82,8 +82,17 @@ function toggleSave(d) {
   forumStore.toggleSaveForum(d.id);
 }
 
+function toggleLike(d) {
+  forumStore.toggleLikeDiscussion(d.id);
+}
+
 function handleVote(id, direction) {
   forumStore.toggleVoteDiscussion(id, direction);
+}
+
+function selectTag(tagName) {
+  const cleanTag = tagName.replace('#', '').trim();
+  router.push({ path: '/forum', query: { q: cleanTag } });
 }
 </script>
 
@@ -109,7 +118,7 @@ function handleVote(id, direction) {
         <!-- Meta Row: Tags on left, posted info on right -->
         <div class="thread-meta">
           <div class="thread-tags">
-            <span v-for="tag in d.tags" :key="tag.label" class="tag-chip" :style="getTagStyle(tag.label, tag.color)">
+            <span v-for="tag in d.tags" :key="tag.label" class="tag-chip" :style="getTagStyle(tag.label, tag.color)" @click.stop="selectTag(tag.label)" style="cursor: pointer;">
               {{ tag.label }}
             </span>
           </div>
@@ -137,9 +146,14 @@ function handleVote(id, direction) {
 
         <!-- Footer Row -->
         <div class="thread-footer">
+          <button class="foot-btn like" :class="{ 'is-liked': d.likedByUser }" @click.stop="toggleLike(d)">
+            <i :class="[d.likedByUser ? 'bi-heart-fill text-danger' : 'bi-heart']"></i>
+            <span>{{ d.likes || 0 }} {{ (d.likes === 1) ? 'Like' : 'Likes' }}</span>
+          </button>
+
           <button class="foot-btn replies" @click.stop="$router.push(`/forum/${d.id}`)">
-            <i class="bi bi-chat-left"></i>
             <span>{{ Array.isArray(d.replies) ? d.replies.length : (typeof d.replies === 'number' ? d.replies : 0) }} Replies</span>
+            <i class="bi bi-chat-left"></i>
           </button>
 
           <button class="foot-btn bookmark" :class="{ 'is-saved': d.saved }" @click.stop="toggleSave(d)">
@@ -265,6 +279,13 @@ function handleVote(id, direction) {
   font-size: 11.5px;
   font-weight: 600;
   border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-chip:hover {
+  filter: brightness(0.85);
+  transform: translateY(-1px);
 }
 
 .thread-time {
@@ -394,6 +415,11 @@ function handleVote(id, direction) {
 
 .foot-btn.bookmark.is-saved {
   color: var(--color-primary);
+  font-weight: 600;
+}
+
+.foot-btn.like.is-liked {
+  color: #ef4444;
   font-weight: 600;
 }
 

@@ -3,11 +3,10 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
-import LeftSidebar from "../../components/forum/LeftSidebar.vue";
 import SkeletonLoader from "../../components/SkeletonLoader.vue";
 import { useBlogStore } from '../../stores/BlogStore';
 import { useAuthStore } from '../../stores/AuthStore';
-import { sanitizeHtml } from '../../utils/sanitizeHtml';
+import { renderStoredContent } from '../../utils/richContent';
 
 const route = useRoute();
 const router = useRouter();
@@ -19,6 +18,11 @@ const scrollProgress = ref(0);
 const localLoading = ref(true);
 
 const post = computed(() => blogStore.blog);
+const articleContent = computed(() => {
+  const rawContent = post.value?.content || post.value?.description || '';
+  const normalizedContent = typeof rawContent === 'string' ? rawContent.replace(/\r\n/g, '\n') : '';
+  return renderStoredContent(normalizedContent);
+});
 
 const relatedPosts = computed(() => {
   if (!post.value) return [];
@@ -112,9 +116,6 @@ const handleImgError = (e) => {
     <Navbar />
 
     <div class="blog-detail-global-grid">
-      <!-- Left Sidebar -->
-      <LeftSidebar :active-tab="'Blog'" />
-
       <!-- Main Content -->
       <div class="blog-detail-wrapper">
       <!-- Back Button -->
@@ -128,16 +129,7 @@ const handleImgError = (e) => {
       <!-- Loading State: Beautiful skeletons matching standard layout dimensions -->
       <div v-if="localLoading" class="blog-detail-content">
         <div class="row py-5">
-          <aside class="col-lg-3 d-none d-lg-block">
-            <div class="p-4 rounded-4 bg-surface-hover border mb-4">
-              <SkeletonLoader variant="text" height="24px" width="60%" class="mb-4" />
-              <SkeletonLoader variant="text" height="18px" width="80%" class="mb-3" />
-              <SkeletonLoader variant="text" height="18px" width="90%" class="mb-3" />
-              <SkeletonLoader variant="text" height="18px" width="75%" class="mb-3" />
-            </div>
-          </aside>
-          
-          <article class="col-lg-8 offset-lg-1">
+          <article class="col-12">
             <div class="mb-4">
               <SkeletonLoader variant="text" height="20px" width="100px" class="d-inline-block me-2" />
               <SkeletonLoader variant="text" height="20px" width="120px" class="d-inline-block" />
@@ -165,55 +157,39 @@ const handleImgError = (e) => {
       <div v-else-if="post" class="blog-detail-content position-relative">
         
         <div class="row position-relative">
-          <!-- Sticky Sidebar (Table of Contents) -->
-          <!-- <aside class="col-lg-3 d-none d-lg-block">
-            <div class="sticky-sidebar-container">
-              <div v-if="headings.length > 0" class="sticky-toc p-4 rounded-4 bg-surface-hover mb-4 border">
-                <h6 class="text-muted fw-bold mb-4 font-xs text-uppercase tracking-wide">Table of Contents</h6>
-                <nav class="toc-nav d-flex flex-column gap-3">
-                  <a v-for="h in headings"
-                     :key="h.id"
-                     :href="'#' + h.id"
-                     @click.prevent="scrollTo(h.id)"
-                     :class="['text-decoration-none font-sm toc-link', activeSection === h.id ? 'text-purple fw-bold active' : 'text-muted']">
-                    {{ h.label }}
-                  </a>
-                </nav>
-              </div>
-            </div>
-          </aside> -->
-
           <!-- Main Content -->
-          <article class="col-lg-8 offset-lg-1">
-            <!-- Metadata -->
-            <div class="mb-4">
-              <span v-for="tag in post.tags" :key="tag" class="badge bg-purple-light text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3 me-2 text-uppercase">
-                {{ tag }}
-              </span>
-              <span class="badge bg-purple-light text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3 text-uppercase">
-                {{ post.category }}
-              </span>
-            </div>
+          <article class="col-12">
+            <div class="blog-main-card p-4 p-md-5 rounded-4 mb-5 border border-theme bg-surface shadow-sm">
+              <!-- Metadata -->
+              <div class="mb-4">
+                <span v-for="tag in post.tags" :key="tag" class="badge bg-purple-light text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3 me-2 text-uppercase">
+                  {{ tag }}
+                </span>
+                <span class="badge bg-purple-light text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3 text-uppercase">
+                  {{ post.category }}
+                </span>
+              </div>
 
-            <h1 class="display-4 fw-bold text-adaptive mb-4 article-title">
-              {{ post.title }}
-            </h1>
+              <h1 class="display-4 fw-bold text-adaptive mb-4 article-title">
+                {{ post.title }}
+              </h1>
 
-            <div class="d-flex align-items-center mb-5">
-              <img :src="post.author_avatar" class="rounded-circle me-3 border border-theme object-fit-cover" width="48" height="48" alt="Author">
-              <div>
-                <h6 class="mb-0 fw-bold text-adaptive">{{ post.author }}</h6>
-                <div class="text-muted font-sm d-flex align-items-center mt-1">
-                  {{ post.date }} &nbsp;&bull;&nbsp; {{ post.readTime }} read
+              <div class="d-flex align-items-center mb-5">
+                <img :src="post.author_avatar" class="rounded-circle me-3 border border-theme object-fit-cover" width="48" height="48" alt="Author">
+                <div>
+                  <h6 class="mb-0 fw-bold text-adaptive">{{ post.author }}</h6>
+                  <div class="text-muted font-sm d-flex align-items-center mt-1">
+                    {{ post.date }} &nbsp;&bull;&nbsp; {{ post.readTime }} read
+                  </div>
                 </div>
               </div>
+
+              <!-- Hero Image -->
+              <img :src="post.image" @error="handleImgError" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme" style="max-height: 400px;" alt="Hero Image">
+
+              <!-- Article Body -->
+              <div class="article-body text-adaptive lh-lg" v-html="articleContent"></div>
             </div>
-
-            <!-- Hero Image -->
-            <img :src="post.image" @error="handleImgError" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme" style="max-height: 400px;" alt="Hero Image">
-
-          <!-- Article Body -->
-          <div class="article-body text-adaptive lh-lg mb-5" style="white-space: pre-line;" v-html="sanitizeHtml(post.content || post.description)"></div>
 
             <!-- Newsletter -->
             <div class="newsletter-section mt-5 p-5 rounded-4 text-center position-relative overflow-hidden border">
@@ -303,10 +279,7 @@ const handleImgError = (e) => {
 
 /* Global Grid */
 .blog-detail-global-grid {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 28px;
-  max-width: 1360px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 32px 24px 80px;
 }
@@ -364,11 +337,75 @@ const handleImgError = (e) => {
   font-size: clamp(2rem, 4vw, 2.8rem);
 }
 
+.blog-main-card {
+  background-color: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base);
+}
+
 /* Article Body */
 .article-body {
   font-size: 1.05rem;
   line-height: 1.9;
   max-width: 72ch;
+}
+
+.article-body :deep(table) {
+  width: 100%;
+  margin: 2rem 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.article-body :deep(th),
+.article-body :deep(td) {
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.article-body :deep(th:last-child),
+.article-body :deep(td:last-child) {
+  border-right: none;
+}
+
+.article-body :deep(tr:last-child) td {
+  border-bottom: none;
+}
+
+.article-body :deep(th) {
+  background-color: var(--color-surface-hover);
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.article-body :deep(td) {
+  color: var(--color-text-muted);
+}
+
+.article-body :deep(tr:hover) td {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.article-body :deep(tr:nth-child(even)) {
+  background-color: rgba(255, 255, 255, 0.015);
+}
+
+[data-theme='dark'] .article-body :deep(tr:nth-child(even)) {
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
 .article-body :deep(p) {
@@ -527,11 +564,7 @@ const handleImgError = (e) => {
   box-shadow: var(--shadow-md) !important;
 }
 
-@media (max-width: 1024px) {
-  .blog-detail-global-grid {
-    grid-template-columns: 1fr;
-  }
-}
+
 
 @media (max-width: 991px) {
   .blog-detail-global-grid {

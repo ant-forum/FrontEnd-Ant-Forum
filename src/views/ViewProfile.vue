@@ -5,6 +5,8 @@ import Navbar from "../components/layouts/header.vue";
 import Footer from "../components/layouts/footer.vue";
 import { useAuthStore } from "../stores/AuthStore";
 import api from "../api/api";
+import { resolveMediaUrl } from "../utils/mediaUrl";
+import { normalizeSkills } from "../utils/profileFields";
 
 const route = useRoute();
 const router = useRouter();
@@ -377,15 +379,16 @@ const populateProfile = (data) => {
   profile.linkedin = data.linkedin || "https://linkedin.com";
   
   // Format avatar URL
-  const rawAvatar = data.avatar || data.avatarUrl;
-  if (rawAvatar) {
-    profile.avatar = rawAvatar;
+  const rawAvatar = data.profile_pic || data.avatar || data.avatarUrl;
+  const avatar = resolveMediaUrl(rawAvatar);
+  if (avatar) {
+    profile.avatar = avatar;
   } else {
     const seed = cleanUsername(data.name || "user");
     profile.avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
   }
   
-  profile.skills = Array.isArray(data.skills) ? data.skills : ["JavaScript", "CSS"];
+  profile.skills = normalizeSkills(data.skills);
   profile.projects = Array.isArray(data.projects) ? data.projects : [];
   profile.activity = Array.isArray(data.activity) ? data.activity : [];
 };

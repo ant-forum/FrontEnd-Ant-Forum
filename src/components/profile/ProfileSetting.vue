@@ -1,8 +1,12 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted, onBeforeUnmount, defineProps, defineEmits } from "vue";
 import BaseModal from "../base/BaseModal.vue";
+import ImageCropModal from "../base/ImageCropModal.vue";
 import { useUserProfilesStore } from "../../stores/UserProfilesStore";
+import { useTagsStore } from "../../stores/TagsStore";
+import { useImageCropper } from "../../composables/useImageCropper";
 import { useToast } from "../../composables/useToast";
+import { normalizeSkills, skillsToText } from "../../utils/profileFields";
 
 const props = defineProps({
   user: { type: Object, required: true }
@@ -11,6 +15,7 @@ const props = defineProps({
 const emit = defineEmits(["saved", "cancel"]);
 
 const userProfilesStore = useUserProfilesStore();
+const tagsStore = useTagsStore();
 const toast = useToast();
 
 const successMessage = ref("");
@@ -21,7 +26,10 @@ const isProfileSaving = ref(false);
 const form = reactive({
   username: "",
   gender: "male",
+  bio: "",
 });
+
+const selectedSkills = ref([]);
 
 // Avatar
 const fileInput = ref(null);
@@ -30,9 +38,23 @@ const pendingAvatarFile = ref(null);
 const pendingAvatarPreview = ref("");
 const showAvatarConfirmModal = ref(false);
 const isAvatarUploading = ref(false);
+const {
+  cropSource: avatarCropSource,
+  isCropModalOpen: isAvatarCropOpen,
+  openCropper: openAvatarCropper,
+  confirmCrop: confirmAvatarCrop,
+  cancelCrop: cancelAvatarCrop,
+} = useImageCropper({
+  title: "Crop Profile Picture",
+  aspectRatio: 1,
+  outputWidth: 512,
+  outputHeight: 512,
+  outputType: "image/jpeg",
+  shape: "circle",
+});
 
 const revokePendingAvatarPreview = () => {
-  if (pendingAvatarPreview.value) {
+  if (pendingAvatarPreview.value?.startsWith("blob:")) {
     URL.revokeObjectURL(pendingAvatarPreview.value);
   }
   pendingAvatarPreview.value = "";
@@ -48,7 +70,43 @@ const resetForm = () => {
   const u = userProfilesStore.profile || props.user || {};
   form.username = u.username || "";
   form.gender = u.gender || "male";
-  avatarPreview.value = u.profile_pic || u.avatar || u.avatarUrl || "";
+  form.bio = u.bio || "";
+  selectedSkills.value = normalizeSkills(u.skills);
+  avatarPreview.value = u.profile_pic || "";
+};
+
+const availableSkillTags = computed(() => {
+  const seen = new Set();
+  return tagsStore.tags
+    .map((tag) => ({
+      id: tag.id,
+      name: String(tag.name || "").trim(),
+      description: tag.description || "",
+    }))
+    .filter((tag) => {
+      const key = tag.name.toLowerCase();
+      if (!tag.name || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+});
+
+const selectedSkillSet = computed(() => new Set(selectedSkills.value.map((skill) => skill.toLowerCase())));
+
+const isSkillSelected = (skillName) => selectedSkillSet.value.has(String(skillName || "").toLowerCase());
+
+const toggleSkill = (skillName) => {
+  const cleanName = String(skillName || "").trim();
+  if (!cleanName) return;
+
+  if (isSkillSelected(cleanName)) {
+    selectedSkills.value = selectedSkills.value.filter(
+      (skill) => skill.toLowerCase() !== cleanName.toLowerCase(),
+    );
+    return;
+  }
+
+  selectedSkills.value = [...selectedSkills.value, cleanName];
 };
 
 const handleCancel = () => {
@@ -56,7 +114,17 @@ const handleCancel = () => {
   emit("cancel");
 };
 
-onMounted(resetForm);
+onMounted(async () => {
+  resetForm();
+  if (tagsStore.tags.length === 0) {
+    try {
+      await tagsStore.fetchTags();
+    } catch (error) {
+      console.error("Failed to load skill tags:", error);
+      toast.warning("Could not load admin-created skill tags.");
+    }
+  }
+});
 onBeforeUnmount(revokePendingAvatarPreview);
 
 // Watch for store changes or prop updates
@@ -69,7 +137,7 @@ const openAvatarFilePicker = () => {
 };
 
 // Handle avatar selection
-const handleAvatarChange = (e) => {
+const handleAvatarChange = async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
@@ -85,11 +153,14 @@ const handleAvatarChange = (e) => {
     return;
   }
 
-  revokePendingAvatarPreview();
-  pendingAvatarFile.value = file;
-  pendingAvatarPreview.value = URL.createObjectURL(file);
-  showAvatarConfirmModal.value = true;
   clearAvatarInput();
+  const cropped = await openAvatarCropper(file);
+  if (!cropped) return;
+
+  revokePendingAvatarPreview();
+  pendingAvatarFile.value = cropped.file;
+  pendingAvatarPreview.value = cropped.previewUrl;
+  showAvatarConfirmModal.value = true;
 };
 
 const closeAvatarConfirmModal = () => {
@@ -106,12 +177,16 @@ const confirmAvatarUpload = async () => {
 
   const usernameBeforeUpload = form.username;
   const genderBeforeUpload = form.gender;
+  const bioBeforeUpload = form.bio;
+  const skillsBeforeUpload = [...selectedSkills.value];
 
   try {
     isAvatarUploading.value = true;
     await userProfilesStore.uploadAvatar(pendingAvatarFile.value);
     form.username = usernameBeforeUpload;
     form.gender = genderBeforeUpload;
+    form.bio = bioBeforeUpload;
+    selectedSkills.value = skillsBeforeUpload;
     toast.success("Profile picture updated.");
     showAvatarConfirmModal.value = false;
     pendingAvatarFile.value = null;
@@ -143,6 +218,8 @@ const handleSubmit = async () => {
     await userProfilesStore.updateProfile({
       username: form.username,
       gender: form.gender,
+      bio: form.bio.trim() || null,
+      skills: skillsToText(selectedSkills.value) || null,
     });
 
     successMessage.value = "Profile saved successfully.";
@@ -166,33 +243,10 @@ const handleSubmit = async () => {
 <template>
   <div class="edit-profile-container">
     <div class="dashboard-card-modern p-4">
-      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+      <div class="mb-4">
         <div>
           <h4 class="mb-0 fw-bold header-title themed-text">Edit Profile</h4>
-          <p class="text-muted small mb-0">Update your username, gender, and avatar picture.</p>
-        </div>
-        <div class="d-flex gap-2">
-          <button
-            type="button"
-            class="btn btn-secondary px-4"
-            @click="handleCancel"
-            :disabled="isProfileSaving"
-          >
-            Cancel
-          </button>
-          <button
-            class="btn btn-primary px-4 d-flex align-items-center gap-2"
-            :disabled="!isValid || isProfileSaving"
-            @click="handleSubmit"
-          >
-            <span
-              v-if="isProfileSaving"
-              class="spinner-border spinner-border-sm"
-              role="status"
-              aria-hidden="true"
-            ></span>
-            {{ isProfileSaving ? "Saving..." : "Save Changes" }}
-          </button>
+          <p class="text-muted small mb-0">Update your username, gender, bio, skills, and avatar picture.</p>
         </div>
       </div>
 
@@ -268,7 +322,89 @@ const handleSubmit = async () => {
               <option value="female">Female</option>
             </select>
           </div>
+
+          <!-- Bio -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small themed-text">Bio</label>
+            <textarea
+              v-model="form.bio"
+              class="form-control profile-textarea"
+              rows="4"
+              maxlength="300"
+              placeholder="Share your background, interests, or what you are building."
+            ></textarea>
+            <small class="text-muted d-block text-end mt-1">{{ form.bio.length }}/300</small>
+          </div>
+
+          <!-- Skills from Admin Tags -->
+          <div class="mb-0">
+            <label class="form-label fw-bold small themed-text">Skills</label>
+            <div class="skill-picker">
+              <div v-if="tagsStore.isLoading" class="skill-picker-loading">
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span>Loading skill tags...</span>
+              </div>
+
+              <div v-else-if="availableSkillTags.length" class="skill-tag-grid">
+                <button
+                  v-for="tag in availableSkillTags"
+                  :key="tag.id || tag.name"
+                  type="button"
+                  :class="['skill-tag-option', { active: isSkillSelected(tag.name) }]"
+                  :title="tag.description || tag.name"
+                  @click="toggleSkill(tag.name)"
+                >
+                  <i :class="['bi', isSkillSelected(tag.name) ? 'bi-check2-circle' : 'bi-plus-circle']"></i>
+                  <span>{{ tag.name }}</span>
+                </button>
+              </div>
+
+              <div v-else class="skill-picker-empty">
+                <i class="bi bi-tags"></i>
+                <span>No admin-created tags available yet.</span>
+              </div>
+            </div>
+
+            <div v-if="selectedSkills.length" class="selected-skills-row" aria-label="Selected skills">
+              <span
+                v-for="skill in selectedSkills"
+                :key="skill"
+                class="selected-skill-chip"
+              >
+                {{ skill }}
+                <button type="button" title="Remove skill" @click="toggleSkill(skill)">
+                  <i class="bi bi-x"></i>
+                </button>
+              </span>
+            </div>
+            <small class="text-muted d-block mt-2">Skills are selected from tags created by admins.</small>
+          </div>
         </div>
+      </div>
+
+      <div class="profile-form-actions">
+        <button
+          type="button"
+          class="btn btn-secondary px-4"
+          @click="handleCancel"
+          :disabled="isProfileSaving"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary px-4 d-flex align-items-center gap-2"
+          :disabled="!isValid || isProfileSaving"
+          @click="handleSubmit"
+        >
+          <span
+            v-if="isProfileSaving"
+            class="spinner-border spinner-border-sm"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          {{ isProfileSaving ? "Saving..." : "Save Changes" }}
+        </button>
       </div>
     </div>
 
@@ -315,6 +451,13 @@ const handleSubmit = async () => {
         </button>
       </template>
     </BaseModal>
+
+    <ImageCropModal
+      v-if="isAvatarCropOpen"
+      :source="avatarCropSource"
+      @confirm="confirmAvatarCrop"
+      @cancel="cancelAvatarCrop"
+    />
   </div>
 </template>
 
@@ -339,6 +482,143 @@ const handleSubmit = async () => {
 
 .border-slate-subtle {
   border-color: var(--color-border) !important;
+}
+
+.profile-textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.skill-picker {
+  min-height: 54px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0.7rem;
+}
+
+.skill-tag-grid,
+.selected-skills-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-tag-option {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 0 0.78rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.skill-tag-option:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.skill-tag-option.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  border-color: transparent;
+  box-shadow: 0 10px 22px -18px var(--color-primary);
+}
+
+.skill-picker-loading,
+.skill-picker-empty {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+  font-weight: 750;
+  text-align: center;
+}
+
+.selected-skills-row {
+  margin-top: 0.65rem;
+}
+
+.selected-skill-chip {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #5b21b6;
+  background: #ede9fe;
+  border: 1px solid #c4b5fd;
+  border-radius: var(--radius-pill);
+  padding: 0 0.42rem 0 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  box-shadow: 0 8px 18px -18px #7c3aed;
+}
+
+.selected-skill-chip button {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6d28d9;
+  background: #ffffff;
+  border: 1px solid #ddd6fe;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.selected-skill-chip button:hover {
+  color: #ffffff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+[data-theme='dark'] .selected-skill-chip {
+  color: #f5f3ff;
+  background: color-mix(in srgb, var(--color-purple) 72%, #111827);
+  border-color: color-mix(in srgb, var(--color-purple) 72%, #ffffff);
+  box-shadow: 0 8px 18px -16px var(--color-purple);
+}
+
+[data-theme='dark'] .selected-skill-chip button {
+  color: #ffffff;
+  background: color-mix(in srgb, var(--color-surface) 78%, #000000);
+  border-color: color-mix(in srgb, #ffffff 34%, transparent);
+}
+
+[data-theme='dark'] .selected-skill-chip button:hover {
+  color: #ffffff;
+  background: var(--color-primary);
+  border-color: color-mix(in srgb, #ffffff 54%, transparent);
+}
+
+.profile-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
 }
 
 /* Avatar Experience */
@@ -480,6 +760,15 @@ const handleSubmit = async () => {
     border-bottom: 1px solid #f1f5f9;
     padding-bottom: var(--spacing-lg);
     margin-bottom: var(--spacing-md);
+  }
+
+  .profile-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .profile-form-actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

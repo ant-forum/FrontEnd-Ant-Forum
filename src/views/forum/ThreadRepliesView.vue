@@ -8,6 +8,7 @@ import { useForumStore } from '@/stores/ForumStore';
 import { useAuthStore } from '@/stores/AuthStore';
 import MarkdownEditor from '@/components/forum/create/MarkdownEditor.vue';
 import { sanitizeHtml } from '@/utils/sanitizeHtml';
+import { resolveMediaUrl } from '@/utils/mediaUrl';
 
 const route = useRoute();
 const router = useRouter();
@@ -110,6 +111,11 @@ const goBack = () => {
   router.push('/forum');
 };
 
+const selectTag = (tagName) => {
+  const cleanTag = tagName.replace('#', '').trim();
+  router.push({ path: '/forum', query: { q: cleanTag } });
+};
+
 const handleVote = (direction) => {
   if (discussion.value) {
     forumStore.toggleVoteDiscussion(discussion.value.id, direction);
@@ -124,6 +130,12 @@ const handleLikeReply = (replyIndex) => {
     } else {
       forumStore.toggleLikeReply(discussion.value.id, replyIndex);
     }
+  }
+};
+
+const handleLike = () => {
+  if (discussion.value) {
+    forumStore.toggleLikeDiscussion(discussion.value.id);
   }
 };
 
@@ -300,6 +312,12 @@ const setupCopyButtons = () => {
     });
   });
 };
+
+function getAvatarUrl(author) {
+  if (!author || typeof author !== 'object') return null;
+  const pic = author.profile_pic || author.avatar || author.avatarUrl;
+  return resolveMediaUrl(pic);
+}
 </script>
 
 <template>
@@ -401,7 +419,8 @@ const setupCopyButtons = () => {
             
             <div class="thread-meta">
               <div class="thread-avatar" :style="getAvatarStyle(discussion.author)" @click="goToProfile(discussion.author)">
-                {{ getAvatarInitials(discussion.author) }}
+                <img v-if="getAvatarUrl(discussion.author)" :src="getAvatarUrl(discussion.author)" alt="avatar" class="avatar-img" />
+                <span v-else>{{ getAvatarInitials(discussion.author) }}</span>
               </div>
               <div class="thread-user-info">
                 <span class="author" @click="goToProfile(discussion.author)">{{ getAvatarName(discussion.author) }}</span>
@@ -426,7 +445,7 @@ const setupCopyButtons = () => {
 
           <!-- Custom tags section -->
           <div v-if="discussion.tags && discussion.tags.length > 0" class="thread-tags-box">
-            <span v-for="t in discussion.tags" :key="t.label" class="tag-badge">
+            <span v-for="t in discussion.tags" :key="t.label" class="tag-badge" @click="selectTag(t.label)" style="cursor: pointer;">
               #{{ t.label }}
             </span>
           </div>
@@ -448,6 +467,10 @@ const setupCopyButtons = () => {
             </div>
             
             <div class="right-actions">
+              <button class="action-btn like-btn" :class="{ active: discussion.likedByUser }" @click="handleLike">
+                <i :class="[discussion.likedByUser ? 'bi-heart-fill text-danger' : 'bi-heart']"></i>
+                <span>{{ discussion.likes || 0 }} Likes</span>
+              </button>
               <button class="action-btn bookmark-btn" :class="{ 'is-saved': discussion.saved }" @click="toggleSaveDiscussion">
                 <i :class="[discussion.saved ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
                 <span>{{ discussion.saved ? 'Saved' : 'Save' }}</span>
@@ -484,7 +507,8 @@ const setupCopyButtons = () => {
               <div v-else v-for="(reply, idx) in discussion.replies" :key="idx" class="reply-card">
                 <div class="reply-header">
                   <div class="reply-avatar" :style="getAvatarStyle(reply.author)" @click="goToProfile(reply.author)">
-                    {{ getAvatarInitials(reply.author) }}
+                    <img v-if="getAvatarUrl(reply.author)" :src="getAvatarUrl(reply.author)" alt="avatar" class="avatar-img" />
+                    <span v-else>{{ getAvatarInitials(reply.author) }}</span>
                   </div>
                   <div class="reply-user-info">
                     <span class="reply-author" @click="goToProfile(reply.author)">{{ getAvatarName(reply.author) }}</span>
@@ -876,6 +900,14 @@ const setupCopyButtons = () => {
   background: var(--color-purple-light);
   padding: 4px 12px;
   border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-badge:hover {
+  background: var(--color-purple);
+  color: white;
+  transform: translateY(-1px);
 }
 
 .thread-actions {
@@ -1468,5 +1500,16 @@ const setupCopyButtons = () => {
   flex-direction: column;
   padding-left: 20px;
   border-left: 2px solid var(--color-border-soft);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.reply-avatar, .thread-avatar {
+  overflow: hidden;
 }
 </style>

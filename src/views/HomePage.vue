@@ -1,17 +1,13 @@
 <script setup>
 import { useAuthStore } from '../stores/AuthStore'
 import Navbar from '../components/layouts/header.vue'
+import { useForumStore } from '../stores/ForumStore'
+import { useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue'
 
 const auth = useAuthStore()
-
-const sponsors = [
-  { name: 'The New York Times', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/41/The_New_York_Times_logo.png' },
-  { name: 'The Guardian', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/The_Guardian_2018.svg/1200px-The_Guardian_2018.svg.png' },
-  { name: 'TechCrunch', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/TechCrunch_logo.svg/1200px-TechCrunch_logo.svg.png' },
-  { name: 'The Wall Street Journal', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/WSJ_Logo.svg/1200px-WSJ_Logo.svg.png' },
-  { name: 'Y Combinator', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Y_Combinator_logo.svg/1200px-Y_Combinator_logo.svg.png' },
-  { name: 'Bustle', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Bustle_logo.svg/1200px-Bustle_logo.svg.png' }
-]
+const forumStore = useForumStore()
+const router = useRouter()
 
 const features = [
   { 
@@ -34,77 +30,90 @@ const features = [
   }
 ]
 
-const latestProjects = [
-  {
-    title: 'Vite Boilerplate',
-    desc: 'Ultimate starter for Vue 3 + Tailwind projects with pre-configured routing and state management.',
-    author: 'Romkyky',
-    avatar: 'https://i.pravatar.cc/150?u=rom',
-    tags: ['Vue', 'Vite', 'Tailwind'],
-    stars: 124,
-    views: '1.2k',
-    image: 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=600'
-  },
-  {
-    title: 'API Gateway',
-    desc: 'A high-performance, lightweight gateway for microservices with built-in rate limiting and auth.',
-    author: 'Sarah Jenkins',
-    avatar: 'https://i.pravatar.cc/150?u=sarah',
-    tags: ['Node', 'Redis', 'Docker'],
-    stars: 89,
-    views: '850',
-    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=600'
-  },
-  {
-    title: 'Design System',
-    desc: 'The official ANT ecosystem design system with consistent UI components and accessibility patterns.',
-    author: 'Alex Chen',
-    avatar: 'https://i.pravatar.cc/150?u=alex',
-    tags: ['Figma', 'React', 'CSS'],
-    stars: 210,
-    views: '3.4k',
-    image: 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&q=80&w=600'
+onMounted(async () => {
+  if (!forumStore.allDiscussions || forumStore.allDiscussions.length === 0) {
+    try {
+      await forumStore.fetchDiscussions()
+    } catch (e) {
+      console.error('Error loading homepage discussions:', e)
+    }
   }
-]
+})
 
-const recentThreads = [
-  {
-    title: 'How to optimize Docker images for Node.js production?',
-    desc: 'I am struggling with large image sizes. Any tips on multi-stage builds?',
-    author: 'Khi',
-    avatar: 'https://i.pravatar.cc/150?u=khi',
-    category: 'DevOps',
-    replies: 12,
-    views: 450,
-    isSolved: true,
-    isHot: true,
-    time: '2h ago'
-  },
-  {
-    title: 'Vue 3 Composition API vs Options API in 2024',
-    desc: 'Which one should I choose for a large scale enterprise application?',
-    author: 'Yeanlang',
-    avatar: 'https://i.pravatar.cc/150?u=yeanlang',
-    category: 'Frontend',
-    replies: 24,
-    views: 1200,
-    isSolved: false,
-    isHot: true,
-    time: '5h ago'
-  },
-  {
-    title: 'Best practices for MySQL connection pooling with mysql2',
-    desc: 'Setting up a robust connection pool for high-traffic API endpoints.',
-    author: 'Romkyky',
-    avatar: 'https://i.pravatar.cc/150?u=rom',
-    category: 'Backend',
-    replies: 8,
-    views: 320,
-    isSolved: true,
-    isHot: false,
-    time: '1d ago'
-  }
-]
+const liveDiscussions = computed(() => {
+  return Array.isArray(forumStore.allDiscussions) ? forumStore.allDiscussions : [];
+});
+
+const recentThreadsLive = computed(() => {
+  return liveDiscussions.value.slice(0, 3).map(d => {
+    let timeDisplay = 'Recent';
+    if (d.created_at || d.createdAt) {
+      const diffMs = new Date() - new Date(d.created_at || d.createdAt);
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      if (diffHours < 24) {
+        timeDisplay = diffHours <= 0 ? 'Just now' : `${diffHours}h ago`;
+      } else {
+        timeDisplay = new Date(d.created_at || d.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      }
+    }
+    
+    let authorName = 'Anonymous';
+    let authorAvatar = 'https://i.pravatar.cc/150?u=anonymous';
+    if (d.user) {
+      authorName = d.user.username || d.user.name || authorName;
+      authorAvatar = d.user.profile_pic || d.user.avatar || authorAvatar;
+    } else if (d.author) {
+      authorName = typeof d.author === 'object' ? (d.author.username || d.author.name) : d.author;
+      authorAvatar = d.author_avatar || authorAvatar;
+    }
+
+    return {
+      id: d.id,
+      title: d.title || '',
+      desc: d.description || d.excerpt || d.body || '',
+      author: authorName,
+      avatar: authorAvatar,
+      category: d.category || 'General',
+      replies: d.replies !== undefined ? d.replies : 0,
+      views: d.views !== undefined ? d.views : 0,
+      isSolved: d.is_solved || false,
+      isHot: (d.likes || d.votes || 0) > 5,
+      time: timeDisplay
+    };
+  });
+});
+
+const latestProjectsLive = computed(() => {
+  const showcaseThreads = liveDiscussions.value.filter(d => String(d.category).toLowerCase() === 'showcase');
+  
+  return showcaseThreads.slice(0, 3).map(d => {
+    let authorName = 'Anonymous';
+    let authorAvatar = 'https://i.pravatar.cc/150?u=anonymous';
+    if (d.user) {
+      authorName = d.user.username || d.user.name || authorName;
+      authorAvatar = d.user.profile_pic || d.user.avatar || authorAvatar;
+    } else if (d.author) {
+      authorName = typeof d.author === 'object' ? (d.author.username || d.author.name) : d.author;
+      authorAvatar = d.author_avatar || authorAvatar;
+    }
+
+    const tagLabels = Array.isArray(d.tags) 
+      ? d.tags.map(t => typeof t === 'object' ? (t.label || t.name) : t)
+      : [];
+
+    return {
+      id: d.id,
+      title: d.title || '',
+      desc: d.description || d.excerpt || d.body || '',
+      author: authorName,
+      avatar: authorAvatar,
+      tags: tagLabels.slice(0, 3),
+      stars: d.likes !== undefined ? d.likes : (d.votes !== undefined ? d.votes : 0),
+      views: d.views !== undefined ? d.views : 0,
+      image: d.thumbnail || d.image || 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=600'
+    };
+  });
+});
 </script>
 
 <template>
@@ -198,14 +207,6 @@ const recentThreads = [
         </div>
       </div>
 
-      <!-- Sponsor Logos -->
-      <div class="sponsors-section mt-auto py-5">
-        <div class="container">
-          <div class="d-flex flex-wrap justify-content-center align-items-center gap-4 gap-md-5 opacity-40">
-            <img v-for="sponsor in sponsors" :key="sponsor.name" :src="sponsor.logo" :alt="sponsor.name" class="sponsor-logo">
-          </div>
-        </div>
-      </div>
     </main>
 
     <!-- New Sections -->
@@ -238,7 +239,7 @@ const recentThreads = [
         </div>
 
         <div class="row g-4">
-          <div v-for="project in latestProjects" :key="project.title" class="col-lg-4">
+          <div v-for="project in latestProjectsLive" :key="project.id" class="col-lg-4" @click="router.push('/forum/' + project.id)" style="cursor: pointer;">
             <div class="project-card rounded-4 overflow-hidden bg-surface border-0 h-100 shadow-sm transition-up">
               <!-- Project Image with Hover Overlay -->
               <div class="project-image position-relative">
@@ -294,7 +295,7 @@ const recentThreads = [
         </div>
 
         <div class="forum-container">
-          <div v-for="thread in recentThreads" :key="thread.title" class="forum-thread-row p-3 p-md-4 mb-3 transition-up border theme-border">
+          <div v-for="thread in recentThreadsLive" :key="thread.id" class="forum-thread-row p-3 p-md-4 mb-3 transition-up border theme-border" @click="router.push('/forum/' + thread.id)">
             <div class="row align-items-center">
               <!-- Solved Status Column -->
               <div class="col-auto d-none d-md-block">
@@ -341,21 +342,6 @@ const recentThreads = [
       </div>
     </section>
 
-    <section class="cta-section py-5 my-5">
-      <div class="container">
-        <div class="cta-card p-5 rounded-5 text-center position-relative overflow-hidden">
-          <div class="glow-bg glow-purple opacity-25" style="top: -50%; left: -20%;"></div>
-          <div class="position-relative z-3">
-            <h2 class="display-5 fw-black mb-3 text-white">Ready to contribute?</h2>
-            <p class="lead opacity-75 mb-4 text-white">Join 2,000+ developers building the future of open software.</p>
-            <div class="d-flex justify-content-center gap-3">
-              <button class="btn btn-primary rounded-pill px-5 py-3 fw-bold">Join Community</button>
-              <button class="btn btn-outline-light rounded-pill px-5 py-3 fw-bold">Browse Forum</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- Simple Footer to match the image -->
     <footer class="custom-footer container py-4 d-flex flex-column flex-md-row justify-content-between align-items-center border-top">
@@ -561,19 +547,6 @@ const recentThreads = [
 .tag { background: rgba(255,255,255,0.2); padding: 5px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
 .time-row { background: rgba(0,0,0,0.15); padding: 10px 14px; border-radius: 14px; font-size: 0.85rem; display: flex; align-items: center; font-weight: 500; }
 
-/* Sponsors */
-.sponsor-logo {
-  height: 28px;
-  max-width: 150px;
-  object-fit: contain;
-  filter: grayscale(100%) brightness(0.8) contrast(0.5);
-  transition: filter var(--transition-base);
-}
-
-[data-theme='dark'] .sponsor-logo {
-  filter: grayscale(100%) invert(1) brightness(0.9);
-}
-
 /* Footer */
 .custom-footer {
   border-color: var(--color-border) !important;
@@ -716,14 +689,6 @@ const recentThreads = [
 .btn-view-all:hover {
   background: var(--color-text) !important;
   color: var(--color-bg) !important;
-}
-
-.cta-card {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%) !important;
-}
-
-[data-theme='dark'] .cta-card {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%) !important;
 }
 
 .forum-thread-card {

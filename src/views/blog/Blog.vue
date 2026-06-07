@@ -6,6 +6,7 @@ import BaseFooter from "../../components/layouts/footer.vue";
 import LeftSidebar from '../../components/forum/LeftSidebar.vue';
 import { useBlogStore } from '../../stores/BlogStore';
 import { useAuthStore } from '../../stores/AuthStore';
+import { createPlainTextExcerpt } from '../../utils/richContent';
 
 const blogStore = useBlogStore();
 const authStore = useAuthStore();
@@ -31,8 +32,39 @@ const activeCategories = computed(() => {
 });
 
 const categories = computed(() => {
-  return ['All', ...activeCategories.value.map(c => c.name || c.title)];
+  const categoryNames = activeCategories.value.map(c => c.name || c.title);
+  const uniqueCategoryNames = [...new Set(categoryNames)];
+  return ['All', ...uniqueCategoryNames];
 });
+
+const categoryMeta = {
+  All: { icon: 'bi-grid-1x2-fill', tone: 'all' },
+  'General Discussion': { icon: 'bi-chat-square-text-fill', tone: 'discussion' },
+  'Questions & Answers': { icon: 'bi-question-circle-fill', tone: 'questions' },
+  Showcase: { icon: 'bi-stars', tone: 'showcase' },
+  Announcements: { icon: 'bi-megaphone-fill', tone: 'announcements' },
+  Tutorials: { icon: 'bi-journal-code', tone: 'tutorials' },
+  Resources: { icon: 'bi-collection-fill', tone: 'resources' },
+  'Showcase Projects': { icon: 'bi-window-stack', tone: 'projects' },
+  Frontend: { icon: 'bi-layout-text-window-reverse', tone: 'frontend' },
+  DevOps: { icon: 'bi-cloud-arrow-up-fill', tone: 'devops' },
+  Systems: { icon: 'bi-cpu-fill', tone: 'systems' },
+  Architecture: { icon: 'bi-diagram-3-fill', tone: 'architecture' },
+};
+
+const categoryOptions = computed(() => {
+  return categories.value.map((name) => {
+    const count = name === 'All'
+      ? activeBlogs.value.length
+      : activeBlogs.value.filter((post) => post.category === name).length;
+    return {
+      name,
+      count,
+      ...(categoryMeta[name] || { icon: 'bi-folder-fill', tone: 'default' }),
+    };
+  });
+});
+
 const allTags = computed(() => {
   const tagsSet = new Set();
   activeBlogs.value.forEach(p => {
@@ -95,7 +127,7 @@ const filteredPosts = computed(() => {
     const query = searchQuery.value.toLowerCase();
     result = result.filter(p => 
       p.title.toLowerCase().includes(query) || 
-      p.description.toLowerCase().includes(query)
+      (p.excerpt || p.description || '').toLowerCase().includes(query)
     );
   }
 
@@ -132,7 +164,7 @@ const openEditModal = (post) => {
   thumbnailPreview.value = post.image || null;
   form.value = {
     title: post.title,
-    description: post.description || post.content || '',
+    description: post.content || post.description || '',
     category_id: post.category_id ? post.category_id.toString() : '1',
     status: post.status || 'published',
     thumbnail: null
@@ -162,8 +194,10 @@ const handleFileChange = (e) => {
 
 const submitForm = async () => {
   const formData = new FormData();
+  const content = form.value.description;
   formData.append('title', form.value.title);
-  formData.append('description', form.value.description);
+  formData.append('description', createPlainTextExcerpt(content));
+  formData.append('content', content);
   formData.append('category_id', form.value.category_id);
   formData.append('status', form.value.status);
   
@@ -249,46 +283,75 @@ const formatNumber = (num) => {
         </div>
 
         <!-- Categories & Filters -->
-        <div class="mb-5">
-          <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-4 mb-4">
-            <div class="category-pills d-flex flex-wrap gap-2">
-              <button 
-                v-for="cat in categories" 
-                :key="cat"
-                @click="selectedCategory = cat"
-                :class="['btn-sm rounded-pill px-4 py-2 transition-all fw-medium', selectedCategory === cat ? 'btn-purple text-white' : 'btn-light text-muted']"
-              >
-                {{ cat }}
-              </button>
+        <section class="filter-panel mb-5" aria-label="Blog filters">
+          <div class="filter-panel-header">
+            <div>
+              <span class="filter-kicker">Browse Library</span>
+              <h2>Articles by category</h2>
             </div>
-            
-            <div class="filter-dropdown">
-              <select v-model="sortBy" class="form-select rounded-pill px-4 py-2 border-0 shadow-sm text-muted fw-medium bg-surface" style="width: 180px;">
-                <option value="latest">Latest First</option>
-                <option value="popular">Most Viewed</option>
+
+            <label class="sort-control">
+              <span>Sort</span>
+              <select v-model="sortBy" aria-label="Sort articles">
+                <option value="latest">Latest first</option>
+                <option value="popular">Most viewed</option>
               </select>
-            </div>
+              <i class="bi bi-chevron-down"></i>
+            </label>
           </div>
 
-          <!-- Tag Cloud -->
-          <div class="tag-cloud-soft d-flex flex-wrap gap-2 align-items-center">
-            <span class="text-muted text-xs fw-bold text-uppercase me-2">Popular Tags:</span>
-            <button 
-              @click="selectedTag = null"
-              :class="['btn-xs rounded-pill px-3 py-1 transition-all', !selectedTag ? 'btn-dark' : 'btn-outline-secondary border-0 opacity-75']"
+          <div class="category-filter-grid">
+            <button
+              v-for="cat in categoryOptions"
+              :key="cat.name"
+              type="button"
+              @click="selectedCategory = cat.name"
+              :class="['category-filter-card', cat.tone, { active: selectedCategory === cat.name }]"
             >
-              All Tags
-            </button>
-            <button 
-              v-for="tag in allTags" 
-              :key="tag"
-              @click="selectedTag = tag"
-              :class="['btn-xs rounded-pill px-3 py-1 transition-all', selectedTag === tag ? 'btn-purple-light text-purple' : 'btn-outline-secondary border-0 opacity-75']"
-            >
-              #{{ tag }}
+              <span class="category-icon">
+                <i :class="['bi', cat.icon]"></i>
+              </span>
+              <span class="category-copy">
+                <strong>{{ cat.name }}</strong>
+                <small>{{ cat.count }} {{ cat.count === 1 ? 'article' : 'articles' }}</small>
+              </span>
             </button>
           </div>
-        </div>
+
+          <div class="filter-panel-footer">
+            <div class="active-filter-chip">
+              <i class="bi bi-funnel-fill"></i>
+              <span>{{ selectedCategory }}</span>
+              <button
+                v-if="selectedCategory !== 'All' || selectedTag"
+                type="button"
+                title="Clear filters"
+                @click="selectedCategory = 'All'; selectedTag = null"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <div class="tag-filter-row" aria-label="Popular tags">
+              <button
+                type="button"
+                @click="selectedTag = null"
+                :class="['tag-filter-chip', { active: !selectedTag }]"
+              >
+                All Tags
+              </button>
+              <button
+                v-for="tag in allTags"
+                :key="tag"
+                type="button"
+                @click="selectedTag = tag"
+                :class="['tag-filter-chip', { active: selectedTag === tag }]"
+              >
+                #{{ tag }}
+              </button>
+            </div>
+          </div>
+        </section>
 
         <!-- Blog Grid Section Title -->
         <div class="mb-4 d-flex align-items-center justify-content-between">
@@ -335,7 +398,7 @@ const formatNumber = (num) => {
                     <span v-for="tag in post.tags" :key="tag" class="text-xxs text-muted">#{{ tag }}</span>
                   </div>
                   
-                  <p class="text-muted text-sm mb-4 line-clamp-2">{{ post.description }}</p>
+                  <p class="text-muted text-sm mb-4 line-clamp-2">{{ post.excerpt || post.description }}</p>
                   
                   <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
                     <div class="author-info d-flex align-items-center gap-2">
@@ -683,6 +746,241 @@ const formatNumber = (num) => {
   color: var(--color-purple);
 }
 
+/* Filter Panel */
+.filter-panel {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, var(--color-purple) 4%), var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, var(--color-purple) 18%);
+  border-radius: 20px;
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+}
+
+.filter-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filter-kicker {
+  display: block;
+  color: var(--color-purple);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.filter-panel-header h2 {
+  color: var(--color-text);
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.sort-control {
+  min-width: 178px;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0 12px 0 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  position: relative;
+}
+
+.sort-control select {
+  width: 100%;
+  color: var(--color-text);
+  background: transparent;
+  border: 0;
+  appearance: none;
+  outline: none;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding-right: 18px;
+  cursor: pointer;
+}
+
+.sort-control i {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  pointer-events: none;
+  position: absolute;
+  right: 12px;
+}
+
+.category-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.category-filter-card {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.category-filter-card:hover {
+  border-color: color-mix(in srgb, var(--color-purple) 58%, var(--color-border));
+  transform: translateY(-1px);
+}
+
+.category-filter-card.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-purple), var(--color-primary));
+  border-color: transparent;
+  box-shadow: 0 16px 34px -26px var(--color-purple);
+}
+
+.category-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: var(--category-tone, var(--color-purple));
+  background: color-mix(in srgb, var(--category-tone, var(--color-purple)) 14%, transparent);
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+.category-filter-card.active .category-icon {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.category-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.category-copy strong {
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.category-copy small {
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.category-filter-card.active .category-copy small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.category-filter-card.all { --category-tone: #8b5cf6; }
+.category-filter-card.discussion { --category-tone: #14b8a6; }
+.category-filter-card.questions { --category-tone: #3b82f6; }
+.category-filter-card.showcase,
+.category-filter-card.projects { --category-tone: #a855f7; }
+.category-filter-card.announcements { --category-tone: #f59e0b; }
+.category-filter-card.tutorials { --category-tone: #22c55e; }
+.category-filter-card.resources { --category-tone: #06b6d4; }
+.category-filter-card.frontend { --category-tone: #0ea5e9; }
+.category-filter-card.devops { --category-tone: #10b981; }
+.category-filter-card.systems { --category-tone: #64748b; }
+.category-filter-card.architecture { --category-tone: #ec4899; }
+
+.filter-panel-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.active-filter-chip {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  color: var(--color-purple);
+  background: var(--color-purple-light);
+  border-radius: 999px;
+  padding: 7px 10px 7px 12px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.active-filter-chip button {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  background: rgba(255, 255, 255, 0.4);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.tag-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tag-filter-chip {
+  min-height: 32px;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.tag-filter-chip:hover,
+.tag-filter-chip.active {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+  border-color: color-mix(in srgb, var(--color-purple) 42%, var(--color-border));
+}
+
+.tag-filter-chip.active {
+  color: #ffffff;
+  background: #1e293b;
+  border-color: transparent;
+}
+
 /* Blog Grid */
 .blog-grid {
   display: grid;
@@ -825,6 +1123,21 @@ const formatNumber = (num) => {
 @media (max-width: 640px) {
   .blog-global-grid {
     padding: 20px 16px 40px;
+  }
+  .filter-panel {
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .filter-panel-header,
+  .filter-panel-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .sort-control {
+    width: 100%;
+  }
+  .category-filter-grid {
+    grid-template-columns: 1fr;
   }
   .blog-banner-soft {
     padding: 24px;

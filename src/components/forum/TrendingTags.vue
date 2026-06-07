@@ -1,12 +1,12 @@
 <script setup>
 import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useTagsStore } from '@/stores/TagsStore';
 import { useForumStore } from '@/stores/ForumStore';
+import { useTagsStore } from '@/stores/TagsStore';
 
 const router = useRouter();
-const tagsStore = useTagsStore();
 const forumStore = useForumStore();
+const tagsStore = useTagsStore();
 
 onMounted(async () => {
   try {
@@ -32,39 +32,12 @@ const staticTagsFallback = [
 ];
 
 const tags = computed(() => {
-  const tagCounts = {};
-  forumStore.discussions.forEach(d => {
-    if (Array.isArray(d.tags)) {
-      d.tags.forEach(t => {
-        const tagName = typeof t === 'string' ? t : (t.label || t.name);
-        if (tagName) {
-          const cleanName = tagName.trim();
-          tagCounts[cleanName] = (tagCounts[cleanName] || 0) + 1;
-        }
-      });
-    }
-  });
-
-  const sortedTags = Object.keys(tagCounts)
-    .sort((a, b) => tagCounts[b] - tagCounts[a])
-    .map((name, idx) => ({
-      id: idx + 1,
-      name: name.startsWith('#') ? name : `#${name}`
-    }));
-
-  if (sortedTags.length > 0) {
-    // Show top 8 used tags
-    return sortedTags.slice(0, 8);
-  }
-
-  // Fallback to database tags if no tags are used in discussions yet
   if (tagsStore.tags && tagsStore.tags.length > 0) {
-    return tagsStore.tags.slice(0, 8).map(t => ({
+    return tagsStore.tags.map(t => ({
       id: t.id,
       name: t.name.startsWith('#') ? t.name : `#${t.name}`
     }));
   }
-
   return staticTagsFallback;
 });
 
