@@ -91,7 +91,7 @@
           @click="navigateToDetail(post)"
         >
           <span class="post-thumb">
-            <img v-if="post.image" :src="post.image" @error="handleImgError" class="thumb-img" alt="Post thumbnail">
+            <img v-if="post.image" :src="post.image" @error.once="handleImgError" class="thumb-img" alt="Post thumbnail">
             <i v-else class="bi bi-file-earmark-post"></i>
           </span>
           <div>

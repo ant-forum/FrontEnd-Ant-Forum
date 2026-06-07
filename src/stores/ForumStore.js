@@ -19,14 +19,24 @@ const getTagColor = (tag) => {
   return "gray";
 };
 
-const normalizeTags = (tags) => {
+const normalizeTags = (...candidates) => {
+  // Find the first valid, non-empty tags representation
+  let tags = null;
+  for (const c of candidates) {
+    if (c) {
+      if (Array.isArray(c) && c.length === 0) continue;
+      tags = c;
+      break;
+    }
+  }
+
   if (!tags) return [];
   let parsed = tags;
   if (typeof tags === 'string') {
     try {
       parsed = JSON.parse(tags);
     } catch (e) {
-      parsed = tags.split(',').map(t => t.trim());
+      parsed = tags.split(',').map(t => t.trim()).filter(Boolean);
     }
   }
   if (!Array.isArray(parsed)) return [];
@@ -164,7 +174,10 @@ export const useForumStore = defineStore("forum", () => {
         return {
           ...d,
           category: catStr,
-          tags: normalizeTags(d.tags || d.Tags || d.tag_name || d.tag_names),
+          tags: normalizeTags(d.tags, d.Tags, d.tag_name, d.tag_names, d.tag).map((t, idx) => {
+            if (idx === 0 && d.tag_id) return { ...t, id: d.tag_id };
+            return t;
+          }),
           saved: bookmarkedIds.has(Number(d.id)) || d.saved || false,
           likes: likesCount,
           likedByUser: isLiked,
@@ -202,7 +215,6 @@ export const useForumStore = defineStore("forum", () => {
       let discussionData = null;
       if (discussionRes.status === 'fulfilled') {
         const raw = discussionRes.value.data;
-        console.log("[ForumStore] getforumById response raw data:", raw);
         discussionData = (raw && raw.data) ? raw.data : raw;
       }
 
@@ -322,7 +334,10 @@ export const useForumStore = defineStore("forum", () => {
         }
 
         discussionData.category = catStr;
-        discussionData.tags = normalizeTags(discussionData.tags || discussionData.Tags || discussionData.tag_name || discussionData.tag_names);
+        discussionData.tags = normalizeTags(discussionData.tags, discussionData.Tags, discussionData.tag_name, discussionData.tag_names, discussionData.tag).map((t, idx) => {
+          if (idx === 0 && discussionData.tag_id) return { ...t, id: discussionData.tag_id };
+          return t;
+        });
         discussionData.saved = isBookmarked || discussionData.saved || false;
         discussionData.replies = commentData;
         discussionData.excerpt = discussionData.excerpt || stripMarkdown(discussionData.description || discussionData.body || '');
@@ -372,7 +387,11 @@ export const useForumStore = defineStore("forum", () => {
       }
 
       let tagNameStr = "";
+      let resolvedTagId = payload.tag_id || null;
       if (Array.isArray(payload.tags)) {
+        if (!resolvedTagId && payload.tags.length > 0) {
+          resolvedTagId = payload.tags[0].id || null;
+        }
         const tagNames = payload.tags.map(t => typeof t === 'string' ? t : (t.label || t.name || ''));
         tagNameStr = tagNames.filter(Boolean).join(', ');
       } else if (typeof payload.tags === 'string') {
@@ -382,7 +401,10 @@ export const useForumStore = defineStore("forum", () => {
       const formattedPayload = {
         title: payload.title,
         description: payload.description,
+        tag_id: resolvedTagId ? String(resolvedTagId) : null,
         tag_name: tagNameStr,
+        tag: tagNameStr,
+        tags: tagNameStr,
         category_name: categoryName,
         code: payload.code,
         hasCode: payload.hasCode,
@@ -393,7 +415,7 @@ export const useForumStore = defineStore("forum", () => {
       if (res.data.result) {
         let savedData = res.data.data;
         if (savedData) {
-          savedData.tags = normalizeTags(savedData.tags || savedData.Tags || savedData.tag_name || savedData.tag_names);
+          savedData.tags = normalizeTags(savedData.tags, savedData.Tags, savedData.tag_name, savedData.tag_names, savedData.tag);
           const likesCount = savedData.likes !== undefined ? savedData.likes : (savedData.like_count !== undefined ? savedData.like_count : 0);
           savedData.likes = likesCount;
           savedData.likedByUser = false;
@@ -433,7 +455,11 @@ export const useForumStore = defineStore("forum", () => {
       }
 
       let tagNameStr = "";
+      let resolvedTagId = payload.tag_id || null;
       if (Array.isArray(payload.tags)) {
+        if (!resolvedTagId && payload.tags.length > 0) {
+          resolvedTagId = payload.tags[0].id || null;
+        }
         const tagNames = payload.tags.map(t => typeof t === 'string' ? t : (t.label || t.name || ''));
         tagNameStr = tagNames.filter(Boolean).join(', ');
       } else if (typeof payload.tags === 'string') {
@@ -443,7 +469,10 @@ export const useForumStore = defineStore("forum", () => {
       const formattedPayload = {
         title: payload.title,
         description: payload.description,
+        tag_id: resolvedTagId ? String(resolvedTagId) : null,
         tag_name: tagNameStr,
+        tag: tagNameStr,
+        tags: tagNameStr,
         category_name: categoryName,
         code: payload.code,
         hasCode: payload.hasCode,
@@ -454,7 +483,7 @@ export const useForumStore = defineStore("forum", () => {
       if (res.data.result) {
         let savedData = res.data.data;
         if (savedData) {
-          savedData.tags = normalizeTags(savedData.tags || savedData.Tags || savedData.tag_name || savedData.tag_names);
+          savedData.tags = normalizeTags(savedData.tags, savedData.Tags, savedData.tag_name, savedData.tag_names, savedData.tag);
           const likesCount = savedData.likes !== undefined ? savedData.likes : (savedData.like_count !== undefined ? savedData.like_count : 0);
           const isLiked = savedData.likedByUser !== undefined ? savedData.likedByUser : (savedData.liked !== undefined ? savedData.liked : (savedData.isLiked !== undefined ? savedData.isLiked : false));
           savedData.likes = likesCount;
@@ -573,12 +602,9 @@ export const useForumStore = defineStore("forum", () => {
 
   const createComment = async (forumId, description) => {
     try {
-      console.log("createComment called with forumId:", forumId, "description:", description);
       const res = await api.post(`/api/comments/create/${forumId}`, {
         description,
       });
-
-      console.log("createComment API response:", res.data);
 
       if (res.data.result) {
         let commentData = res.data.data;
@@ -834,25 +860,31 @@ export const useForumStore = defineStore("forum", () => {
   };
 
   const toggleBookmark = async (forumId) => {
+    // Optimistic UI Update
+    let found = discussions.value.find(item => Number(item.id) === Number(forumId));
+    if (found) {
+      found.saved = !found.saved;
+    }
+    if (discussion.value && Number(discussion.value.id) === Number(forumId)) {
+      discussion.value.saved = !discussion.value.saved;
+    }
+
     try {
       const res = await api.post("/api/saved/toggle", {
         forumId,
         forum_id: forumId,
       });
 
-      await fetchBookmarks();
-
-      if (discussion.value && Number(discussion.value.id) === Number(forumId)) {
-        discussion.value.saved = !discussion.value.saved;
-      }
-
-      const found = discussions.value.find(item => Number(item.id) === Number(forumId));
-      if (found) {
-        found.saved = !found.saved;
-      }
+      // Fetch bookmarks in background without blocking
+      fetchBookmarks().catch(e => console.error("Background fetchBookmarks failed:", e));
 
       return res.data;
     } catch (err) {
+      // Revert on failure
+      if (found) found.saved = !found.saved;
+      if (discussion.value && Number(discussion.value.id) === Number(forumId)) {
+        discussion.value.saved = !discussion.value.saved;
+      }
       throw err.response?.data || err.message;
     }
   };
@@ -1080,7 +1112,10 @@ export const useForumStore = defineStore("forum", () => {
           return {
             ...d,
             category: catStr,
-            tags: normalizeTags(d.tags || d.Tags || d.tag_name || d.tag_names),
+            tags: normalizeTags(d.tags, d.Tags, d.tag_name, d.tag_names, d.tag).map((t, idx) => {
+              if (idx === 0 && d.tag_id) return { ...t, id: d.tag_id };
+              return t;
+            }),
             saved: bookmarkedIds.has(Number(d.id)) || d.saved || false,
             likes: likesCount,
             likedByUser: isLiked,

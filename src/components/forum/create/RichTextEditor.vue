@@ -1,10 +1,15 @@
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { Editor, EditorContent } from "@tiptap/vue-3";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import TextAlign from "@tiptap/extension-text-align";
 import BaseModal from "@/components/base/BaseModal.vue";
 import ImageCropModal from "@/components/base/ImageCropModal.vue";
 import { useImageCropper } from "@/composables/useImageCropper";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
-import { htmlToPlainText, renderStoredContent } from "@/utils/richContent";
 
 const props = defineProps({
   modelValue: {
@@ -19,26 +24,15 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue", "focus", "blur"]);
 
-const editorRef = ref(null);
+const editor = ref(null);
 const imageInputRef = ref(null);
 const isFocused = ref(false);
 const showTextMenu = ref(false);
-const showTableMenu = ref(false);
-const showListMenu = ref(false);
-const showAlignMenu = ref(false);
 const showLinkPopup = ref(false);
 const showImageModal = ref(false);
 const isDraggingImage = ref(false);
 const linkUrl = ref("");
-const lastEmitted = ref("");
-const activeStates = ref({
-  bold: false,
-  italic: false,
-  strikeThrough: false,
-  underline: false,
-  superscript: false,
-  subscript: false,
-});
+
 const {
   cropSource: blogImageCropSource,
   isCropModalOpen: isBlogImageCropOpen,
@@ -53,167 +47,119 @@ const {
   shape: "rect",
 });
 
-const plainText = computed(() => htmlToPlainText(props.modelValue));
-const wordCount = computed(() => {
-  const text = plainText.value.trim();
-  return text ? text.split(/\s+/).length : 0;
+const wordCount = ref(0);
+const charCount = ref(0);
+
+const updateCounts = () => {
+  if (!editor.value) return;
+  const text = editor.value.getText() || "";
+  charCount.value = text.length;
+  const words = text.trim();
+  wordCount.value = words ? words.split(/\s+/).length : 0;
+};
+
+onMounted(() => {
+  editor.value = new Editor({
+    content: props.modelValue,
+    extensions: [
+      StarterKit,
+      Image.configure({
+        inline: true,
+        allowBase64: true,
+      }),
+      Link.configure({
+        openOnClick: false,
+      }),
+      Placeholder.configure({
+        placeholder: props.placeholder,
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+    ],
+    onUpdate: () => {
+      if (editor.value) {
+        const html = editor.value.getHTML();
+        emit("update:modelValue", html);
+        updateCounts();
+      }
+    },
+    onFocus: () => {
+      isFocused.value = true;
+      emit("focus");
+    },
+    onBlur: () => {
+      isFocused.value = false;
+      emit("blur");
+    },
+  });
+  
+  if (editor.value) {
+     updateCounts();
+  }
 });
-const charCount = computed(() => plainText.value.length);
 
-const setEditorHtml = (html) => {
-  if (!editorRef.value) return;
-  const nextHtml = renderStoredContent(html);
-  if (editorRef.value.innerHTML !== nextHtml) {
-    editorRef.value.innerHTML = nextHtml;
+watch(() => props.modelValue, (value) => {
+  if (!editor.value) return;
+  const currentHtml = editor.value.getHTML();
+  if (currentHtml !== value) {
+    editor.value.commands.setContent(value);
   }
-};
+});
 
-const cleanEditorHtml = () => {
-  const html = editorRef.value?.innerHTML || "";
-  const cleaned = sanitizeHtml(html).replace(/^<p><br><\/p>$/, "");
-  return cleaned === "<br>" ? "" : cleaned;
-};
-
-const emitContent = () => {
-  const html = cleanEditorHtml();
-  lastEmitted.value = html;
-  emit("update:modelValue", html);
-};
-
-const focusEditor = async () => {
-  await nextTick();
-  editorRef.value?.focus();
-};
-
-const runCommand = async (command, value = null) => {
-  await focusEditor();
-  document.execCommand(command, false, value);
-  emitContent();
-  checkActiveStates();
-};
-
-const checkActiveStates = () => {
-  activeStates.value.bold = document.queryCommandState('bold');
-  activeStates.value.italic = document.queryCommandState('italic');
-  activeStates.value.strikeThrough = document.queryCommandState('strikeThrough');
-  activeStates.value.underline = document.queryCommandState('underline');
-  activeStates.value.superscript = document.queryCommandState('superscript');
-  activeStates.value.subscript = document.queryCommandState('subscript');
-};
-
-const closeMenus = () => {
-  showTextMenu.value = false;
-  showTableMenu.value = false;
-  showListMenu.value = false;
-  showAlignMenu.value = false;
-};
-
-const toggleMenu = (menuName) => {
-  const nextState = {
-    text: false,
-    table: false,
-    list: false,
-    align: false,
-  };
-
-  if (menuName === "text") nextState.text = !showTextMenu.value;
-  if (menuName === "table") nextState.table = !showTableMenu.value;
-  if (menuName === "list") nextState.list = !showListMenu.value;
-  if (menuName === "align") nextState.align = !showAlignMenu.value;
-
-  showTextMenu.value = nextState.text;
-  showTableMenu.value = nextState.table;
-  showListMenu.value = nextState.list;
-  showAlignMenu.value = nextState.align;
-};
-
-const formatBlock = async (tag) => {
-  closeMenus();
-  await runCommand("formatBlock", tag);
-};
-
-const insertHtml = async (html) => {
-  await focusEditor();
-  document.execCommand("insertHTML", false, html);
-  emitContent();
-};
-
-const insertTable = (rows = 3, cols = 2) => {
-  closeMenus();
-  const body = Array.from({ length: rows }, (_, rowIndex) => {
-    const cells = Array.from({ length: cols }, (_, colIndex) => {
-      const tag = rowIndex === 0 ? "th" : "td";
-      const label = rowIndex === 0 ? `Column ${colIndex + 1}` : "Text";
-      return `<${tag}>${label}</${tag}>`;
-    }).join("");
-    return `<tr>${cells}</tr>`;
-  }).join("");
-
-  insertHtml(`<table><tbody>${body}</tbody></table><p><br></p>`);
-};
-
-const insertCodeBlock = async () => {
-  await focusEditor();
-  const selection = window.getSelection();
-  const text = selection.toString() || "Code block content...";
-  await insertHtml(`<pre><code>${escapeHtml(text)}</code></pre><p><br></p>`);
-};
-
-const toggleInlineCode = async () => {
-  await focusEditor();
-  const selection = window.getSelection();
-  if (!selection.rangeCount) return;
-  const text = selection.toString();
-  if (text) {
-    await insertHtml(`<code>${escapeHtml(text)}</code>`);
-  } else {
-    await insertHtml(`<code>&nbsp;</code>&nbsp;`);
+onBeforeUnmount(() => {
+  if (editor.value) {
+    editor.value.destroy();
   }
-};
+});
 
-const openLinkPopup = async () => {
-  await focusEditor();
-  closeMenus();
-  linkUrl.value = "";
+const toggleBold = () => editor.value?.chain().focus().toggleBold().run();
+const toggleItalic = () => editor.value?.chain().focus().toggleItalic().run();
+const toggleStrike = () => editor.value?.chain().focus().toggleStrike().run();
+const toggleCode = () => editor.value?.chain().focus().toggleCode().run();
+const toggleCodeBlock = () => editor.value?.chain().focus().toggleCodeBlock().run();
+const toggleBlockquote = () => editor.value?.chain().focus().toggleBlockquote().run();
+const toggleHeading = (level) => editor.value?.chain().focus().toggleHeading({ level }).run();
+const toggleBulletList = () => editor.value?.chain().focus().toggleBulletList().run();
+const toggleOrderedList = () => editor.value?.chain().focus().toggleOrderedList().run();
+const setHorizontalRule = () => editor.value?.chain().focus().setHorizontalRule().run();
+const undo = () => editor.value?.chain().focus().undo().run();
+const redo = () => editor.value?.chain().focus().redo().run();
+
+const openLinkPopup = () => {
+  const previousUrl = editor.value?.getAttributes('link').href;
+  linkUrl.value = previousUrl || "";
   showLinkPopup.value = true;
 };
 
-const saveLink = async () => {
+const saveLink = () => {
   const url = linkUrl.value.trim();
-  if (!url) return;
-  const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  if (!url) {
+    editor.value?.chain().focus().extendMarkRange('link').unsetLink().run();
+  } else {
+    const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    editor.value?.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
+  }
   showLinkPopup.value = false;
-  await runCommand("createLink", normalized);
 };
 
 const insertImageFiles = async (files = []) => {
   const validFiles = Array.from(files)
-    .filter(
-      (file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024,
-    )
+    .filter((file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024)
     .slice(0, 3);
 
   if (!validFiles.length) return;
-
   showImageModal.value = false;
 
-  const imageBlocks = [];
   for (const file of validFiles) {
     const cropped = await openBlogImageCropper(file);
     if (cropped?.dataUrl) {
-      imageBlocks.push(
-        `<img src="${cropped.dataUrl}" alt="${escapeHtml(file.name)}">`,
-      );
+      editor.value?.chain().focus().setImage({ src: cropped.dataUrl, alt: file.name }).run();
     }
   }
-
-  if (!imageBlocks.length) return;
-
-  await insertHtml(`${imageBlocks.join("")}<p><br></p>`);
 };
 
 const openImageModal = () => {
-  closeMenus();
   showImageModal.value = true;
 };
 
@@ -230,60 +176,6 @@ const handleImageDrop = (event) => {
   isDraggingImage.value = false;
   insertImageFiles(event.dataTransfer?.files || []);
 };
-
-const escapeHtml = (value = "") =>
-  String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-
-const handlePaste = (event) => {
-  event.preventDefault();
-  const html = event.clipboardData?.getData("text/html");
-  const text = event.clipboardData?.getData("text/plain");
-
-  if (html) {
-    insertHtml(sanitizeHtml(html));
-    return;
-  }
-
-  if (text) {
-    insertHtml(
-      text
-        .split(/\n{2,}/)
-        .map(
-          (paragraph) =>
-            `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`,
-        )
-        .join(""),
-    );
-  }
-};
-
-const handleFocus = () => {
-  isFocused.value = true;
-  emit("focus");
-};
-
-const handleBlur = () => {
-  isFocused.value = false;
-  emit("blur");
-  emitContent();
-};
-
-watch(
-  () => props.modelValue,
-  (value) => {
-    if (value === lastEmitted.value || isFocused.value) return;
-    setEditorHtml(value);
-  },
-);
-
-onMounted(() => {
-  setEditorHtml(props.modelValue);
-});
 </script>
 
 <template>
@@ -297,22 +189,12 @@ onMounted(() => {
       @change="handleImageInput"
     />
 
-    <div class="rich-toolbar">
+    <div v-if="editor" class="rich-toolbar">
       <div class="toolbar-left">
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Undo"
-          @mousedown.prevent="runCommand('undo')"
-        >
+        <button type="button" @mousedown.prevent="undo" :disabled="!editor.can().undo()" class="toolbar-btn" title="Undo">
           <i class="bi bi-arrow-counterclockwise"></i>
         </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Redo"
-          @mousedown.prevent="runCommand('redo')"
-        >
+        <button type="button" @mousedown.prevent="redo" :disabled="!editor.can().redo()" class="toolbar-btn" title="Redo">
           <i class="bi bi-arrow-clockwise"></i>
         </button>
 
@@ -323,259 +205,68 @@ onMounted(() => {
             type="button"
             class="toolbar-btn text-btn"
             title="Heading"
-            @mousedown.prevent="toggleMenu('text')"
+            @mousedown.prevent="showTextMenu = !showTextMenu"
           >
             <span>H</span><i class="bi bi-chevron-down"></i>
           </button>
           <div v-if="showTextMenu" class="toolbar-dropdown">
-            <button type="button" @mousedown.prevent="formatBlock('p')">
+            <button type="button" @mousedown.prevent="editor.chain().focus().setParagraph().run(); showTextMenu = false" :class="{ 'is-active': editor.isActive('paragraph') }">
               <i class="bi bi-paragraph"></i> Paragraph
             </button>
-            <button type="button" @mousedown.prevent="formatBlock('h1')">
+            <button type="button" @mousedown.prevent="toggleHeading(1); showTextMenu = false" :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }">
               <i class="bi bi-type-h1"></i> Heading 1
             </button>
-            <button type="button" @mousedown.prevent="formatBlock('h2')">
+            <button type="button" @mousedown.prevent="toggleHeading(2); showTextMenu = false" :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }">
               <i class="bi bi-type-h2"></i> Heading 2
             </button>
-            <button type="button" @mousedown.prevent="formatBlock('h3')">
+            <button type="button" @mousedown.prevent="toggleHeading(3); showTextMenu = false" :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }">
               <i class="bi bi-type-h3"></i> Heading 3
             </button>
           </div>
         </div>
 
-        <div class="toolbar-popover-wrapper">
-          <button
-            type="button"
-            class="toolbar-btn split-btn"
-            title="Lists"
-            @mousedown.prevent="toggleMenu('list')"
-          >
-            <i class="bi bi-list-ul"></i
-            ><i class="bi bi-chevron-down mini-chevron"></i>
-          </button>
-          <div v-if="showListMenu" class="toolbar-dropdown">
-            <button
-              type="button"
-              @mousedown.prevent="
-                closeMenus();
-                runCommand('insertUnorderedList');
-              "
-            >
-              <i class="bi bi-list-ul"></i> Bullet list
-            </button>
-            <button
-              type="button"
-              @mousedown.prevent="
-                closeMenus();
-                runCommand('insertOrderedList');
-              "
-            >
-              <i class="bi bi-list-ol"></i> Numbered list
-            </button>
-          </div>
-        </div>
+        <button type="button" @mousedown.prevent="toggleBulletList" :class="{ 'is-active': editor.isActive('bulletList') }" class="toolbar-btn" title="Bullet List">
+          <i class="bi bi-list-ul"></i>
+        </button>
+        <button type="button" @mousedown.prevent="toggleOrderedList" :class="{ 'is-active': editor.isActive('orderedList') }" class="toolbar-btn" title="Numbered List">
+          <i class="bi bi-list-ol"></i>
+        </button>
 
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Indent"
-          @mousedown.prevent="runCommand('indent')"
-        >
-          <i class="bi bi-text-indent-left"></i>
-        </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Outdent"
-          @mousedown.prevent="runCommand('outdent')"
-        >
-          <i class="bi bi-text-indent-right"></i>
-        </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Code block"
-          @mousedown.prevent="insertCodeBlock"
-        >
+        <button type="button" @mousedown.prevent="toggleCodeBlock" :class="{ 'is-active': editor.isActive('codeBlock') }" class="toolbar-btn" title="Code Block">
           <i class="bi bi-braces"></i>
         </button>
 
         <span class="toolbar-divider"></span>
 
-        <button
-          type="button"
-          class="toolbar-btn"
-          :class="{ 'active': activeStates.bold }"
-          title="Bold"
-          @mousedown.prevent="runCommand('bold')"
-        >
+        <button type="button" @mousedown.prevent="toggleBold" :class="{ 'is-active': editor.isActive('bold') }" class="toolbar-btn" title="Bold">
           <i class="bi bi-type-bold"></i>
         </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          :class="{ 'active': activeStates.italic }"
-          title="Italic"
-          @mousedown.prevent="runCommand('italic')"
-        >
+        <button type="button" @mousedown.prevent="toggleItalic" :class="{ 'is-active': editor.isActive('italic') }" class="toolbar-btn" title="Italic">
           <i class="bi bi-type-italic"></i>
         </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          :class="{ 'active': activeStates.strikeThrough }"
-          title="Strikethrough"
-          @mousedown.prevent="runCommand('strikeThrough')"
-        >
+        <button type="button" @mousedown.prevent="toggleStrike" :class="{ 'is-active': editor.isActive('strike') }" class="toolbar-btn" title="Strikethrough">
           <i class="bi bi-type-strikethrough"></i>
         </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Inline code"
-          @mousedown.prevent="toggleInlineCode"
-        >
+        <button type="button" @mousedown.prevent="toggleCode" :class="{ 'is-active': editor.isActive('code') }" class="toolbar-btn" title="Inline Code">
           <i class="bi bi-code-slash"></i>
         </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          :class="{ 'active': activeStates.underline }"
-          title="Underline"
-          @mousedown.prevent="runCommand('underline')"
-        >
-          <i class="bi bi-type-underline"></i>
-        </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Highlight"
-          @mousedown.prevent="runCommand('backColor', '#facc15')"
-        >
-          <i class="bi bi-highlighter"></i>
-        </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Link"
-          @mousedown.prevent="openLinkPopup"
-        >
+
+        <button type="button" @mousedown.prevent="openLinkPopup" :class="{ 'is-active': editor.isActive('link') }" class="toolbar-btn" title="Link">
           <i class="bi bi-link-45deg"></i>
-        </button>
-        <button
-          type="button"
-          class="toolbar-btn math-btn"
-          :class="{ 'active': activeStates.superscript }"
-          title="Superscript"
-          @mousedown.prevent="runCommand('superscript')"
-        >
-          x²
-        </button>
-        <button
-          type="button"
-          class="toolbar-btn math-btn"
-          :class="{ 'active': activeStates.subscript }"
-          title="Subscript"
-          @mousedown.prevent="runCommand('subscript')"
-        >
-          x₂
         </button>
 
         <span class="toolbar-divider"></span>
 
-        <div class="toolbar-popover-wrapper">
-          <button
-            type="button"
-            class="toolbar-btn split-btn"
-            title="Alignment"
-            @mousedown.prevent="toggleMenu('align')"
-          >
-            <i class="bi bi-text-left"></i
-            ><i class="bi bi-chevron-down mini-chevron"></i>
-          </button>
-          <div v-if="showAlignMenu" class="toolbar-dropdown">
-            <button
-              type="button"
-              @mousedown.prevent="
-                closeMenus();
-                runCommand('justifyLeft');
-              "
-            >
-              <i class="bi bi-text-left"></i> Left
-            </button>
-            <button
-              type="button"
-              @mousedown.prevent="
-                closeMenus();
-                runCommand('justifyCenter');
-              "
-            >
-              <i class="bi bi-text-center"></i> Center
-            </button>
-            <button
-              type="button"
-              @mousedown.prevent="
-                closeMenus();
-                runCommand('justifyRight');
-              "
-            >
-              <i class="bi bi-text-right"></i> Right
-            </button>
-            <button
-              type="button"
-              @mousedown.prevent="
-                closeMenus();
-                runCommand('justifyFull');
-              "
-            >
-              <i class="bi bi-justify"></i> Justify
-            </button>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Divider"
-          @mousedown.prevent="runCommand('insertHorizontalRule')"
-        >
+        <button type="button" @mousedown.prevent="setHorizontalRule" class="toolbar-btn" title="Divider">
           <i class="bi bi-hr"></i>
         </button>
-        <button
-          type="button"
-          class="toolbar-btn"
-          title="Quote"
-          @mousedown.prevent="formatBlock('blockquote')"
-        >
+        <button type="button" @mousedown.prevent="toggleBlockquote" :class="{ 'is-active': editor.isActive('blockquote') }" class="toolbar-btn" title="Quote">
           <i class="bi bi-quote"></i>
         </button>
 
         <span class="toolbar-divider"></span>
 
-        <div class="toolbar-popover-wrapper">
-          <button
-            type="button"
-            class="toolbar-btn"
-            title="Table"
-            @mousedown.prevent="toggleMenu('table')"
-          >
-            <i class="bi bi-table"></i>
-          </button>
-          <div v-if="showTableMenu" class="toolbar-dropdown table-dropdown">
-            <button type="button" @mousedown.prevent="insertTable(3, 2)">
-              2 columns
-            </button>
-            <button type="button" @mousedown.prevent="insertTable(3, 3)">
-              3 columns
-            </button>
-          </div>
-        </div>
-        <button
-          type="button"
-          class="toolbar-btn add-media-btn"
-          title="Add image"
-          @mousedown.prevent="openImageModal"
-        >
+        <button type="button" class="toolbar-btn add-media-btn" title="Add image" @mousedown.prevent="openImageModal">
           <i class="bi bi-image"></i>
           <span>Add</span>
         </button>
@@ -592,45 +283,19 @@ onMounted(() => {
           placeholder="https://example.com"
           @keydown.enter.prevent="saveLink"
         />
-        <button
-          type="button"
-          class="btn-save-link"
-          @mousedown.prevent="saveLink"
-        >
-          Apply
-        </button>
-        <button
-          type="button"
-          class="btn-cancel-link"
-          @mousedown.prevent="showLinkPopup = false"
-        >
-          Cancel
-        </button>
+        <button type="button" class="btn-save-link" @mousedown.prevent="saveLink">Apply</button>
+        <button type="button" class="btn-cancel-link" @mousedown.prevent="showLinkPopup = false">Cancel</button>
       </div>
     </div>
 
-    <div
-      ref="editorRef"
-      class="rich-editable"
-      contenteditable="true"
-      :data-placeholder="placeholder"
-      @input="emitContent"
-      @focus="handleFocus"
-      @blur="handleBlur"
-      @paste="handlePaste"
-      @keyup="checkActiveStates"
-      @mouseup="checkActiveStates"
-      @click="checkActiveStates"
-    ></div>
+    <!-- TIPTAP WORKSPACE -->
+    <div class="rich-editable-container">
+      <editor-content :editor="editor" class="rich-editable" />
+    </div>
 
     <div class="rich-status">
-      <span
-        ><i class="bi bi-file-earmark-text"></i>
-        <strong>{{ wordCount }}</strong> words</span
-      >
-      <span
-        ><strong>{{ charCount }}</strong> characters</span
-      >
+      <span><i class="bi bi-file-earmark-text"></i><strong>{{ wordCount }}</strong> words</span>
+      <span><strong>{{ charCount }}</strong> characters</span>
       <span class="live-note"><i class="bi bi-eye"></i> Live rich editing</span>
     </div>
   </div>
@@ -677,6 +342,8 @@ onMounted(() => {
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 [data-theme='dark'] .rich-editor {
@@ -733,10 +400,15 @@ onMounted(() => {
   outline: none;
 }
 
-.toolbar-btn.active {
+.toolbar-btn.is-active {
   color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 15%, transparent);
   border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .text-btn {
@@ -747,18 +419,9 @@ onMounted(() => {
   font-weight: 700;
 }
 
-.split-btn {
-  padding: 0 0.3rem;
-}
-
 .mini-chevron {
   font-size: 0.6rem;
   margin-left: -0.1rem;
-}
-
-.math-btn {
-  font-size: 0.85rem;
-  font-weight: 800;
 }
 
 .add-media-btn {
@@ -770,10 +433,6 @@ onMounted(() => {
 
 .add-media-btn span {
   font-size: 0.85rem;
-}
-
-.theme-btn {
-  flex: 0 0 auto;
 }
 
 .toolbar-divider {
@@ -800,23 +459,19 @@ onMounted(() => {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
-[data-theme='dark'] .toolbar-dropdown {
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-}
-
 .toolbar-dropdown button {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.55rem;
-  color: var(--color-text-muted);
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
   background: transparent;
-  border: 0;
+  border: none;
   border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
   text-align: left;
+  transition: all 0.2s ease;
 }
 
 .toolbar-dropdown button:hover {
@@ -824,23 +479,24 @@ onMounted(() => {
   color: var(--color-text);
 }
 
-.table-dropdown {
-  min-width: 120px;
+.toolbar-dropdown button.is-active {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
 }
 
 .link-popup-panel {
-  padding: 0.75rem 1rem;
-  background: var(--color-surface);
+  padding: 1rem;
+  background: var(--color-surface-hover);
   border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .link-popup-panel label {
-  display: block;
-  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--color-text-muted);
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
 }
 
 .link-row {
@@ -850,242 +506,227 @@ onMounted(() => {
 
 .link-row input {
   flex: 1;
-  min-width: 0;
-  color: var(--color-text);
-  background: var(--color-input-bg);
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  padding: 0.45rem 0.6rem;
+  color: var(--color-text);
+  outline: none;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.link-row input:focus {
+  border-color: var(--color-primary);
 }
 
 .btn-save-link,
 .btn-cancel-link {
-  border: 0;
+  padding: 0.5rem 1rem;
   border-radius: 6px;
-  padding: 0 0.7rem;
-  font-weight: 800;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-save-link {
-  color: #fff;
   background: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+.btn-save-link:hover {
+  filter: brightness(0.9);
 }
 
 .btn-cancel-link {
+  background: transparent;
   color: var(--color-text-muted);
-  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+}
+
+.btn-cancel-link:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* Editor Styles */
+.rich-editable-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
 }
 
 .rich-editable {
-  min-height: 520px;
-  padding: 3rem 2.5rem;
-  color: var(--color-text);
-  background: var(--color-surface);
-  outline: none;
-  overflow-x: auto;
-  font-size: 1rem;
-  line-height: 1.8;
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
 }
 
-.rich-editable:empty::before {
-  content: attr(data-placeholder);
+:deep(.tiptap) {
+  outline: none;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text);
+  min-height: 100%;
+}
+
+:deep(.tiptap p.is-editor-empty:first-child::before) {
   color: var(--color-text-muted);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
   pointer-events: none;
 }
 
-.rich-editable :deep(h1),
-.rich-editable :deep(h2),
-.rich-editable :deep(h3) {
+:deep(.tiptap h1),
+:deep(.tiptap h2),
+:deep(.tiptap h3) {
   color: var(--color-text);
-  font-weight: 850;
-  line-height: 1.25;
-}
-
-.rich-editable :deep(h1) {
-  font-size: 2rem;
-  margin: 0 0 1rem;
-  color: var(--color-text);
-}
-.rich-editable :deep(h2) {
-  font-size: 1.55rem;
-  margin: 1.6rem 0 0.8rem;
-}
-.rich-editable :deep(h3) {
-  font-size: 1.25rem;
-  margin: 1.3rem 0 0.65rem;
-}
-.rich-editable :deep(p) {
-  margin: 0 0 1rem;
-}
-.rich-editable :deep(a) {
-  color: var(--color-primary);
   font-weight: 700;
-}
-.rich-editable :deep(blockquote) {
-  margin: 1rem 0;
-  padding: 0.75rem 1rem;
-  color: var(--color-text-muted);
-  background: var(--color-surface-hover);
-  border-left: 4px solid var(--color-primary);
-  border-radius: 0 10px 10px 0;
+  margin: 1.5rem 0 0.5rem;
+  line-height: 1.2;
 }
 
-.rich-editable :deep(pre) {
-  padding: 1rem;
-  color: var(--color-text);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  overflow-x: auto;
-  line-height: 1.6;
-}
+:deep(.tiptap h1) { font-size: 1.75rem; }
+:deep(.tiptap h2) { font-size: 1.5rem; }
+:deep(.tiptap h3) { font-size: 1.25rem; }
 
-.rich-editable :deep(code) {
-  color: #e879f9;
-  background: rgba(139, 92, 246, 0.14);
-  border-radius: 5px;
-  padding: 0.08rem 0.25rem;
-}
+:deep(.tiptap p) { margin-bottom: 1rem; }
 
-.rich-editable :deep(pre code) {
-  color: inherit;
-  background: transparent;
-  padding: 0;
-}
-
-.rich-editable :deep(ul),
-.rich-editable :deep(ol) {
-  padding-left: 1.45rem;
-  margin: 0 0 1rem;
-}
-
-.rich-editable :deep(li) {
-  margin-bottom: 0.35rem;
-}
-
-.rich-editable :deep(table) {
-  width: 100%;
-  margin: 1rem 0;
-  border-collapse: collapse;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-}
-
-.rich-editable :deep(th),
-.rich-editable :deep(td) {
-  min-width: 120px;
-  padding: 0.75rem;
-  border: 1px solid var(--color-border);
-  vertical-align: top;
-}
-
-.rich-editable :deep(th) {
-  background: var(--color-surface-hover);
-  font-weight: 850;
-}
-
-.rich-editable :deep(img) {
-  max-width: 100%;
-  height: auto;
+:deep(.tiptap img) {
   display: block;
-  margin: 1rem 0;
-  border-radius: 12px;
+  max-width: 100%;
+  max-height: 400px;
+  margin: 1.5rem 0;
+  border-radius: 8px;
   border: 1px solid var(--color-border);
+}
+
+:deep(.tiptap blockquote) {
+  border-left: 4px solid var(--color-primary);
+  padding: 0.5rem 1rem;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-text-muted);
+  margin: 1.5rem 0;
+  font-style: italic;
+  border-radius: 0 8px 8px 0;
+}
+
+:deep(.tiptap code) {
+  background: var(--color-surface-hover);
+  color: var(--color-danger);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+:deep(.tiptap pre) {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+:deep(.tiptap pre code) {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 0.9em;
+}
+
+:deep(.tiptap a) {
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+:deep(.tiptap hr) {
+  border: none;
+  border-top: 2px dashed var(--color-border);
+  margin: 2rem 0;
 }
 
 .rich-status {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.85rem;
+  gap: 1rem;
   padding: 0.75rem 1rem;
-  color: var(--color-text-muted);
-  background: var(--color-surface);
+  background: var(--color-surface-hover);
   border-top: 1px solid var(--color-border);
-  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.rich-status span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rich-status strong {
+  color: var(--color-text);
   font-weight: 700;
 }
 
 .live-note {
   margin-left: auto;
   color: var(--color-primary);
+  font-weight: 600;
 }
 
 .image-dropzone {
-  min-height: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 2rem;
-  color: var(--color-text-muted);
-  background: color-mix(in srgb, var(--color-bg) 88%, #000 12%);
-  border: 2px dashed color-mix(in srgb, var(--color-border) 75%, #fff 25%);
-  border-radius: 16px;
+  padding: 3rem 2rem;
+  border: 2px dashed var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
   cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease;
+  transition: all 0.2s ease;
+  text-align: center;
 }
 
-.image-dropzone:hover,
-.image-dropzone.dragging {
-  background: color-mix(in srgb, var(--color-primary-light) 24%, transparent);
+.image-dropzone.dragging,
+.image-dropzone:hover {
   border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
 }
 
 .upload-file-icon {
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
   position: relative;
-  width: 74px;
-  height: 76px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted);
-  font-size: 3.8rem;
 }
 
 .upload-file-icon span {
   position: absolute;
-  right: 4px;
-  bottom: 6px;
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  background: var(--color-primary);
+  bottom: 0;
+  right: -10px;
+  font-size: 1.5rem;
+  color: var(--color-success);
+  background: var(--color-surface);
   border-radius: 50%;
-  font-size: 1.15rem;
+  padding: 2px;
 }
 
 .image-dropzone p {
-  margin: 0;
   color: var(--color-text);
-  font-size: 1.02rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
 }
 
 .image-dropzone strong {
   color: var(--color-text-muted);
-  font-size: 0.86rem;
-}
-
-@media (max-width: 767.98px) {
-  .rich-editable {
-    min-height: 420px;
-    padding: 1.25rem;
-  }
-
-  .link-row {
-    flex-direction: column;
-  }
-
-  .live-note {
-    margin-left: 0;
-  }
+  font-size: 0.85rem;
 }
 </style>

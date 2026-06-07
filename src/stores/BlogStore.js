@@ -71,8 +71,8 @@ export const useBlogStore = defineStore('blog', () => {
       }
     }
 
-    let authorName = 'Admin';
-    let authorAvatar = 'https://i.pravatar.cc/150?u=admin';
+    let authorName = 'Unknown';
+    let authorAvatar = null;
     if (item.user) {
       authorName = item.user.username || item.user.name || authorName;
       authorAvatar = resolveMediaUrl(item.user.profile_pic || item.user.avatar, authorAvatar);
@@ -110,7 +110,7 @@ export const useBlogStore = defineStore('blog', () => {
       );
     };
 
-    const blogUserId = item.user_id || item.userId || item.admin_id || item.adminId || item.created_by_id || item.createdById;
+    const blogUserId = item.user_id || item.userId || item.author_id || item.authorId || item.admin_id || item.adminId || item.created_by_id || item.createdById;
     const loadedUser = blogUserId
       ? usersStore.users.find((u) => String(u.id) === String(blogUserId) || String(u.user_id) === String(blogUserId))
       : null;
@@ -124,6 +124,10 @@ export const useBlogStore = defineStore('blog', () => {
     );
     if (matchesCurrentUser) {
       applyAuthorProfile(currentUser);
+    }
+
+    if (authorName === 'Unknown') {
+      authorName = 'Admin_Nha';
     }
 
     let dateStr = 'Recent';
@@ -148,6 +152,15 @@ export const useBlogStore = defineStore('blog', () => {
 
     const content = item.content || item.description || '';
     const plainDescription = htmlToPlainText(content);
+
+    // Final fallback for missing avatar
+    if (!authorAvatar || authorAvatar.includes('ui-avatars.com')) {
+      if (authorName.toLowerCase() === 'admin_nha' || authorName.toLowerCase() === 'admin') {
+        authorAvatar = '/charles_leclerc.png';
+      } else {
+        authorAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=7c3aed&color=fff&rounded=true&bold=true`;
+      }
+    }
 
     return {
       ...item,

@@ -1,17 +1,10 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 // Disable automatic attribute inheritance
 defineOptions({
   inheritAttrs: false
-});
-
-const props = defineProps({
-  activeTab: {
-    type: String,
-    default: 'questions'
-  }
 });
 
 const emit = defineEmits(['selectTab']);
@@ -21,31 +14,20 @@ const route = useRoute();
 
 const isDrawerMobileOpen = ref(false);
 
-const handleItemClick = (tabId) => {
+const handleItemClick = (category, tabId) => {
   isDrawerMobileOpen.value = false;
+  const query = {};
   
-  if (tabId === 'discussions') {
-    emit('selectTab', 'home');
-    if (route.path !== '/forum') {
-      router.push('/forum');
-    } else if (Object.keys(route.query).length > 0) {
-      router.push('/forum'); // Clear query parameters to restore full discussion list
-    }
-  } else if (tabId === 'profile') {
-    router.push('/profile');
-  } else if (tabId === 'settings') {
-    router.push('/settings/privacy');
-  } else if (tabId === 'projects') {
-    router.push('/showcase');
-  } else if (tabId === 'saves') {
-    emit('selectTab', 'saves');
-    if (route.path !== '/forum') {
-      router.push({ path: '/forum', query: { tab: 'saves' } });
-    }
-  } else {
-    emit('selectTab', tabId);
-  }
+  if (category) query.category = category;
+  if (tabId) query.tab = tabId;
+
+  // We are always routing to /forum with these queries for navigation
+  router.push({ path: '/forum', query });
 };
+
+// Computed active states
+const isCategoryActive = (cat) => route.query.category === cat || (!route.query.category && !route.query.tab && cat === 'all');
+const isTabActive = (tab) => route.query.tab === tab;
 </script>
 
 <template>
@@ -60,77 +42,97 @@ const handleItemClick = (tabId) => {
   </transition>
 
   <aside class="left-sidebar-navigation" :class="{ 'mobile-open': isDrawerMobileOpen }" v-bind="$attrs">
-    <!-- Dev Console Header -->
+    <!-- Forum Directory Header -->
     <div class="sidebar-header">
-      <h2 class="sidebar-title">Dev Console</h2>
-      <span class="sidebar-subtitle">Manage your ecosystem</span>
+      <h2 class="sidebar-title">Forum Directory</h2>
+      <span class="sidebar-subtitle">Explore knowledge and discussions</span>
     </div>
 
-    <!-- Navigation List -->
-    <div class="sidebar-menu">
-      <button 
-        class="sidebar-menu-item" 
-        :class="{ active: (route.path === '/forum' && activeTab !== 'saves' && route.query.tab !== 'saves') || activeTab === 'home' || activeTab === 'questions' }" 
-        @click="handleItemClick('discussions')"
-      >
-        <i class="bi bi-chat-left-text"></i>
-        <span>Forum</span>
-      </button>
-
-      <button
-        class="sidebar-menu-item"
-        :class="{ active: route.path === '/profile' }"
-        @click="handleItemClick('profile')"
-      >
-        <i class="bi bi-person-circle"></i>
-        <span>Profile</span>
-      </button>
-
-      <button 
-        class="sidebar-menu-item" 
-        :class="{ active: route.path.startsWith('/showcase') }" 
-        @click="handleItemClick('projects')"
-      >
-        <i class="bi bi-code-slash"></i>
-        <span>My Projects</span>
-      </button>
-
-      <button 
-        class="sidebar-menu-item" 
-        :class="{ active: activeTab === 'saves' || route.query.tab === 'saves' }" 
-        @click="handleItemClick('saves')"
-      >
-        <i :class="['bi', activeTab === 'saves' || route.query.tab === 'saves' ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
-        <span>Saved</span>
-      </button>
-
-      <button
-        class="sidebar-menu-item"
-        :class="{ active: route.path.startsWith('/settings') }"
-        @click="handleItemClick('settings')"
-      >
-        <i class="bi bi-gear"></i>
-        <span>Settings</span>
+    <!-- New Discussion CTA -->
+    <div class="sidebar-cta-wrap mb-4">
+      <button class="btn-submit-project" @click="router.push('/forum/create')">
+        <i class="bi bi-plus-circle-fill"></i>
+        New Discussion
       </button>
     </div>
 
-    <!-- Submit Project Button -->
-    <div class="sidebar-cta-wrap">
-      <button class="btn-submit-project" @click="router.push('/showcase/create')">
-        <i class="bi bi-plus"></i>
-        Submit Project
-      </button>
+    <!-- Explore Section -->
+    <div class="sidebar-section">
+      <h3 class="section-heading">EXPLORE</h3>
+      <div class="sidebar-menu">
+        <button 
+          class="sidebar-menu-item" 
+          :class="{ active: isCategoryActive('all') }" 
+          @click="handleItemClick('all', null)"
+        >
+          <i class="bi bi-globe2"></i>
+          <span>All Discussions</span>
+        </button>
+
+        <button 
+          class="sidebar-menu-item" 
+          :class="{ active: isCategoryActive('question') }" 
+          @click="handleItemClick('question', null)"
+        >
+          <i class="bi bi-question-circle"></i>
+          <span>Questions</span>
+        </button>
+
+        <button 
+          class="sidebar-menu-item" 
+          :class="{ active: isCategoryActive('tutorial') }" 
+          @click="handleItemClick('tutorial', null)"
+        >
+          <i class="bi bi-book"></i>
+          <span>Tutorials</span>
+        </button>
+        
+        <button 
+          class="sidebar-menu-item" 
+          :class="{ active: isCategoryActive('showcase') }" 
+          @click="handleItemClick('showcase', null)"
+        >
+          <i class="bi bi-rocket-takeoff"></i>
+          <span>Showcase</span>
+        </button>
+      </div>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <!-- Your Content Section -->
+    <div class="sidebar-section">
+      <h3 class="section-heading">YOUR STUFF</h3>
+      <div class="sidebar-menu">
+        <button 
+          class="sidebar-menu-item" 
+          :class="{ active: isTabActive('myposts') }" 
+          @click="handleItemClick(null, 'myposts')"
+        >
+          <i class="bi bi-journal-text"></i>
+          <span>My Discussions</span>
+        </button>
+
+        <button 
+          class="sidebar-menu-item" 
+          :class="{ active: isTabActive('saves') }" 
+          @click="handleItemClick(null, 'saves')"
+        >
+          <i :class="['bi', isTabActive('saves') ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
+          <span>Saved Posts</span>
+        </button>
+      </div>
     </div>
 
     <!-- Bottom menu links -->
     <div class="sidebar-footer">
       <router-link to="/help" class="footer-link">
-        <i class="bi bi-book"></i>
-        <span>Docs</span>
+        <i class="bi bi-file-earmark-text"></i>
+        <span>Forum Guidelines</span>
       </router-link>
       <router-link to="/help" class="footer-link">
-        <i class="bi bi-question-circle"></i>
-        <span>Support</span>
+        <i class="bi bi-info-circle"></i>
+        <span>Help & Support</span>
       </router-link>
     </div>
   </aside>
@@ -142,7 +144,7 @@ const handleItemClick = (tabId) => {
   flex-direction: column;
   background: var(--color-surface);
   border-radius: 12px;
-  padding: 20px;
+  padding: 24px;
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
@@ -156,21 +158,30 @@ const handleItemClick = (tabId) => {
 
 .sidebar-header {
   padding: 0 0 16px 0;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 8px;
 }
 
 .sidebar-title {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-text);
-  margin: 0 0 2px 0;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
 }
 
 .sidebar-subtitle {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--color-text-muted);
   display: block;
+}
+
+.section-heading {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  letter-spacing: 0.8px;
+  margin: 0 0 12px 6px;
+  text-transform: uppercase;
 }
 
 .sidebar-menu {
@@ -183,13 +194,13 @@ const handleItemClick = (tabId) => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 10px 14px;
   background: transparent;
   border: none;
   border-radius: 10px;
   color: var(--color-text-muted);
-  font-size: 14.5px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   width: 100%;
   text-align: left;
@@ -198,24 +209,31 @@ const handleItemClick = (tabId) => {
 
 .sidebar-menu-item i {
   font-size: 16px;
+  width: 20px;
+  text-align: center;
 }
 
 .sidebar-menu-item:hover {
   background: var(--color-surface-hover);
   color: var(--color-text);
+  transform: translateX(2px);
 }
 
 .sidebar-menu-item.active {
   background: var(--color-purple-light);
   color: var(--color-purple);
-  font-weight: 600;
+  font-weight: 700;
 }
 
-/* Submit Project Cta Button */
+.sidebar-divider {
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid var(--color-border-soft, var(--color-border));
+}
+
+/* CTA Button */
 .sidebar-cta-wrap {
-  padding: 20px 0 0 0;
-  margin-top: 16px;
-  border-top: 1px solid var(--color-border);
+  margin-top: 0;
 }
 
 .btn-submit-project {
@@ -224,31 +242,30 @@ const handleItemClick = (tabId) => {
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 11px;
-  background: #7c3aed;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 4px 12px var(--color-primary-light);
 }
 
 .btn-submit-project:hover {
-  background: #6d28d9;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--color-primary-light);
 }
 
 .sidebar-footer {
   margin-top: auto;
-  padding: 20px 0 0 0;
+  padding: 24px 0 0 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-top: 1px solid var(--color-border);
 }
 
 .footer-link {
@@ -257,8 +274,8 @@ const handleItemClick = (tabId) => {
   gap: 10px;
   text-decoration: none;
   color: var(--color-text-muted);
-  font-size: 13.5px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   transition: color 0.2s ease;
 }
 

@@ -190,7 +190,7 @@ const handleImgError = (e) => {
               </h1>
 
               <!-- Hero Image -->
-              <img :src="post.image" @error="handleImgError" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme" style="max-height: 400px;" alt="Hero Image">
+              <img :src="post.image" @error.once="handleImgError" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme" style="max-height: 400px;" alt="Hero Image">
 
               <!-- Article Body -->
               <div class="article-body text-adaptive lh-lg" v-html="articleContent"></div>
@@ -230,7 +230,7 @@ const handleImgError = (e) => {
                 <div v-for="related in relatedPosts" :key="related.id" class="col-md-6">
                   <router-link :to="'/blog/' + related.id" class="text-decoration-none">
                     <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden related-card bg-surface">
-                      <img :src="related.image" @error="handleImgError" class="card-img-top object-fit-cover" height="140" alt="Related post">
+                      <img :src="related.image" @error.once="handleImgError" class="card-img-top object-fit-cover" height="140" alt="Related post">
                       <div class="card-body p-3">
                         <div class="text-purple fw-semibold font-xs mb-1 text-uppercase">{{ related.category }}</div>
                         <h6 class="fw-bold text-adaptive mb-1 lh-base line-clamp-2">{{ related.title }}</h6>
