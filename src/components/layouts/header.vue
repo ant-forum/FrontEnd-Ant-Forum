@@ -27,6 +27,13 @@ const navLinks = [
   { name: 'Blog', path: '/blog' }
 ];
 
+const navTarget = (link) => {
+  if (authStore.isAuthenticated) return link.path;
+  return { name: 'login', query: { redirect: link.path } };
+};
+
+const isNavActive = (link) => authStore.isAuthenticated && route.path.startsWith(link.path);
+
 const toggleNotificationMenu = () => {
   isAccountMenuOpen.value = false;
   isNotificationOpen.value = !isNotificationOpen.value;
@@ -91,9 +98,9 @@ onMounted(() => {
           <router-link 
             v-for="link in navLinks" 
             :key="link.name" 
-            :to="link.path" 
+            :to="navTarget(link)" 
             class="nav-link-modern" 
-            :class="{ 'active': route.path.startsWith(link.path) }"
+            :class="{ 'active': isNavActive(link) }"
           >
             {{ link.name }}
           </router-link>
@@ -141,7 +148,7 @@ onMounted(() => {
             @click="toggleAccountMenu"
           >
             <img
-              :src="authStore.user?.profile_pic || authStore.user?.avatar || '/charles_leclerc.png'"
+              :src="authStore.user?.profile_pic || '/charles_leclerc.png'"
               class="rounded-circle border border-2 border-primary-subtle object-fit-cover"
               width="32"
               height="32"
@@ -186,9 +193,9 @@ onMounted(() => {
           <router-link 
             v-for="link in navLinks" 
             :key="link.name" 
-            :to="link.path" 
+            :to="navTarget(link)" 
             class="mobile-nav-link" 
-            :class="{ 'active': route.path.startsWith(link.path) }"
+            :class="{ 'active': isNavActive(link) }"
             @click="isMobileMenuOpen = false"
           >
             {{ link.name }}

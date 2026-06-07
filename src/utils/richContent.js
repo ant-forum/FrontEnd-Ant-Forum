@@ -234,3 +234,10 @@ export const htmlToPlainText = (value = "") => {
   div.innerHTML = renderStoredContent(value);
   return div.textContent.replace(/\s+/g, " ").trim();
 };
+
+export const createPlainTextExcerpt = (value = "", maxLength = 240) => {
+  const text = htmlToPlainText(value);
+  if (text.length <= maxLength) return text;
+
+  return `${text.slice(0, maxLength).trimEnd()}...`;
+};

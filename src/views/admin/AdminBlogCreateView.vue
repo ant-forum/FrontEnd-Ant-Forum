@@ -254,7 +254,7 @@ import { useBlogStore } from '../../stores/BlogStore.js';
 import { useImageCropper } from '../../composables/useImageCropper.js';
 import { useToast } from '../../composables/useToast.js';
 import { useUnsavedChangesGuard } from '../../composables/useUnsavedChangesGuard.js';
-import { htmlToPlainText } from '../../utils/richContent.js';
+import { createPlainTextExcerpt, htmlToPlainText } from '../../utils/richContent.js';
 
 const blogStore = useBlogStore();
 const router = useRouter();
@@ -347,7 +347,7 @@ onMounted(async () => {
       const blogData = await blogStore.fetchBlogById(editId);
       if (blogData) {
         form.title = blogData.title || '';
-        form.description = blogData.description || '';
+        form.description = blogData.content || blogData.description || '';
         form.category_id = blogData.category_id ? blogData.category_id.toString() : '2';
         form.status = blogData.status || 'draft';
         if (blogData.thumbnail || blogData.image) {
@@ -454,8 +454,10 @@ const savePost = async () => {
 
   try {
     const formData = new FormData();
+    const content = form.description;
     formData.append('title', form.title);
-    formData.append('description', form.description);
+    formData.append('description', createPlainTextExcerpt(content));
+    formData.append('content', content);
     formData.append('category_id', form.category_id);
     formData.append('status', form.status);
     

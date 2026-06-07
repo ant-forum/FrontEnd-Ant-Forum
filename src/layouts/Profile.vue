@@ -6,6 +6,7 @@ import Footer from "../components/layouts/footer.vue";
 import LeftSidebar from "../components/forum/LeftSidebar.vue";
 import { useAuthStore } from "../stores/AuthStore";
 import BaseModal from "../components/base/BaseModal.vue";
+import { normalizeSkills } from "../utils/profileFields";
 
 // Sub-components
 import ProfileOverview from "../components/profile/ProfileOverview.vue";
@@ -69,8 +70,8 @@ const profileRole = computed(() => {
 const profileBio = computed(() => authStore.user?.bio || "");
 const profileGithub = computed(() => authStore.user?.github || "");
 const profileLinkedin = computed(() => authStore.user?.linkedin || "");
-const profileSkills = computed(() => Array.isArray(authStore.user?.skills) ? authStore.user.skills : []);
-const profileAvatar = computed(() => authStore.user?.profile_pic || authStore.user?.avatar || "");
+const profileSkills = computed(() => normalizeSkills(authStore.user?.skills));
+const profileAvatar = computed(() => authStore.user?.profile_pic || "");
 
 // Empty arrays since these are not part of the current API schema
 const defaultProjects = ref([]);

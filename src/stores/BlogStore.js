@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/api";
-import { htmlToPlainText } from "@/utils/richContent";
+import { createPlainTextExcerpt, htmlToPlainText } from "@/utils/richContent";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const ensureSuccess = (response) => {
   if (response.data && response.data.result === false) {
@@ -26,33 +27,7 @@ export const useBlogStore = defineStore('blog', () => {
   const normalizeBlog = (item) => {
     if (!item) return null;
 
-    let image = item.thumbnail || item.image;
-    if (image) {
-      // 1. Remove host/protocol parts if they belong to backend to make it relative
-      if (image.includes('localhost:3000')) {
-        image = image.replace(/https?:\/\/localhost:3000/, '');
-      }
-      const base = import.meta.env.VITE_API_BASE_URL || '';
-      if (base) {
-        const cleanBase = base.replace(/https?:\/\//, '').replace(/\/$/, '');
-        const baseRegex = new RegExp(`https?:\\/\\/${cleanBase}`, 'i');
-        image = image.replace(baseRegex, '');
-      }
-      
-      // 2. Strip any /public/ or public/ prefixes
-      if (image.includes('/public/')) {
-        image = image.replace('/public/', '/');
-      } else if (image.startsWith('public/')) {
-        image = image.replace('public/', '');
-      }
-
-      // 3. Ensure local paths start with a leading slash to be root-relative
-      if (!image.startsWith('http') && !image.startsWith('data:')) {
-        if (!image.startsWith('/')) {
-          image = `/${image}`;
-        }
-      }
-    }
+    const image = resolveMediaUrl(item.thumbnail || item.image);
 
     let categoryName = 'General';
     if (item.category) {
@@ -69,10 +44,10 @@ export const useBlogStore = defineStore('blog', () => {
     let authorAvatar = 'https://i.pravatar.cc/150?u=admin';
     if (item.user) {
       authorName = item.user.username || item.user.name || authorName;
-      authorAvatar = item.user.profile_pic || item.user.avatar || authorAvatar;
+      authorAvatar = resolveMediaUrl(item.user.profile_pic || item.user.avatar, authorAvatar);
     } else if (item.author) {
       authorName = typeof item.author === 'object' ? (item.author.name || item.author.username) : item.author;
-      authorAvatar = item.author_avatar || authorAvatar;
+      authorAvatar = resolveMediaUrl(item.author_avatar, authorAvatar);
     }
 
     let dateStr = 'Recent';
@@ -85,14 +60,16 @@ export const useBlogStore = defineStore('blog', () => {
       dateStr = item.date;
     }
 
-    const plainDescription = htmlToPlainText(item.description || item.content || '');
+    const content = item.content || item.description || '';
+    const plainDescription = htmlToPlainText(content);
 
     return {
       ...item,
       id: item.id,
       title: item.title || '',
-      description: item.description || '',
-      excerpt: plainDescription,
+      description: item.description || createPlainTextExcerpt(content),
+      content,
+      excerpt: createPlainTextExcerpt(item.description || content),
       category: categoryName,
       category_id: item.category_id,
       image: image || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800',
