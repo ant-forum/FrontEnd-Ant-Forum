@@ -109,6 +109,11 @@ const goBack = () => {
   router.push('/forum');
 };
 
+const selectTag = (tagName) => {
+  const cleanTag = tagName.replace('#', '').trim();
+  router.push({ path: '/forum', query: { q: cleanTag } });
+};
+
 const handleVote = (direction) => {
   if (discussion.value) {
     forumStore.toggleVoteDiscussion(discussion.value.id, direction);
@@ -448,7 +453,7 @@ function getAvatarUrl(author) {
 
           <!-- Custom tags section -->
           <div v-if="discussion.tags && discussion.tags.length > 0" class="thread-tags-box">
-            <span v-for="t in discussion.tags" :key="t.label" class="tag-badge">
+            <span v-for="t in discussion.tags" :key="t.label" class="tag-badge" @click="selectTag(t.label)" style="cursor: pointer;">
               #{{ t.label }}
             </span>
           </div>
@@ -903,6 +908,14 @@ function getAvatarUrl(author) {
   background: var(--color-purple-light);
   padding: 4px 12px;
   border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-badge:hover {
+  background: var(--color-purple);
+  color: white;
+  transform: translateY(-1px);
 }
 
 .thread-actions {

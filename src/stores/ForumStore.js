@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import api from "@/api/api";
 import { useUsersStore } from "./UsersStore";
 import { useAuthStore } from "./AuthStore";
+import { useTagsStore } from "./TagsStore";
 
 const getTagColor = (tag) => {
   if (!tag) return "gray";
@@ -48,7 +49,9 @@ export const useForumStore = defineStore("forum", () => {
   const comments = ref([]);
   const bookmarks = ref([]);
   const categories = ref([]);
-  const tags = ref([]);
+
+  const tagsStore = useTagsStore();
+  const tags = computed(() => tagsStore.tags);
 
   const isLoading = ref(false);
   const page = ref(1);
@@ -77,7 +80,7 @@ export const useForumStore = defineStore("forum", () => {
   };
 
   const setTags = (data) => {
-    tags.value = data;
+    tagsStore.tags = data;
   };
 
   const fetchDiscussions = async () => {
@@ -160,7 +163,7 @@ export const useForumStore = defineStore("forum", () => {
         return {
           ...d,
           category: catStr,
-          tags: normalizeTags(d.tags),
+          tags: normalizeTags(d.tags || d.Tags || d.tag_name || d.tag_names),
           saved: bookmarkedIds.has(Number(d.id)) || d.saved || false,
           likes: likesCount,
           likedByUser: isLiked,
@@ -197,6 +200,7 @@ export const useForumStore = defineStore("forum", () => {
       let discussionData = null;
       if (discussionRes.status === 'fulfilled') {
         const raw = discussionRes.value.data;
+        console.log("[ForumStore] getforumById response raw data:", raw);
         discussionData = (raw && raw.data) ? raw.data : raw;
       }
 
@@ -316,7 +320,7 @@ export const useForumStore = defineStore("forum", () => {
         }
 
         discussionData.category = catStr;
-        discussionData.tags = normalizeTags(discussionData.tags);
+        discussionData.tags = normalizeTags(discussionData.tags || discussionData.Tags || discussionData.tag_name || discussionData.tag_names);
         discussionData.saved = isBookmarked || discussionData.saved || false;
         discussionData.replies = commentData;
         
@@ -344,16 +348,49 @@ export const useForumStore = defineStore("forum", () => {
 
   const createDiscussion = async (payload) => {
     try {
+      let categoryName = "Discussion";
+      const catVal = payload.category;
+      if (catVal) {
+        const standardCats = {
+          question: "Question",
+          discussion: "Discussion",
+          tutorial: "Tutorial",
+          idea: "Idea",
+          showcase: "Showcase"
+        };
+        if (standardCats[String(catVal).toLowerCase()]) {
+          categoryName = standardCats[String(catVal).toLowerCase()];
+        } else {
+          const catObj = categories.value.find(c => Number(c.id) === Number(catVal) || String(c.type || c.name).toLowerCase() === String(catVal).toLowerCase());
+          if (catObj) {
+            categoryName = catObj.name || catObj.type || "Discussion";
+          }
+        }
+      }
+
+      let tagNameStr = "";
+      if (Array.isArray(payload.tags)) {
+        const tagNames = payload.tags.map(t => typeof t === 'string' ? t : (t.label || t.name || ''));
+        tagNameStr = tagNames.filter(Boolean).join(', ');
+      } else if (typeof payload.tags === 'string') {
+        tagNameStr = payload.tags;
+      }
+
       const formattedPayload = {
-        ...payload,
-        tags: Array.isArray(payload.tags) ? payload.tags.map(t => typeof t === 'string' ? t : (t.label || t.name || '')) : payload.tags
+        title: payload.title,
+        description: payload.description,
+        tag_name: tagNameStr,
+        category_name: categoryName,
+        code: payload.code,
+        hasCode: payload.hasCode,
+        category_id: payload.category_id
       };
       const res = await api.post("/api/forums/create/forum", formattedPayload);
 
       if (res.data.result) {
         let savedData = res.data.data;
         if (savedData) {
-          savedData.tags = normalizeTags(savedData.tags);
+          savedData.tags = normalizeTags(savedData.tags || savedData.Tags || savedData.tag_name || savedData.tag_names);
           const likesCount = savedData.likes !== undefined ? savedData.likes : (savedData.like_count !== undefined ? savedData.like_count : 0);
           savedData.likes = likesCount;
           savedData.likedByUser = false;
@@ -371,16 +408,49 @@ export const useForumStore = defineStore("forum", () => {
 
   const updateDiscussion = async (id, payload) => {
     try {
+      let categoryName = "Discussion";
+      const catVal = payload.category;
+      if (catVal) {
+        const standardCats = {
+          question: "Question",
+          discussion: "Discussion",
+          tutorial: "Tutorial",
+          idea: "Idea",
+          showcase: "Showcase"
+        };
+        if (standardCats[String(catVal).toLowerCase()]) {
+          categoryName = standardCats[String(catVal).toLowerCase()];
+        } else {
+          const catObj = categories.value.find(c => Number(c.id) === Number(catVal) || String(c.type || c.name).toLowerCase() === String(catVal).toLowerCase());
+          if (catObj) {
+            categoryName = catObj.name || catObj.type || "Discussion";
+          }
+        }
+      }
+
+      let tagNameStr = "";
+      if (Array.isArray(payload.tags)) {
+        const tagNames = payload.tags.map(t => typeof t === 'string' ? t : (t.label || t.name || ''));
+        tagNameStr = tagNames.filter(Boolean).join(', ');
+      } else if (typeof payload.tags === 'string') {
+        tagNameStr = payload.tags;
+      }
+
       const formattedPayload = {
-        ...payload,
-        tags: Array.isArray(payload.tags) ? payload.tags.map(t => typeof t === 'string' ? t : (t.label || t.name || '')) : payload.tags
+        title: payload.title,
+        description: payload.description,
+        tag_name: tagNameStr,
+        category_name: categoryName,
+        code: payload.code,
+        hasCode: payload.hasCode,
+        category_id: payload.category_id
       };
       const res = await api.put(`/api/forums/updateforum/${id}`, formattedPayload);
 
       if (res.data.result) {
         let savedData = res.data.data;
         if (savedData) {
-          savedData.tags = normalizeTags(savedData.tags);
+          savedData.tags = normalizeTags(savedData.tags || savedData.Tags || savedData.tag_name || savedData.tag_names);
           const likesCount = savedData.likes !== undefined ? savedData.likes : (savedData.like_count !== undefined ? savedData.like_count : 0);
           const isLiked = savedData.likedByUser !== undefined ? savedData.likedByUser : (savedData.liked !== undefined ? savedData.liked : (savedData.isLiked !== undefined ? savedData.isLiked : false));
           savedData.likes = likesCount;
@@ -498,9 +568,12 @@ export const useForumStore = defineStore("forum", () => {
 
   const createComment = async (forumId, description) => {
     try {
+      console.log("createComment called with forumId:", forumId, "description:", description);
       const res = await api.post(`/api/comments/create/${forumId}`, {
         description,
       });
+
+      console.log("createComment API response:", res.data);
 
       if (res.data.result) {
         let commentData = res.data.data;
@@ -556,7 +629,9 @@ export const useForumStore = defineStore("forum", () => {
           if (!discussion.value.replies) {
             discussion.value.replies = [];
           }
-          discussion.value.replies.push(commentData);
+          if (discussion.value.replies !== comments.value) {
+            discussion.value.replies.push(commentData);
+          }
         }
       }
 
@@ -749,22 +824,7 @@ export const useForumStore = defineStore("forum", () => {
   };
 
   const fetchTags = async () => {
-    try {
-      isLoading.value = true;
-      const res = await api.get('/api/tags/getAllTags');
-      if (res.data.result !== false) {
-        const TAG_COLORS = ['green', 'blue', 'orange', 'purple'];
-        const mapped = (res.data.data || []).map((item, index) => ({
-          ...item,
-          colorClass: TAG_COLORS[index % TAG_COLORS.length],
-        }));
-        setTags(mapped);
-        return mapped;
-      }
-      return [];
-    } finally {
-      isLoading.value = false;
-    }
+    return await tagsStore.fetchTags();
   };
 
   const toggleBookmark = async (forumId) => {
@@ -923,7 +983,7 @@ export const useForumStore = defineStore("forum", () => {
       }
     }
     const comment = comments.value.find(c => Number(c.id) === Number(commentId));
-    if (comment) {
+    if (comment && comment !== reply) {
       comment.likedByUser = !comment.likedByUser;
       comment.likes = (comment.likes || 0) + (comment.likedByUser ? 1 : -1);
     }
@@ -952,6 +1012,89 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  const fetchDiscussionsByTagName = async (tagName) => {
+    try {
+      isLoading.value = true;
+      const res = await api.get(`/api/tags/getTagByName/${encodeURIComponent(tagName)}`);
+
+      if (res.data.result !== false) {
+        const tagData = res.data.data;
+        const forumsList = Array.isArray(tagData)
+          ? tagData
+          : (tagData.forums || tagData.Forums || tagData.discussions || tagData.Discussions || []);
+
+        if (categories.value.length === 0) {
+          try {
+            await fetchCategories();
+          } catch (e) {
+            console.error("Failed to fetch categories list in ForumStore:", e);
+          }
+        }
+
+        let bookmarkedIds = new Set();
+        try {
+          const bookmarksRes = await api.get("/api/saved/my-bookmarks");
+          const raw = bookmarksRes.data;
+          let bookmarksData = [];
+          if (Array.isArray(raw)) {
+            bookmarksData = raw;
+          } else if (raw && Array.isArray(raw.data)) {
+            bookmarksData = raw.data;
+          } else if (raw && raw.result && Array.isArray(raw.data)) {
+            bookmarksData = raw.data;
+          }
+          bookmarksData.forEach(item => {
+            if (item.forum_id) bookmarkedIds.add(Number(item.forum_id));
+            else if (item.forum && item.forum.id) bookmarkedIds.add(Number(item.forum.id));
+            else if (item.id) bookmarkedIds.add(Number(item.id));
+          });
+        } catch (e) {}
+
+        const mappedDiscussions = forumsList.map(d => {
+          let catStr = d.category;
+          const isKnownCategoryType = ['question', 'discussion', 'tutorial', 'idea', 'showcase'].includes(String(catStr).toLowerCase());
+          
+          if (!isKnownCategoryType) {
+            const lookupId = d.category_id || (Number(d.category) ? Number(d.category) : null);
+            if (lookupId) {
+              const catObj = categories.value.find(c => Number(c.id) === Number(lookupId));
+              if (catObj) {
+                catStr = (catObj.type || catObj.name || '').toLowerCase();
+              }
+            }
+          }
+          
+          if (!catStr || !['question', 'discussion', 'tutorial', 'idea', 'showcase'].includes(catStr.toLowerCase())) {
+            catStr = 'discussion';
+          }
+
+          const likesCount = d.likes !== undefined ? d.likes : (d.like_count !== undefined ? d.like_count : 0);
+          const isLiked = d.likedByUser !== undefined ? d.likedByUser : (d.liked !== undefined ? d.liked : (d.isLiked !== undefined ? d.isLiked : false));
+          const repliesVal = d.replies !== undefined ? d.replies : (d.comment_count !== undefined ? Number(d.comment_count) : 0);
+          return {
+            ...d,
+            category: catStr,
+            tags: normalizeTags(d.tags || d.Tags || d.tag_name || d.tag_names),
+            saved: bookmarkedIds.has(Number(d.id)) || d.saved || false,
+            likes: likesCount,
+            likedByUser: isLiked,
+            voted: isLiked ? 'up' : (d.voted || null),
+            votes: d.votes !== undefined ? d.votes : likesCount,
+            replies: repliesVal
+          };
+        });
+
+        setDiscussions(mappedDiscussions);
+        return mappedDiscussions;
+      }
+      return [];
+    } catch (err) {
+      throw err.response?.data || err.message;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   return {
     discussions, discussion, comments, bookmarks, categories, tags, isLoading, page, hasMore, allDiscussions,
     setDiscussions, setDiscussion, setComments, setBookmarks, setCategories, setTags,
@@ -961,6 +1104,6 @@ export const useForumStore = defineStore("forum", () => {
     fetchComments, createComment, postReply, deleteComment,
 
     fetchBookmarks, toggleBookmark, toggleSaveForum, toggleVoteDiscussion, toggleLikeDiscussion, toggleLikeComment, toggleLikeReply,
-    fetchCategories, fetchTags,
+    fetchCategories, fetchTags, fetchDiscussionsByTagName,
   };
 });

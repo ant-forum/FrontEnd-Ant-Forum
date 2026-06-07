@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, watch, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useForumStore } from "@/stores/ForumStore";
+import { useTagsStore } from "@/stores/TagsStore";
 import Navbar from "@/components/layouts/header.vue";
 import MarkdownEditor from "@/components/forum/create/MarkdownEditor.vue";
 import LeftSidebar from "@/components/forum/LeftSidebar.vue";
@@ -10,6 +11,7 @@ import { useToast } from "@/composables/useToast.js";
 const router = useRouter();
 const route = useRoute();
 const forumStore = useForumStore();
+const tagsStore = useTagsStore();
 const toast = useToast();
 
 const isEditMode = computed(() => route.name === "EditDiscussion");
@@ -46,8 +48,8 @@ const staticSuggestedTags = [
 ];
 
 const suggestedTags = computed(() => {
-  if (forumStore.tags && forumStore.tags.length > 0) {
-    return forumStore.tags.map((t) => t.name);
+  if (tagsStore.tags && tagsStore.tags.length > 0) {
+    return tagsStore.tags.map((t) => t.name);
   }
   return staticSuggestedTags;
 });
@@ -357,7 +359,7 @@ onMounted(async () => {
 
   // Fetch real tags from backend for suggestion pills
   try {
-    await forumStore.fetchTags();
+    await tagsStore.fetchTags();
   } catch (err) {
     console.warn('Could not fetch backend tags:', err);
   }
@@ -367,9 +369,10 @@ onMounted(async () => {
       const discId = route.params.id;
       await forumStore.fetchDiscussion(discId);
       const disc = forumStore.discussion;
+      console.log("[CreateDiscussionView] loaded disc for editing:", JSON.parse(JSON.stringify(disc)));
       if (disc) {
         form.value.title = disc.title || "";
-        form.value.excerpt = disc.body || disc.excerpt || "";
+        form.value.excerpt = disc.description || disc.Description || disc.body || disc.excerpt || "";
         form.value.code = disc.code || "";
         form.value.hasCode = disc.hasCode || false;
 
@@ -381,8 +384,14 @@ onMounted(async () => {
         }
 
         // Tags
-        if (Array.isArray(disc.tags)) {
-          tagsList.value = disc.tags.map(t => typeof t === "string" ? { label: t, color: getTagColor(t) } : { label: t.label || t.name, color: t.color || getTagColor(t.label || t.name) });
+        const rawTags = disc.tags || disc.Tags || disc.tag_name || disc.tag_names;
+        if (Array.isArray(rawTags)) {
+          tagsList.value = rawTags.map(t => typeof t === "string" ? { label: t, color: getTagColor(t) } : { label: t.label || t.name, color: t.color || getTagColor(t.label || t.name) });
+        } else if (typeof rawTags === 'string') {
+          tagsList.value = rawTags.split(',').map(t => t.trim()).filter(Boolean).map(t => ({
+            label: t.replace('#', ''),
+            color: getTagColor(t)
+          }));
         }
       }
     } catch (err) {
