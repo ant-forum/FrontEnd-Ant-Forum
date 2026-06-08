@@ -4,6 +4,7 @@ import Navbar from '../components/layouts/header.vue'
 import { useForumStore } from '../stores/ForumStore'
 import { useRouter } from 'vue-router'
 import { computed, onMounted } from 'vue'
+import { resolveMediaUrl } from '../utils/mediaUrl'
 
 const auth = useAuthStore()
 const forumStore = useForumStore()
@@ -61,10 +62,12 @@ const recentThreadsLive = computed(() => {
     let authorAvatar = 'https://i.pravatar.cc/150?u=anonymous';
     if (d.user) {
       authorName = d.user.username || d.user.name || authorName;
-      authorAvatar = d.user.profile_pic || d.user.avatar || authorAvatar;
+      const rawPic = d.user.profile_pic || d.user.avatar;
+      authorAvatar = resolveMediaUrl(rawPic) || authorAvatar;
     } else if (d.author) {
       authorName = typeof d.author === 'object' ? (d.author.username || d.author.name) : d.author;
-      authorAvatar = d.author_avatar || authorAvatar;
+      const rawPic = d.author_avatar || (typeof d.author === 'object' ? (d.author.profile_pic || d.author.avatar) : null);
+      authorAvatar = resolveMediaUrl(rawPic) || authorAvatar;
     }
 
     return {
@@ -91,10 +94,12 @@ const latestProjectsLive = computed(() => {
     let authorAvatar = 'https://i.pravatar.cc/150?u=anonymous';
     if (d.user) {
       authorName = d.user.username || d.user.name || authorName;
-      authorAvatar = d.user.profile_pic || d.user.avatar || authorAvatar;
+      const rawPic = d.user.profile_pic || d.user.avatar;
+      authorAvatar = resolveMediaUrl(rawPic) || authorAvatar;
     } else if (d.author) {
       authorName = typeof d.author === 'object' ? (d.author.username || d.author.name) : d.author;
-      authorAvatar = d.author_avatar || authorAvatar;
+      const rawPic = d.author_avatar || (typeof d.author === 'object' ? (d.author.profile_pic || d.author.avatar) : null);
+      authorAvatar = resolveMediaUrl(rawPic) || authorAvatar;
     }
 
     const tagLabels = Array.isArray(d.tags) 
@@ -110,7 +115,7 @@ const latestProjectsLive = computed(() => {
       tags: tagLabels.slice(0, 3),
       stars: d.likes !== undefined ? d.likes : (d.votes !== undefined ? d.votes : 0),
       views: d.views !== undefined ? d.views : 0,
-      image: d.thumbnail || d.image || 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=600'
+      image: resolveMediaUrl(d.thumbnail || d.image) || 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=600'
     };
   });
 });
