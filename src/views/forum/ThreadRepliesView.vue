@@ -7,7 +7,7 @@ import ForumSidebar from '@/components/forum/ForumSidebar.vue';
 import { useForumStore } from '@/stores/ForumStore';
 import { useAuthStore } from '@/stores/AuthStore';
 import MarkdownEditor from '@/components/forum/create/MarkdownEditor.vue';
-import { sanitizeHtml } from '@/utils/sanitizeHtml';
+import { markdownToHtml } from '@/utils/markdown';
 import { resolveMediaUrl } from '@/utils/mediaUrl';
 
 const route = useRoute();
@@ -429,7 +429,7 @@ function getAvatarUrl(author) {
             </div>
           </div>
 
-          <div class="thread-body" v-html="sanitizeHtml(discussion.excerpt || discussion.body || 'No description provided.')">
+          <div class="thread-body" v-html="markdownToHtml(discussion.description || discussion.excerpt || discussion.body || 'No description provided.')">
           </div>
 
           <!-- Codeblock if present -->
@@ -515,7 +515,7 @@ function getAvatarUrl(author) {
                     <span class="reply-time">{{ reply.timestamp || 'Just now' }}</span>
                   </div>
                 </div>
-                <div class="reply-body" v-html="sanitizeHtml(reply.body)">
+                <div class="reply-body" v-html="markdownToHtml(reply.body || '')">
                 </div>
                 
                 <div class="reply-actions">

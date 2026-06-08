@@ -131,7 +131,7 @@ function selectTag(tagName) {
         <h3 class="thread-title">{{ d.title }}</h3>
 
         <!-- Excerpt -->
-        <p class="thread-excerpt">{{ d.excerpt }}</p>
+        <p class="thread-excerpt">{{ d.excerpt || d.description || d.body }}</p>
 
         <!-- Code Block (Card 2 / hasCode) -->
         <div v-if="d.hasCode && d.code" class="code-block" @click.stop>

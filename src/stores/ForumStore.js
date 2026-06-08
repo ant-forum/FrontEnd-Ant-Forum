@@ -4,6 +4,7 @@ import api from "@/api/api";
 import { useUsersStore } from "./UsersStore";
 import { useAuthStore } from "./AuthStore";
 import { useTagsStore } from "./TagsStore";
+import { stripMarkdown } from "@/utils/markdown";
 
 const getTagColor = (tag) => {
   if (!tag) return "gray";
@@ -169,7 +170,8 @@ export const useForumStore = defineStore("forum", () => {
           likedByUser: isLiked,
           voted: isLiked ? 'up' : (d.voted || null),
           votes: d.votes !== undefined ? d.votes : likesCount,
-          replies: repliesVal
+          replies: repliesVal,
+          excerpt: d.excerpt || stripMarkdown(d.description || d.body || '')
         };
       });
 
@@ -323,6 +325,7 @@ export const useForumStore = defineStore("forum", () => {
         discussionData.tags = normalizeTags(discussionData.tags || discussionData.Tags || discussionData.tag_name || discussionData.tag_names);
         discussionData.saved = isBookmarked || discussionData.saved || false;
         discussionData.replies = commentData;
+        discussionData.excerpt = discussionData.excerpt || stripMarkdown(discussionData.description || discussionData.body || '');
         
         const likesCount = discussionData.likes !== undefined ? discussionData.likes : (discussionData.like_count !== undefined ? discussionData.like_count : 0);
         const isLiked = discussionData.likedByUser !== undefined ? discussionData.likedByUser : (discussionData.liked !== undefined ? discussionData.liked : (discussionData.isLiked !== undefined ? discussionData.isLiked : false));
@@ -396,6 +399,7 @@ export const useForumStore = defineStore("forum", () => {
           savedData.likedByUser = false;
           savedData.votes = likesCount;
           savedData.replies = 0;
+          savedData.excerpt = savedData.excerpt || stripMarkdown(savedData.description || savedData.body || '');
         }
         discussions.value.unshift(savedData);
       }
@@ -458,6 +462,7 @@ export const useForumStore = defineStore("forum", () => {
           savedData.voted = isLiked ? 'up' : (savedData.voted || null);
           savedData.votes = savedData.votes !== undefined ? savedData.votes : likesCount;
           savedData.replies = savedData.replies !== undefined ? savedData.replies : (savedData.comment_count !== undefined ? Number(savedData.comment_count) : 0);
+          savedData.excerpt = savedData.excerpt || stripMarkdown(savedData.description || savedData.body || '');
         }
         const index = discussions.value.findIndex(
           (item) => Number(item.id) === Number(id)
@@ -785,6 +790,7 @@ export const useForumStore = defineStore("forum", () => {
         bd.voted = isLiked ? 'up' : (bd.voted || null);
         bd.votes = bd.votes !== undefined ? bd.votes : likesCount;
         bd.replies = bd.replies !== undefined ? bd.replies : (bd.comment_count !== undefined ? Number(bd.comment_count) : 0);
+        bd.excerpt = bd.excerpt || stripMarkdown(bd.description || bd.body || '');
 
         const index = discussions.value.findIndex(d => Number(d.id) === Number(bd.id));
         if (index === -1) {
@@ -1080,7 +1086,8 @@ export const useForumStore = defineStore("forum", () => {
             likedByUser: isLiked,
             voted: isLiked ? 'up' : (d.voted || null),
             votes: d.votes !== undefined ? d.votes : likesCount,
-            replies: repliesVal
+            replies: repliesVal,
+            excerpt: d.excerpt || stripMarkdown(d.description || d.body || '')
           };
         });
 
