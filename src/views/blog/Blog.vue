@@ -1,9 +1,8 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
-import LeftSidebar from '../../components/forum/LeftSidebar.vue';
 import { useBlogStore } from '../../stores/BlogStore';
 import { useAuthStore } from '../../stores/AuthStore';
 import { createPlainTextExcerpt } from '../../utils/richContent';
@@ -17,6 +16,9 @@ const searchQuery = ref('');
 const selectedCategory = ref('All');
 const sortBy = ref('latest');
 const showDrafts = ref(false);
+const initialLoading = ref(true);
+const BLOGS_PER_PAGE = 6;
+const visibleBlogCount = ref(BLOGS_PER_PAGE);
 
 const fallbackCategories = [
   { id: 1, name: 'Frontend' },
@@ -92,16 +94,21 @@ const form = ref({
 });
 
 onMounted(async () => {
+  initialLoading.value = true;
   try {
-    await blogStore.fetchCategories();
-  } catch (err) {
-    console.error("Failed to fetch categories:", err);
-  }
+    try {
+      await blogStore.fetchCategories();
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
 
-  if (authStore.user?.role === 'admin') {
-    await blogStore.fetchAllBlogs();
-  } else {
-    await blogStore.fetchBlogs();
+    if (authStore.user?.role === 'admin') {
+      await blogStore.fetchAllBlogs();
+    } else {
+      await blogStore.fetchBlogs();
+    }
+  } finally {
+    initialLoading.value = false;
   }
 });
 
@@ -143,6 +150,27 @@ const filteredPosts = computed(() => {
 
   return result;
 });
+
+const visiblePosts = computed(() => filteredPosts.value.slice(0, visibleBlogCount.value));
+const canShowMore = computed(() => {
+  return visibleBlogCount.value < filteredPosts.value.length || (blogStore.hasMore && !showDrafts.value);
+});
+
+watch([searchQuery, selectedCategory, selectedTag, sortBy, showDrafts], () => {
+  visibleBlogCount.value = BLOGS_PER_PAGE;
+});
+
+const loadMorePosts = async () => {
+  if (visibleBlogCount.value < filteredPosts.value.length) {
+    visibleBlogCount.value += BLOGS_PER_PAGE;
+    return;
+  }
+
+  if (blogStore.hasMore && !showDrafts.value) {
+    await blogStore.loadMore();
+    visibleBlogCount.value += BLOGS_PER_PAGE;
+  }
+};
 
 const openCreateModal = () => {
   isEditing.value = false;
@@ -196,7 +224,7 @@ const submitForm = async () => {
   const formData = new FormData();
   const content = form.value.description;
   formData.append('title', form.value.title);
-  formData.append('description', createPlainTextExcerpt(content));
+  formData.append('description', createPlainTextExcerpt(content, 180));
   formData.append('content', content);
   formData.append('category_id', form.value.category_id);
   formData.append('status', form.value.status);
@@ -240,34 +268,85 @@ const formatNumber = (num) => {
     <Navbar />
 
     <div class="blog-global-grid">
-      <!-- Left Column: Left Sidebar Navigation -->
-      <LeftSidebar :active-tab="'Blog'" />
-
-      <!-- Right Column: Main Content Container -->
-      <div class="blog-main-container">
+      <!-- Left Column: Blog Sidebar -->
+      <aside class="blog-sidebar">
         <!-- Search Bar -->
-        <div class="showcase-search-section mb-5">
-          <div class="search-input-wrapper">
+        <div class="sidebar-search mb-4">
+          <div class="sidebar-search-wrapper">
+            <i class="bi bi-search search-icon"></i>
             <input
               v-model="searchQuery"
               type="text"
               placeholder="Search articles..."
-              class="search-bar"
-              @input="() => {}"
+              class="sidebar-search-input"
             >
-            <button class="search-btn" @click="() => {}" title="Search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
+          </div>
+        </div>
+
+        <!-- Categories Section -->
+        <div class="sidebar-section">
+          <h3 class="sidebar-heading">CATEGORIES</h3>
+          <div class="sidebar-menu">
+            <button
+              v-for="cat in categoryOptions"
+              :key="cat.name"
+              type="button"
+              @click="selectedCategory = cat.name"
+              :class="['sidebar-menu-item', { active: selectedCategory === cat.name }]"
+            >
+              <i :class="['bi', cat.icon, 'me-2']"></i>
+              <span class="flex-grow-1 text-start fw-semibold">{{ cat.name }}</span>
+              <span class="sidebar-badge">{{ cat.count }}</span>
             </button>
           </div>
         </div>
 
+        <!-- Tags Section -->
+        <div class="sidebar-section mt-5">
+          <h3 class="sidebar-heading">POPULAR TAGS</h3>
+          <div class="sidebar-tags">
+            <button
+              type="button"
+              @click="selectedTag = null"
+              :class="['sidebar-tag-pill', { active: !selectedTag }]"
+            >
+              All Tags
+            </button>
+            <button
+              v-for="tag in allTags"
+              :key="tag"
+              type="button"
+              @click="selectedTag = tag"
+              :class="['sidebar-tag-pill', { active: selectedTag === tag }]"
+            >
+              #{{ tag }}
+            </button>
+          </div>
+        </div>
+      </aside>
 
+      <!-- Right Column: Main Content Container -->
+      <div class="blog-main-container">
+        <!-- Sleek Page Header -->
+        <section class="blog-page-header mb-4">
+          <div class="header-text-main" style="max-width: 600px;">
+            <span class="blog-page-kicker">Engineering Blog</span>
+            <h1>Knowledge Base</h1>
+            <p class="mt-2 mb-2 fs-5 fw-medium text-light">Insights, tutorials, and deep dives from our developer community.</p>
+            <p class="text-muted text-sm mb-0">
+              Explore hundreds of technical articles covering everything from frontend system design and React performance tuning, to backend scaling with Node and GraphQL. Stay up to date with the latest patterns, written by engineers, for engineers.
+            </p>
+            <div class="d-flex gap-2 mt-4">
+              <span class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"><i class="bi bi-journal-text me-1"></i> {{ blogStore.blogs.length }} Articles</span>
+              <span class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"><i class="bi bi-people me-1"></i> Community Driven</span>
+              <span class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"><i class="bi bi-stars me-1"></i> Weekly Updates</span>
+            </div>
+          </div>
+          
+        </section>
 
         <!-- Admin drafts toggle -->
-        <div v-if="authStore.user?.role === 'admin'" class="mb-4 d-flex justify-content-start gap-2 border-bottom pb-2">
+        <div v-if="authStore.user?.role === 'admin'" class="mb-4 d-flex justify-content-start gap-2 pb-2">
           <button 
             @click="showDrafts = false"
             :class="['btn-sm px-4 py-2 fw-bold rounded-pill transition-all', !showDrafts ? 'btn-purple text-white' : 'btn-light text-muted']"
@@ -282,88 +361,42 @@ const formatNumber = (num) => {
           </button>
         </div>
 
-        <!-- Categories & Filters -->
-        <section class="filter-panel mb-5" aria-label="Blog filters">
-          <div class="filter-panel-header">
-            <div>
-              <span class="filter-kicker">Browse Library</span>
-              <h2>Articles by category</h2>
-            </div>
-
-            <label class="sort-control">
-              <span>Sort</span>
-              <select v-model="sortBy" aria-label="Sort articles">
-                <option value="latest">Latest first</option>
-                <option value="popular">Most viewed</option>
-              </select>
-              <i class="bi bi-chevron-down"></i>
-            </label>
-          </div>
-
-          <div class="category-filter-grid">
-            <button
-              v-for="cat in categoryOptions"
-              :key="cat.name"
-              type="button"
-              @click="selectedCategory = cat.name"
-              :class="['category-filter-card', cat.tone, { active: selectedCategory === cat.name }]"
-            >
-              <span class="category-icon">
-                <i :class="['bi', cat.icon]"></i>
-              </span>
-              <span class="category-copy">
-                <strong>{{ cat.name }}</strong>
-                <small>{{ cat.count }} {{ cat.count === 1 ? 'article' : 'articles' }}</small>
-              </span>
-            </button>
-          </div>
-
-          <div class="filter-panel-footer">
-            <div class="active-filter-chip">
-              <i class="bi bi-funnel-fill"></i>
-              <span>{{ selectedCategory }}</span>
-              <button
-                v-if="selectedCategory !== 'All' || selectedTag"
-                type="button"
-                title="Clear filters"
-                @click="selectedCategory = 'All'; selectedTag = null"
-              >
-                <i class="bi bi-x-lg"></i>
-              </button>
-            </div>
-
-            <div class="tag-filter-row" aria-label="Popular tags">
-              <button
-                type="button"
-                @click="selectedTag = null"
-                :class="['tag-filter-chip', { active: !selectedTag }]"
-              >
-                All Tags
-              </button>
-              <button
-                v-for="tag in allTags"
-                :key="tag"
-                type="button"
-                @click="selectedTag = tag"
-                :class="['tag-filter-chip', { active: selectedTag === tag }]"
-              >
-                #{{ tag }}
-              </button>
-            </div>
-          </div>
-        </section>
-
         <!-- Blog Grid Section Title -->
-        <div class="mb-4 d-flex align-items-center justify-content-between">
-          <h4 class="fw-bold mb-0">
-            {{ selectedCategory === 'All' ? 'Latest Publications' : selectedCategory + ' Articles' }}
-          </h4>
-          <div class="text-muted text-sm">{{ filteredPosts.length }} Articles found</div>
+        <div class="mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <h4 class="fw-bold mb-0 text-nowrap">
+              {{ selectedCategory === 'All' ? 'Latest Publications' : selectedCategory + ' Articles' }}
+            </h4>
+            <span class="text-muted text-sm text-nowrap">
+              {{ initialLoading ? 'Loading articles...' : filteredPosts.length + ' Articles found' }}
+            </span>
+          </div>
+
+          <select v-model="sortBy" class="form-select form-select-sm rounded-pill sort-select w-auto">
+            <option value="latest">Sort: Latest first</option>
+            <option value="popular">Sort: Most viewed</option>
+          </select>
         </div>
 
         <!-- Blog Grid -->
         <div class="blog-grid">
-          <div v-if="filteredPosts.length === 0" class="col-12 text-center py-5">
+          <template v-if="initialLoading">
+            <article v-for="index in 4" :key="'skeleton-' + index" class="blog-card blog-card-skeleton" aria-hidden="true">
+              <div class="skeleton-media skeleton-shimmer"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-line-sm skeleton-shimmer"></div>
+                <div class="skeleton-line skeleton-line-lg skeleton-shimmer"></div>
+                <div class="skeleton-line skeleton-line-md skeleton-shimmer"></div>
+                <div class="skeleton-line skeleton-line-xs skeleton-shimmer"></div>
+                <div class="skeleton-author">
+                  <div class="skeleton-avatar skeleton-shimmer"></div>
+                  <div class="skeleton-line skeleton-line-author skeleton-shimmer"></div>
+                </div>
+              </div>
+            </article>
+          </template>
+
+          <div v-else-if="filteredPosts.length === 0" class="blog-empty-state text-center py-5">
             <div class="empty-state-card">
               <div class="empty-icon-wrap">
                 <i class="bi bi-journal-x"></i>
@@ -373,11 +406,11 @@ const formatNumber = (num) => {
             </div>
           </div>
           
-          <div v-for="post in filteredPosts" :key="post.id" class="blog-card">
+          <div v-for="post in visiblePosts" :key="post.id" class="blog-card">
             <router-link :to="'/blog/' + post.id" class="text-decoration-none h-100 d-block">
-              <article class="h-100 overflow-hidden bg-surface transition-up">
+              <article class="blog-card-surface h-100 transition-up">
                 <div class="post-image-container position-relative overflow-hidden">
-                  <img :src="post.image" @error="handleImgError" class="post-img-zoom" alt="Article">
+                  <img :src="post.image" @error.once="handleImgError" class="post-img-zoom" alt="Article">
                   <div class="post-category-tag position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill bg-surface-blur backdrop-blur-sm">
                     <span class="text-xs fw-bold text-purple text-uppercase">{{ post.category }}</span>
                   </div>
@@ -386,10 +419,10 @@ const formatNumber = (num) => {
                 <div class="post-content p-4 d-flex flex-column">
                   <div class="d-flex align-items-center gap-2 text-muted text-xs mb-3 fw-medium">
                     <i class="bi bi-calendar3"></i> {{ post.date }} 
-                    <span class="mx-1">•</span>
-                    <i class="bi bi-eye"></i> {{ formatNumber(post.views) }}
-                    <span class="mx-1">•</span>
-                    <i class="bi bi-heart"></i> {{ post.likes }}
+                    <!-- <span class="mx-1">•</span> -->
+                    <!-- <i class="bi bi-eye"></i> {{ formatNumber(post.views) }} -->
+                    <!-- <span class="mx-1">•</span> -->
+                    <!-- <i class="bi bi-heart"></i> {{ post.likes }} -->
                   </div>
                   <h5 class="fw-bold mb-2 blog-title line-clamp-2">{{ post.title }}</h5>
                   
@@ -401,9 +434,9 @@ const formatNumber = (num) => {
                   <p class="text-muted text-sm mb-4 line-clamp-2">{{ post.excerpt || post.description }}</p>
                   
                   <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
-                    <div class="author-info d-flex align-items-center gap-2">
+                    <div class="author-info d-flex align-items-center gap-2 min-w-0">
                       <img :src="post.author_avatar" class="author-avatar" width="28" height="28">
-                      <span class="text-sm fw-bold">{{ post.author }}</span>
+                      <span class="text-sm fw-bold text-truncate">{{ post.author }}</span>
                     </div>
                     
                     <div class="read-more-link text-purple text-sm fw-bold">
@@ -417,9 +450,9 @@ const formatNumber = (num) => {
         </div>
 
         <!-- Load More Button -->
-        <div v-if="blogStore.hasMore && !showDrafts" class="d-flex justify-content-center mt-5">
+        <div v-if="canShowMore" class="d-flex justify-content-center mt-5">
           <button 
-            @click="blogStore.loadMore()" 
+            @click="loadMorePosts" 
             :disabled="blogStore.isLoading" 
             class="btn-purple rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2"
           >
@@ -542,57 +575,7 @@ const formatNumber = (num) => {
   flex-direction: column;
 }
 
-/* Search Bar Styles from Showcase */
-.showcase-search-section {
-  margin-top: 24px;
-  width: 100%;
-}
-
-.search-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-radius: 99px;
-  transition: all 0.2s ease;
-  overflow: hidden;
-}
-
-.search-input-wrapper:focus-within {
-  border-color: var(--color-purple);
-  box-shadow: 0 0 0 3px var(--color-purple-light);
-}
-
-.search-bar {
-  flex: 1;
-  padding: 12px 20px;
-  background: transparent;
-  border: none;
-  font-size: 14.5px;
-  color: var(--color-text);
-  outline: none;
-  font-family: inherit;
-}
-
-.search-btn {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.search-btn:hover {
-  color: var(--color-purple);
-}
-
-/* Featured Card Styles */
+/* Sidebar Styles */
 .featured-section {
   margin-top: 32px;
 }
@@ -746,239 +729,207 @@ const formatNumber = (num) => {
   color: var(--color-purple);
 }
 
-/* Filter Panel */
-.filter-panel {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, var(--color-purple) 4%), var(--color-surface));
-  border: 1px solid color-mix(in srgb, var(--color-border) 82%, var(--color-purple) 18%);
-  border-radius: 20px;
+/* Sidebar Styles */
+.blog-sidebar {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 24px;
   box-shadow: var(--shadow-sm);
-  padding: 18px;
 }
 
-.filter-panel-header {
+.sidebar-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0 14px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-search-wrapper:focus-within {
+  border-color: var(--color-purple);
+  box-shadow: 0 0 0 3px var(--color-purple-light);
+}
+
+.search-icon {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.sidebar-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 12px 10px;
+  color: var(--color-text);
+  font-size: 13.5px;
+  outline: none;
+}
+
+.sidebar-heading {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  letter-spacing: 0.8px;
+  margin: 0 0 12px 6px;
+  text-transform: uppercase;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.sidebar-menu-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  transform: translateX(2px);
+}
+
+.sidebar-menu-item.active {
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  font-weight: 700;
+}
+
+.sidebar-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sidebar-tag-pill {
+  padding: 6px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-tag-pill:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-purple);
+  color: var(--color-purple);
+}
+
+.sidebar-tag-pill.active {
+  background: var(--color-purple-light);
+  border-color: var(--color-purple);
+  color: var(--color-purple);
+}
+
+.sidebar-badge {
+  padding: 2px 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.sidebar-menu-item.active .sidebar-badge {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: transparent;
+  color: var(--color-purple);
+}
+
+/* Page Header */
+.blog-page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 24px;
+  padding: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  font-family: inherit;
 }
 
-.filter-kicker {
+.blog-page-kicker {
   display: block;
+  margin-bottom: 6px;
   color: var(--color-purple);
-  font-size: 0.7rem;
-  font-weight: 900;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 800;
   letter-spacing: 0.08em;
-  margin-bottom: 4px;
+  text-transform: uppercase;
 }
 
-.filter-panel-header h2 {
-  color: var(--color-text);
-  font-size: 1.15rem;
-  font-weight: 900;
-  line-height: 1.2;
+.blog-page-header h1 {
   margin: 0;
-}
-
-.sort-control {
-  min-width: 178px;
-  min-height: 42px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--color-text-muted);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 0 12px 0 14px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  position: relative;
-}
-
-.sort-control select {
-  width: 100%;
   color: var(--color-text);
-  background: transparent;
-  border: 0;
+  font-size: clamp(1.6rem, 2.5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.blog-page-header p {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.sort-select {
   appearance: none;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 36px 8px 16px;
+  border-radius: 99px;
+  cursor: pointer;
   outline: none;
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 800;
-  padding-right: 18px;
-  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  transition: all 0.2s ease;
 }
 
-.sort-control i {
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-  pointer-events: none;
-  position: absolute;
-  right: 12px;
+.sort-select:focus {
+  border-color: var(--color-purple);
+  box-shadow: 0 0 0 3px var(--color-purple-light);
 }
 
-.category-filter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 10px;
-}
-
-.category-filter-card {
-  min-height: 70px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-  color: var(--color-text);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 12px;
-  cursor: pointer;
-  transition:
-    transform var(--transition-fast),
-    border-color var(--transition-fast),
-    background var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-
-.category-filter-card:hover {
-  border-color: color-mix(in srgb, var(--color-purple) 58%, var(--color-border));
-  transform: translateY(-1px);
-}
-
-.category-filter-card.active {
-  color: #ffffff;
-  background: linear-gradient(135deg, var(--color-purple), var(--color-primary));
-  border-color: transparent;
-  box-shadow: 0 16px 34px -26px var(--color-purple);
-}
-
-.category-icon {
-  width: 38px;
-  height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  color: var(--category-tone, var(--color-purple));
-  background: color-mix(in srgb, var(--category-tone, var(--color-purple)) 14%, transparent);
-  border-radius: 12px;
-  font-size: 1rem;
-}
-
-.category-filter-card.active .category-icon {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.category-copy {
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.category-copy strong {
-  font-size: 0.9rem;
-  font-weight: 900;
-  line-height: 1.2;
-}
-
-.category-copy small {
-  color: var(--color-text-muted);
-  font-size: 0.74rem;
-  font-weight: 750;
-}
-
-.category-filter-card.active .category-copy small {
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.category-filter-card.all { --category-tone: #8b5cf6; }
-.category-filter-card.discussion { --category-tone: #14b8a6; }
-.category-filter-card.questions { --category-tone: #3b82f6; }
-.category-filter-card.showcase,
-.category-filter-card.projects { --category-tone: #a855f7; }
-.category-filter-card.announcements { --category-tone: #f59e0b; }
-.category-filter-card.tutorials { --category-tone: #22c55e; }
-.category-filter-card.resources { --category-tone: #06b6d4; }
-.category-filter-card.frontend { --category-tone: #0ea5e9; }
-.category-filter-card.devops { --category-tone: #10b981; }
-.category-filter-card.systems { --category-tone: #64748b; }
-.category-filter-card.architecture { --category-tone: #ec4899; }
-
-.filter-panel-footer {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-top: 14px;
-}
-
-.active-filter-chip {
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
-  color: var(--color-purple);
-  background: var(--color-purple-light);
-  border-radius: 999px;
-  padding: 7px 10px 7px 12px;
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.active-filter-chip button {
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: currentColor;
-  background: rgba(255, 255, 255, 0.4);
-  border: 0;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.tag-filter-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-width: 0;
-}
-
-.tag-filter-chip {
-  min-height: 32px;
-  color: var(--color-text-muted);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  padding: 0 12px;
-  font-size: 0.78rem;
-  font-weight: 850;
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.tag-filter-chip:hover,
-.tag-filter-chip.active {
-  color: var(--color-text);
-  background: var(--color-surface-hover);
-  border-color: color-mix(in srgb, var(--color-purple) 42%, var(--color-border));
-}
-
-.tag-filter-chip.active {
-  color: #ffffff;
-  background: #1e293b;
-  border-color: transparent;
+@media (max-width: 992px) {
+  .blog-global-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Blog Grid */
@@ -989,39 +940,158 @@ const formatNumber = (num) => {
 }
 
 .blog-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
+  min-width: 0;
+  border-radius: 18px;
+  transform: translateY(0);
+  transition:
+    transform 260ms ease,
+    filter 260ms ease;
 }
 
 .blog-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  filter: drop-shadow(0 18px 28px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.14)) 72%, transparent));
+}
+
+.blog-card-surface {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, var(--color-purple) 4%), var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
+  border-radius: inherit;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.12)) 50%, transparent);
+  transition:
+    border-color 260ms ease,
+    box-shadow 260ms ease,
+    background 260ms ease;
+}
+
+.blog-card:hover .blog-card-surface {
+  border-color: color-mix(in srgb, var(--color-purple) 42%, var(--color-border));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 42%, transparent);
 }
 
 .post-image-container {
   height: 220px;
+  background: var(--color-surface-hover);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
 }
 
 .post-img-zoom {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s ease;
+  transform: scale(1);
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms ease;
 }
 
 .blog-card:hover .post-img-zoom {
-  transform: scale(1.05);
+  transform: scale(1.035);
+  filter: saturate(1.04) contrast(1.02);
+}
+
+.post-category-tag {
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.12)) 38%, transparent);
+}
+
+.post-content {
+  min-height: 300px;
 }
 
 .blog-title {
   font-size: 1.25rem;
   line-height: 1.4;
-  transition: color 0.2s;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  transition: color 220ms ease;
 }
 
 .blog-card:hover .blog-title {
   color: var(--color-purple);
+}
+
+.read-more-link {
+  transition: transform 220ms ease, color 220ms ease;
+}
+
+.blog-card:hover .read-more-link {
+  transform: translateX(3px);
+}
+
+.blog-card-skeleton {
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.12)) 50%, transparent);
+}
+
+.skeleton-media {
+  height: 220px;
+  border-radius: 20px 20px 0 0;
+}
+
+.skeleton-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+}
+
+.skeleton-line,
+.skeleton-avatar,
+.skeleton-media {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 0%,
+    color-mix(in srgb, var(--color-surface-hover) 72%, var(--color-text-muted) 28%) 48%,
+    var(--color-surface-hover) 100%
+  );
+  background-size: 220% 100%;
+}
+
+.skeleton-shimmer {
+  animation: blogSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 13px;
+  border-radius: 999px;
+}
+
+.skeleton-line-sm { width: 38%; }
+.skeleton-line-lg { width: 88%; height: 22px; }
+.skeleton-line-md { width: 72%; height: 18px; }
+.skeleton-line-xs { width: 52%; }
+.skeleton-line-author { width: 92px; }
+
+.skeleton-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--color-border);
+  margin-top: 10px;
+  padding-top: 18px;
+}
+
+.skeleton-avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+@keyframes blogSkeletonShimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
 }
 
 .bg-surface {
@@ -1067,8 +1137,15 @@ const formatNumber = (num) => {
 }
 
 /* Empty State */
+.blog-empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+}
+
 .empty-state-card {
   padding: 60px 40px;
+  width: min(100%, 520px);
 }
 
 .empty-icon-wrap {

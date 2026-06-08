@@ -43,7 +43,7 @@ const tags = computed(() => {
 
 const selectTag = (tagName) => {
   const cleanTag = tagName.replace('#', '').trim();
-  router.push({ path: '/forum', query: { q: cleanTag } });
+  router.push({ path: '/forum', query: { tag: cleanTag } });
 };
 </script>
 

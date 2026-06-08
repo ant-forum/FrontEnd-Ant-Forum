@@ -1,6 +1,9 @@
 <script setup>
-import { computed, defineEmits, defineProps } from "vue";
+import { computed, defineEmits, defineProps, ref } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
+const showAllActivities = ref(false);
 const props = defineProps({
   profileName: { type: String, required: true },
   profileRole: { type: String, default: "Student" },
@@ -24,6 +27,10 @@ const profileInitials = computed(() => {
     .map((name) => name[0])
     .join("")
     .toUpperCase() || "A";
+});
+
+const displayedActivities = computed(() => {
+  return showAllActivities.value ? props.activityFeed : props.activityFeed.slice(0, 3);
 });
 </script>
 
@@ -118,7 +125,10 @@ const profileInitials = computed(() => {
         </div>
         
         <div class="d-flex flex-column gap-3">
-          <div v-for="activity in activityFeed" :key="activity.title" class="activity-row-modern p-3 d-flex align-items-center gap-3">
+          <div v-for="activity in displayedActivities" :key="activity.id || activity.title" 
+               class="activity-row-modern p-3 d-flex align-items-center gap-3"
+               style="cursor: pointer;"
+               @click="activity.link ? router.push(activity.link) : null">
             <div class="activity-icon-container">
               <i :class="['bi', activity.icon, 'text-primary-purple']"></i>
             </div>
@@ -127,6 +137,12 @@ const profileInitials = computed(() => {
               <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ activity.meta }}</small>
             </div>
           </div>
+          
+          <button v-if="activityFeed.length > 3" 
+                  @click="showAllActivities = !showAllActivities" 
+                  class="btn btn-sm btn-outline-secondary mt-2 border-0 fw-bold themed-text">
+            {{ showAllActivities ? 'Show Less' : `View All Activity (${activityFeed.length})` }}
+          </button>
           <div v-if="activityFeed.length === 0" class="empty-state-card">
             <i class="bi bi-clock-history"></i>
             <div>

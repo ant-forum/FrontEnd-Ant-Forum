@@ -6,310 +6,410 @@ import { useForumStore } from '@/stores/ForumStore';
 const router = useRouter();
 const forumStore = useForumStore();
 
-const featuredThread = computed(() => {
-  if (!forumStore.discussions || forumStore.discussions.length === 0) {
-    return null;
-  }
-  // Find top voted discussion
-  return [...forumStore.discussions].sort((a, b) => (b.votes || 0) - (a.votes || 0))[0];
+const discussions = computed(() => {
+  return Array.isArray(forumStore.allDiscussions)
+    ? forumStore.allDiscussions
+    : [];
 });
 
-const participantsAvatars = computed(() => {
-  const list = [];
-  if (featuredThread.value && Array.isArray(featuredThread.value.replies)) {
-    const uniqueAuthors = new Set();
-    featuredThread.value.replies.forEach(r => {
-      const name = typeof r.author === 'object' ? (r.author.username || r.author.name) : r.author;
-      if (name && !uniqueAuthors.has(name)) {
-        uniqueAuthors.add(name);
-        const initials = name.replace('@', '').trim().slice(0, 2).toUpperCase();
-        list.push({ initials, name });
-      }
+const threadScore = (thread) => {
+  const votes = Number(thread?.votes ?? thread?.likes ?? 0);
+  const replies = Array.isArray(thread?.replies)
+    ? thread.replies.length
+    : Number(thread?.replies ?? thread?.comment_count ?? 0);
+  const createdTime = new Date(thread?.createdAt || thread?.created_at || 0).getTime();
+  const recentBoost = Number.isFinite(createdTime) ? createdTime / 100000000000 : 0;
+  return (votes * 3) + (replies * 5) + recentBoost;
+};
+
+const spotlightThread = computed(() => {
+  if (!discussions.value.length) return null;
+  return [...discussions.value].sort((a, b) => threadScore(b) - threadScore(a))[0];
+});
+
+const getReplyCount = (thread) => {
+  if (Array.isArray(thread?.replies)) return thread.replies.length;
+  return Number(thread?.replies ?? thread?.comment_count ?? 0);
+};
+
+const getAuthorName = (thread) => {
+  const author = thread?.author;
+  if (typeof author === 'object' && author) {
+    return author.username || author.name || 'Forum member';
+  }
+  return author || thread?.username || 'Forum member';
+};
+
+const getThreadCategory = (thread) => {
+  const raw = thread?.category || 'discussion';
+  return String(raw)
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+};
+
+const totalReplies = computed(() => {
+  return discussions.value.reduce((sum, thread) => sum + getReplyCount(thread), 0);
+});
+
+const unansweredCount = computed(() => {
+  return discussions.value.filter((thread) => getReplyCount(thread) === 0).length;
+});
+
+const activeTagNames = computed(() => {
+  const counts = new Map();
+  discussions.value.forEach((thread) => {
+    const tags = Array.isArray(thread.tags) ? thread.tags : [];
+    tags.forEach((tag) => {
+      const label = typeof tag === 'object' ? tag.label || tag.name : tag;
+      if (!label) return;
+      const cleanLabel = String(label).replace(/^#/, '').trim();
+      counts.set(cleanLabel, (counts.get(cleanLabel) || 0) + 1);
     });
-  }
-  return list.slice(0, 3);
+  });
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([name]) => name);
 });
 
-const remainingCount = computed(() => {
-  if (featuredThread.value && Array.isArray(featuredThread.value.replies)) {
-    if (featuredThread.value.replies.length === 0) return 0;
-    return Math.max(0, featuredThread.value.replies.length - participantsAvatars.value.length);
-  }
-  return 42; // Fallback
-});
+const stats = computed(() => [
+  { label: 'Threads', value: discussions.value.length, icon: 'bi-chat-square-text' },
+  { label: 'Replies', value: totalReplies.value, icon: 'bi-reply-all' },
+  { label: 'Open', value: unansweredCount.value, icon: 'bi-question-circle' },
+]);
 
-const activeAvatars = computed(() => {
-  const list = participantsAvatars.value;
-  if (list.length > 0) {
-    return list.map(item => {
-      const name = item.name;
-      const gradients = [
-        'linear-gradient(135deg, #3b82f6, #2563eb)', // Blue
-        'linear-gradient(135deg, #10b981, #059669)', // Emerald
-        'linear-gradient(135deg, #f59e0b, #d97706)', // Amber
-        'linear-gradient(135deg, #ec4899, #db2777)', // Pink
-        'linear-gradient(135deg, #8b5cf6, #7c3aed)', // Purple
-        'linear-gradient(135deg, #06b6d4, #0891b2)', // Cyan
-      ];
-      let sum = 0;
-      for (let i = 0; i < name.length; i++) {
-        sum += name.charCodeAt(i);
-      }
-      const grad = gradients[sum % gradients.length];
-      return {
-        initials: item.initials,
-        name: name,
-        style: { background: grad, color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }
-      };
-    });
+const openSpotlight = () => {
+  if (spotlightThread.value?.id) {
+    router.push(`/forum/${spotlightThread.value.id}`);
+    return;
   }
-  return [
-    { initials: 'AM', color: '#8b5cf6', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100' },
-    { initials: 'SK', color: '#ec4899', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100' },
-    { initials: 'JL', color: '#10b981', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100' }
-  ];
-});
+  router.push('/forum/create');
+};
 
-const joinDiscussion = () => {
-  if (featuredThread.value) {
-    router.push(`/forum/${featuredThread.value.id}`);
-  }
+const openCreate = () => {
+  router.push('/forum/create');
+};
+
+const openTag = (tag) => {
+  router.push({ path: '/forum', query: { tag: tag } });
 };
 </script>
 
 <template>
-  <div class="featured-section">
-    <div class="featured-content">
-      <span class="featured-badge">
-        {{ featuredThread ? 'Featured Thread' : 'Weekly Challenge' }}
-      </span>
+  <section class="featured-section" aria-label="Forum highlights">
+    <div class="spotlight-panel">
+      <div class="spotlight-top">
+        <span class="featured-badge">
+          <i class="bi bi-lightning-charge-fill"></i>
+          Community Pulse
+        </span>
+        <span class="category-pill">{{ spotlightThread ? getThreadCategory(spotlightThread) : 'Discussion' }}</span>
+      </div>
 
-      <h1 class="featured-title" v-if="featuredThread">
-        {{ featuredThread.title }}
-      </h1>
-      <h1 class="featured-title" v-else>
-        Optimize React Server Components for<br>High-Traffic Dashboards
+      <h1 class="featured-title">
+        {{ spotlightThread?.title || 'Start the next useful discussion' }}
       </h1>
 
-      <p class="featured-description" v-if="featuredThread">
-        {{ featuredThread.excerpt || featuredThread.description || 'Join the community in dissecting this topic and sharing benchmarks!' }}
+      <p class="featured-description">
+        {{ spotlightThread?.excerpt || spotlightThread?.description || 'Ask a focused question, share what you tried, and help the community build better answers together.' }}
       </p>
-      <p class="featured-description" v-else>
-        Join the core engineering team in dissecting the latest patterns for data
-        fetching and streaming in next-gen web applications. Share your
-        benchmarks and earn ecosystem reputation points.
-      </p>
+
+      <div class="thread-meta">
+        <span>
+          <i class="bi bi-person-circle"></i>
+          {{ getAuthorName(spotlightThread) }}
+        </span>
+        <span>
+          <i class="bi bi-heart"></i>
+          {{ spotlightThread?.likes || spotlightThread?.votes || 0 }}
+        </span>
+        <span>
+          <i class="bi bi-chat-dots"></i>
+          {{ getReplyCount(spotlightThread) }}
+        </span>
+      </div>
 
       <div class="featured-actions">
-        <button class="join-btn" @click="joinDiscussion">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5,3 19,12 5,21"/>
-          </svg>
-          Join Discussion
+        <button class="primary-action" type="button" @click="openSpotlight">
+          <i class="bi bi-arrow-right-circle-fill"></i>
+          {{ spotlightThread ? 'Open Thread' : 'Ask Question' }}
         </button>
-
-        <div class="participants">
-          <div class="avatars">
-            <div
-              v-for="(avatar, index) in activeAvatars"
-              :key="index"
-              class="avatar"
-              :style="avatar.style"
-              :title="avatar.name"
-            >
-              <img v-if="avatar.image" :src="avatar.image" :alt="avatar.initials">
-              <span v-else>{{ avatar.initials }}</span>
-            </div>
-            <!-- + bubble exactly like screenshot -->
-            <div v-if="remainingCount > 0" class="avatar more-bubble">
-              +{{ remainingCount }}
-            </div>
-          </div>
-        </div>
+        <button class="secondary-action" type="button" @click="openCreate">
+          <i class="bi bi-plus-lg"></i>
+          New Question
+        </button>
       </div>
     </div>
 
-    <div class="featured-deco" aria-hidden="true">
-      <svg viewBox="0 0 440 300" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0.4"/>
-            <stop offset="100%" stop-color="#e9d5ff" stop-opacity="0.1"/>
-          </linearGradient>
-          <linearGradient id="g2" x1="1" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ddd6fe" stop-opacity="0.5"/>
-            <stop offset="100%" stop-color="#f5f3ff" stop-opacity="0.1"/>
-          </linearGradient>
-          <linearGradient id="g3" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.3"/>
-            <stop offset="100%" stop-color="#ede9fe" stop-opacity="0.05"/>
-          </linearGradient>
-          <filter id="blur1">
-            <feGaussianBlur stdDeviation="8"/>
-          </filter>
-        </defs>
-        <path d="M 80,300 Q 200,80 440,160 L 440,300 Z" fill="url(#g1)"/>
-        <path d="M 0,220 Q 160,40 380,180 L 440,200 L 440,300 L 0,300 Z" fill="url(#g2)"/>
-        <path d="M 100,300 Q 220,130 440,220 L 440,300 Z" fill="url(#g3)"/>
-        <circle cx="330" cy="80" r="64" fill="#c4b5fd" opacity="0.1" filter="url(#blur1)"/>
-        <circle cx="390" cy="48" r="32" fill="#a78bfa" opacity="0.15" filter="url(#blur1)"/>
-        <circle cx="270" cy="120" r="20" fill="#ddd6fe" opacity="0.3"/>
-      </svg>
-    </div>
-  </div>
+    <aside class="pulse-panel" aria-label="Forum activity">
+      <div class="stats-grid">
+        <div v-for="item in stats" :key="item.label" class="stat-card">
+          <i :class="['bi', item.icon]"></i>
+          <strong>{{ item.value }}</strong>
+          <span>{{ item.label }}</span>
+        </div>
+      </div>
+
+      <div class="tag-strip">
+        <span class="tag-strip-label">Active tags</span>
+        <div class="tag-list">
+          <button
+            v-for="tag in activeTagNames"
+            :key="tag"
+            type="button"
+            class="tag-chip"
+            @click="openTag(tag)"
+          >
+            #{{ tag }}
+          </button>
+          <span v-if="activeTagNames.length === 0" class="tag-empty">No tags yet</span>
+        </div>
+      </div>
+    </aside>
+  </section>
 </template>
 
 <style scoped>
 .featured-section {
   display: grid;
-  grid-template-columns: 1fr 340px;
-  align-items: center;
-  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-hover) 60%, var(--color-primary-light) 100%);
-  border-radius: 20px;
-  overflow: hidden;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
+  gap: 18px;
   min-height: 240px;
-  border: 1px solid var(--color-border);
-  transition: all var(--transition-slow);
+  padding: 18px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-surface) 94%, var(--color-purple) 6%), var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-border) 84%, var(--color-purple) 16%);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
 }
 
-[data-theme='dark'] .featured-section {
-  background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+.spotlight-panel,
+.pulse-panel {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--color-border) 86%, transparent);
+  border-radius: 14px;
 }
 
-.featured-content {
+.spotlight-panel {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 14px;
-  padding: 40px;
-  position: relative;
-  z-index: 1;
+  padding: 28px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-surface-hover) 65%, transparent), transparent 70%),
+    var(--color-bg);
+}
+
+.spotlight-top,
+.featured-actions,
+.thread-meta,
+.tag-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.spotlight-top {
+  justify-content: space-between;
+}
+
+.featured-badge,
+.category-pill,
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 850;
 }
 
 .featured-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 12px;
-  background: var(--color-purple-light);
   color: var(--color-purple);
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 99px;
-  width: fit-content;
+  background: var(--color-purple-light);
+  padding: 0 12px;
+}
+
+.category-pill {
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 0 11px;
 }
 
 .featured-title {
+  max-width: 780px;
   margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.25;
   color: var(--color-text);
-  letter-spacing: -0.5px;
+  font-size: clamp(1.8rem, 4vw, 2.55rem);
+  font-weight: 900;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
 }
 
 .featured-description {
+  max-width: 720px;
   margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
   color: var(--color-text-muted);
-  max-width: 520px;
+  font-size: 0.96rem;
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.featured-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 6px;
+.thread-meta {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 750;
 }
 
-.join-btn {
+.thread-meta span {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: var(--color-text);
-  color: var(--color-bg);
-  border: none;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  gap: 6px;
 }
 
-.join-btn:hover {
-  background: var(--color-primary);
-  color: white;
-  transform: translateY(-1px);
-}
-
-.participants {
-  display: flex;
-  align-items: center;
-}
-
-.avatars {
-  display: flex;
-  align-items: center;
-}
-
-.avatar {
+.primary-action,
+.secondary-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 2px solid var(--color-surface);
-  border-radius: 50%;
-  margin-right: -6px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  overflow: hidden;
+  gap: 8px;
+  min-height: 42px;
+  border-radius: 12px;
+  padding: 0 15px;
+  font-size: 0.88rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
 }
 
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.primary-action {
+  color: #ffffff;
+  background: var(--color-purple);
+  border: 1px solid transparent;
 }
 
-.more-bubble {
-  background: var(--color-purple-light);
+.secondary-action {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.primary-action:hover,
+.secondary-action:hover {
+  transform: translateY(-1px);
+}
+
+.pulse-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background: color-mix(in srgb, var(--color-surface-hover) 62%, transparent);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-card {
+  min-width: 0;
+  min-height: 92px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 12px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.stat-card i {
   color: var(--color-purple);
-  font-size: 10px;
-  font-weight: 700;
-  border: 2px solid var(--color-surface);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  padding-right: 0;
-  margin-left: 0;
-  width: 28px;
-  height: 28px;
+  font-size: 1rem;
 }
 
-/* Decorative SVG panel */
-.featured-deco {
-  width: 340px;
-  height: 100%;
-  min-height: 240px;
-  position: relative;
-  overflow: hidden;
+.stat-card strong {
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
-.featured-deco svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.stat-card span,
+.tag-strip-label,
+.tag-empty {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
 }
 
-@media (max-width: 900px) {
-  .featured-section { grid-template-columns: 1fr; }
-  .featured-deco { display: none; }
-  .featured-content { padding: 32px 24px; }
-  .featured-title { font-size: 22px; }
+.tag-strip {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
 }
 
-@media (max-width: 540px) {
-  .featured-content { padding: 24px 16px; }
-  .featured-title { font-size: 19px; }
-  .featured-actions { flex-wrap: wrap; gap: 12px; }
+.tag-strip-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tag-chip {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  padding: 0 11px;
+  cursor: pointer;
+}
+
+.tag-chip:hover {
+  color: var(--color-purple);
+  border-color: color-mix(in srgb, var(--color-purple) 48%, var(--color-border));
+}
+
+@media (max-width: 1050px) {
+  .featured-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .featured-section {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .spotlight-panel,
+  .pulse-panel {
+    padding: 16px;
+  }
+
+  .spotlight-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .primary-action,
+  .secondary-action {
+    width: 100%;
+  }
 }
 </style>

@@ -131,7 +131,7 @@
         <div v-else class="post-cards-grid">
           <div v-for="post in visiblePosts" :key="post.id" class="post-card">
             <div class="card-image-wrap">
-              <img :src="post.image" @error="handleImgError" class="card-img-top zoom-hover" alt="Article Cover">
+              <img :src="post.image" @error.once="handleImgError" class="card-img-top zoom-hover" alt="Article Cover">
               <span :class="['status-badge', post.status]">
                 {{ post.status }}
               </span>

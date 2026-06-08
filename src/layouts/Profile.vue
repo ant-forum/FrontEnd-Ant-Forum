@@ -3,7 +3,6 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Navbar from "../components/layouts/header.vue";
 import Footer from "../components/layouts/footer.vue";
-import LeftSidebar from "../components/forum/LeftSidebar.vue";
 import { useAuthStore } from "../stores/AuthStore";
 import BaseModal from "../components/base/BaseModal.vue";
 import { normalizeSkills } from "../utils/profileFields";
@@ -17,8 +16,10 @@ import ProfileSetting from "../components/profile/ProfileSetting.vue";
 const authStore = useAuthStore();
 const router = useRouter();
 import { useUserProfilesStore } from "../stores/UserProfilesStore";
+import { useForumStore } from "../stores/ForumStore";
 
 const userProfilesStore = useUserProfilesStore();
+const forumStore = useForumStore();
 
 const activeTab = ref("profile");
 const showLogoutModal = ref(false);
@@ -48,8 +49,9 @@ const confirmLogout = async () => {
 onMounted(async () => {
   try {
     await userProfilesStore.fetchProfile();
+    await forumStore.fetchDiscussions();
   } catch (err) {
-    console.error("Failed to load user profile:", err);
+    console.error("Failed to load user profile or discussions:", err);
   }
 });
 
@@ -76,15 +78,30 @@ const profileAvatar = computed(() => authStore.user?.profile_pic || "");
 // Empty arrays since these are not part of the current API schema
 const defaultProjects = ref([]);
 const additionalProjects = ref([]);
-const activityFeed = ref([]);
+
+const activityFeed = computed(() => {
+  if (!authStore.user) return [];
+  const username = authStore.user.username || authStore.user.name;
+  if (!username) return [];
+  
+  return forumStore.discussions.filter(d => {
+    const authorName = (typeof d.author === 'object' && d.author !== null) ? (d.author.username || d.author.name) : d.author;
+    return (authorName || '').toLowerCase() === username.toLowerCase();
+  }).map(d => ({
+    id: d.id,
+    type: "discussion",
+    title: d.title,
+    meta: `Posted in ${d.category}`,
+    icon: "bi-chat-left-text-fill",
+    link: `/forum/${d.id}`
+  })); // Pass all activities
+});
 </script>
 
 <template>
   <Navbar />
   <div class="profile-page">
     <div class="profile-global-grid">
-      <LeftSidebar :active-tab="activeTab" />
-
       <main class="profile-main-container">
         <section class="profile-page-header">
           <div>
@@ -196,9 +213,9 @@ const activityFeed = ref([]);
 
 .profile-global-grid {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 1fr;
   gap: 28px;
-  max-width: 1280px;
+  max-width: 1040px;
   margin: 0 auto;
   padding: 32px 24px 60px;
 }
