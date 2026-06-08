@@ -11,7 +11,7 @@ const props = defineProps({
 const emit = defineEmits(["close", "logout"]);
 const dropdownRef = ref(null);
 
-const avatar = computed(() => props.user?.profile_pic || props.user?.avatar || "/charles_leclerc.png");
+const avatar = computed(() => props.user?.profile_pic || "/charles_leclerc.png");
 const displayName = computed(() => props.user?.username || props.user?.name || "ANT Developer");
 const role = computed(() => {
   const value = props.user?.role || "Member";

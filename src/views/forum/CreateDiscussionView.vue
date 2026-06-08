@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, watch, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useForumStore } from "@/stores/ForumStore";
+import { useTagsStore } from "@/stores/TagsStore";
 import Navbar from "@/components/layouts/header.vue";
 import MarkdownEditor from "@/components/forum/create/MarkdownEditor.vue";
 import LeftSidebar from "@/components/forum/LeftSidebar.vue";
@@ -10,9 +11,11 @@ import { useToast } from "@/composables/useToast.js";
 const router = useRouter();
 const route = useRoute();
 const forumStore = useForumStore();
+const tagsStore = useTagsStore();
 const toast = useToast();
 
 const isEditMode = computed(() => route.name === "EditDiscussion");
+const isFetchingData = ref(route.name === "EditDiscussion");
 
 // Backend categories (fetched on mount)
 const backendCategories = ref([]);
@@ -46,10 +49,11 @@ const staticSuggestedTags = [
 ];
 
 const suggestedTags = computed(() => {
-  if (forumStore.tags && forumStore.tags.length > 0) {
-    return forumStore.tags.map((t) => t.name);
+  if (tagsStore.tags && tagsStore.tags.length > 0) {
+    // Return full objects including id
+    return tagsStore.tags;
   }
-  return staticSuggestedTags;
+  return staticSuggestedTags.map((name) => ({ id: null, name }));
 });
 
 const getTagColor = (tag) => {
@@ -94,9 +98,11 @@ const getTagChipStyle = (color) => {
   return { background: t.bg, color: t.color };
 };
 
-const addTag = (tagText) => {
-  if (!tagText) return;
-  const clean = tagText.trim();
+const addTag = (tagInputObj) => {
+  if (!tagInputObj) return;
+  const label = typeof tagInputObj === 'string' ? tagInputObj : (tagInputObj.name || tagInputObj.label || tagInputObj.tag_name);
+  const tagId = typeof tagInputObj === 'string' ? null : tagInputObj.id;
+  const clean = label ? label.trim() : '';
   if (!clean) return;
 
   if (
@@ -107,15 +113,18 @@ const addTag = (tagText) => {
     return;
   }
 
-  if (tagsList.value.length >= 5) {
-    toast.warning("A maximum of 5 tags is allowed.");
-    return;
-  }
-
-  tagsList.value.push({
+  const newTag = {
+    id: tagId,
     label: clean,
     color: getTagColor(clean),
-  });
+  };
+
+  if (tagsList.value.length >= 1) {
+    // Replace the existing tag since backend only supports 1 tag
+    tagsList.value = [newTag];
+  } else {
+    tagsList.value.push(newTag);
+  }
 
   tagInput.value = "";
 };
@@ -194,7 +203,22 @@ const staticCategoryMeta = {
 
 const getCategoryMeta = (type) => {
   const t = (type || "discussion").toLowerCase();
-  return staticCategoryMeta[t] || { icon: "bi-chat-dots", color: "purple", desc: "Topic category description" };
+  
+  if (t.includes('question') || t.includes('q&a') || t.includes('help')) {
+    return { idType: 'question', icon: "bi-question-circle", color: "blue", desc: "Get help with a technical problem" };
+  } else if (t.includes('showcase') || t.includes('project')) {
+    return { idType: 'showcase', icon: "bi-rocket-takeoff", color: "purple", desc: "Show off your cool projects" };
+  } else if (t.includes('tutorial') || t.includes('guide')) {
+    return { idType: 'tutorial', icon: "bi-book", color: "orange", desc: "Share a guide, walkthrough, or article" };
+  } else if (t.includes('announcement') || t.includes('news')) {
+    return { idType: 'announcement', icon: "bi-megaphone", color: "red", desc: "Important announcements and news" };
+  } else if (t.includes('resource') || t.includes('link')) {
+    return { idType: 'resource', icon: "bi-link-45deg", color: "green", desc: "Useful resources and links" };
+  } else if (t.includes('idea') || t.includes('feature')) {
+    return { idType: 'idea', icon: "bi-lightbulb", color: "pink", desc: "Propose a new feature or design" };
+  }
+  
+  return { idType: 'discussion', icon: "bi-chat-dots", color: "purple", desc: "General forum discussions" };
 };
 
 const displayedCategories = computed(() => {
@@ -206,7 +230,7 @@ const displayedCategories = computed(() => {
     const meta = getCategoryMeta(type);
     return {
       id: cat.id,
-      type: type,
+      type: meta.idType,
       label: cat.name || cat.type || "Topic",
       icon: meta.icon,
       color: meta.color,
@@ -357,19 +381,21 @@ onMounted(async () => {
 
   // Fetch real tags from backend for suggestion pills
   try {
-    await forumStore.fetchTags();
+    await tagsStore.fetchTags();
   } catch (err) {
     console.warn('Could not fetch backend tags:', err);
   }
 
   if (isEditMode.value) {
+    isFetchingData.value = true;
     try {
       const discId = route.params.id;
       await forumStore.fetchDiscussion(discId);
       const disc = forumStore.discussion;
+      console.log("[CreateDiscussionView] loaded disc for editing:", JSON.parse(JSON.stringify(disc)));
       if (disc) {
         form.value.title = disc.title || "";
-        form.value.excerpt = disc.body || disc.excerpt || "";
+        form.value.excerpt = disc.description || disc.Description || disc.body || disc.excerpt || "";
         form.value.code = disc.code || "";
         form.value.hasCode = disc.hasCode || false;
 
@@ -381,12 +407,20 @@ onMounted(async () => {
         }
 
         // Tags
-        if (Array.isArray(disc.tags)) {
-          tagsList.value = disc.tags.map(t => typeof t === "string" ? { label: t, color: getTagColor(t) } : { label: t.label || t.name, color: t.color || getTagColor(t.label || t.name) });
+        if (disc.tags && Array.isArray(disc.tags)) {
+          tagsList.value = disc.tags.map(t => typeof t === "string" ? { label: t, color: getTagColor(t), id: null } : { label: t.label || t.name, color: t.color || getTagColor(t.label || t.name), id: t.id || null });
+        } else if (disc.tags && typeof disc.tags === 'string') {
+          tagsList.value = disc.tags.split(',').map(t => t.trim()).filter(Boolean).map(t => ({
+            label: t,
+            color: getTagColor(t),
+            id: disc.tag_id || null
+          }));
         }
       }
     } catch (err) {
       toast.error("Failed to load discussion details for editing.");
+    } finally {
+      isFetchingData.value = false;
     }
   } else {
     if (!form.value.title) {
@@ -471,7 +505,6 @@ const handleSubmit = async () => {
           <i class="bi bi-arrow-left"></i>
           Back to Forum
         </button>
-
         <div class="header-content-wrapper">
           <div class="header-main">
             <h1>{{ isEditMode ? 'Edit Discussion' : 'Create a New Discussion' }}</h1>
@@ -512,43 +545,10 @@ const handleSubmit = async () => {
       </transition>
 
       <!-- Main Columns Grid Layout -->
-      <div class="form-column">
-        <div class="form-card">
-          <form class="create-form" @submit.prevent="handleSubmit">
-            <!-- Premium Post Readiness Header Banner -->
-            <div class="readiness-banner" :class="{ completed: isFormReady }">
-              <div class="readiness-main">
-                <div class="readiness-info">
-                  <span class="readiness-title-text">
-                    <i class="bi bi-stars text-gradient-purple"></i>
-                    <strong>Post Completion Progress</strong>
-                  </span>
-                  <span class="readiness-percentage">{{ checklistProgress }}%</span>
-                </div>
-                <div class="readiness-progress-bar-bg">
-                  <div class="readiness-progress-bar-fill" :style="{ width: checklistProgress + '%' }"></div>
-                </div>
-              </div>
-
-              <div class="readiness-checklist-grid">
-                <div class="readiness-check-item" :class="{ active: isTitleValid }">
-                  <i class="bi" :class="isTitleValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-                  <span>Title (12+ chars)</span>
-                </div>
-                <div class="readiness-check-item" :class="{ active: isBodyValid }">
-                  <i class="bi" :class="isBodyValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-                  <span>Description (25+ chars)</span>
-                </div>
-                <div class="readiness-check-item" :class="{ active: isCategoryValid }">
-                  <i class="bi" :class="isCategoryValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-                  <span>Select Category</span>
-                </div>
-                <div class="readiness-check-item" :class="{ active: hasTags }">
-                  <i class="bi" :class="hasTags ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-                  <span>Add at least 1 Tag</span>
-                </div>
-              </div>
-            </div>
+      <div class="create-layout-grid">
+        <div class="form-column">
+          <div class="form-card">
+            <form v-if="!isFetchingData" class="create-form" @submit.prevent="handleSubmit">
 
             <!-- 1. CATEGORY GRID SELECTOR -->
             <div class="form-group">
@@ -619,8 +619,7 @@ const handleSubmit = async () => {
                 Tags <span class="required">*</span>
               </label>
               <p class="section-desc">
-                Add up to 5 descriptive tags. Press space, comma, or enter to
-                register a tag.
+                Select a descriptive tag. Click on the suggestions below to add it.
               </p>
 
               <div
@@ -643,15 +642,9 @@ const handleSubmit = async () => {
                       <i class="bi bi-x"></i>
                     </button>
                   </span>
-                  <input
-                    v-model="tagInput"
-                    type="text"
-                    class="tag-text-input"
-                    placeholder="Add tag..."
-                    @keydown="handleTagKeydown"
-                    @focus="isEditorFocused = true"
-                    @blur="isEditorFocused = false"
-                  />
+                  <span v-if="tagsList.length === 0" class="empty-tags-placeholder">
+                    Select tags from the suggestions below...
+                  </span>
                 </div>
               </div>
 
@@ -659,13 +652,13 @@ const handleSubmit = async () => {
               <div class="tag-suggestions">
                 <span class="suggestion-title">Suggestions:</span>
                 <button
-                  v-for="sTag in suggestedTags"
-                  :key="sTag"
+                  v-for="(sTag, idx) in suggestedTags"
+                  :key="sTag.id || idx"
                   type="button"
                   class="suggestion-pill"
                   @click="addTag(sTag)"
                 >
-                  + {{ sTag }}
+                  + {{ sTag.name || sTag.label || sTag.tag_name || sTag }}
                 </button>
               </div>
             </div>
@@ -718,35 +711,7 @@ const handleSubmit = async () => {
               </div>
             </transition>
 
-            <!-- Collapsible Pro Writing Tips -->
-            <div class="tips-accordion-card">
-              <details class="tips-details">
-                <summary class="tips-summary">
-                  <div class="summary-title-wrap">
-                    <i class="bi bi-lightning-charge-fill text-warning"></i>
-                    <span>Pro Writing Tips & Formatting Guide</span>
-                  </div>
-                  <span class="accordion-icon"><i class="bi bi-chevron-down"></i></span>
-                </summary>
-                
-                <div class="tips-accordion-content">
-                  <div class="tips-inline-grid">
-                    <div class="tip-box">
-                      <span class="tip-box-title">Provide Context</span>
-                      <p>Describe your environment, system config, frameworks, and versions to get faster answers.</p>
-                    </div>
-                    <div class="tip-box">
-                      <span class="tip-box-title">Format Code Blocks</span>
-                      <p>Surround snippets with <code>```</code> to highlight your code dynamically with automatic syntax highlighting.</p>
-                    </div>
-                    <div class="tip-box">
-                      <span class="tip-box-title">Add Descriptive Tags</span>
-                      <p>Tags like <code>Vue.js</code> or <code>System Design</code> help developers easily discover your thread.</p>
-                    </div>
-                  </div>
-                </div>
-              </details>
-            </div>
+
 
             <!-- FORM FOOTER ACTIONS -->
             <div class="form-actions">
@@ -769,17 +734,102 @@ const handleSubmit = async () => {
               </button>
             </div>
           </form>
+
+            <div v-else class="form-skeleton">
+              <div class="skeleton-section">
+                <div class="skeleton-title"></div>
+                <div class="skeleton-desc"></div>
+                <div class="skeleton-grid">
+                  <div class="skeleton-box"></div>
+                  <div class="skeleton-box"></div>
+                  <div class="skeleton-box"></div>
+                </div>
+              </div>
+              
+              <div class="skeleton-section">
+                <div class="skeleton-title"></div>
+                <div class="skeleton-input"></div>
+              </div>
+
+              <div class="skeleton-section">
+                <div class="skeleton-title"></div>
+                <div class="skeleton-textarea"></div>
+              </div>
+            </div>
+        </div>
+      </div>
+
+      <!-- Right Sidebar for Helpers -->
+      <div class="sidebar-column">
+        <!-- Sleek Readiness Widget -->
+        <div class="readiness-widget" :class="{ completed: isFormReady }">
+          <div class="widget-header">
+            <i class="bi bi-stars text-gradient-purple"></i>
+            <strong>Post Readiness</strong>
+          </div>
+          <div class="readiness-progress-wrapper">
+            <div class="readiness-progress-bar-bg">
+              <div class="readiness-progress-bar-fill" :style="{ width: checklistProgress + '%' }"></div>
+            </div>
+            <span class="readiness-percentage">{{ checklistProgress }}%</span>
+          </div>
+
+          <div class="readiness-checklist-vertical">
+            <div class="readiness-check-item" :class="{ active: isTitleValid }">
+              <i class="bi" :class="isTitleValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+              <span>Title (12+ chars)</span>
+            </div>
+            <div class="readiness-check-item" :class="{ active: isBodyValid }">
+              <i class="bi" :class="isBodyValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+              <span>Description (25+ chars)</span>
+            </div>
+            <div class="readiness-check-item" :class="{ active: isCategoryValid }">
+              <i class="bi" :class="isCategoryValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+              <span>Select Category</span>
+            </div>
+            <div class="readiness-check-item" :class="{ active: hasTags }">
+              <i class="bi" :class="hasTags ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+              <span>Add at least 1 Tag</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pro Writing Tips Widget -->
+        <div class="tips-widget">
+          <div class="widget-header">
+            <i class="bi bi-lightning-charge-fill text-warning"></i>
+            <strong>Pro Writing Tips</strong>
+          </div>
+          <div class="tips-vertical-list">
+            <div class="tip-box">
+              <span class="tip-box-title">Provide Context</span>
+              <p>Describe your environment, system config, frameworks, and versions.</p>
+            </div>
+            <div class="tip-box">
+              <span class="tip-box-title">Format Code Blocks</span>
+              <p>Surround snippets with <code>```</code> to highlight your code dynamically.</p>
+            </div>
+            <div class="tip-box">
+              <span class="tip-box-title">Add Descriptive Tags</span>
+              <p>Tags like <code>Vue.js</code> help developers easily discover your thread.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
   </div>
+</div>
 </template>
 
 <style scoped>
 .create-page {
   min-height: 100vh;
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  background-image: 
+    linear-gradient(to right, rgba(128, 128, 128, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(128, 128, 128, 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
   padding-bottom: 80px;
 }
 
@@ -840,10 +890,10 @@ const handleSubmit = async () => {
   align-items: center;
   gap: 24px;
   background: var(--color-surface);
-  border-radius: 20px;
-  padding: 24px 32px;
-  box-shadow: var(--shadow-sm);
+  border-radius: 24px;
   border: 1px solid var(--color-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  padding: 32px 40px;
 }
 
 .header-main h1 {
@@ -943,17 +993,19 @@ const handleSubmit = async () => {
 
 .btn-discard {
   background: transparent;
-  color: var(--color-text-muted);
-  border: none;
-  padding: 8px 12px;
-  font-size: 13px;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 8px 16px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .btn-discard:hover {
   background: var(--color-surface-hover);
+  border-color: var(--color-text-muted);
 }
 
 /* 2-Column Grid Layout */
@@ -969,29 +1021,18 @@ const handleSubmit = async () => {
 }
 
 .form-card {
+  position: relative;
   background: var(--color-surface);
   border-radius: 24px;
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-  padding: 36px;
-  position: relative;
-  overflow: hidden;
-}
-
-.form-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-success), var(--color-info));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  padding: 40px;
 }
 
 .create-form {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 48px;
 }
 
 /* Section styling inside form */
@@ -1018,10 +1059,10 @@ const handleSubmit = async () => {
 }
 
 .section-desc {
-  margin: 4px 0 12px 34px;
+  margin: 4px 0 16px 34px;
   font-size: 13.5px;
   color: var(--color-text-muted);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .required {
@@ -1036,19 +1077,20 @@ const handleSubmit = async () => {
 
 .form-input {
   width: 100%;
-  padding: 14px 18px;
+  padding: 16px 20px;
   padding-right: 110px;
-  border: 1.5px solid var(--color-border);
-  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
   font-size: 14.5px;
   background: var(--color-surface-hover);
   color: var(--color-text);
+  transition: all 0.2s ease;
 }
 
 .form-input:focus {
   background: var(--color-surface);
-  border-color: var(--color-primary);
-  box-shadow: var(--focus-ring);
+  border-color: var(--color-purple, var(--color-primary));
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), 0 0 16px rgba(139, 92, 246, 0.1);
   outline: none;
 }
 
@@ -1075,22 +1117,22 @@ const handleSubmit = async () => {
 /* Category grid selector styling */
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
   margin-left: 34px;
 }
 
 .category-card {
-  border: 1.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   background: var(--color-surface-hover);
   border-radius: 16px;
-  padding: 16px 12px;
-  text-align: center;
+  padding: 14px 16px;
+  text-align: left;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1098,11 +1140,12 @@ const handleSubmit = async () => {
   background: var(--color-surface);
   border-color: var(--color-primary);
   transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .category-icon-wrapper {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -1111,6 +1154,7 @@ const handleSubmit = async () => {
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .category-meta strong {
@@ -1187,14 +1231,36 @@ const handleSubmit = async () => {
   color: var(--color-danger);
 }
 
+.category-card.active.resource {
+  border-color: #14b8a6;
+  box-shadow:
+    0 0 0 3px rgba(20, 184, 166, 0.12),
+    0 4px 12px rgba(20, 184, 166, 0.08);
+}
+.category-card.active.resource .category-icon-wrapper {
+  background: rgba(20, 184, 166, 0.15);
+  color: #14b8a6;
+}
+
+.category-card.active.announcement {
+  border-color: #ef4444;
+  box-shadow:
+    0 0 0 3px rgba(239, 68, 68, 0.12),
+    0 4px 12px rgba(239, 68, 68, 0.08);
+}
+.category-card.active.announcement .category-icon-wrapper {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
 /* Tag input section */
 .tags-input-container {
   margin-left: 34px;
-  border: 1.5px solid var(--color-border);
-  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
   background: var(--color-surface-hover);
-  padding: 8px 12px;
-  min-height: 52px;
+  padding: 10px 16px;
+  min-height: 54px;
   display: flex;
   align-items: center;
   transition: all 0.2s ease;
@@ -1202,8 +1268,8 @@ const handleSubmit = async () => {
 
 .tags-input-container.focused {
   background: var(--color-surface);
-  border-color: var(--color-primary);
-  box-shadow: var(--focus-ring);
+  border-color: var(--color-purple, var(--color-primary));
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), 0 0 16px rgba(139, 92, 246, 0.1);
 }
 
 .tags-list {
@@ -1241,15 +1307,11 @@ const handleSubmit = async () => {
   opacity: 1;
 }
 
-.tag-text-input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  outline: none;
+.empty-tags-placeholder {
+  color: var(--color-text-muted);
   font-size: 13.5px;
-  color: var(--color-text);
-  min-width: 100px;
   padding: 4px 0;
+  user-select: none;
 }
 
 /* Suggested Tags */
@@ -1271,19 +1333,21 @@ const handleSubmit = async () => {
 .suggestion-pill {
   border: 1px solid var(--color-border);
   background: var(--color-surface);
-  padding: 3px 10px;
+  padding: 4px 12px;
   font-size: 11.5px;
   font-weight: 600;
   color: var(--color-text-muted);
-  border-radius: 8px;
+  border-radius: 100px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .suggestion-pill:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  background: rgba(139, 92, 246, 0.08);
+  color: var(--color-purple, var(--color-primary));
+  border-color: var(--color-purple, var(--color-primary));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
 }
 
 /* Editor container alignment styling */
@@ -1720,93 +1784,92 @@ const handleSubmit = async () => {
   }
 }
 
-/* Premium Readiness Banner Header inside form card */
-.readiness-banner {
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 20px 24px;
-  margin-bottom: 32px;
+/* Sidebar column & Widgets */
+.sidebar-column {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
+  position: sticky;
+  top: 100px;
+}
+
+.readiness-widget, .tips-widget {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   transition: all 0.3s ease;
 }
 
-.readiness-banner.completed {
+.readiness-widget.completed {
   border-color: var(--color-success);
-  background: rgba(16, 185, 129, 0.03);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
 }
 
-.readiness-main {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.readiness-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.readiness-title-text {
+.widget-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.readiness-title-text i {
+  gap: 10px;
   font-size: 16px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 12px;
+}
+
+.widget-header i {
+  font-size: 18px;
+}
+
+.readiness-progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.readiness-progress-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: var(--color-surface-hover);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.readiness-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-purple, #8b5cf6), var(--color-primary));
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .readiness-percentage {
   font-size: 14px;
   font-weight: 800;
   color: var(--color-primary);
+  width: 40px;
+  text-align: right;
 }
 
-.readiness-banner.completed .readiness-percentage {
-  color: var(--color-success);
-}
-
-.readiness-progress-bar-bg {
-  height: 6px;
-  background: var(--color-border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.readiness-progress-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-success));
-  border-radius: 10px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.readiness-checklist-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  border-top: 1px solid var(--color-border);
-  padding-top: 14px;
+.readiness-checklist-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .readiness-check-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   color: var(--color-text-muted);
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .readiness-check-item i {
-  font-size: 15px;
+  font-size: 16px;
   color: var(--color-border);
 }
 
@@ -1819,100 +1882,44 @@ const handleSubmit = async () => {
   color: var(--color-success);
 }
 
-/* Accordion Writing Tips block */
-.tips-accordion-card {
-  margin-left: 34px;
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  background: var(--color-surface);
-  overflow: hidden;
-  transition: all 0.25s ease;
-}
-
-.tips-accordion-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.tips-details {
-  width: 100%;
-}
-
-.tips-summary {
+.tips-vertical-list {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--color-text);
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-}
-
-.tips-summary::-webkit-details-marker {
-  display: none;
-}
-
-.summary-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.summary-title-wrap i {
-  font-size: 16px;
-}
-
-.accordion-icon {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  transition: transform 0.25s ease;
-}
-
-.tips-details[open] .accordion-icon {
-  transform: rotate(180deg);
-}
-
-.tips-accordion-content {
-  padding: 0 20px 20px;
-  border-top: 1px dashed var(--color-border);
-  animation: slideDown 0.2s ease-out;
-}
-
-.tips-inline-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-top: 16px;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .tip-box {
   background: var(--color-surface-hover);
   border-radius: 12px;
-  padding: 14px;
+  padding: 16px;
   border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+}
+
+.tip-box:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
 }
 
 .tip-box-title {
   display: block;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--color-text);
   margin-bottom: 6px;
 }
 
 .tip-box p {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--color-text-muted);
-  line-height: 1.45;
+  line-height: 1.5;
   margin: 0;
 }
 
 .tip-box code {
   background: var(--color-surface);
-  padding: 2px 4px;
+  padding: 2px 6px;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
@@ -1920,29 +1927,66 @@ const handleSubmit = async () => {
   border: 1px solid var(--color-border);
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
+@media (max-width: 1024px) {
+  .sidebar-column {
+    display: none;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+}
+/* Loading Skeleton */
+.form-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  padding: 12px 0;
 }
 
-@media (max-width: 768px) {
-  .readiness-checklist-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .tips-inline-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .tips-accordion-card {
-    margin-left: 0;
-  }
+.skeleton-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
+
+.skeleton-title, .skeleton-desc, .skeleton-box, .skeleton-input, .skeleton-textarea {
+  background: var(--color-surface-hover);
+  border-radius: 8px;
+  animation: pulse-skeleton 1.5s infinite ease-in-out;
+}
+
+.skeleton-title {
+  width: 30%;
+  height: 24px;
+}
+
+.skeleton-desc {
+  width: 60%;
+  height: 16px;
+  margin-bottom: 8px;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.skeleton-box {
+  height: 80px;
+}
+
+.skeleton-input {
+  height: 48px;
+  width: 100%;
+}
+
+.skeleton-textarea {
+  height: 240px;
+  width: 100%;
+}
+
+@keyframes pulse-skeleton {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.6; }
+}
+
 </style>

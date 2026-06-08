@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "@/api/api.js";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 export const useProjectStore = defineStore("project", () => {
   const projects = ref([]);
@@ -17,10 +18,12 @@ export const useProjectStore = defineStore("project", () => {
     if (!author && item.user) {
       author = {
         name: item.user.username || item.user.name || "Unknown",
-        avatar:
+        avatar: resolveMediaUrl(
           item.user.profile_pic ||
           item.user.avatar ||
           "https://i.pravatar.cc/150?u=default",
+          "https://i.pravatar.cc/150?u=default",
+        ),
         username: item.user.username ? `@${item.user.username}` : "@unknown",
       };
     }
@@ -39,13 +42,10 @@ export const useProjectStore = defineStore("project", () => {
       tags = item.tags;
     }
 
-    // Thumbnail (single image) - handle relative /uploads/ paths
-    let image = item.thumbnail || item.image || "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600";
-    if (image && image.startsWith('/')) {
-      // If it's a relative path, prepend the backend base URL
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
-      image = apiBaseUrl + image;
-    }
+    const image = resolveMediaUrl(
+      item.thumbnail || item.image,
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600",
+    );
     const averageRating = Number(item.average_rating) || 0;
     const views = Number(item.views) || 0;
     const myRating = item.my_rating ? Number(item.my_rating) : null;

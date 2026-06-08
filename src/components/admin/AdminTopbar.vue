@@ -78,14 +78,72 @@
         </div>
       </div>
 
-      <router-link to="/admin/profile" class="topbar-profile text-decoration-none">
-        <img v-if="adminAvatar" :src="adminAvatar" class="profile-avatar border border-1 border-primary-subtle" style="object-fit: cover; border-radius: 50%;" width="38" height="38">
-        <span v-else class="profile-avatar">{{ adminInitials }}</span>
-        <div>
-          <strong>{{ adminName }}</strong>
-          <small class="text-muted">{{ adminRole }}</small>
+      <div class="admin-profile-menu-wrapper">
+        <button
+          type="button"
+          class="topbar-profile"
+          aria-haspopup="menu"
+          :aria-expanded="isProfileMenuOpen"
+          title="Admin account menu"
+          @click.stop="toggleProfileMenu"
+        >
+          <img v-if="adminAvatar" :src="adminAvatar" class="profile-avatar border border-1 border-primary-subtle" style="object-fit: cover; border-radius: 50%;" width="38" height="38">
+          <span v-else class="profile-avatar">{{ adminInitials }}</span>
+          <div class="topbar-profile-name">
+            <strong>{{ adminName }}</strong>
+          </div>
+        </button>
+
+        <div v-if="isProfileMenuOpen" class="admin-profile-dropdown shadow-lg fade-in-scale" role="menu">
+          <router-link to="/admin/profile" class="admin-profile-card" role="menuitem" @click="isProfileMenuOpen = false">
+            <img v-if="adminAvatar" :src="adminAvatar" width="54" height="54" alt="Admin avatar">
+            <span v-else class="profile-avatar profile-avatar-menu">{{ adminInitials }}</span>
+            <span class="admin-profile-card-copy">
+              <strong>{{ adminName }}</strong>
+              <small>{{ adminRole }} profile</small>
+            </span>
+            <i class="bi bi-chevron-right"></i>
+          </router-link>
+
+          <div class="admin-profile-divider"></div>
+
+          <router-link
+            v-for="item in profileMenuItems"
+            :key="item.to"
+            :to="item.to"
+            class="admin-profile-menu-item"
+            role="menuitem"
+            @click="isProfileMenuOpen = false"
+          >
+            <span class="admin-profile-menu-icon">
+              <i :class="item.icon"></i>
+            </span>
+            <span class="admin-profile-menu-copy">
+              <strong>{{ item.label }}</strong>
+              <small>{{ item.description }}</small>
+            </span>
+            <i class="bi bi-chevron-right admin-profile-menu-chevron"></i>
+          </router-link>
+
+          <button type="button" class="admin-profile-menu-item logout" role="menuitem" @click="handleLogout">
+            <span class="admin-profile-menu-icon">
+              <i class="bi bi-box-arrow-right"></i>
+            </span>
+            <span class="admin-profile-menu-copy">
+              <strong>Log out</strong>
+              <small>Sign out of your ANT Forum account</small>
+            </span>
+          </button>
+
+          <footer class="admin-profile-menu-footer">
+            <router-link to="/help" @click="isProfileMenuOpen = false">Privacy</router-link>
+            <span>·</span>
+            <router-link to="/help" @click="isProfileMenuOpen = false">Terms</router-link>
+            <span>·</span>
+            <router-link to="/help" @click="isProfileMenuOpen = false">Community guidelines</router-link>
+          </footer>
         </div>
-      </router-link>
+      </div>
     </div>
   </header>
 </template>
@@ -114,6 +172,7 @@ const notificationStore = useNotificationStore();
 const router = useRouter();
 
 const isDropdownOpen = ref(false);
+const isProfileMenuOpen = ref(false);
 
 const adminName = computed(() => authStore.user?.name || authStore.user?.username || 'Alex Rivera');
 const adminRole = computed(() => {
@@ -130,13 +189,39 @@ const adminInitials = computed(() => {
     .toUpperCase() || 'AR';
 });
 const adminAvatar = computed(() => authStore.user?.avatar || authStore.user?.profile_pic || authStore.user?.avatarUrl);
+const profileMenuItems = [
+  {
+    label: 'Settings & privacy',
+    description: 'Manage privacy and account preferences',
+    icon: 'bi bi-gear-fill',
+    to: '/admin/settings',
+  },
+  {
+    label: 'Help & support',
+    description: 'Guides and community support',
+    icon: 'bi bi-question-circle-fill',
+    to: '/help',
+  },
+  {
+    label: 'Report a problem',
+    description: 'Tell us when something is not working',
+    icon: 'bi bi-exclamation-square-fill',
+    to: '/help',
+  },
+];
 
 // Notification Dropdown Computeds & Methods
 const unreadCount = computed(() => notificationStore.unreadCount);
 const notifications = computed(() => notificationStore.allNotifications);
 
 const toggleNotifications = () => {
+  isProfileMenuOpen.value = false;
   isDropdownOpen.value = !isDropdownOpen.value;
+};
+
+const toggleProfileMenu = () => {
+  isDropdownOpen.value = false;
+  isProfileMenuOpen.value = !isProfileMenuOpen.value;
 };
 
 const markAllRead = () => {
@@ -149,6 +234,12 @@ const clickNotification = (item) => {
   if (item.link) {
     router.push(item.link);
   }
+};
+
+const handleLogout = async () => {
+  isProfileMenuOpen.value = false;
+  await authStore.logout();
+  router.push('/login');
 };
 
 const handleAvatarError = (e) => {
@@ -170,6 +261,9 @@ const formatTimeAgo = (dateStr) => {
 const closeDropdown = (e) => {
   if (!e.target.closest('.notification-dropdown-wrapper')) {
     isDropdownOpen.value = false;
+  }
+  if (!e.target.closest('.admin-profile-menu-wrapper')) {
+    isProfileMenuOpen.value = false;
   }
 };
 
@@ -300,13 +394,36 @@ onUnmounted(() => {
   right: 9px;
 }
 
+.admin-profile-menu-wrapper {
+  position: relative;
+}
+
 .topbar-profile {
-  min-width: 164px;
+  min-width: 0;
+  min-height: 48px;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  padding-left: 0.75rem;
-  border-left: 1px solid var(--color-border);
+  gap: 0.72rem;
+  padding: 0.32rem 1.15rem 0.32rem 0.38rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+}
+
+.topbar-profile:hover {
+  background: var(--color-surface-hover);
+  border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .profile-avatar {
@@ -324,19 +441,158 @@ onUnmounted(() => {
 }
 
 .topbar-profile strong,
-.topbar-profile small {
+.topbar-profile-name {
   display: block;
   white-space: nowrap;
 }
 
 .topbar-profile strong {
   color: var(--color-text);
-  font-size: 0.86rem;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
-.topbar-profile small {
+.admin-profile-dropdown {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  width: min(330px, calc(100vw - 32px));
+  padding: 10px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  z-index: 120;
+}
+
+.admin-profile-card,
+.admin-profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: 10px;
+}
+
+.admin-profile-card {
+  padding: 8px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.admin-profile-card:hover,
+.admin-profile-menu-item:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.admin-profile-card img,
+.profile-avatar-menu {
+  flex-shrink: 0;
+  object-fit: cover;
+  border: 2px solid var(--color-primary-light);
+  border-radius: 50%;
+}
+
+.profile-avatar-menu {
+  width: 54px;
+  height: 54px;
+}
+
+.admin-profile-card-copy,
+.admin-profile-menu-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-profile-card-copy strong,
+.admin-profile-card-copy small,
+.admin-profile-menu-copy strong,
+.admin-profile-menu-copy small {
+  display: block;
+}
+
+.admin-profile-card-copy strong,
+.admin-profile-menu-copy strong {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-profile-card-copy small,
+.admin-profile-menu-copy small {
+  margin-top: 2px;
   color: var(--color-text-muted);
-  font-size: 0.74rem;
+  font-size: 0.68rem;
+}
+
+.admin-profile-divider {
+  height: 1px;
+  margin: 9px 4px;
+  background: var(--color-border);
+}
+
+.admin-profile-menu-item {
+  width: 100%;
+  padding: 8px 6px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+}
+
+.admin-profile-menu-item.logout:hover {
+  background: var(--color-danger-light);
+}
+
+.admin-profile-menu-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: 50%;
+  font-size: 0.9rem;
+}
+
+.admin-profile-menu-item.logout .admin-profile-menu-icon {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.admin-profile-menu-chevron,
+.admin-profile-card > .bi {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.admin-profile-menu-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px 6px 2px;
+  color: var(--color-text-muted);
+  font-size: 0.66rem;
+}
+
+.admin-profile-menu-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.admin-profile-menu-footer a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 991.98px) {
@@ -363,12 +619,15 @@ onUnmounted(() => {
 @media (max-width: 575.98px) {
   .topbar-profile {
     min-width: 0;
-    padding-left: 0;
-    border-left: 0;
+    padding-right: 0.8rem;
   }
 
-  .topbar-profile div {
+  .topbar-profile-name {
     display: none;
+  }
+
+  .admin-profile-dropdown {
+    right: 0;
   }
 }
 

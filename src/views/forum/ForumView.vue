@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import Navbar from '@/components/layouts/header.vue';
 import BaseFooter from '@/components/layouts/footer.vue';
 import FeaturedDiscussion from '@/components/forum/FeaturedDiscussion.vue';
@@ -8,19 +8,26 @@ import DiscussionThreadList from '@/components/forum/DiscussionThreadList.vue';
 import ForumSidebar from '@/components/forum/ForumSidebar.vue';
 import LeftSidebar from '@/components/forum/LeftSidebar.vue';
 import { useForumStore } from '@/stores/ForumStore';
+import { useTagsStore } from '@/stores/TagsStore';
+import { useAuthStore } from '@/stores/AuthStore';
 
 const route = useRoute();
+const router = useRouter();
 
 const forumStore = useForumStore();
+const tagsStore = useTagsStore();
+const authStore = useAuthStore();
 
 const filterTab = ref('latest');
 const loading = ref(false);
 const searchLoading = ref(false);
 const searchQuery = ref('');
-const selectedCategory = ref('all');
+const activeTagFilter = ref('');
 
-const activeTab = ref(route.query.tab || 'questions');
-const showSavedOnly = ref(activeTab.value === 'saves');
+const activeTab = computed(() => route.query.tab || '');
+const showSavedOnly = computed(() => activeTab.value === 'saves');
+const showMyPostsOnly = computed(() => activeTab.value === 'myposts');
+const selectedCategory = computed(() => route.query.category || 'all');
 
 const searchInput = ref(null);
 
@@ -37,6 +44,17 @@ const categories = [
 
 const filteredDiscussions = computed(() => {
   let list = Array.isArray(forumStore.allDiscussions) ? [...forumStore.allDiscussions] : [];
+
+  if (activeTagFilter.value) {
+    const tq = activeTagFilter.value.toLowerCase().trim();
+    list = list.filter(d => {
+      return d.tags && Array.isArray(d.tags) && d.tags.some(t => {
+        if (!t) return false;
+        const label = typeof t === 'object' ? (t.label || t.name || '') : String(t);
+        return label.toLowerCase() === tq;
+      });
+    });
+  }
 
   // 1. Search Query filter
   if (searchQuery.value && typeof searchQuery.value === 'string' && searchQuery.value.trim()) {
@@ -57,11 +75,16 @@ const filteredDiscussions = computed(() => {
 
       const matchesTags = d.tags && Array.isArray(d.tags) && d.tags.some(t => {
         if (!t) return false;
-        const label = typeof t === 'object' ? (t.label || t.name || '') : t;
-        return (label || '').toString().toLowerCase().includes(q);
+        const label = typeof t === 'object' ? (t.label || t.name || '') : String(t);
+        return label.toLowerCase().includes(q);
       });
 
-      return title.includes(q) || excerpt.includes(q) || authorName.includes(q) || matchesTags;
+      const categoryId = (d.category || '').toString().toLowerCase();
+      const categoryObj = categories.find(c => c.id === categoryId);
+      const categoryLabel = categoryObj ? categoryObj.label.toLowerCase() : '';
+      const matchesCategory = categoryId.includes(q) || categoryLabel.includes(q);
+
+      return title.includes(q) || excerpt.includes(q) || authorName.includes(q) || matchesTags || matchesCategory;
     });
   }
 
@@ -70,9 +93,18 @@ const filteredDiscussions = computed(() => {
     list = list.filter(d => d.saved);
   }
 
+  // 1.6 My Posts filter
+  if (showMyPostsOnly.value && authStore.user) {
+    const myUsername = (authStore.user.username || authStore.user.name || '').toLowerCase();
+    list = list.filter(d => {
+      const authorName = (typeof d.author === 'object' && d.author !== null) ? (d.author.username || d.author.name) : d.author;
+      return (authorName || '').toLowerCase() === myUsername;
+    });
+  }
+
   // 2. Category filter
   if (selectedCategory.value !== 'all') {
-    list = list.filter(d => d.category === selectedCategory.value);
+    list = list.filter(d => (d.category || '').toLowerCase() === selectedCategory.value.toLowerCase());
   }
 
   // 3. Tab Sort / Unanswered Filter
@@ -86,7 +118,11 @@ const filteredDiscussions = computed(() => {
   } else if (filterTab.value === 'top rated') {
     list.sort((a, b) => (b.votes || 0) - (a.votes || 0));
   } else if (filterTab.value === 'unanswered') {
-    list = list.filter(d => !d.replies || d.replies.length === 0);
+    list = list.filter(d => {
+      const repliesCount = d.replies !== undefined ? Number(d.replies) : 0;
+      const likesCount = d.likes !== undefined ? Number(d.likes) : 0;
+      return repliesCount === 0 && likesCount === 0;
+    });
   }
   return list;
 });
@@ -99,58 +135,90 @@ const handleSearchInput = () => {
   }, 350);
 };
 
-const handleSidebarSelect = (tabId) => {
-  activeTab.value = tabId;
+const submitSearch = () => {
+  const qVal = searchQuery.value.trim();
+  router.push({ path: '/forum', query: { q: qVal || undefined } });
+};
+
+const showSuggestions = ref(false);
+
+const matchingSuggestedTags = computed(() => {
+  if (!searchQuery.value || !tagsStore.tags) return [];
+  const q = searchQuery.value.toLowerCase().replace('#', '').trim();
+  if (!q) return [];
+  return tagsStore.tags.filter(t => t.name.toLowerCase().includes(q)).slice(0, 5);
+});
+
+const selectSuggestedTag = (tagName) => {
+  const cleanTag = tagName.replace('#', '').trim();
+  router.push({ path: '/forum', query: { tag: cleanTag } });
+  showSuggestions.value = false;
+};
+
+const handleSearchBlur = () => {
+  setTimeout(() => {
+    showSuggestions.value = false;
+  }, 200);
+};
+
+watch(() => [route.query.tab, route.query.category], () => {
   searchLoading.value = true;
   setTimeout(() => {
     searchLoading.value = false;
   }, 350);
 
-  if (tabId === 'saves') {
-    showSavedOnly.value = true;
-    selectedCategory.value = 'all';
+  if (route.query.tab === 'saves') {
     forumStore.fetchBookmarks().catch(() => {});
-  } else if (tabId === 'questions') {
-    showSavedOnly.value = false;
-    selectedCategory.value = 'question';
-  } else if (tabId === 'home') {
-    showSavedOnly.value = false;
-    selectedCategory.value = 'all';
-  } else {
-    showSavedOnly.value = false;
-  }
-};
-
-const handleCategorySelect = (id) => {
-  selectedCategory.value = id;
-  searchLoading.value = true;
-  setTimeout(() => {
-    searchLoading.value = false;
-  }, 400);
-};
-
-watch(() => route.query.tab, (newTab) => {
-  if (newTab) {
-    handleSidebarSelect(newTab);
-  } else {
-    handleSidebarSelect('home');
   }
 });
 
-watch(() => route.query.q, (newQ) => {
+watch(() => [route.query.q, route.query.tag], async ([newQ, newTag]) => {
+  const qVal = newQ ? String(newQ).replace('#', '').trim() : '';
+  const tagVal = newTag ? String(newTag).replace('#', '').trim() : '';
+  
   searchQuery.value = newQ ? String(newQ) : '';
-});
+  activeTagFilter.value = tagVal;
+  
+  loading.value = true;
+  try {
+    if (!tagsStore.tags || tagsStore.tags.length === 0) {
+      await tagsStore.fetchTags();
+    }
+    if (tagVal) {
+      const matchedTag = tagsStore.tags && tagsStore.tags.find(t => t.name.toLowerCase() === tagVal.toLowerCase());
+      if (matchedTag) {
+        const results = await forumStore.fetchDiscussionsByTagName(matchedTag.name);
+        if (!results || results.length === 0) {
+          // Fallback to fetching recent discussions so local filtering can find newly created tags
+          await forumStore.fetchDiscussions();
+        }
+      } else {
+        await forumStore.fetchDiscussions();
+      }
+    } else {
+      await forumStore.fetchDiscussions();
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+}, { immediate: true });
 
 onMounted(async () => {
   loading.value = true;
-  await forumStore.fetchDiscussions();
-  if (route.query.tab === 'saves') {
-    await forumStore.fetchBookmarks().catch(() => {});
-  }
-  loading.value = false;
+  try {
+    await tagsStore.fetchTags();
+  } catch (e) {}
 
-  if (route.query.q) {
-    searchQuery.value = String(route.query.q);
+  try {
+    if (route.query.tab === 'saves') {
+      await forumStore.fetchBookmarks().catch(() => {});
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    loading.value = false;
   }
 
   window.addEventListener('keydown', handleGlobalKeydown);
@@ -177,13 +245,14 @@ const handleLoadMore = () => {
 
 const clearSearch = () => {
   searchQuery.value = '';
+  router.push({ path: '/forum', query: { ...route.query, q: undefined } });
   searchInput.value?.focus();
 };
 
 const clearFilters = () => {
   searchQuery.value = '';
-  selectedCategory.value = 'all';
   filterTab.value = 'latest';
+  router.push({ path: '/forum', query: {} });
 };
 </script>
 
@@ -193,7 +262,7 @@ const clearFilters = () => {
 
     <div class="forum-global-grid">
       <!-- Left Column: Left Sidebar Navigation stuck on the left -->
-      <LeftSidebar :active-tab="activeTab" @select-tab="handleSidebarSelect" />
+      <LeftSidebar />
 
       <!-- Right Column: Main Content Container -->
       <div class="forum-main-container">
@@ -209,13 +278,37 @@ const clearFilters = () => {
               placeholder="Search discussions, tags, or authors..."
               class="search-bar"
               @input="handleSearchInput"
+              @focus="showSuggestions = true"
+              @blur="handleSearchBlur"
+              @keydown.enter="submitSearch"
             />
-            <button class="search-btn" @click="handleSearchInput" title="Search">
+            <button v-if="searchQuery" class="clear-btn" @click="clearSearch" title="Clear search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <button class="search-btn" @click="submitSearch" title="Search">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
             </button>
+          </div>
+
+          <!-- Tag Suggestions Dropdown -->
+          <div v-if="showSuggestions && matchingSuggestedTags.length > 0" class="search-suggestions-dropdown">
+            <div class="suggestions-header">Suggested Tags</div>
+            <div class="suggestions-list">
+              <button
+                v-for="tag in matchingSuggestedTags"
+                :key="tag.id"
+                class="suggestion-item"
+                @mousedown.prevent="selectSuggestedTag(tag.name)"
+              >
+                #{{ tag.name }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -231,10 +324,10 @@ const clearFilters = () => {
               {{ filter }}
             </button>
           </div>
-          <button class="create-btn" @click="$router.push('/forum/create')">
+          <!-- <button class="create-btn" @click="$router.push('/forum/create')">
             <i class="bi bi-plus-lg"></i>
             <span>Create Question</span>
-          </button>
+          </button> -->
         </div>
 
         <!-- Inner Content Grid (Discussions Feed + Right Sidebar) -->
@@ -357,6 +450,22 @@ const clearFilters = () => {
 
 .search-bar::placeholder {
   color: var(--color-text-muted);
+}
+
+.clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+  color: var(--color-danger, #ef4444);
 }
 
 .search-btn {
@@ -488,7 +597,7 @@ const clearFilters = () => {
   border-radius: 50%;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-body {
@@ -515,7 +624,7 @@ const clearFilters = () => {
   border-radius: 100px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-line-sm {
@@ -524,7 +633,7 @@ const clearFilters = () => {
   border-radius: 4px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-line-sm.right {
@@ -537,7 +646,7 @@ const clearFilters = () => {
   border-radius: 6px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-excerpt {
@@ -546,7 +655,7 @@ const clearFilters = () => {
   border-radius: 6px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-footer {
@@ -555,7 +664,7 @@ const clearFilters = () => {
   border-radius: 4px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 @keyframes pulse-glow {
@@ -700,5 +809,59 @@ const clearFilters = () => {
   .tabs-group { width: 100%; justify-content: center; }
   .tab-btn { flex: 1; text-align: center; }
   .create-btn { justify-content: center; }
+}
+
+.forum-search-section {
+  position: relative;
+}
+
+.search-suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 16px;
+  margin-top: 8px;
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.suggestions-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestion-item {
+  padding: 6px 12px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.suggestion-item:hover {
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  border-color: var(--color-purple);
 }
 </style>

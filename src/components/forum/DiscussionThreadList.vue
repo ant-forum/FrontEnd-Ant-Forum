@@ -2,8 +2,10 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useForumStore } from '@/stores/ForumStore';
+import { useToast } from "vue-toastification";
 
 const router = useRouter();
+const toast = useToast();
 
 function goToProfile(author) {
   let username = 'user';
@@ -14,6 +16,53 @@ function goToProfile(author) {
   }
   username = username.replace('@', '').trim();
   router.push(`/viewprofile/${username}`);
+}
+
+function getAuthorName(author) {
+  if (typeof author === 'object' && author !== null) {
+    return author.username || author.name || 'User';
+  }
+  return author || 'User';
+}
+
+function getAuthorAvatar(d) {
+  if (!d) return null;
+  const author = d.author || d.user;
+  if (d.author_avatar || d.avatar) return d.author_avatar || d.avatar;
+  if (typeof author === 'object' && author !== null) {
+    return author.profile_pic || author.avatar || author.avatarUrl || null;
+  }
+  return null;
+}
+
+function getAuthorInitials(author) {
+  return getAuthorName(author)
+    .replace('@', '')
+    .trim()
+    .slice(0, 2)
+    .toUpperCase() || 'U';
+}
+
+function getReplyCount(d) {
+  return Array.isArray(d.replies)
+    ? d.replies.length
+    : (typeof d.replies === 'number' ? d.replies : Number(d.comment_count || 0));
+}
+
+function formatCreatedAt(d) {
+  const raw = d.createdAt || d.created_at || d.timestamp;
+  if (!raw) return 'Just now';
+
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
 }
 
 defineProps({
@@ -79,15 +128,43 @@ async function shareThread(id) {
 }
 
 function toggleSave(d) {
-  forumStore.toggleSaveForum(d.id);
-}
+  const isNowSaved = !d.saved; // Since store will toggle it instantly
+  
+  if (isNowSaved) {
+    toast.success("Discussion saved successfully!");
+  } else {
+    toast.success("Discussion removed from saved.");
+  }
 
-function toggleLike(d) {
-  forumStore.toggleLikeDiscussion(d.id);
+  forumStore.toggleSaveForum(d.id).catch(err => {
+    console.error("Failed to toggle save:", err);
+    toast.error("Failed to save discussion.");
+  });
 }
 
 function handleVote(id, direction) {
   forumStore.toggleVoteDiscussion(id, direction);
+  toast.success(direction === 'up' ? "Upvoted!" : "Downvoted!");
+}
+
+const categoryMap = {
+  question:   { label: 'Question', icon: 'bi-question-circle-fill', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' },
+  discussion: { label: 'Discussion', icon: 'bi-chat-left-text-fill', gradient: 'linear-gradient(135deg, #10b981, #047857)' },
+  showcase:   { label: 'Show & Tell', icon: 'bi-rocket-takeoff-fill', gradient: 'linear-gradient(135deg, #a855f7, #6d28d9)' },
+  tutorial:   { label: 'Tutorial', icon: 'bi-book-half', gradient: 'linear-gradient(135deg, #f59e0b, #b45309)' },
+  idea:       { label: 'Idea', icon: 'bi-lightbulb-fill', gradient: 'linear-gradient(135deg, #0d9488, #0f766e)' }
+};
+
+function getCategoryMeta(cat) {
+  if (cat && Object.prototype.hasOwnProperty.call(categoryMap, cat)) {
+    return categoryMap[cat];
+  }
+  return categoryMap['discussion']; // Fallback
+}
+
+function selectTag(tagName) {
+  const cleanTag = tagName.replace('#', '').trim();
+  router.push({ path: '/forum', query: { tag: cleanTag } });
 }
 </script>
 
@@ -110,23 +187,38 @@ function handleVote(id, direction) {
 
       <!-- Content Column -->
       <div class="thread-content">
-        <!-- Meta Row: Tags on left, posted info on right -->
-        <div class="thread-meta">
-          <div class="thread-tags">
-            <span v-for="tag in d.tags" :key="tag.label" class="tag-chip" :style="getTagStyle(tag.label, tag.color)">
-              {{ tag.label }}
+        <div class="thread-header">
+          <button class="author-chip" type="button" @click.stop="goToProfile(d.author)">
+            <span class="author-avatar">
+              <img v-if="getAuthorAvatar(d)" :src="getAuthorAvatar(d)" alt="">
+              <span v-else>{{ getAuthorInitials(d.author) }}</span>
             </span>
+            <span class="author-copy">
+              <strong>@{{ getAuthorName(d.author).replace('@', '') }}</strong>
+              <small>Created {{ formatCreatedAt(d) }}</small>
+            </span>
+          </button>
+
+          <div class="thread-status">
+            <!-- Category Badge -->
+            <span v-if="d.category && getCategoryMeta(d.category)" class="category-badge" :style="{ background: getCategoryMeta(d.category).gradient }">
+              <i :class="['bi', getCategoryMeta(d.category).icon]"></i>
+              {{ getCategoryMeta(d.category).label }}
+            </span>
+            <!-- Tags -->
+            <div v-if="d.tags && d.tags.length" class="thread-tags">
+              <span v-for="tag in d.tags" :key="tag.label" class="tag-chip" :style="getTagStyle(tag.label, tag.color)" @click.stop="selectTag(tag.label)" style="cursor: pointer;">
+                #{{ tag.label.replace('#', '') }}
+              </span>
+            </div>
           </div>
-          <span class="thread-time">
-            Posted {{ d.timestamp }} by <span class="author-name" @click.stop="goToProfile(d.author)">@{{ typeof d.author === 'object' ? (d.author.username?.replace('@','') || 'author') : d.author?.replace('@','') }}</span>
-          </span>
         </div>
 
         <!-- Title -->
         <h3 class="thread-title">{{ d.title }}</h3>
 
         <!-- Excerpt -->
-        <p class="thread-excerpt">{{ d.excerpt }}</p>
+        <p class="thread-excerpt">{{ d.excerpt || d.description || d.body }}</p>
 
         <!-- Code Block (Card 2 / hasCode) -->
         <div v-if="d.hasCode && d.code" class="code-block" @click.stop>
@@ -141,14 +233,9 @@ function handleVote(id, direction) {
 
         <!-- Footer Row -->
         <div class="thread-footer">
-          <button class="foot-btn like" :class="{ 'is-liked': d.likedByUser }" @click.stop="toggleLike(d)">
-            <i :class="[d.likedByUser ? 'bi-heart-fill text-danger' : 'bi-heart']"></i>
-            <span>{{ d.likes || 0 }} {{ (d.likes === 1) ? 'Like' : 'Likes' }}</span>
-          </button>
-
           <button class="foot-btn replies" @click.stop="$router.push(`/forum/${d.id}`)">
-            <span>{{ Array.isArray(d.replies) ? d.replies.length : (typeof d.replies === 'number' ? d.replies : 0) }} Replies</span>
-            <i class="bi bi-chat-left"></i>
+            <i class="bi bi-chat-square-text"></i>
+            <span>{{ getReplyCount(d) }} {{ getReplyCount(d) === 1 ? 'Reply' : 'Replies' }}</span>
           </button>
 
           <button class="foot-btn bookmark" :class="{ 'is-saved': d.saved }" @click.stop="toggleSave(d)">
@@ -185,8 +272,9 @@ function handleVote(id, direction) {
 }
 
 .thread-card:hover {
-  border-color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 52%, var(--color-border));
   box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 /* Vote Column (Clean layout matching reference) */
@@ -246,20 +334,117 @@ function handleVote(id, direction) {
 /* Thread Content Column */
 .thread-content {
   flex: 1;
-  padding: 24px 24px 24px 12px;
+  padding: 22px 24px 22px 12px;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 /* Metadata Row */
-.thread-meta {
+.thread-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.author-chip {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.author-avatar {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-purple), var(--color-primary));
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.author-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.author-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.author-copy strong {
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.author-copy small {
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.author-chip:hover .author-copy strong {
+  color: var(--color-primary);
+}
+
+.thread-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 100px;
+  color: white;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+}
+
+.reply-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  color: var(--color-text-muted);
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.reply-pill i {
+  color: var(--color-primary);
 }
 
 .thread-tags {
@@ -274,32 +459,23 @@ function handleVote(id, direction) {
   font-size: 11.5px;
   font-weight: 600;
   border-radius: 99px;
-}
-
-.thread-time {
-  font-size: 12.5px;
-  color: var(--color-text-muted);
-}
-
-.author-name {
-  font-weight: 600;
-  color: var(--color-text);
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.author-name:hover {
-  color: var(--color-primary);
-  text-decoration: underline;
+.tag-chip:hover {
+  filter: brightness(0.85);
+  transform: translateY(-1px);
 }
 
 /* Title & Excerpt */
 .thread-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 850;
   color: var(--color-text);
   line-height: 1.35;
+  overflow-wrap: anywhere;
   transition: color 0.2s ease;
 }
 
@@ -371,43 +547,40 @@ function handleVote(id, direction) {
 .thread-footer {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   margin-top: 8px;
-  padding-top: 12px;
+  padding-top: 14px;
   border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
 }
 
 .foot-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
+  gap: 7px;
+  min-height: 34px;
+  background: var(--color-surface-hover);
+  border: 1px solid transparent;
   color: var(--color-text-muted);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 750;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 0 11px;
+  border-radius: 999px;
   transition: all 0.2s ease;
 }
 
 .foot-btn i {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .foot-btn:hover {
   color: var(--color-text);
-  background: var(--color-surface-hover);
+  border-color: color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
 }
 
 .foot-btn.bookmark.is-saved {
   color: var(--color-primary);
-  font-weight: 600;
-}
-
-.foot-btn.like.is-liked {
-  color: #ef4444;
   font-weight: 600;
 }
 

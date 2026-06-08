@@ -1,7 +1,10 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/api";
-import { htmlToPlainText } from "@/utils/richContent";
+import { createPlainTextExcerpt, htmlToPlainText } from "@/utils/richContent";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
+import { useAuthStore } from "@/stores/AuthStore";
+import { useUsersStore } from "@/stores/UsersStore";
 
 const ensureSuccess = (response) => {
   if (response.data && response.data.result === false) {
@@ -9,7 +12,13 @@ const ensureSuccess = (response) => {
   }
 };
 
+const LIST_CACHE_MS = 1500;
+const CATEGORY_CACHE_MS = 5 * 60 * 1000;
+
 export const useBlogStore = defineStore('blog', () => {
+  const authStore = useAuthStore();
+  const usersStore = useUsersStore();
+
   const blogs = ref([]);
   const ownBlogs = ref([]);
   const blog = ref(null);
@@ -21,38 +30,35 @@ export const useBlogStore = defineStore('blog', () => {
   // Fallback lists
   const drafts = ref([]); // internal helper for admin drafts
   const categories = ref([]);
+  let allBlogsRequest = null;
+  let categoriesRequest = null;
+  let authorProfilesRequest = null;
+  let lastAllBlogsFetchedAt = 0;
+  let lastCategoriesFetchedAt = 0;
+
+  const ensureAuthorProfiles = async () => {
+    if (String(authStore.user?.role || '').toLowerCase() !== 'admin') return;
+    if (usersStore.users.length > 0) return;
+
+    if (!authorProfilesRequest) {
+      authorProfilesRequest = usersStore.fetchUsers(true)
+        .catch((err) => {
+          console.warn('Could not load admin author profiles for blogs:', err);
+          return [];
+        })
+        .finally(() => {
+          authorProfilesRequest = null;
+        });
+    }
+
+    await authorProfilesRequest;
+  };
 
   // Helper to normalize blog image paths, dates, authors, categories
   const normalizeBlog = (item) => {
     if (!item) return null;
 
-    let image = item.thumbnail || item.image;
-    if (image) {
-      // 1. Remove host/protocol parts if they belong to backend to make it relative
-      if (image.includes('localhost:3000')) {
-        image = image.replace(/https?:\/\/localhost:3000/, '');
-      }
-      const base = import.meta.env.VITE_API_BASE_URL || '';
-      if (base) {
-        const cleanBase = base.replace(/https?:\/\//, '').replace(/\/$/, '');
-        const baseRegex = new RegExp(`https?:\\/\\/${cleanBase}`, 'i');
-        image = image.replace(baseRegex, '');
-      }
-      
-      // 2. Strip any /public/ or public/ prefixes
-      if (image.includes('/public/')) {
-        image = image.replace('/public/', '/');
-      } else if (image.startsWith('public/')) {
-        image = image.replace('public/', '');
-      }
-
-      // 3. Ensure local paths start with a leading slash to be root-relative
-      if (!image.startsWith('http') && !image.startsWith('data:')) {
-        if (!image.startsWith('/')) {
-          image = `/${image}`;
-        }
-      }
-    }
+    const image = resolveMediaUrl(item.thumbnail || item.image);
 
     let categoryName = 'General';
     if (item.category) {
@@ -65,38 +71,109 @@ export const useBlogStore = defineStore('blog', () => {
       }
     }
 
-    let authorName = 'System Admin';
-    let authorAvatar = 'https://i.pravatar.cc/150?u=admin';
+    let authorName = 'Unknown';
+    let authorAvatar = null;
     if (item.user) {
       authorName = item.user.username || item.user.name || authorName;
-      authorAvatar = item.user.profile_pic || item.user.avatar || authorAvatar;
+      authorAvatar = resolveMediaUrl(item.user.profile_pic || item.user.avatar, authorAvatar);
     } else if (item.author) {
       authorName = typeof item.author === 'object' ? (item.author.name || item.author.username) : item.author;
-      authorAvatar = item.author_avatar || authorAvatar;
+      authorAvatar = resolveMediaUrl(item.author_avatar, authorAvatar);
+    } else if (item.admin) {
+      authorName = item.admin.username || item.admin.name || authorName;
+      authorAvatar = resolveMediaUrl(item.admin.profile_pic || item.admin.avatar, authorAvatar);
+    } else if (item.created_by) {
+      authorName = item.created_by.username || item.created_by.name || authorName;
+      authorAvatar = resolveMediaUrl(item.created_by.profile_pic || item.created_by.avatar, authorAvatar);
+    } else if (item.createdBy) {
+      authorName = item.createdBy.username || item.createdBy.name || authorName;
+      authorAvatar = resolveMediaUrl(item.createdBy.profile_pic || item.createdBy.avatar, authorAvatar);
+    } else {
+      authorName =
+        item.username ||
+        item.admin_username ||
+        item.created_by_username ||
+        item.createdByUsername ||
+        item.publisher_username ||
+        item.user_name ||
+        item.name ||
+        authorName;
+      authorAvatar = resolveMediaUrl(item.profile_pic || item.avatar || item.author_avatar, authorAvatar);
+    }
+
+    const applyAuthorProfile = (profile) => {
+      if (!profile) return;
+      authorName = profile.username || profile.name || authorName;
+      authorAvatar = resolveMediaUrl(
+        profile.profile_pic || profile.avatar || profile.avatarUrl,
+        authorAvatar
+      );
+    };
+
+    const blogUserId = item.user_id || item.userId || item.author_id || item.authorId || item.admin_id || item.adminId || item.created_by_id || item.createdById;
+    const loadedUser = blogUserId
+      ? usersStore.users.find((u) => String(u.id) === String(blogUserId) || String(u.user_id) === String(blogUserId))
+      : null;
+    applyAuthorProfile(loadedUser);
+
+    const currentUser = authStore.user;
+    const matchesCurrentUser = currentUser && (
+      (blogUserId && (String(currentUser.id) === String(blogUserId) || String(currentUser.user_id) === String(blogUserId))) ||
+      (item.email && currentUser.email && String(currentUser.email).toLowerCase() === String(item.email).toLowerCase()) ||
+      (item.username && currentUser.username && String(currentUser.username).toLowerCase() === String(item.username).toLowerCase())
+    );
+    if (matchesCurrentUser) {
+      applyAuthorProfile(currentUser);
+    }
+
+    if (authorName === 'Unknown') {
+      authorName = 'Admin_Nha';
     }
 
     let dateStr = 'Recent';
-    if (item.created_at || item.createdAt) {
-      const d = new Date(item.created_at || item.createdAt);
+    let postedAt = 'Recent';
+    const rawDate = item.created_at || item.createdAt || item.published_at || item.publishedAt || item.date;
+    if (rawDate) {
+      const d = new Date(rawDate);
       if (!isNaN(d.getTime())) {
         dateStr = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        postedAt = d.toLocaleString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+      } else {
+        dateStr = rawDate;
+        postedAt = rawDate;
       }
-    } else if (item.date) {
-      dateStr = item.date;
     }
 
-    const plainDescription = htmlToPlainText(item.description || item.content || '');
+    const content = item.content || item.description || '';
+    const plainDescription = htmlToPlainText(content);
+
+    // Final fallback for missing avatar
+    if (!authorAvatar || authorAvatar.includes('ui-avatars.com')) {
+      if (authorName.toLowerCase() === 'admin_nha' || authorName.toLowerCase() === 'admin') {
+        authorAvatar = '/charles_leclerc.png';
+      } else {
+        authorAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=7c3aed&color=fff&rounded=true&bold=true`;
+      }
+    }
 
     return {
       ...item,
       id: item.id,
       title: item.title || '',
-      description: item.description || '',
-      excerpt: plainDescription,
+      description: item.description || createPlainTextExcerpt(content),
+      content,
+      excerpt: createPlainTextExcerpt(item.description || content),
       category: categoryName,
       category_id: item.category_id,
       image: image || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800',
       date: dateStr,
+      postedAt,
       author: authorName,
       author_avatar: authorAvatar,
       readTime: item.readTime || `${Math.max(3, Math.ceil(plainDescription.split(' ').length / 200))} min`,
@@ -142,6 +219,7 @@ export const useBlogStore = defineStore('blog', () => {
     if (isLoading.value && !isLoadMore) return;
     isLoading.value = true;
     try {
+      await ensureAuthorProfiles();
       const response = await api.get('/api/blog/getAllBlogsPublished', {
         params: {
           sortBy: 'created_at',
@@ -186,6 +264,7 @@ export const useBlogStore = defineStore('blog', () => {
   const fetchBlogPreview = async (id) => {
     try {
       isLoading.value = true;
+      await ensureAuthorProfiles();
       const response = await api.get(`/api/blog/getBlogbyIDPublished/${id}`);
       ensureSuccess(response);
       const raw = response.data?.data || response.data;
@@ -226,6 +305,7 @@ export const useBlogStore = defineStore('blog', () => {
       blogs.value = blogs.value.filter(b => String(b.id) !== String(id));
       ownBlogs.value = ownBlogs.value.filter(b => String(b.id) !== String(id));
       drafts.value = drafts.value.filter(b => String(b.id) !== String(id));
+      lastAllBlogsFetchedAt = 0;
       return response.data;
     } finally {
       isLoading.value = false;
@@ -249,22 +329,40 @@ export const useBlogStore = defineStore('blog', () => {
 
       const response = await api.post('/api/blog/createBlog', body);
       ensureSuccess(response);
+      lastAllBlogsFetchedAt = 0;
       return response.data;
     } finally {
       isLoading.value = false;
     }
   };
 
-  const fetchAllBlogs = async () => {
+  const fetchAllBlogs = async ({ force = false } = {}) => {
+    if (allBlogsRequest) {
+      return allBlogsRequest;
+    }
+
+    const hasCachedList = ownBlogs.value.length > 0;
+    const isFresh = Date.now() - lastAllBlogsFetchedAt < LIST_CACHE_MS;
+    if (!force && hasCachedList && isFresh) {
+      return ownBlogs.value;
+    }
+
     try {
       isLoading.value = true;
-      const response = await api.get('/api/blog/getAllBlogs');
-      ensureSuccess(response);
+      allBlogsRequest = (async () => {
+        await ensureAuthorProfiles();
+        const response = await api.get('/api/blog/getAllBlogs');
+        ensureSuccess(response);
 
-      const normalized = getNormalizedList(response.data);
-      blogs.value = normalized.filter(b => b.status === 'published');
-      drafts.value = normalized.filter(b => b.status === 'draft');
-      ownBlogs.value = normalized;
+        const normalized = getNormalizedList(response.data);
+        blogs.value = normalized.filter(b => b.status === 'published');
+        drafts.value = normalized.filter(b => b.status === 'draft');
+        ownBlogs.value = normalized;
+        lastAllBlogsFetchedAt = Date.now();
+        return ownBlogs.value;
+      })();
+
+      return await allBlogsRequest;
     } catch (err) {
       blogs.value = [];
       drafts.value = [];
@@ -272,12 +370,14 @@ export const useBlogStore = defineStore('blog', () => {
       throw err;
     } finally {
       isLoading.value = false;
+      allBlogsRequest = null;
     }
   };
 
   const fetchDraftBlogs = async () => {
     try {
       isLoading.value = true;
+      await ensureAuthorProfiles();
       const response = await api.get('/api/blog/getAllBlogsDraft');
       ensureSuccess(response);
       drafts.value = getNormalizedList(response.data);
@@ -292,6 +392,7 @@ export const useBlogStore = defineStore('blog', () => {
   const fetchBlogById = async (id) => {
     try {
       isLoading.value = true;
+      await ensureAuthorProfiles();
       const response = await api.get(`/api/blog/getBlogbyID/${id}`);
       ensureSuccess(response);
       const raw = response.data?.data || response.data;
@@ -317,6 +418,7 @@ export const useBlogStore = defineStore('blog', () => {
 
       const response = await api.put(`/api/blog/updateBlog/${id}`, body);
       ensureSuccess(response);
+      lastAllBlogsFetchedAt = 0;
       return response.data;
     } finally {
       isLoading.value = false;
@@ -324,27 +426,43 @@ export const useBlogStore = defineStore('blog', () => {
   };
 
   const fetchCategories = async () => {
+    if (categoriesRequest) {
+      return categoriesRequest;
+    }
+
+    const hasCachedCategories = categories.value.length > 0;
+    const isFresh = Date.now() - lastCategoriesFetchedAt < CATEGORY_CACHE_MS;
+    if (hasCachedCategories && isFresh) {
+      return categories.value;
+    }
+
     try {
       isLoading.value = true;
-      const response = await api.get('/api/categories/getAllCategories', { skipGlobalToast: true });
-      ensureSuccess(response);
+      categoriesRequest = (async () => {
+        const response = await api.get('/api/categories/getAllCategories', { skipGlobalToast: true });
+        ensureSuccess(response);
       
-      const rawData = response.data || response;
-      let list = [];
-      if (Array.isArray(rawData)) {
-        list = rawData;
-      } else if (Array.isArray(rawData.data)) {
-        list = rawData.data;
-      } else if (rawData.data && Array.isArray(rawData.data.data)) {
-        list = rawData.data.data;
-      }
-      categories.value = list;
-      return list;
+        const rawData = response.data || response;
+        let list = [];
+        if (Array.isArray(rawData)) {
+          list = rawData;
+        } else if (Array.isArray(rawData.data)) {
+          list = rawData.data;
+        } else if (rawData.data && Array.isArray(rawData.data.data)) {
+          list = rawData.data.data;
+        }
+        categories.value = list;
+        lastCategoriesFetchedAt = Date.now();
+        return list;
+      })();
+
+      return await categoriesRequest;
     } catch (err) {
       categories.value = [];
       throw err;
     } finally {
       isLoading.value = false;
+      categoriesRequest = null;
     }
   };
 
