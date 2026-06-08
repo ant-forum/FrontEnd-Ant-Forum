@@ -51,8 +51,96 @@ const normalizeTags = (...candidates) => {
   });
 };
 
+const unwrapDiscussionPayload = (raw) => {
+  const payload = raw?.data ?? raw;
+  if (Array.isArray(payload)) return payload[0] || null;
+  if (!payload || typeof payload !== "object") return payload;
 
+  return payload.forum ||
+    payload.discussion ||
+    payload.thread ||
+    payload.post ||
+    payload.data ||
+    payload;
+};
 
+const getDiscussionBody = (data = {}) => {
+  return data.description ||
+    data.Description ||
+    data.body ||
+    data.Body ||
+    data.content ||
+    data.Content ||
+    data.details ||
+    data.detail ||
+    data.message ||
+    "";
+};
+
+const slugifyCategory = (value = "") => {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "discussion";
+};
+
+const getCategoryLabel = (category = {}) => {
+  return category.name || category.label || category.type || category.category || "";
+};
+
+const resolveCategoryMeta = (item = {}, categoryList = []) => {
+  const lookupId = item.category_id || item.categoryId || item.cat_id || (Number(item.category) ? Number(item.category) : null);
+  const rawCategory = item.category_name || item.categoryName || item.category_label || item.categoryLabel || item.category;
+  const categoryObj = lookupId
+    ? categoryList.find((category) => Number(category.id) === Number(lookupId))
+    : categoryList.find((category) => {
+        const raw = String(rawCategory || "").toLowerCase();
+        return [category.id, category.name, category.label, category.type]
+          .filter(Boolean)
+          .map((value) => String(value).toLowerCase())
+          .includes(raw);
+      });
+
+  const label = getCategoryLabel(categoryObj || {}) || String(rawCategory || "Discussion");
+  const id = lookupId || categoryObj?.id || item.category_id || item.categoryId || slugifyCategory(label);
+  const slug = slugifyCategory(categoryObj?.type || label);
+
+  return {
+    id,
+    slug,
+    label,
+    icon: categoryObj?.icon || null,
+    color: categoryObj?.color || null,
+    description: categoryObj?.description || "",
+  };
+};
+
+const getLocalVote = (id) => {
+  try {
+    const currentUserId = useAuthStore().user?.id || 'guest';
+    const key = `forum_votes_${currentUserId}`;
+    const votes = JSON.parse(localStorage.getItem(key) || '{}');
+    return votes[id] || null;
+  } catch {
+    return null;
+  }
+};
+
+const saveLocalVote = (id, voteType) => {
+  try {
+    const currentUserId = useAuthStore().user?.id || 'guest';
+    const key = `forum_votes_${currentUserId}`;
+    const votes = JSON.parse(localStorage.getItem(key) || '{}');
+    if (voteType) {
+      votes[id] = voteType;
+    } else {
+      delete votes[id];
+    }
+    localStorage.setItem(key, JSON.stringify(votes));
+  } catch (e) {}
+};
 
 export const useForumStore = defineStore("forum", () => {
   const discussions = ref([]);
@@ -149,31 +237,19 @@ export const useForumStore = defineStore("forum", () => {
         }
       }
 
-      // Map saved status, tags, and category types
+      // Map saved status, tags, and dynamic category metadata
       const mappedDiscussions = discussionsData.map(d => {
-        let catStr = d.category;
-        const isKnownCategoryType = ['question', 'discussion', 'tutorial', 'idea', 'showcase'].includes(String(catStr).toLowerCase());
-        
-        if (!isKnownCategoryType) {
-          const lookupId = d.category_id || (Number(d.category) ? Number(d.category) : null);
-          if (lookupId) {
-            const catObj = categories.value.find(c => Number(c.id) === Number(lookupId));
-            if (catObj) {
-              catStr = (catObj.type || catObj.name || '').toLowerCase();
-            }
-          }
-        }
-        
-        if (!catStr || !['question', 'discussion', 'tutorial', 'idea', 'showcase'].includes(catStr.toLowerCase())) {
-          catStr = 'discussion';
-        }
+        const categoryMeta = resolveCategoryMeta(d, categories.value);
 
         const likesCount = d.likes !== undefined ? d.likes : (d.like_count !== undefined ? d.like_count : 0);
         const isLiked = d.likedByUser !== undefined ? d.likedByUser : (d.liked !== undefined ? d.liked : (d.isLiked !== undefined ? d.isLiked : false));
         const repliesVal = d.replies !== undefined ? d.replies : (d.comment_count !== undefined ? Number(d.comment_count) : 0);
         return {
           ...d,
-          category: catStr,
+          category: categoryMeta.slug,
+          category_id: d.category_id || d.categoryId || categoryMeta.id,
+          categoryMeta,
+          categoryLabel: categoryMeta.label,
           tags: normalizeTags(d.tags, d.Tags, d.tag_name, d.tag_names, d.tag).map((t, idx) => {
             if (idx === 0 && d.tag_id) return { ...t, id: d.tag_id };
             return t;
@@ -181,7 +257,7 @@ export const useForumStore = defineStore("forum", () => {
           saved: bookmarkedIds.has(Number(d.id)) || d.saved || false,
           likes: likesCount,
           likedByUser: isLiked,
-          voted: isLiked ? 'up' : (d.voted || null),
+          voted: isLiked ? 'up' : (getLocalVote(d.id) || d.voted || null),
           votes: d.votes !== undefined ? d.votes : likesCount,
           replies: repliesVal,
           excerpt: d.excerpt || stripMarkdown(d.description || d.body || '')
@@ -215,7 +291,7 @@ export const useForumStore = defineStore("forum", () => {
       let discussionData = null;
       if (discussionRes.status === 'fulfilled') {
         const raw = discussionRes.value.data;
-        discussionData = (raw && raw.data) ? raw.data : raw;
+        discussionData = unwrapDiscussionPayload(raw);
       }
 
       let isBookmarked = false;
@@ -309,44 +385,29 @@ export const useForumStore = defineStore("forum", () => {
             console.error("Failed to fetch categories list in ForumStore:", e);
           }
         }
-        let catStr = discussionData.category;
-        const isKnownCategoryType = ['question', 'discussion', 'tutorial', 'idea', 'showcase'].includes(String(catStr).toLowerCase());
-        
-        if (!isKnownCategoryType) {
-          const lookupId = discussionData.category_id || (Number(discussionData.category) ? Number(discussionData.category) : null);
-          if (lookupId) {
-            if (categories.value.length === 0) {
-              try {
-                await fetchCategories();
-              } catch (e) {
-                console.error("Failed to fetch categories list in ForumStore:", e);
-              }
-            }
-            const catObj = categories.value.find(c => Number(c.id) === Number(lookupId));
-            if (catObj) {
-              catStr = (catObj.type || catObj.name || '').toLowerCase();
-            }
-          }
-        }
+        const categoryMeta = resolveCategoryMeta(discussionData, categories.value);
 
-        if (!catStr || !['question', 'discussion', 'tutorial', 'idea', 'showcase'].includes(catStr.toLowerCase())) {
-          catStr = 'discussion';
-        }
-
-        discussionData.category = catStr;
+        discussionData.category = categoryMeta.slug;
+        discussionData.category_id = discussionData.category_id || discussionData.categoryId || categoryMeta.id;
+        discussionData.categoryMeta = categoryMeta;
+        discussionData.categoryLabel = categoryMeta.label;
         discussionData.tags = normalizeTags(discussionData.tags, discussionData.Tags, discussionData.tag_name, discussionData.tag_names, discussionData.tag).map((t, idx) => {
           if (idx === 0 && discussionData.tag_id) return { ...t, id: discussionData.tag_id };
           return t;
         });
         discussionData.saved = isBookmarked || discussionData.saved || false;
         discussionData.replies = commentData;
+        discussionData.description = getDiscussionBody(discussionData);
+        discussionData.body = discussionData.body || discussionData.description;
+        discussionData.code = discussionData.code || discussionData.code_snippet || discussionData.codeSnippet || "";
+        discussionData.hasCode = Boolean(discussionData.hasCode || discussionData.has_code || discussionData.code);
         discussionData.excerpt = discussionData.excerpt || stripMarkdown(discussionData.description || discussionData.body || '');
         
         const likesCount = discussionData.likes !== undefined ? discussionData.likes : (discussionData.like_count !== undefined ? discussionData.like_count : 0);
         const isLiked = discussionData.likedByUser !== undefined ? discussionData.likedByUser : (discussionData.liked !== undefined ? discussionData.liked : (discussionData.isLiked !== undefined ? discussionData.isLiked : false));
         discussionData.likes = likesCount;
         discussionData.likedByUser = isLiked;
-        discussionData.voted = isLiked ? 'up' : (discussionData.voted || null);
+        discussionData.voted = isLiked ? 'up' : (getLocalVote(discussionData.id) || discussionData.voted || null);
         discussionData.votes = discussionData.votes !== undefined ? discussionData.votes : likesCount;
 
         setDiscussion(discussionData);
@@ -401,13 +462,18 @@ export const useForumStore = defineStore("forum", () => {
       const formattedPayload = {
         title: payload.title,
         description: payload.description,
+        body: payload.description,
+        excerpt: payload.description,
         tag_id: resolvedTagId ? String(resolvedTagId) : null,
         tag_name: tagNameStr,
         tag: tagNameStr,
         tags: tagNameStr,
         category_name: categoryName,
         code: payload.code,
+        code_snippet: payload.code,
+        codeSnippet: payload.code,
         hasCode: payload.hasCode,
+        has_code: payload.hasCode,
         category_id: payload.category_id
       };
       const res = await api.post("/api/forums/create/forum", formattedPayload);
@@ -416,6 +482,10 @@ export const useForumStore = defineStore("forum", () => {
         let savedData = res.data.data;
         if (savedData) {
           savedData.tags = normalizeTags(savedData.tags, savedData.Tags, savedData.tag_name, savedData.tag_names, savedData.tag);
+          savedData.description = savedData.description || savedData.body || savedData.Description || payload.description || "";
+          savedData.body = savedData.body || savedData.description;
+          savedData.code = savedData.code || savedData.code_snippet || savedData.codeSnippet || payload.code || "";
+          savedData.hasCode = Boolean(savedData.hasCode || savedData.has_code || savedData.code);
           const likesCount = savedData.likes !== undefined ? savedData.likes : (savedData.like_count !== undefined ? savedData.like_count : 0);
           savedData.likes = likesCount;
           savedData.likedByUser = false;
@@ -469,26 +539,48 @@ export const useForumStore = defineStore("forum", () => {
       const formattedPayload = {
         title: payload.title,
         description: payload.description,
+        body: payload.description,
+        excerpt: payload.description,
         tag_id: resolvedTagId ? String(resolvedTagId) : null,
         tag_name: tagNameStr,
         tag: tagNameStr,
         tags: tagNameStr,
         category_name: categoryName,
         code: payload.code,
+        code_snippet: payload.code,
+        codeSnippet: payload.code,
         hasCode: payload.hasCode,
+        has_code: payload.hasCode,
         category_id: payload.category_id
       };
-      const res = await api.put(`/api/forums/updateforum/${id}`, formattedPayload);
+      let res;
+      try {
+        res = await api.put(`/api/forums/updateforum/${id}`, formattedPayload);
+      } catch (primaryErr) {
+        const fallbackPayload = {
+          title: payload.title,
+          description: payload.description,
+          category_id: payload.category_id,
+          tag_id: resolvedTagId ? String(resolvedTagId) : null,
+          tag_name: tagNameStr,
+          category_name: categoryName,
+        };
+        res = await api.put(`/api/forums/updateforum/${id}`, fallbackPayload);
+      }
 
       if (res.data.result) {
         let savedData = res.data.data;
         if (savedData) {
           savedData.tags = normalizeTags(savedData.tags, savedData.Tags, savedData.tag_name, savedData.tag_names, savedData.tag);
+          savedData.description = savedData.description || savedData.body || savedData.Description || payload.description || "";
+          savedData.body = savedData.body || savedData.description;
+          savedData.code = savedData.code || savedData.code_snippet || savedData.codeSnippet || payload.code || "";
+          savedData.hasCode = Boolean(savedData.hasCode || savedData.has_code || savedData.code);
           const likesCount = savedData.likes !== undefined ? savedData.likes : (savedData.like_count !== undefined ? savedData.like_count : 0);
           const isLiked = savedData.likedByUser !== undefined ? savedData.likedByUser : (savedData.liked !== undefined ? savedData.liked : (savedData.isLiked !== undefined ? savedData.isLiked : false));
           savedData.likes = likesCount;
           savedData.likedByUser = isLiked;
-          savedData.voted = isLiked ? 'up' : (savedData.voted || null);
+          savedData.voted = isLiked ? 'up' : (getLocalVote(savedData.id) || savedData.voted || null);
           savedData.votes = savedData.votes !== undefined ? savedData.votes : likesCount;
           savedData.replies = savedData.replies !== undefined ? savedData.replies : (savedData.comment_count !== undefined ? Number(savedData.comment_count) : 0);
           savedData.excerpt = savedData.excerpt || stripMarkdown(savedData.description || savedData.body || '');
@@ -813,7 +905,7 @@ export const useForumStore = defineStore("forum", () => {
         const isLiked = bd.likedByUser !== undefined ? bd.likedByUser : (bd.liked !== undefined ? bd.liked : (bd.isLiked !== undefined ? bd.isLiked : false));
         bd.likes = likesCount;
         bd.likedByUser = isLiked;
-        bd.voted = isLiked ? 'up' : (bd.voted || null);
+        bd.voted = isLiked ? 'up' : (getLocalVote(bd.id) || bd.voted || null);
         bd.votes = bd.votes !== undefined ? bd.votes : likesCount;
         bd.replies = bd.replies !== undefined ? bd.replies : (bd.comment_count !== undefined ? Number(bd.comment_count) : 0);
         bd.excerpt = bd.excerpt || stripMarkdown(bd.description || bd.body || '');
@@ -961,6 +1053,10 @@ export const useForumStore = defineStore("forum", () => {
             }
           }
         }
+        
+        // Save the new vote state to localStorage
+        const newVoteState = discussion.value ? discussion.value.voted : (found ? found.voted : null);
+        saveLocalVote(id, newVoteState);
       }
 
       return res.data;
@@ -1003,6 +1099,9 @@ export const useForumStore = defineStore("forum", () => {
           found.voted = found.likedByUser ? 'up' : null;
           found.votes = found.likes;
         }
+
+        const newVoteState = discussion.value ? discussion.value.voted : (found ? found.voted : null);
+        saveLocalVote(id, newVoteState);
       }
 
       return res.data;
@@ -1119,7 +1218,7 @@ export const useForumStore = defineStore("forum", () => {
             saved: bookmarkedIds.has(Number(d.id)) || d.saved || false,
             likes: likesCount,
             likedByUser: isLiked,
-            voted: isLiked ? 'up' : (d.voted || null),
+            voted: isLiked ? 'up' : (getLocalVote(d.id) || d.voted || null),
             votes: d.votes !== undefined ? d.votes : likesCount,
             replies: repliesVal,
             excerpt: d.excerpt || stripMarkdown(d.description || d.body || '')

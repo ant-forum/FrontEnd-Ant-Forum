@@ -103,7 +103,7 @@ const routes = [
     component: () => import("../views/settings/UserSettingsView.vue"),
   },
   {
-    path: "/viewprofile/:username",
+    path: "/viewprofile/:id",
     name: "ViewProfile",
     meta: { requiresAuth: true },
     component: () => import("../views/ViewProfile.vue"),

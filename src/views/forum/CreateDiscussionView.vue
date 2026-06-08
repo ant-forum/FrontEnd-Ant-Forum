@@ -22,6 +22,9 @@ const backendCategories = ref([]);
 
 const isEditorFocused = ref(false);
 const isSubmitting = ref(false);
+const descriptionEditorRef = ref(null);
+const CODE_SNIPPET_HEADING = "### Code Snippet";
+const attachedCodeSnippetRegex = /\n{0,2}### Code Snippet\s*\n```[^\n`]*\n([\s\S]*?)\n```\s*$/i;
 
 // Form State
 const form = ref({
@@ -96,6 +99,48 @@ const tagColorMap = {
 const getTagChipStyle = (color) => {
   const t = (color && Object.prototype.hasOwnProperty.call(tagColorMap, color)) ? tagColorMap[color] : tagColorMap.gray;
   return { background: t.bg, color: t.color };
+};
+
+const extractAttachedCodeSnippet = (body = "") => {
+  const text = String(body || "");
+  const match = text.match(attachedCodeSnippetRegex);
+
+  if (!match) {
+    return {
+      body: text,
+      code: "",
+    };
+  }
+
+  return {
+    body: text.replace(attachedCodeSnippetRegex, "").trim(),
+    code: match[1].trimEnd(),
+  };
+};
+
+const getDiscussionDescription = (disc = {}) => {
+  return disc.description ||
+    disc.Description ||
+    disc.body ||
+    disc.Body ||
+    disc.content ||
+    disc.Content ||
+    disc.details ||
+    disc.detail ||
+    disc.excerpt ||
+    "";
+};
+
+const buildDescriptionPayload = () => {
+  const { body } = extractAttachedCodeSnippet(form.value.excerpt);
+  const cleanBody = body.trim();
+  const cleanCode = form.value.hasCode ? form.value.code.trim() : "";
+
+  if (!cleanCode) {
+    return cleanBody;
+  }
+
+  return `${cleanBody}\n\n${CODE_SNIPPET_HEADING}\n\`\`\`\n${cleanCode}\n\`\`\``;
 };
 
 const addTag = (tagInputObj) => {
@@ -255,6 +300,8 @@ const isDraftSaved = ref(false);
 const lastSavedTime = ref("");
 
 const saveDraft = () => {
+  if (isEditMode.value) return;
+
   const draft = {
     title: form.value.title,
     excerpt: form.value.excerpt,
@@ -279,6 +326,8 @@ let autosaveTimeout = null;
 watch(
   [form, tagsList],
   () => {
+    if (isEditMode.value) return;
+
     if (autosaveTimeout) clearTimeout(autosaveTimeout);
     autosaveTimeout = setTimeout(() => {
       if (form.value.title.trim() || form.value.excerpt.trim()) {
@@ -359,12 +408,14 @@ const isFormReady = computed(() => {
     isTitleValid.value &&
     isBodyValid.value &&
     isCategoryValid.value &&
-    hasTags.value
+    (isEditMode.value || hasTags.value)
   );
 });
 
 onMounted(async () => {
-  checkDraft();
+  if (!isEditMode.value) {
+    checkDraft();
+  }
 
   // Fetch real categories from backend so we can resolve numeric IDs
   try {
@@ -392,16 +443,26 @@ onMounted(async () => {
       const discId = route.params.id;
       await forumStore.fetchDiscussion(discId);
       const disc = forumStore.discussion;
-      console.log("[CreateDiscussionView] loaded disc for editing:", JSON.parse(JSON.stringify(disc)));
       if (disc) {
+        const rawBody = getDiscussionDescription(disc);
+        const attachedSnippet = extractAttachedCodeSnippet(rawBody);
         form.value.title = disc.title || "";
-        form.value.excerpt = disc.description || disc.Description || disc.body || disc.excerpt || "";
-        form.value.code = disc.code || "";
-        form.value.hasCode = disc.hasCode || false;
+        form.value.excerpt = attachedSnippet.body;
+        form.value.code = disc.code || attachedSnippet.code || "";
+        form.value.hasCode = Boolean(disc.hasCode || disc.code || attachedSnippet.code);
 
         // Match category ID directly
         if (disc.category_id) {
           form.value.category = Number(disc.category_id);
+        } else if (disc.category) {
+          const matchedCategory = backendCategories.value.find((cat) => {
+            const candidates = [cat.id, cat.name, cat.type]
+              .filter(Boolean)
+              .map((value) => String(value).toLowerCase());
+
+            return candidates.includes(String(disc.category).toLowerCase());
+          });
+          form.value.category = matchedCategory?.id || form.value.category || 1;
         } else {
           form.value.category = 1;
         }
@@ -415,12 +476,25 @@ onMounted(async () => {
             color: getTagColor(t),
             id: disc.tag_id || null
           }));
+        } else if (disc.tag_name || disc.tag || disc.tag_names) {
+          const tagName = disc.tag_name || disc.tag || disc.tag_names;
+          tagsList.value = String(tagName)
+            .split(',')
+            .map(t => t.trim())
+            .filter(Boolean)
+            .map(t => ({
+              label: t,
+              color: getTagColor(t),
+              id: disc.tag_id || null
+            }));
         }
       }
     } catch (err) {
       toast.error("Failed to load discussion details for editing.");
     } finally {
       isFetchingData.value = false;
+      await nextTick();
+      descriptionEditorRef.value?.setMarkdown(form.value.excerpt);
     }
   } else {
     if (!form.value.title) {
@@ -443,7 +517,7 @@ const handleSubmit = async () => {
     return;
   }
 
-  if (tagsList.value.length === 0) {
+  if (!isEditMode.value && tagsList.value.length === 0) {
     toast.error("Please add at least one tag to categorise your post.");
     return;
   }
@@ -452,17 +526,21 @@ const handleSubmit = async () => {
 
   try {
     let resolvedCategoryId = Number(form.value.category) || 1;
+    const descriptionPayload = buildDescriptionPayload();
+    const codePayload = form.value.hasCode && form.value.code.trim()
+      ? form.value.code.trim()
+      : null;
 
     if (isEditMode.value) {
       await forumStore.updateDiscussion(route.params.id, {
         title: form.value.title,
-        description: form.value.excerpt,
+        description: descriptionPayload,
         category_id: resolvedCategoryId,
-        excerpt: form.value.excerpt,
+        excerpt: descriptionPayload,
         category: form.value.category,
         tags: tagsList.value,
-        code: form.value.hasCode ? form.value.code : null,
-        hasCode: form.value.hasCode,
+        code: codePayload,
+        hasCode: Boolean(codePayload),
       });
       localStorage.removeItem("ant_forum_discussion_draft");
       toast.success("Discussion updated successfully!");
@@ -470,13 +548,13 @@ const handleSubmit = async () => {
     } else {
       await forumStore.createDiscussion({
         title: form.value.title,
-        description: form.value.excerpt,
+        description: descriptionPayload,
         category_id: resolvedCategoryId,
-        excerpt: form.value.excerpt,
+        excerpt: descriptionPayload,
         category: form.value.category,
         tags: tagsList.value,
-        code: form.value.hasCode ? form.value.code : null,
-        hasCode: form.value.hasCode,
+        code: codePayload,
+        hasCode: Boolean(codePayload),
       });
       localStorage.removeItem("ant_forum_discussion_draft");
       toast.success("Discussion posted successfully!");
@@ -675,6 +753,7 @@ const handleSubmit = async () => {
               </p>
 
               <MarkdownEditor
+                ref="descriptionEditorRef"
                 v-model="form.excerpt"
                 :is-draft-saved="isDraftSaved"
                 :last-saved-time="lastSavedTime"
