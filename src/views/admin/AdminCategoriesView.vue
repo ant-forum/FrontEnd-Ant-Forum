@@ -57,7 +57,7 @@
           </div>
           <div v-else class="modal-blogs-scroll border rounded p-2 d-flex flex-column gap-2">
             <div v-for="b in mDetail.blogs" :key="b.id" class="modal-blog-item d-flex align-items-center gap-3 p-2 rounded border bg-surface">
-              <img :src="b.image" class="rounded object-fit-cover" width="40" height="40" @error="handleImgError" />
+              <img :src="b.image" class="rounded object-fit-cover" width="40" height="40" @error.once="handleImgError" />
               <div class="flex-grow-1 min-width-0">
                 <h6 class="m-0 fw-bold text-adaptive text-truncate" style="font-size: 0.84rem;">{{ b.title }}</h6>
                 <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">By {{ b.author }} • {{ b.date }}</small>

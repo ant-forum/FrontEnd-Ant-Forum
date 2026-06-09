@@ -3,12 +3,13 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import Navbar from '../../components/layouts/header.vue';
 import BaseFooter from '../../components/layouts/footer.vue';
-import LeftSidebar from '../../components/forum/LeftSidebar.vue';
 import { useProjectStore } from '../../stores/ProjectStore.js';
+import { useTagsStore } from '../../stores/TagsStore.js';
 
 const router = useRouter();
 const route = useRoute();
 const projectStore = useProjectStore();
+const tagsStore = useTagsStore();
 
 const filterTab = ref('latest');
 const searchLoading = ref(false);
@@ -16,7 +17,21 @@ const searchQuery = ref('');
 const selectedTag = ref('All');
 const activeTab = ref('projects');
 
-const availableTags = ['All', 'VUE.JS', 'NODE.JS', 'REACT', 'D3.JS', 'TYPESCRIPT', 'REDIS', 'GRAPHQL', 'TAILWIND'];
+const availableTags = computed(() => {
+  const list = ['All'];
+  if (tagsStore.tags) {
+    tagsStore.tags.forEach(t => {
+      const name = t.name || t.tag_name;
+      if (name) {
+        const nameUpper = name.toUpperCase();
+        if (!list.includes(nameUpper)) {
+          list.push(nameUpper);
+        }
+      }
+    });
+  }
+  return list;
+});
 const filters = ['Latest', 'Top Rated', 'Most Viewed'];
 
 const projects = computed(() => projectStore.projects);
@@ -75,6 +90,7 @@ const clearFilters = () => {
 
 onMounted(() => {
   projectStore.fetchProjects();
+  tagsStore.fetchTags();
 });
 </script>
 
@@ -83,11 +99,23 @@ onMounted(() => {
     <Navbar />
 
     <div class="showcase-global-grid">
-      <!-- Left Column: Left Sidebar Navigation stuck on the left -->
-      <LeftSidebar :active-tab="activeTab" />
-
-      <!-- Right Column: Main Content Container -->
+      <!-- Main Content Container -->
       <div class="showcase-main-container">
+        <!-- Sleek Page Header -->
+        <section class="showcase-page-header">
+          <div>
+            <span class="showcase-page-kicker">Community Hub</span>
+            <h1>Project Showcase</h1>
+            <p>Discover, review, and get inspired by projects built by our developers.</p>
+          </div>
+          <div class="showcase-stats">
+            <div class="stat-badge">
+              <i class="bi bi-rocket-takeoff"></i>
+              <span>{{ projects.length }} Active Projects</span>
+            </div>
+          </div>
+        </section>
+
         <!-- Clean Local Search Bar with clickable button inside it -->
         <div class="showcase-search-section">
           <div class="search-input-wrapper">
@@ -199,10 +227,14 @@ onMounted(() => {
                     <span class="meta-item"><i class="bi bi-eye"></i> {{ formatNumber(project.views) }}</span>
                   </div>
                   <div class="author-avatars">
+                    <span class="author-name-text" v-if="project.author && project.author.name !== 'Unknown'" :title="project.author.username">
+                      by {{ project.author.name }}
+                    </span>
                     <div class="avatar-stack">
                       <img v-for="(author, idx) in project.authors.slice(0, 3)" :key="idx" 
                            :src="author.avatar" class="stack-avatar" 
-                           width="28" height="28" :style="{ zIndex: 10 - idx }">
+                           width="28" height="28" :style="{ zIndex: 10 - idx }"
+                           :title="author.name">
                       <div v-if="project.authors.length > 3" class="stack-more" 
                            style="width: 28px; height: 28px; z-index: 0;">+{{ project.authors.length - 3 }}</div>
                     </div>
@@ -236,9 +268,9 @@ onMounted(() => {
 
 .showcase-global-grid {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 1fr;
   gap: 28px;
-  max-width: 1280px;
+  max-width: 1040px;
   margin: 0 auto;
   padding: 32px 24px 60px;
 }
@@ -247,6 +279,73 @@ onMounted(() => {
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* Page Header */
+.showcase-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  font-family: inherit;
+  margin-top: 8px;
+}
+
+.showcase-page-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-purple);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.showcase-page-header h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1.6rem, 2.5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.showcase-page-header p {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.showcase-stats {
+  display: flex;
+  align-items: center;
+}
+
+.stat-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stat-badge i {
+  font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .showcase-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* Local Search Bar Styling */
@@ -593,6 +692,27 @@ onMounted(() => {
   font-weight: 700;
   color: var(--color-text);
   margin-left: -8px;
+}
+
+.author-avatars {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.author-name-text {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+
+.project-card:hover .author-name-text {
+  color: var(--color-text);
 }
 
 /* Skeletons Styling */

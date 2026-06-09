@@ -1,32 +1,3 @@
-<script setup>
-import { computed, defineEmits, defineProps } from "vue";
-
-const props = defineProps({
-  profileName: { type: String, required: true },
-  profileRole: { type: String, default: "Student" },
-  profileBio: { type: String, required: true },
-  profileGithub: { type: String, required: true },
-  profileLinkedin: { type: String, required: true },
-  profileSkills: { type: Array, required: true },
-  profileAvatar: { type: String, required: true },
-  defaultProjects: { type: Array, required: true },
-  activityFeed: { type: Array, required: true },
-  canEdit: { type: Boolean, default: false },
-});
-
-const emit = defineEmits(["edit"]);
-
-const profileInitials = computed(() => {
-  return props.profileName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((name) => name[0])
-    .join("")
-    .toUpperCase() || "A";
-});
-</script>
-
 <template>
   <div class="row g-4">
     <!-- Center Column -->
@@ -54,8 +25,12 @@ const profileInitials = computed(() => {
           <div class="flex-grow-1">
             <div class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3 mb-2">
               <div>
-                <h3 class="fw-bold mb-2 profile-name">{{ profileName }}</h3>
-                <span class="role-badge-overview">{{ profileRole }}</span>
+                <h3 v-if="profileFullname" class="fw-bold mb-0 profile-name">{{ profileFullname }}</h3>
+                <h3 v-else class="fw-bold mb-0 profile-name">{{ profileName }}</h3>
+                <div class="d-flex align-items-center gap-2 mt-1 mb-2">
+                  <span class="text-muted fw-semibold">@{{ profileName }}</span>
+                  <span class="role-badge-overview">{{ profileRole }}</span>
+                </div>
               </div>
               <button v-if="canEdit" type="button" class="btn-edit-profile" @click="emit('edit')">
                 <i class="bi bi-pencil-square"></i>
@@ -63,7 +38,7 @@ const profileInitials = computed(() => {
               </button>
             </div>
             <!-- Description -->
-            <p class="bio-text text-muted mb-0">
+            <p class="bio-text text-muted mb-0 mt-3 pt-1 border-top border-slate text-break">
               {{ profileBio || "Share your background, interests, and what you are building with the ANT Forum community." }}
             </p>
           </div>
@@ -82,7 +57,9 @@ const profileInitials = computed(() => {
             <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
               <div>
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                  <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                  <router-link :to="'/showcase/' + project.id" class="text-decoration-none">
+                    <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                  </router-link>
                   <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
                 </div>
                 <p class="text-muted small mb-4 line-clamp-3">
@@ -118,7 +95,10 @@ const profileInitials = computed(() => {
         </div>
         
         <div class="d-flex flex-column gap-3">
-          <div v-for="activity in activityFeed" :key="activity.title" class="activity-row-modern p-3 d-flex align-items-center gap-3">
+          <div v-for="activity in displayedActivities" :key="activity.id || activity.title" 
+               class="activity-row-modern p-3 d-flex align-items-center gap-3"
+               style="cursor: pointer;"
+               @click="activity.link ? router.push(activity.link) : null">
             <div class="activity-icon-container">
               <i :class="['bi', activity.icon, 'text-primary-purple']"></i>
             </div>
@@ -127,6 +107,12 @@ const profileInitials = computed(() => {
               <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ activity.meta }}</small>
             </div>
           </div>
+          
+          <button v-if="activityFeed.length > 3" 
+                  @click="showAllActivities = !showAllActivities" 
+                  class="btn btn-sm btn-outline-secondary mt-2 border-0 fw-bold themed-text">
+            {{ showAllActivities ? 'Show Less' : `View All Activity (${activityFeed.length})` }}
+          </button>
           <div v-if="activityFeed.length === 0" class="empty-state-card">
             <i class="bi bi-clock-history"></i>
             <div>
@@ -168,13 +154,92 @@ const profileInitials = computed(() => {
           </span>
         </div>
         <p v-else class="empty-skills-copy">Add skills to help the community understand your strengths.</p>
+        
+        <hr class="my-3 border-slate">
+
+        <h6 class="text-muted text-uppercase fw-bold mb-3 skills-heading">Social Links</h6>
+        <div v-if="userProfilesStore.socialLinks.length" class="d-flex flex-wrap gap-2">
+          <a v-for="link in userProfilesStore.socialLinks" :key="link.id" :href="link.url" target="_blank" class="social-icon-btn d-flex align-items-center justify-content-center rounded-circle text-decoration-none" :title="link.platform">
+            <i :class="getPlatformIcon(link.platform)"></i>
+          </a>
+        </div>
+        <p v-else class="empty-skills-copy">No social links added yet.</p>
       </div>
       
     </div>
   </div>
 </template>
 
+<script setup>
+import { computed, defineEmits, defineProps, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useUserProfilesStore } from "../../stores/UserProfilesStore";
+
+const router = useRouter();
+const userProfilesStore = useUserProfilesStore();
+const showAllActivities = ref(false);
+const props = defineProps({
+  profileFullname: { type: String, default: "" },
+  profileName: { type: String, required: true },
+  profileRole: { type: String, default: "Student" },
+  profileBio: { type: String, required: true },
+  profileGithub: { type: String, required: true },
+  profileLinkedin: { type: String, required: true },
+  profileSkills: { type: Array, required: true },
+  profileAvatar: { type: String, required: true },
+  defaultProjects: { type: Array, required: true },
+  activityFeed: { type: Array, required: true },
+  canEdit: { type: Boolean, default: false },
+});
+
+const emit = defineEmits(["edit"]);
+
+const profileInitials = computed(() => {
+  const nameToUse = props.profileFullname || props.profileName;
+  return nameToUse
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((name) => name[0])
+    .join("")
+    .toUpperCase() || "A";
+});
+
+const getPlatformIcon = (platformStr) => {
+  const p = (platformStr || '').toLowerCase();
+  if (p.includes('linkedin')) return 'bi-linkedin';
+  if (p.includes('github')) return 'bi-github';
+  if (p.includes('twitter') || p.includes('x')) return 'bi-twitter-x';
+  if (p.includes('facebook')) return 'bi-facebook';
+  if (p.includes('instagram')) return 'bi-instagram';
+  if (p.includes('youtube')) return 'bi-youtube';
+  if (p.includes('discord')) return 'bi-discord';
+  if (p.includes('tiktok')) return 'bi-tiktok';
+  return 'bi-link-45deg';
+};
+
+const displayedActivities = computed(() => {
+  return showAllActivities.value ? props.activityFeed : props.activityFeed.slice(0, 3);
+});
+</script>
+
 <style scoped>
+.social-icon-btn {
+  width: 40px;
+  height: 40px;
+  color: var(--color-purple);
+  background: var(--color-purple-light);
+  font-size: 1.1rem;
+  transition: all var(--transition-base);
+}
+
+.social-icon-btn:hover {
+  background: var(--color-purple);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px -2px var(--color-purple-light);
+}
+
 .dashboard-card-modern {
   background: var(--color-surface) !important;
   backdrop-filter: blur(10px);

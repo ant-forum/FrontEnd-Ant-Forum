@@ -7,31 +7,52 @@ import ForumSidebar from '@/components/forum/ForumSidebar.vue';
 import { useForumStore } from '@/stores/ForumStore';
 import { useAuthStore } from '@/stores/AuthStore';
 import MarkdownEditor from '@/components/forum/create/MarkdownEditor.vue';
-import { markdownToHtml } from '@/utils/markdown';
+import { markdownToHtml, stripMarkdown } from '@/utils/markdown';
 import { resolveMediaUrl } from '@/utils/mediaUrl';
+import BaseModal from '@/components/base/BaseModal.vue';
+import { useToast } from "vue-toastification";
 
 const route = useRoute();
 const router = useRouter();
 const forumStore = useForumStore();
 const authStore = useAuthStore();
+const toast = useToast();
 
 const loading = ref(true);
 const newReplyText = ref('');
 const repliesEnd = ref(null);
 
-const categoryMap = {
-  question:   { label: 'Question', icon: 'bi-question-circle-fill', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', shadow: 'rgba(59, 130, 246, 0.25)' },
-  discussion: { label: 'Discussion', icon: 'bi-chat-left-text-fill', gradient: 'linear-gradient(135deg, #10b981, #047857)', shadow: 'rgba(16, 185, 129, 0.25)' },
-  showcase:   { label: 'Show & Tell', icon: 'bi-rocket-takeoff-fill', gradient: 'linear-gradient(135deg, #a855f7, #6d28d9)', shadow: 'rgba(168, 85, 247, 0.25)' },
-  tutorial:   { label: 'Tutorial', icon: 'bi-book-half', gradient: 'linear-gradient(135deg, #f59e0b, #b45309)', shadow: 'rgba(245, 158, 11, 0.25)' },
-  idea:       { label: 'Idea', icon: 'bi-lightbulb-fill', gradient: 'linear-gradient(135deg, #0d9488, #0f766e)', shadow: 'rgba(13, 148, 136, 0.25)' }
+const categoryGradients = [
+  'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+  'linear-gradient(135deg, #10b981, #047857)',
+  'linear-gradient(135deg, #a855f7, #6d28d9)',
+  'linear-gradient(135deg, #f59e0b, #b45309)',
+  'linear-gradient(135deg, #0d9488, #0f766e)',
+  'linear-gradient(135deg, #ef4444, #b91c1c)',
+];
+
+const hashString = (value = '') => String(value).split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
+
+const getCategoryIcon = (label = '') => {
+  const lower = label.toLowerCase();
+  if (lower.includes('question') || lower.includes('answer')) return 'bi-question-circle-fill';
+  if (lower.includes('tutorial') || lower.includes('guide')) return 'bi-book-half';
+  if (lower.includes('showcase') || lower.includes('project')) return 'bi-rocket-takeoff-fill';
+  if (lower.includes('announce') || lower.includes('news')) return 'bi-megaphone-fill';
+  if (lower.includes('resource') || lower.includes('link')) return 'bi-link-45deg';
+  if (lower.includes('idea') || lower.includes('feature')) return 'bi-lightbulb-fill';
+  return 'bi-chat-left-text-fill';
 };
 
-const getCategoryMeta = (cat) => {
-  if (cat && Object.prototype.hasOwnProperty.call(categoryMap, cat)) {
-    return categoryMap[cat];
-  }
-  return null;
+const getCategoryMeta = (item) => {
+  const label = item?.categoryLabel || item?.categoryMeta?.label || item?.category || '';
+  if (!label) return null;
+
+  return {
+    label,
+    icon: item?.categoryMeta?.icon || getCategoryIcon(label),
+    gradient: categoryGradients[hashString(label) % categoryGradients.length],
+  };
 };
 
 // We'll try to fetch the discussion using the ID.
@@ -39,6 +60,63 @@ const mockDiscussion = ref(null);
 
 const discussion = computed(() => {
   return forumStore.discussion || mockDiscussion.value;
+});
+
+const formatDateTime = (value) => {
+  if (!value) return 'Just now';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+};
+
+const getCreatedAt = (item) => {
+  return formatDateTime(item?.created_at || item?.createdAt || item?.updated_at || item?.timestamp);
+};
+
+const normalizePlain = (value) => stripMarkdown(String(value || '')).trim().toLowerCase();
+
+const discussionBody = computed(() => {
+  if (!discussion.value) return '';
+  const candidates = [
+    discussion.value.body,
+    discussion.value.description,
+    discussion.value.excerpt,
+  ].filter(Boolean);
+
+  const titlePlain = normalizePlain(discussion.value.title);
+  const body = candidates.find((candidate) => normalizePlain(candidate) !== titlePlain);
+  return body || '';
+});
+
+const separateThreadCode = computed(() => {
+  const code = discussion.value?.code;
+  if (!discussion.value?.hasCode || !code) return '';
+
+  return discussionBody.value.includes(code) ? '' : code;
+});
+
+const replyCount = computed(() => {
+  return Array.isArray(discussion.value?.replies) ? discussion.value.replies.length : 0;
+});
+
+const sortedReplies = computed(() => {
+  if (!Array.isArray(discussion.value?.replies)) return [];
+  return [...discussion.value.replies].sort((a, b) => {
+    const likeDiff = Number(b.likes || 0) - Number(a.likes || 0);
+    if (likeDiff !== 0) return likeDiff;
+    return new Date(a.created_at || a.createdAt || a.timestamp || 0) - new Date(b.created_at || b.createdAt || b.timestamp || 0);
+  });
+});
+
+const topReplyId = computed(() => {
+  const first = sortedReplies.value[0];
+  return first && Number(first.likes || 0) > 0 ? first.id : null;
 });
 
 const loadDiscussion = async (id) => {
@@ -113,35 +191,45 @@ const goBack = () => {
 
 const selectTag = (tagName) => {
   const cleanTag = tagName.replace('#', '').trim();
-  router.push({ path: '/forum', query: { q: cleanTag } });
+  router.push({ path: '/forum', query: { tag: cleanTag } });
 };
 
 const handleVote = (direction) => {
   if (discussion.value) {
     forumStore.toggleVoteDiscussion(discussion.value.id, direction);
-  }
-};
-
-const handleLikeReply = (replyIndex) => {
-  if (discussion.value && Array.isArray(discussion.value.replies)) {
-    const reply = discussion.value.replies[replyIndex];
-    if (reply && reply.id) {
-      forumStore.toggleLikeComment(reply.id);
-    } else {
-      forumStore.toggleLikeReply(discussion.value.id, replyIndex);
-    }
-  }
-};
-
-const handleLike = () => {
-  if (discussion.value) {
-    forumStore.toggleLikeDiscussion(discussion.value.id);
+    toast.success(direction === 'up' ? "Discussion upvoted!" : "Discussion downvoted!");
   }
 };
 
 const toggleSaveDiscussion = () => {
   if (discussion.value) {
-    forumStore.toggleSaveForum(discussion.value.id);
+    const isNowSaved = !discussion.value.saved;
+    
+    if (isNowSaved) {
+      toast.success("Discussion saved successfully!");
+    } else {
+      toast.success("Discussion removed from saved.");
+    }
+
+    forumStore.toggleSaveForum(discussion.value.id).catch(err => {
+      console.error("Failed to toggle save:", err);
+      toast.error("Failed to save discussion.");
+    });
+  }
+};
+
+const handleLikeReply = (reply) => {
+  if (!reply) return;
+  if (reply.id) {
+    forumStore.toggleLikeComment(reply.id);
+    toast.success("Reply liked!");
+    return;
+  }
+
+  const originalIndex = discussion.value?.replies?.indexOf(reply);
+  if (originalIndex >= 0) {
+    forumStore.toggleLikeReply(discussion.value.id, originalIndex);
+    toast.success("Reply liked!");
   }
 };
 
@@ -155,6 +243,7 @@ const postReply = async () => {
   try {
     await forumStore.postReply(discussion.value.id, replyData);
     newReplyText.value = '';
+    toast.success("Reply posted successfully!");
 
     // Trigger smooth scroll to bottom and reload copy actions
     nextTick(() => {
@@ -163,11 +252,14 @@ const postReply = async () => {
     });
   } catch (err) {
     console.error("Failed to post reply:", err);
+    toast.error("Failed to post reply.");
   }
 };
 
 const canDeleteDiscussion = computed(() => {
   if (!discussion.value || !authStore.user) return false;
+
+  if (String(authStore.user.role || '').toLowerCase() === 'admin') return true;
 
   const currentUserId = authStore.user.id;
   const discussionUserId = discussion.value.user_id || discussion.value.userId;
@@ -206,29 +298,62 @@ const canDeleteReply = (reply) => {
   return false;
 };
 
+const discussionAuthor = computed(() => {
+  if (!discussion.value) return null;
+  if (discussion.value.user && typeof discussion.value.user === 'object') {
+    return discussion.value.user;
+  }
+  if (discussion.value.author && typeof discussion.value.author === 'object') {
+    return discussion.value.author;
+  }
+  
+  // Create a proper author object from flat fields if the backend didn't nest them
+  return {
+    name: discussion.value.author || discussion.value.user || 'Unknown User',
+    profile_pic: discussion.value.author_avatar || discussion.value.avatar || null
+  };
+});
+
+const showDeleteDiscModal = ref(false);
+const showDeleteReplyModal = ref(false);
+const replyToDeleteId = ref(null);
+
 const editDiscussion = () => {
   router.push(`/forum/edit/${discussion.value.id}`);
 };
 
-const confirmDeleteDiscussion = async () => {
-  if (confirm("Are you sure you want to delete this discussion? This action cannot be undone.")) {
-    try {
-      await forumStore.deleteDiscussion(discussion.value.id);
-      router.push('/forum');
-    } catch (err) {
-      console.error("Failed to delete discussion:", err);
-    }
+const confirmDeleteDiscussion = () => {
+  showDeleteDiscModal.value = true;
+};
+
+const performDeleteDiscussion = async () => {
+  showDeleteDiscModal.value = false;
+  try {
+    await forumStore.deleteDiscussion(discussion.value.id);
+    toast.success("Discussion deleted successfully!");
+    router.push('/forum');
+  } catch (err) {
+    console.error("Failed to delete discussion:", err);
+    toast.error("Failed to delete discussion.");
   }
 };
 
-const deleteReply = async (replyId) => {
+const deleteReply = (replyId) => {
   if (!replyId) return;
-  if (confirm("Are you sure you want to delete this reply?")) {
-    try {
-      await forumStore.deleteComment(replyId);
-    } catch (err) {
-      console.error("Failed to delete comment:", err);
-    }
+  replyToDeleteId.value = replyId;
+  showDeleteReplyModal.value = true;
+};
+
+const performDeleteReply = async () => {
+  if (!replyToDeleteId.value) return;
+  showDeleteReplyModal.value = false;
+  try {
+    await forumStore.deleteComment(replyToDeleteId.value);
+    toast.success("Reply deleted successfully!");
+    replyToDeleteId.value = null;
+  } catch (err) {
+    console.error("Failed to delete comment:", err);
+    toast.error("Failed to delete reply.");
   }
 };
 
@@ -271,15 +396,16 @@ function getAvatarStyle(author) {
   return { background: grad };
 }
 
-function goToProfile(author) {
-  let username = 'user';
-  if (typeof author === 'object' && author !== null) {
-    username = author.username || author.name || 'user';
-  } else if (typeof author === 'string') {
-    username = author;
+function goToProfile(item) {
+  if (!item) return;
+
+  let identifier = item.user_id || item.author || item;
+
+  if (typeof identifier === 'string') {
+    identifier = identifier.replace('@', '').trim();
   }
-  username = username.replace('@', '').trim();
-  router.push(`/viewprofile/${username}`);
+  
+  router.push(`/viewprofile/${identifier}`);
 }
 
 // Search and inject copy buttons in pre tags dynamically
@@ -402,53 +528,56 @@ function getAvatarUrl(author) {
         <!-- Main Thread Card -->
         <div class="main-thread">
           <div class="thread-header">
-            <div class="thread-header-meta">
-              <!-- Styled Category badge -->
-              <span v-if="discussion.category && getCategoryMeta(discussion.category)" class="category-badge" :style="{ background: getCategoryMeta(discussion.category).gradient }">
-                <i :class="['bi', getCategoryMeta(discussion.category).icon]"></i>
-                {{ getCategoryMeta(discussion.category).label }}
-              </span>
+            <div class="thread-header-top-row" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 12px; flex-wrap: wrap;">
+              <div class="thread-header-meta" style="margin-bottom: 0;">
+                <!-- Styled Category badge -->
+                <span v-if="getCategoryMeta(discussion)" class="category-badge" :style="{ background: getCategoryMeta(discussion).gradient }">
+                  <i :class="['bi', getCategoryMeta(discussion).icon]"></i>
+                  {{ getCategoryMeta(discussion).label }}
+                </span>
 
-              <!-- Code indicator -->
-              <span v-if="discussion.hasCode" class="snippet-badge">
-                <i class="bi bi-code-slash"></i> Snippet
-              </span>
+                <!-- Code indicator -->
+                <span v-if="discussion.hasCode" class="snippet-badge">
+                  <i class="bi bi-code-slash"></i> Snippet
+                </span>
+              </div>
+
+              <!-- Custom tags section moved to top right -->
+              <div v-if="discussion.tags && discussion.tags.length > 0" class="thread-tags-box" style="margin-bottom: 0;">
+                <span v-for="t in discussion.tags" :key="t.label" class="tag-badge" @click="selectTag(t.label)" style="cursor: pointer;">
+                  #{{ t.label }}
+                </span>
+              </div>
             </div>
 
             <h1 class="thread-title">{{ discussion.title }}</h1>
             
             <div class="thread-meta">
-              <div class="thread-avatar" :style="getAvatarStyle(discussion.author)" @click="goToProfile(discussion.author)">
-                <img v-if="getAvatarUrl(discussion.author)" :src="getAvatarUrl(discussion.author)" alt="avatar" class="avatar-img" />
-                <span v-else>{{ getAvatarInitials(discussion.author) }}</span>
+              <div class="thread-avatar" :style="getAvatarStyle(discussionAuthor)" @click="goToProfile(discussion)">
+                <img v-if="getAvatarUrl(discussionAuthor)" :src="getAvatarUrl(discussionAuthor)" alt="avatar" class="avatar-img" />
+                <span v-else>{{ getAvatarInitials(discussionAuthor) }}</span>
               </div>
               <div class="thread-user-info">
-                <span class="author" @click="goToProfile(discussion.author)">{{ getAvatarName(discussion.author) }}</span>
-                <span class="time">{{ discussion.timestamp }}</span>
+                <span class="author" @click="goToProfile(discussion)">{{ getAvatarName(discussionAuthor) }}</span>
+                <span class="time">Created {{ getCreatedAt(discussion) }}</span>
               </div>
             </div>
           </div>
 
-          <div class="thread-body" v-html="markdownToHtml(discussion.description || discussion.excerpt || discussion.body || 'No description provided.')">
+          <div class="thread-body" v-html="markdownToHtml(discussionBody || 'No description provided.')">
           </div>
 
           <!-- Codeblock if present -->
-          <div v-if="discussion.hasCode && discussion.code" class="thread-code-block">
+          <div v-if="separateThreadCode" class="thread-code-block">
             <div class="code-header">
               <span class="code-lang">Code Block</span>
               <div class="code-dots">
                 <span></span><span></span><span></span>
               </div>
             </div>
-            <pre><code>{{ discussion.code }}</code></pre>
+            <pre><code>{{ separateThreadCode }}</code></pre>
           </div>
 
-          <!-- Custom tags section -->
-          <div v-if="discussion.tags && discussion.tags.length > 0" class="thread-tags-box">
-            <span v-for="t in discussion.tags" :key="t.label" class="tag-badge" @click="selectTag(t.label)" style="cursor: pointer;">
-              #{{ t.label }}
-            </span>
-          </div>
 
           <div class="thread-actions">
             <!-- Active Votes column in action bar -->
@@ -467,10 +596,6 @@ function getAvatarUrl(author) {
             </div>
             
             <div class="right-actions">
-              <button class="action-btn like-btn" :class="{ active: discussion.likedByUser }" @click="handleLike">
-                <i :class="[discussion.likedByUser ? 'bi-heart-fill text-danger' : 'bi-heart']"></i>
-                <span>{{ discussion.likes || 0 }} Likes</span>
-              </button>
               <button class="action-btn bookmark-btn" :class="{ 'is-saved': discussion.saved }" @click="toggleSaveDiscussion">
                 <i :class="[discussion.saved ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
                 <span>{{ discussion.saved ? 'Saved' : 'Save' }}</span>
@@ -484,8 +609,8 @@ function getAvatarUrl(author) {
                 Delete
               </button>
               <button class="action-btn" @click="scrollToBottom">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                Reply
+                <i class="bi bi-chat-square-text"></i>
+                {{ replyCount }} {{ replyCount === 1 ? 'Reply' : 'Replies' }}
               </button>
             </div>
           </div>
@@ -493,40 +618,60 @@ function getAvatarUrl(author) {
 
         <!-- Replies Section -->
         <div class="replies-section">
-          <h2>Discussion Replies ({{ Array.isArray(discussion.replies) ? discussion.replies.length : 0 }})</h2>
+          <h2>Discussion Replies ({{ replyCount }})</h2>
           
           <div class="reply-list-container">
             <!-- Sleek Timeline Connector lines -->
             <div class="timeline-line"></div>
 
             <div class="reply-list">
-              <div class="no-replies" v-if="!Array.isArray(discussion.replies) || discussion.replies.length === 0">
+              <div class="no-replies" v-if="replyCount === 0">
                 No replies yet. Be the first to share your thoughts!
               </div>
               
-              <div v-else v-for="(reply, idx) in discussion.replies" :key="idx" class="reply-card">
-                <div class="reply-header">
-                  <div class="reply-avatar" :style="getAvatarStyle(reply.author)" @click="goToProfile(reply.author)">
-                    <img v-if="getAvatarUrl(reply.author)" :src="getAvatarUrl(reply.author)" alt="avatar" class="avatar-img" />
-                    <span v-else>{{ getAvatarInitials(reply.author) }}</span>
-                  </div>
-                  <div class="reply-user-info">
-                    <span class="reply-author" @click="goToProfile(reply.author)">{{ getAvatarName(reply.author) }}</span>
-                    <span class="reply-time">{{ reply.timestamp || 'Just now' }}</span>
-                  </div>
-                </div>
-                <div class="reply-body" v-html="markdownToHtml(reply.body || '')">
-                </div>
-                
-                <div class="reply-actions">
-                  <button class="like-btn" :class="{ active: reply.likedByUser }" @click="handleLikeReply(idx)">
-                    <i :class="['bi', reply.likedByUser ? 'bi-heart-fill' : 'bi-heart']"></i>
-                    <span>{{ reply.likes || 0 }} Likes</span>
+              <div
+                v-else
+                v-for="reply in sortedReplies"
+                :key="reply.id || `${getAvatarName(reply.author)}-${getCreatedAt(reply)}`"
+                :class="['reply-card', { 'top-reply': topReplyId && reply.id === topReplyId }]"
+              >
+                <div class="reply-vote-col" @click.stop>
+                  <button class="reply-vote-btn up" :class="{ active: reply.likedByUser }" @click="handleLikeReply(reply)" title="Upvote reply">
+                    <i class="bi bi-chevron-up"></i>
                   </button>
-                  <button v-if="canDeleteReply(reply)" class="delete-reply-btn" @click="deleteReply(reply.id)">
-                    <i class="bi bi-trash"></i>
-                    <span>Delete</span>
+                  <span class="reply-vote-num" :class="{ active: reply.likedByUser }">{{ reply.likes || 0 }}</span>
+                  <button class="reply-vote-btn down" disabled title="Downvote unavailable">
+                    <i class="bi bi-chevron-down"></i>
                   </button>
+                </div>
+
+                <div class="reply-content">
+                  <div class="reply-header">
+                    <div class="reply-author-block">
+                      <div class="reply-avatar" :style="getAvatarStyle(reply.author)" @click="goToProfile(reply)">
+                        <img v-if="getAvatarUrl(reply.author)" :src="getAvatarUrl(reply.author)" alt="avatar" class="avatar-img" />
+                        <span v-else>{{ getAvatarInitials(reply.author) }}</span>
+                      </div>
+                      <div class="reply-user-info">
+                        <span class="reply-author" @click="goToProfile(reply)">{{ getAvatarName(reply.author) }}</span>
+                        <span class="reply-time">{{ getCreatedAt(reply) }}</span>
+                      </div>
+                    </div>
+
+                    <span v-if="topReplyId && reply.id === topReplyId" class="top-reply-badge">
+                      <i class="bi bi-stars"></i>
+                      Top comment
+                    </span>
+                  </div>
+                  <div class="reply-body" v-html="markdownToHtml(reply.body || '')">
+                  </div>
+                  
+                  <div v-if="canDeleteReply(reply)" class="reply-actions">
+                    <button class="delete-reply-btn" @click="deleteReply(reply.id)">
+                      <i class="bi bi-trash"></i>
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -538,7 +683,10 @@ function getAvatarUrl(author) {
           <!-- Reply Input Box Overhaul -->
           <div class="reply-input-wrapper">
             <div class="input-header">
-              <div class="reply-avatar current-user" :style="getAvatarStyle('@current_user')">C</div>
+              <div class="reply-avatar current-user" :style="getAvatarStyle(authStore.user || '@current_user')">
+                <img v-if="getAvatarUrl(authStore.user)" :src="getAvatarUrl(authStore.user)" alt="avatar" class="avatar-img" />
+                <span v-else>{{ getAvatarInitials(authStore.user || '@current_user') }}</span>
+              </div>
               <span class="input-prompt">Add to the discussion</span>
             </div>
             
@@ -567,6 +715,34 @@ function getAvatarUrl(author) {
 
     <ForumSidebar class="replies-right-sidebar" />
     </div>
+
+    <!-- Delete Discussion Modal -->
+    <BaseModal
+      v-if="showDeleteDiscModal"
+      title="Delete Discussion"
+      theme="danger"
+      @closeModal="showDeleteDiscModal = false"
+    >
+      <p>Are you sure you want to delete this discussion? This action cannot be undone.</p>
+      <template #footer>
+        <button class="btn btn-light border" @click="showDeleteDiscModal = false">Cancel</button>
+        <button class="btn btn-danger" @click="performDeleteDiscussion">Delete</button>
+      </template>
+    </BaseModal>
+
+    <!-- Delete Reply Modal -->
+    <BaseModal
+      v-if="showDeleteReplyModal"
+      title="Delete Reply"
+      theme="danger"
+      @closeModal="showDeleteReplyModal = false"
+    >
+      <p>Are you sure you want to delete this reply?</p>
+      <template #footer>
+        <button class="btn btn-light border" @click="showDeleteReplyModal = false">Cancel</button>
+        <button class="btn btn-danger" @click="performDeleteReply">Delete</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -625,12 +801,12 @@ function getAvatarUrl(author) {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  font-weight: 600;
+  font-weight: 800;
   font-size: 13.5px;
   cursor: pointer;
   margin-bottom: 24px;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   transition: all 0.2s ease;
   font-family: inherit;
 }
@@ -648,12 +824,14 @@ function getAvatarUrl(author) {
 }
 
 .main-thread {
-  background: var(--color-surface);
-  border-radius: 12px;
-  padding: 32px;
-  border: 1px solid var(--color-border);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, var(--color-purple) 4%), var(--color-surface));
+  border-radius: 18px;
+  padding: 34px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 86%, var(--color-purple) 14%);
   box-shadow: var(--shadow-sm);
   position: relative;
+  overflow: hidden;
 }
 
 .thread-header-meta {
@@ -689,12 +867,12 @@ function getAvatarUrl(author) {
 }
 
 .thread-title {
-  font-size: 28px;
-  font-weight: 800;
+  font-size: clamp(1.8rem, 4vw, 2.55rem);
+  font-weight: 900;
   color: var(--color-text);
   margin: 0 0 20px;
-  line-height: 1.35;
-  letter-spacing: -0.5px;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
 }
 
 .thread-header {
@@ -705,7 +883,7 @@ function getAvatarUrl(author) {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding-bottom: 20px;
+  padding-bottom: 22px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -736,7 +914,7 @@ function getAvatarUrl(author) {
 }
 
 .thread-meta .author {
-  font-weight: 700;
+  font-weight: 850;
   color: var(--color-text);
   font-size: 15px;
   cursor: pointer;
@@ -751,6 +929,7 @@ function getAvatarUrl(author) {
 .thread-meta .time {
   font-size: 12.5px;
   color: var(--color-text-muted);
+  font-weight: 700;
 }
 
 .thread-body {
@@ -758,6 +937,12 @@ function getAvatarUrl(author) {
   color: var(--color-text);
   line-height: 1.75;
   margin-bottom: 24px;
+  overflow-wrap: anywhere;
+}
+
+.thread-body :deep(p:last-child),
+.reply-body :deep(p:last-child) {
+  margin-bottom: 0;
 }
 
 /* Monospaced code snippets styling */
@@ -779,9 +964,11 @@ function getAvatarUrl(author) {
 .thread-body :deep(pre),
 .reply-body :deep(pre) {
   background: #110e1a !important;
-  padding: 14px 18px !important;
+  padding: 18px 112px 18px 22px !important;
   border-radius: 14px !important;
-  overflow-x: auto !important;
+  overflow-x: hidden !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   margin: 18px 0;
   box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
@@ -796,6 +983,10 @@ function getAvatarUrl(author) {
   border-radius: 0 !important;
   border: none !important;
   font-size: 13px !important;
+  line-height: 1.7 !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
 }
 
 /* Floating copy code buttons inside pre blocks */
@@ -876,7 +1067,9 @@ function getAvatarUrl(author) {
 .thread-code-block pre {
   margin: 0;
   padding: 14px 18px 18px;
-  overflow-x: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .thread-code-block code {
@@ -884,6 +1077,9 @@ function getAvatarUrl(author) {
   font-size: 13px;
   line-height: 1.7;
   color: #e9d5ff;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .thread-tags-box {
@@ -916,6 +1112,8 @@ function getAvatarUrl(author) {
   justify-content: space-between;
   padding-top: 20px;
   border-top: 1px dashed var(--color-border);
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .vote-actions {
@@ -929,7 +1127,7 @@ function getAvatarUrl(author) {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 999px;
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   font-size: 13.5px;
@@ -987,12 +1185,19 @@ function getAvatarUrl(author) {
   color: var(--color-danger);
 }
 
+.right-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .action-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 18px;
-  border-radius: 10px;
+  border-radius: 999px;
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   font-size: 13px;
@@ -1060,27 +1265,101 @@ function getAvatarUrl(author) {
 }
 
 .reply-card {
-  background: var(--color-surface);
-  border-radius: 12px;
-  padding: 24px 28px;
-  border: 1px solid var(--color-border);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 97%, var(--color-purple) 3%), var(--color-surface));
+  border-radius: 16px;
+  padding: 22px 26px 22px 18px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
   box-shadow: var(--shadow-sm);
   position: relative;
   z-index: 1;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 18px;
   transition: all 0.2s ease;
   animation: slide-up-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .reply-card:hover {
-  border-color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 48%, var(--color-border));
   box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.reply-card.top-reply {
+  border-color: color-mix(in srgb, var(--color-primary) 64%, var(--color-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 26%, transparent),
+    var(--shadow-md);
+}
+
+.reply-vote-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+  user-select: none;
+}
+
+.reply-vote-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reply-vote-btn i {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.reply-vote-btn:hover:not(:disabled),
+.reply-vote-btn.active {
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.reply-vote-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.reply-vote-num {
+  color: var(--color-text);
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.reply-vote-num.active {
+  color: var(--color-primary);
+}
+
+.reply-content {
+  min-width: 0;
 }
 
 .reply-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 14px;
+}
+
+.reply-author-block {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .reply-avatar {
@@ -1126,45 +1405,34 @@ function getAvatarUrl(author) {
   color: var(--color-text-muted);
 }
 
+.top-reply-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 0.74rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
 .reply-body {
   font-size: 14.5px;
   color: var(--color-text);
   line-height: 1.6;
   margin-bottom: 14px;
+  overflow-wrap: anywhere;
 }
 
 .reply-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
-}
-
-.like-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  color: var(--color-text-muted);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.like-btn:hover {
-  background: var(--color-danger-light);
-  color: var(--color-danger);
-}
-
-.like-btn.active {
-  color: var(--color-danger);
-}
-
-.like-btn i {
-  font-size: 14px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .delete-reply-btn {
@@ -1289,6 +1557,51 @@ function getAvatarUrl(author) {
 
 .scroll-anchor {
   height: 1px;
+}
+
+@media (max-width: 640px) {
+  .main-thread {
+    padding: 24px 20px;
+  }
+
+  .thread-actions,
+  .right-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .vote-actions {
+    justify-content: space-between;
+  }
+
+  .reply-list-container {
+    padding-left: 0;
+  }
+
+  .timeline-line {
+    display: none;
+  }
+
+  .reply-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 18px;
+  }
+
+  .reply-vote-col {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding-top: 0;
+  }
+
+  .reply-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .reply-input-wrapper {
+    padding: 20px;
+  }
 }
 
 /* Loading & Error States */

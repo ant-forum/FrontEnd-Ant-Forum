@@ -12,7 +12,7 @@
           <p>Track admin-created blog content and publishing status.</p>
           <div class="filter-tabs">
             <button
-              v-for="tab in ['all', 'published', 'draft', 'scheduled']"
+              v-for="tab in ['all', 'published', 'draft']"
               :key="tab"
               @click="activeTab = tab"
               :class="['tab-btn', { active: activeTab === tab }]"
@@ -20,6 +20,32 @@
               <span class="tab-label">{{ tab }}</span>
               <span class="tab-badge">{{ getTabCount(tab) }}</span>
             </button>
+            <div class="sort-divider"></div>
+            <div class="custom-sort-dropdown" style="position: relative;">
+              <button 
+                class="tab-btn sort-trigger" 
+                :class="{ active: isSortDropdownOpen }"
+                @click.stop="isSortDropdownOpen = !isSortDropdownOpen"
+              >
+                <span>{{ selectedSortLabel }}</span>
+                <i class="bi bi-chevron-down ms-1" style="font-size: 0.75rem;"></i>
+              </button>
+              
+              <Transition name="fade-scale">
+                <ul v-if="isSortDropdownOpen" class="sort-menu">
+                  <li 
+                    v-for="option in sortOptions" 
+                    :key="option.value"
+                    @click="selectSort(option.value)"
+                    :class="{ active: sortBy === option.value }"
+                  >
+                    <i v-if="sortBy === option.value" class="bi bi-check2"></i>
+                    <i v-else style="width: 1rem"></i>
+                    <span>{{ option.label }}</span>
+                  </li>
+                </ul>
+              </Transition>
+            </div>
           </div>
         </div>
         <div class="panel-tools">
@@ -91,14 +117,14 @@
           @click="navigateToDetail(post)"
         >
           <span class="post-thumb">
-            <img v-if="post.image" :src="post.image" @error="handleImgError" class="thumb-img" alt="Post thumbnail">
+            <img v-if="post.image" :src="post.image" @error.once="handleImgError" class="thumb-img" alt="Post thumbnail">
             <i v-else class="bi bi-file-earmark-post"></i>
           </span>
           <div>
             <h3>{{ post.title }}</h3>
             <p class="post-desc">{{ post.excerpt || post.description }}</p>
             <div class="post-meta">
-              <span><strong>Category:</strong> {{ post.category }} (ID: {{ post.category_id }})</span>
+              <span><strong>Category:</strong> {{ post.category }}</span>
               <span class="mx-1">•</span>
               <span><i class="bi bi-calendar3"></i> {{ post.date || 'Recent' }}</span>
               <span v-if="post.author" class="mx-1">•</span>
@@ -174,12 +200,34 @@
       </footer>
     </section>
   </AdminPageShell>
+
+  <BaseModal
+    v-if="showDeleteModal"
+    title="Delete Article?"
+    icon="bi bi-exclamation-triangle"
+    theme="danger"
+    @closeModal="cancelDelete"
+  >
+    <p class="leave-modal-text">Are you sure you want to delete this article? This action cannot be undone.</p>
+    
+    <template #footer>
+      <button class="btn btn-light border" type="button" @click="cancelDelete">
+        Cancel
+      </button>
+      <button class="btn btn-danger" type="button" @click="confirmDelete" :disabled="isDeleting">
+        <span v-if="isDeleting" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        <i v-else class="bi bi-trash-fill me-1"></i>
+        Delete
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
+import BaseModal from '../../components/base/BaseModal.vue';
 import { useBlogStore } from '../../stores/BlogStore.js';
 import { useToast } from '../../composables/useToast.js';
 
@@ -188,7 +236,7 @@ const router = useRouter();
 const route = useRoute();
 const toast = useToast();
 const activeTab = ref(
-  route.query.tab && ['all', 'published', 'draft', 'scheduled'].includes(route.query.tab)
+  route.query.tab && ['all', 'published', 'draft'].includes(route.query.tab)
     ? route.query.tab
     : 'all'
 );
@@ -212,7 +260,7 @@ watch(activeTab, (newTab) => {
 
 watch(() => route.query.tab, (newTab) => {
   const target = newTab || 'all';
-  if (activeTab.value !== target && ['all', 'published', 'draft', 'scheduled'].includes(target)) {
+  if (activeTab.value !== target && ['all', 'published', 'draft'].includes(target)) {
     isTabSwitching.value = true;
     setTimeout(() => {
       isTabSwitching.value = false;
@@ -240,12 +288,36 @@ const getTabCount = (tab) => {
   return items.filter(b => b.status === tab).length;
 };
 
-const metrics = computed(() => [
-  { label: 'Admin Posts', value: blogStore.ownBlogs.length.toString(), change: 'Only admins publish', icon: 'bi-file-earmark-text', className: 'blue' },
-  { label: 'Published', value: blogStore.blogs.length.toString(), change: 'Live content', icon: 'bi-send-check', className: 'green' },
-  { label: 'Drafts', value: blogStore.drafts.length.toString(), change: 'Needs editing', icon: 'bi-pencil', className: 'purple' },
-  { label: 'Scheduled', value: blogStore.ownBlogs.filter(b => b.status === 'scheduled').length.toString(), change: 'This week', icon: 'bi-calendar-event', className: 'orange' },
-]);
+const sortBy = ref('date-desc');
+const isSortDropdownOpen = ref(false);
+
+const sortOptions = [
+  { value: 'date-desc', label: 'Recent Posts' },
+  { value: 'date-asc', label: 'Oldest Posts' },
+  { value: 'author-asc', label: 'Author (A-Z)' },
+  { value: 'author-desc', label: 'Author (Z-A)' },
+];
+
+const selectedSortLabel = computed(() => {
+  const option = sortOptions.find(opt => opt.value === sortBy.value);
+  return option ? option.label : 'Recent Posts';
+});
+
+const selectSort = (value) => {
+  sortBy.value = value;
+  isSortDropdownOpen.value = false;
+};
+
+const metrics = computed(() => {
+  const totalViews = blogStore.ownBlogs.reduce((sum, blog) => sum + (Number(blog.views) || 0), 0);
+  
+  return [
+    { label: 'Admin Posts', value: blogStore.ownBlogs.length.toString(), change: 'Only admins publish', icon: 'bi-file-earmark-text', className: 'blue' },
+    { label: 'Published', value: blogStore.blogs.length.toString(), change: 'Live content', icon: 'bi-send-check', className: 'green' },
+    { label: 'Drafts', value: blogStore.drafts.length.toString(), change: 'Needs editing', icon: 'bi-pencil', className: 'purple' },
+    { label: 'Total Reads', value: totalViews >= 1000 ? (totalViews / 1000).toFixed(1) + 'k' : totalViews.toString(), change: 'Across all posts', icon: 'bi-eye', className: 'orange' },
+  ];
+});
 
 const visiblePosts = computed(() => {
   const needle = search.value.toLowerCase();
@@ -263,11 +335,28 @@ const visiblePosts = computed(() => {
   }
 
   // Filter by Search Query
-  if (!needle) return items;
-  return items.filter((post) => 
-    (post.title || '').toLowerCase().includes(needle) || 
-    (post.excerpt || post.description || '').toLowerCase().includes(needle)
-  );
+  if (needle) {
+    items = items.filter((post) => 
+      (post.title || '').toLowerCase().includes(needle) || 
+      (post.excerpt || post.description || '').toLowerCase().includes(needle)
+    );
+  }
+  
+  // Apply Sort
+  items = [...items].sort((a, b) => {
+    if (sortBy.value === 'date-desc') {
+      return new Date(b.created_at || b.createdAt || b.date || 0).getTime() - new Date(a.created_at || a.createdAt || a.date || 0).getTime();
+    } else if (sortBy.value === 'date-asc') {
+      return new Date(a.created_at || a.createdAt || a.date || 0).getTime() - new Date(b.created_at || b.createdAt || b.date || 0).getTime();
+    } else if (sortBy.value === 'author-asc') {
+      return (a.author || '').localeCompare(b.author || '');
+    } else if (sortBy.value === 'author-desc') {
+      return (b.author || '').localeCompare(a.author || '');
+    }
+    return 0;
+  });
+
+  return items;
 });
 const hasActiveFilters = computed(() => Boolean(search.value) || activeTab.value !== 'all' || Boolean(route.query.category_id));
 const activeFilterChips = computed(() => [
@@ -331,8 +420,11 @@ const toggleMenu = (id) => {
   }
 };
 
-const closeAllMenus = () => {
+const closeAllMenus = (e) => {
   activeMenuId.value = null;
+  if (e && e.target && !e.target.closest('.custom-sort-dropdown')) {
+    isSortDropdownOpen.value = false;
+  }
 };
 
 onMounted(() => {
@@ -348,17 +440,35 @@ const editBlog = (post) => {
   router.push(`/admin/blogs/create?id=${post.id}`);
 };
 
-const deleteBlog = async (id) => {
+const showDeleteModal = ref(false);
+const blogToDelete = ref(null);
+const isDeleting = ref(false);
+
+const deleteBlog = (id) => {
   activeMenuId.value = null;
-  if (confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
-    try {
-      await blogStore.deleteOwnBlog(id);
-      toast.success('Blog deleted successfully.');
-      await blogStore.fetchAllBlogs();
-    } catch (err) {
-      console.error('Failed to delete blog:', err);
-      toast.error('Failed to delete blog.');
-    }
+  blogToDelete.value = id;
+  showDeleteModal.value = true;
+};
+
+const cancelDelete = () => {
+  showDeleteModal.value = false;
+  blogToDelete.value = null;
+};
+
+const confirmDelete = async () => {
+  if (!blogToDelete.value) return;
+  isDeleting.value = true;
+  try {
+    await blogStore.deleteOwnBlog(blogToDelete.value);
+    toast.success('Blog deleted successfully.');
+    await blogStore.fetchAllBlogs();
+  } catch (err) {
+    console.error('Failed to delete blog:', err);
+    toast.error('Failed to delete blog.');
+  } finally {
+    isDeleting.value = false;
+    showDeleteModal.value = false;
+    blogToDelete.value = null;
   }
 };
 </script>
@@ -924,5 +1034,106 @@ const deleteBlog = async (id) => {
 .pagination-btn:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+/* Custom Sort Dropdown */
+.sort-trigger {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.8rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.sort-trigger:hover, .sort-trigger.active {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.sort-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  min-width: 175px;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+[data-theme='light'] .sort-menu {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.sort-menu li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+[data-theme='light'] .sort-menu li {
+  color: var(--color-text-muted);
+}
+
+.sort-menu li i {
+  display: inline-flex;
+  font-size: 1.1rem;
+}
+
+.sort-menu li:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+[data-theme='light'] .sort-menu li:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+}
+
+.sort-menu li.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+[data-theme='light'] .sort-menu li.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fade-scale-enter-from,
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.96);
 }
 </style>

@@ -9,37 +9,73 @@ import ForumSidebar from '@/components/forum/ForumSidebar.vue';
 import LeftSidebar from '@/components/forum/LeftSidebar.vue';
 import { useForumStore } from '@/stores/ForumStore';
 import { useTagsStore } from '@/stores/TagsStore';
+import { useAuthStore } from '@/stores/AuthStore';
 
 const route = useRoute();
 const router = useRouter();
 
 const forumStore = useForumStore();
 const tagsStore = useTagsStore();
+const authStore = useAuthStore();
 
 const filterTab = ref('latest');
 const loading = ref(false);
 const searchLoading = ref(false);
 const searchQuery = ref('');
-const selectedCategory = ref('all');
+const activeTagFilter = ref('');
 
-const activeTab = ref(route.query.tab || 'questions');
-const showSavedOnly = ref(activeTab.value === 'saves');
+const activeTab = computed(() => route.query.tab || '');
+const showSavedOnly = computed(() => activeTab.value === 'saves');
+const showMyPostsOnly = computed(() => activeTab.value === 'myposts');
+const selectedCategory = computed(() => route.query.category || 'all');
 
 const searchInput = ref(null);
 
 const filters = ['Latest', 'Top Rated', 'Unanswered'];
 
-const categories = [
-  { id: 'all', label: 'All Topics', icon: 'bi-grid-fill', color: 'purple', gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)' },
-  { id: 'question', label: 'Questions', icon: 'bi-question-circle-fill', color: 'blue', gradient: 'linear-gradient(135deg, #60a5fa, #3b82f6)' },
-  { id: 'discussion', label: 'Discussions', icon: 'bi-chat-left-text-fill', color: 'green', gradient: 'linear-gradient(135deg, #34d399, #10b981)' },
-  { id: 'showcase', label: 'Show & Tell', icon: 'bi-rocket-takeoff-fill', color: 'fuchsia', gradient: 'linear-gradient(135deg, #c084fc, #a855f7)' },
-  { id: 'tutorial', label: 'Tutorials', icon: 'bi-book-half', color: 'amber', gradient: 'linear-gradient(135deg, #f59e0b, #d97706)' },
-  { id: 'idea', label: 'Ideas', icon: 'bi-lightbulb-fill', color: 'teal', gradient: 'linear-gradient(135deg, #2dd4bf, #0d9488)' },
-];
+const normalizeCategoryValue = (value = '') => String(value || '').trim().toLowerCase();
+
+const categoryMatches = (discussion, selected) => {
+  const target = normalizeCategoryValue(selected);
+  if (!target || target === 'all') return true;
+
+  return [
+    discussion.category_id,
+    discussion.categoryId,
+    discussion.category,
+    discussion.categoryLabel,
+    discussion.categoryMeta?.id,
+    discussion.categoryMeta?.slug,
+    discussion.categoryMeta?.label,
+  ]
+    .filter((value) => value !== undefined && value !== null)
+    .some((value) => normalizeCategoryValue(value) === target);
+};
+
+const getDiscussionCategoryText = (discussion) => {
+  return [
+    discussion.categoryLabel,
+    discussion.categoryMeta?.label,
+    discussion.category,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+};
 
 const filteredDiscussions = computed(() => {
   let list = Array.isArray(forumStore.allDiscussions) ? [...forumStore.allDiscussions] : [];
+
+  if (activeTagFilter.value) {
+    const tq = activeTagFilter.value.toLowerCase().trim();
+    list = list.filter(d => {
+      return d.tags && Array.isArray(d.tags) && d.tags.some(t => {
+        if (!t) return false;
+        const label = typeof t === 'object' ? (t.label || t.name || '') : String(t);
+        return label.toLowerCase() === tq;
+      });
+    });
+  }
 
   // 1. Search Query filter
   if (searchQuery.value && typeof searchQuery.value === 'string' && searchQuery.value.trim()) {
@@ -64,10 +100,7 @@ const filteredDiscussions = computed(() => {
         return label.toLowerCase().includes(q);
       });
 
-      const categoryId = (d.category || '').toString().toLowerCase();
-      const categoryObj = categories.find(c => c.id === categoryId);
-      const categoryLabel = categoryObj ? categoryObj.label.toLowerCase() : '';
-      const matchesCategory = categoryId.includes(q) || categoryLabel.includes(q);
+      const matchesCategory = getDiscussionCategoryText(d).includes(q);
 
       return title.includes(q) || excerpt.includes(q) || authorName.includes(q) || matchesTags || matchesCategory;
     });
@@ -78,9 +111,18 @@ const filteredDiscussions = computed(() => {
     list = list.filter(d => d.saved);
   }
 
+  // 1.6 My Posts filter
+  if (showMyPostsOnly.value && authStore.user) {
+    const myUsername = (authStore.user.username || authStore.user.name || '').toLowerCase();
+    list = list.filter(d => {
+      const authorName = (typeof d.author === 'object' && d.author !== null) ? (d.author.username || d.author.name) : d.author;
+      return (authorName || '').toLowerCase() === myUsername;
+    });
+  }
+
   // 2. Category filter
   if (selectedCategory.value !== 'all') {
-    list = list.filter(d => d.category === selectedCategory.value);
+    list = list.filter(d => categoryMatches(d, selectedCategory.value));
   }
 
   // 3. Tab Sort / Unanswered Filter
@@ -127,7 +169,7 @@ const matchingSuggestedTags = computed(() => {
 
 const selectSuggestedTag = (tagName) => {
   const cleanTag = tagName.replace('#', '').trim();
-  router.push({ path: '/forum', query: { q: cleanTag } });
+  router.push({ path: '/forum', query: { tag: cleanTag } });
   showSuggestions.value = false;
 };
 
@@ -137,57 +179,37 @@ const handleSearchBlur = () => {
   }, 200);
 };
 
-const handleSidebarSelect = (tabId) => {
-  activeTab.value = tabId;
+watch(() => [route.query.tab, route.query.category], () => {
   searchLoading.value = true;
   setTimeout(() => {
     searchLoading.value = false;
   }, 350);
 
-  if (tabId === 'saves') {
-    showSavedOnly.value = true;
-    selectedCategory.value = 'all';
+  if (route.query.tab === 'saves') {
     forumStore.fetchBookmarks().catch(() => {});
-  } else if (tabId === 'questions') {
-    showSavedOnly.value = false;
-    selectedCategory.value = 'question';
-  } else if (tabId === 'home') {
-    showSavedOnly.value = false;
-    selectedCategory.value = 'all';
-  } else {
-    showSavedOnly.value = false;
-  }
-};
-
-const handleCategorySelect = (id) => {
-  selectedCategory.value = id;
-  searchLoading.value = true;
-  setTimeout(() => {
-    searchLoading.value = false;
-  }, 400);
-};
-
-watch(() => route.query.tab, (newTab) => {
-  if (newTab) {
-    handleSidebarSelect(newTab);
-  } else {
-    handleSidebarSelect('home');
   }
 });
 
-watch(() => route.query.q, async (newQ) => {
+watch(() => [route.query.q, route.query.tag], async ([newQ, newTag]) => {
   const qVal = newQ ? String(newQ).replace('#', '').trim() : '';
+  const tagVal = newTag ? String(newTag).replace('#', '').trim() : '';
+  
   searchQuery.value = newQ ? String(newQ) : '';
+  activeTagFilter.value = tagVal;
   
   loading.value = true;
   try {
     if (!tagsStore.tags || tagsStore.tags.length === 0) {
       await tagsStore.fetchTags();
     }
-    if (qVal) {
-      const matchedTag = tagsStore.tags && tagsStore.tags.find(t => t.name.toLowerCase() === qVal.toLowerCase());
+    if (tagVal) {
+      const matchedTag = tagsStore.tags && tagsStore.tags.find(t => t.name.toLowerCase() === tagVal.toLowerCase());
       if (matchedTag) {
-        await forumStore.fetchDiscussionsByTagName(matchedTag.name);
+        const results = await forumStore.fetchDiscussionsByTagName(matchedTag.name);
+        if (!results || results.length === 0) {
+          // Fallback to fetching recent discussions so local filtering can find newly created tags
+          await forumStore.fetchDiscussions();
+        }
       } else {
         await forumStore.fetchDiscussions();
       }
@@ -241,13 +263,14 @@ const handleLoadMore = () => {
 
 const clearSearch = () => {
   searchQuery.value = '';
+  router.push({ path: '/forum', query: { ...route.query, q: undefined } });
   searchInput.value?.focus();
 };
 
 const clearFilters = () => {
   searchQuery.value = '';
-  selectedCategory.value = 'all';
   filterTab.value = 'latest';
+  router.push({ path: '/forum', query: {} });
 };
 </script>
 
@@ -257,7 +280,7 @@ const clearFilters = () => {
 
     <div class="forum-global-grid">
       <!-- Left Column: Left Sidebar Navigation stuck on the left -->
-      <LeftSidebar :active-tab="activeTab" @select-tab="handleSidebarSelect" />
+      <LeftSidebar />
 
       <!-- Right Column: Main Content Container -->
       <div class="forum-main-container">
@@ -277,6 +300,12 @@ const clearFilters = () => {
               @blur="handleSearchBlur"
               @keydown.enter="submitSearch"
             />
+            <button v-if="searchQuery" class="clear-btn" @click="clearSearch" title="Clear search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
             <button class="search-btn" @click="submitSearch" title="Search">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -313,10 +342,10 @@ const clearFilters = () => {
               {{ filter }}
             </button>
           </div>
-          <button class="create-btn" @click="$router.push('/forum/create')">
+          <!-- <button class="create-btn" @click="$router.push('/forum/create')">
             <i class="bi bi-plus-lg"></i>
             <span>Create Question</span>
-          </button>
+          </button> -->
         </div>
 
         <!-- Inner Content Grid (Discussions Feed + Right Sidebar) -->
@@ -439,6 +468,22 @@ const clearFilters = () => {
 
 .search-bar::placeholder {
   color: var(--color-text-muted);
+}
+
+.clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+  color: var(--color-danger, #ef4444);
 }
 
 .search-btn {
@@ -570,7 +615,7 @@ const clearFilters = () => {
   border-radius: 50%;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-body {
@@ -597,7 +642,7 @@ const clearFilters = () => {
   border-radius: 100px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-line-sm {
@@ -606,7 +651,7 @@ const clearFilters = () => {
   border-radius: 4px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-line-sm.right {
@@ -619,7 +664,7 @@ const clearFilters = () => {
   border-radius: 6px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-excerpt {
@@ -628,7 +673,7 @@ const clearFilters = () => {
   border-radius: 6px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 .skeleton-footer {
@@ -637,7 +682,7 @@ const clearFilters = () => {
   border-radius: 4px;
   background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow 1.5s infinite linear;
 }
 
 @keyframes pulse-glow {

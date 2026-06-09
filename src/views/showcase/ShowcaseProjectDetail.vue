@@ -1,12 +1,17 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import Navbar from '../../components/layouts/header.vue';
 import BaseFooter from '../../components/layouts/footer.vue';
 import { useProjectStore } from '../../stores/ProjectStore.js';
+import { useAuthStore } from '../../stores/AuthStore.js';
+import { useToast } from '../../composables/useToast.js';
 
 const route = useRoute();
+const router = useRouter();
 const projectStore = useProjectStore();
+const authStore = useAuthStore();
+const toast = useToast();
 
 const loading = ref(true);
 
@@ -21,12 +26,73 @@ const project = computed(() => projectStore.project || {
   stats: { stars: '0', forks: '0', contributors: '0' }
 });
 
+const formattedDemoLink = computed(() => {
+  const link = project.value.link;
+  if (!link) return "";
+  if (/^https?:\/\//i.test(link)) {
+    return link;
+  }
+  return `http://${link}`;
+});
+
 const technicalSpecs = computed(() => [
   { label: 'Frontend', value: 'Vue 3, Pinia' },
   { label: 'Tags', value: project.value.tags?.join(', ') || 'N/A' },
   { label: 'Link', value: project.value.link || 'Not provided' },
   { label: 'Created At', value: new Date(project.value.createdAt).toLocaleDateString() || 'N/A' }
 ]);
+
+const isOwner = computed(() => {
+  if (!authStore.user || !project.value || !project.value.author) return false;
+  const loggedInUser = (authStore.user.username || authStore.user.name || "").toLowerCase().replace('@', '').trim();
+  const projectAuthor = (project.value.author.username || project.value.author.name || "").toLowerCase().replace('@', '').trim();
+  return loggedInUser && projectAuthor && loggedInUser === projectAuthor;
+});
+
+const deleting = ref(false);
+const handleDelete = async () => {
+  if (!confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+    return;
+  }
+  deleting.value = true;
+  try {
+    const projectId = route.params.id;
+    await projectStore.deleteProject(projectId);
+    toast.success("Project deleted successfully!");
+    router.push('/showcase');
+  } catch (err) {
+    console.error("Failed to delete project:", err);
+    toast.error("Failed to delete project. Please try again.");
+  } finally {
+    deleting.value = false;
+  }
+};
+
+const isTeacher = computed(() => {
+  return authStore.user?.role?.toLowerCase() === 'teacher';
+});
+
+const submittingRating = ref(false);
+const currentTeacherRating = computed(() => project.value.my_rating || 0);
+
+const submitTeacherRating = async (rating) => {
+  submittingRating.value = true;
+  try {
+    const projectId = route.params.id;
+    if (project.value.my_rating) {
+      await projectStore.updateRateProject(projectId, rating);
+      toast.success("Project rating updated successfully!");
+    } else {
+      await projectStore.rateProject(projectId, rating);
+      toast.success("Project rated successfully!");
+    }
+  } catch (err) {
+    console.error("Failed to submit rating:", err);
+    toast.error("Failed to submit rating. Please try again.");
+  } finally {
+    submittingRating.value = false;
+  }
+};
 
 onMounted(async () => {
   const projectId = route.params.id;
@@ -72,9 +138,16 @@ onMounted(async () => {
             <span v-for="tag in project.tags" :key="tag" class="minimal-tag">{{ tag }}</span>
           </div>
 
-          <div class="d-flex gap-3">
-            <a v-if="project.link" :href="project.link" target="_blank" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">Live Demo</a>
+          <div class="d-flex gap-3 align-items-center">
+            <a v-if="project.link" :href="formattedDemoLink" target="_blank" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">Live Demo</a>
             <button v-else class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" disabled>No Demo</button>
+            <router-link v-if="isOwner" :to="`/showcase/edit/${project.id}`" class="btn btn-outline-adaptive rounded-pill px-4 py-2 fw-bold shadow-sm">
+              <i class="bi bi-pencil-square me-1"></i> Edit Project
+            </router-link>
+            <button v-if="isOwner" @click="handleDelete" :disabled="deleting" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-bold shadow-sm">
+              <span v-if="deleting" class="spinner-border spinner-border-sm" role="status"></span>
+              <span v-else><i class="bi bi-trash3 me-1"></i> Delete Project</span>
+            </button>
           </div>
         </section>
 
@@ -90,6 +163,37 @@ onMounted(async () => {
         <section class="project-about mb-5">
           <h4 class="fw-bold mb-3 text-adaptive">About the Project</h4>
           <p class="text-muted lh-lg">{{ project.description }}</p>
+        </section>
+
+        <!-- Teacher Rating Section -->
+        <section v-if="isTeacher" class="teacher-rating-section p-4 rounded-4 bg-surface border mb-5 shadow-sm">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-star-fill text-warning"></i>
+            <h5 class="fw-bold mb-0 text-adaptive">Teacher Assessment</h5>
+          </div>
+          <p class="text-muted small mb-3">
+            As a teacher, you can rate this project's implementation and design.
+          </p>
+          
+          <div class="d-flex align-items-center gap-3">
+            <div class="rating-stars d-flex gap-2 fs-3">
+              <i 
+                v-for="star in 5" 
+                :key="star" 
+                class="bi text-warning"
+                :class="star <= currentTeacherRating ? 'bi-star-fill' : 'bi-star'"
+                style="cursor: pointer;"
+                @click="submitTeacherRating(star)"
+              ></i>
+            </div>
+            <span v-if="submittingRating" class="spinner-border spinner-border-sm text-primary" role="status"></span>
+            <span v-else-if="project.my_rating" class="text-success small fw-semibold">
+              Your rating: {{ project.my_rating }} / 5 stars (Click star to update)
+            </span>
+            <span v-else class="text-muted small">
+              You haven't rated this project yet.
+            </span>
+          </div>
         </section>
 
         <!-- Details Grid -->

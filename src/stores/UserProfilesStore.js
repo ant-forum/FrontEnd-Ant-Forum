@@ -12,6 +12,7 @@ const ensureSuccess = (response, fallbackMessage) => {
 
 export const useUserProfilesStore = defineStore("userProfiles", () => {
   const profile = ref(null);
+  const socialLinks = ref([]);
   const isLoading = ref(false);
   const error = ref(null);
 
@@ -30,6 +31,15 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
       }
       profile.value = normalizeProfileRecord(extractProfilePayload(res.data));
       
+      // Fetch social links at the same time
+      try {
+        const socialRes = await api.get("/api/sociallink/get-all/social-link");
+        const links = socialRes.data?.data || socialRes.data || [];
+        socialLinks.value = links.filter(l => Number(l.user_id) === Number(profile.value?.id) || !l.user_id) || [];
+      } catch (e) {
+        console.warn("Failed to fetch social links", e);
+      }
+      
       // Keep authStore in sync
       if (profile.value) {
         authStore.setUser(profile.value);
@@ -46,7 +56,7 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
   /**
    * Update User Profile
    */
-  const updateProfile = async ({ username, gender, bio, skills }) => {
+  const updateProfile = async ({ username, fullname, gender, bio, skills }) => {
     try {
       isLoading.value = true;
       error.value = null;
@@ -62,6 +72,11 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
       const res = await api.put("/api/update/profile", profilePayload);
       ensureSuccess(res, "Failed to update profile");
 
+      if (fullname !== undefined) {
+        const nameRes = await api.post("/api/fullname", { fullname });
+        ensureSuccess(nameRes, "Failed to update fullname");
+      }
+
       const bioRes = await api.put("/api/update/bio", bioPayload);
       ensureSuccess(bioRes, "Failed to update bio");
 
@@ -73,6 +88,8 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
         ...normalizeProfileRecord(extractProfilePayload(res.data)),
         username,
         gender,
+        name: fullname,
+        fullname,
       };
 
       savedProfilePatch.bio = bioPayload.bio;
@@ -130,12 +147,57 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
     }
   };
 
+  /**
+   * Add Social Link
+   */
+  const addSocialLink = async (platform, url) => {
+    try {
+      isLoading.value = true;
+      const res = await api.post('/api/sociallink/createSocialLink', { platform, url });
+      if (res.data && res.data.result === false) throw new Error(res.data.message);
+      
+      // Refetch
+      const socialRes = await api.get("/api/sociallink/get-all/social-link");
+      const links = socialRes.data?.data || socialRes.data || [];
+      socialLinks.value = links.filter(l => Number(l.user_id) === Number(profile.value?.id) || !l.user_id) || [];
+      return res.data;
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || "Failed to add link";
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  /**
+   * Delete Social Link
+   */
+  const deleteSocialLink = async (id) => {
+    try {
+      isLoading.value = true;
+      await api.delete(`/api/sociallink/delete/social-link/${id}`);
+      
+      // Refetch
+      const socialRes = await api.get("/api/sociallink/get-all/social-link");
+      const links = socialRes.data?.data || socialRes.data || [];
+      socialLinks.value = links.filter(l => Number(l.user_id) === Number(profile.value?.id) || !l.user_id) || [];
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || "Failed to delete link";
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   return {
     profile,
+    socialLinks,
     isLoading,
     error,
     fetchProfile,
     updateProfile,
     uploadAvatar,
+    addSocialLink,
+    deleteSocialLink
   };
 });

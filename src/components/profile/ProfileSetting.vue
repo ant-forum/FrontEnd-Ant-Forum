@@ -1,3 +1,314 @@
+<template>
+  <div class="edit-profile-container">
+    <div class="dashboard-card-modern p-4">
+      <div class="mb-4">
+        <div>
+          <h4 class="mb-0 fw-bold header-title themed-text">Edit Profile</h4>
+          <p class="text-muted small mb-0">Update your username, gender, bio, skills, and avatar picture.</p>
+        </div>
+      </div>
+
+      <div v-if="successMessage" class="alert alert-success mt-2" role="alert">
+        {{ successMessage }}
+      </div>
+      <div v-if="errorMessage" class="alert alert-danger mt-2" role="alert">
+        {{ errorMessage }}
+      </div>
+
+      <div class="row g-4 mt-2">
+        <!-- Avatar Upload -->
+        <div class="col-md-4 text-center border-end border-slate-subtle">
+          <button
+            type="button"
+            class="mb-3 d-inline-block position-relative avatar-preview-container"
+            :disabled="isProfileSaving || isAvatarUploading"
+            aria-label="Choose profile picture"
+            @click="openAvatarFilePicker"
+          >
+            <img
+              :src="avatarPreview || 'https://via.placeholder.com/130'"
+              class="rounded-circle"
+              width="120"
+              height="120"
+              style="object-fit: cover;"
+            />
+            <div class="avatar-overlay d-flex align-items-center justify-content-center rounded-circle">
+              <i class="bi bi-camera-fill text-white fs-4"></i>
+            </div>
+          </button>
+          <div class="px-2 mt-2">
+            <label class="form-label text-muted small fw-bold d-block mb-2">Profile Picture</label>
+            <div class="custom-file-upload">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary px-3 rounded-pill"
+                :disabled="isProfileSaving || isAvatarUploading"
+                @click="openAvatarFilePicker"
+              >
+                Choose Image
+              </button>
+              <input
+                ref="fileInput"
+                type="file"
+                class="d-none"
+                accept="image/*"
+                @change="handleAvatarChange"
+              />
+            </div>
+            <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">PNG, JPG up to 2MB</small>
+          </div>
+        </div>
+
+        <!-- Main Details Form -->
+        <div class="col-md-8">
+          <!-- Full Name -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small themed-text">Full Name *</label>
+            <input
+              v-model="form.fullname"
+              class="form-control"
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
+
+          <!-- Username -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small themed-text">Username *</label>
+            <input
+              v-model="form.username"
+              class="form-control"
+              placeholder="Enter your username"
+              required
+            />
+          </div>
+
+          <!-- Gender -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small themed-text">Gender *</label>
+            <select v-model="form.gender" class="form-select">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+
+          <!-- Bio -->
+          <div class="mb-3">
+            <label class="form-label fw-bold small themed-text">Bio</label>
+            <textarea
+              v-model="form.bio"
+              class="form-control profile-textarea"
+              rows="4"
+              maxlength="300"
+              placeholder="Share your background, interests, or what you are building."
+            ></textarea>
+            <small class="text-muted d-block text-end mt-1">{{ form.bio.length }}/300</small>
+          </div>
+
+          <!-- Skills from Admin Tags -->
+          <div class="mb-0">
+            <label class="form-label fw-bold small themed-text">Skills</label>
+            <div class="skill-picker">
+              <div v-if="tagsStore.isLoading" class="skill-picker-loading">
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span>Loading skill tags...</span>
+              </div>
+
+              <div v-else-if="availableSkillTags.length" class="skill-tag-grid">
+                <button
+                  v-for="tag in availableSkillTags"
+                  :key="tag.id || tag.name"
+                  type="button"
+                  :class="['skill-tag-option', { active: isSkillSelected(tag.name) }]"
+                  :title="tag.description || tag.name"
+                  @click="toggleSkill(tag.name)"
+                >
+                  <i :class="['bi', isSkillSelected(tag.name) ? 'bi-check2-circle' : 'bi-plus-circle']"></i>
+                  <span>{{ tag.name }}</span>
+                </button>
+              </div>
+
+              <div v-else class="skill-picker-empty">
+                <i class="bi bi-tags"></i>
+                <span>No admin-created tags available yet.</span>
+              </div>
+            </div>
+
+            <div v-if="selectedSkills.length" class="selected-skills-row" aria-label="Selected skills">
+              <span
+                v-for="skill in selectedSkills"
+                :key="skill"
+                class="selected-skill-chip"
+              >
+                {{ skill }}
+                <button type="button" title="Remove skill" @click="toggleSkill(skill)">
+                  <i class="bi bi-x"></i>
+                </button>
+              </span>
+            </div>
+            <small class="text-muted d-block mt-2">Skills are selected from tags created by admins.</small>
+          </div>
+        </div>
+      </div>
+      
+      <hr class="border-slate my-4">
+      
+      <!-- Social Links Section -->
+      <div class="mb-4">
+        <h5 class="fw-bold header-title themed-text mb-3">Social Links</h5>
+        
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <select v-model="newSocialPlatform" class="form-select">
+              <option value="" disabled>Select Platform</option>
+              <option value="Github">Github</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Twitter/X">Twitter/X</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Instagram">Instagram</option>
+              <option value="YouTube">YouTube</option>
+              <option value="Discord">Discord</option>
+              <option value="TikTok">TikTok</option>
+              <option value="Website">Website (Other)</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <input v-model="newSocialUrl" type="text" class="form-control" placeholder="URL (https://...)">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" :disabled="!newSocialPlatform || !newSocialUrl || isAddingSocial" @click="handleAddSocialLink">
+              {{ isAddingSocial ? 'Adding...' : 'Add Link' }}
+            </button>
+          </div>
+        </div>
+        
+        <div v-if="userProfilesStore.socialLinks.length === 0" class="card-empty-state p-3 text-center rounded">
+          <i class="bi bi-link-45deg text-muted fs-4 d-block mb-2"></i>
+          <span class="text-muted small">No social links added yet.</span>
+        </div>
+        
+        <div v-else class="d-flex flex-column gap-2">
+          <div v-for="link in userProfilesStore.socialLinks" :key="link.id" class="d-flex align-items-center justify-content-between p-3 border rounded bg-surface">
+            <div class="d-flex align-items-center gap-3">
+              <i :class="getPlatformIcon(link.platform)" class="fs-4 text-primary-purple"></i>
+              <div>
+                <strong class="d-block themed-text">{{ link.platform }}</strong>
+                <a :href="link.url" target="_blank" class="small text-muted text-decoration-none">{{ link.url }}</a>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" title="Delete Link" @click="handleDeleteSocialLink(link.id)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-form-actions">
+        <button
+          type="button"
+          class="btn btn-secondary px-4"
+          @click="handleCancel"
+          :disabled="isProfileSaving"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary px-4 d-flex align-items-center gap-2"
+          :disabled="!isValid || isProfileSaving"
+          @click="handleSubmit"
+        >
+          <span
+            v-if="isProfileSaving"
+            class="spinner-border spinner-border-sm"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          {{ isProfileSaving ? "Saving..." : "Save Changes" }}
+        </button>
+      </div>
+    </div>
+
+    <BaseModal
+      v-if="showAvatarConfirmModal"
+      title="Use this profile picture?"
+      icon="bi bi-camera-fill"
+      theme="primary"
+      @closeModal="closeAvatarConfirmModal"
+    >
+      <div class="avatar-confirm-body">
+        <img
+          :src="pendingAvatarPreview"
+          alt="Selected profile picture preview"
+          class="avatar-confirm-preview"
+        >
+        <p class="mb-1 fw-bold themed-text">Update your profile picture now?</p>
+        <small class="text-muted">
+          This uploads immediately after you confirm. You do not need to click Save Changes.
+        </small>
+      </div>
+
+      <template #footer>
+        <button
+          type="button"
+          class="btn btn-secondary px-4"
+          :disabled="isAvatarUploading"
+          @click="closeAvatarConfirmModal"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary px-4 d-inline-flex align-items-center gap-2"
+          :disabled="isAvatarUploading"
+          @click="confirmAvatarUpload"
+        >
+          <span
+            v-if="isAvatarUploading"
+            class="spinner-border spinner-border-sm"
+            aria-hidden="true"
+          ></span>
+          <span>{{ isAvatarUploading ? "Updating..." : "Confirm Picture" }}</span>
+        </button>
+      </template>
+    </BaseModal>
+
+    <!-- Social Link Delete Modal -->
+    <BaseModal
+      v-if="mDelete.isVisible"
+      title="Delete Social Link"
+      theme="danger"
+      icon="bi bi-trash3"
+      @closeModal="mDelete.isVisible = false"
+    >
+      <div class="d-grid gap-3">
+        <div>
+          <p class="fw-semibold mb-2">
+            Are you sure you want to delete this social link?
+          </p>
+          <span class="text-muted"> This action cannot be undone.</span>
+        </div>
+
+        <div class="d-flex justify-content-end align-items-center gap-3">
+          <button
+            class="btn btn-outline-secondary"
+            @click="mDelete.isVisible = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn-danger"
+            @click="deleteSocialLinkConfirm"
+            :disabled="mDelete.isLoading"
+          >
+            {{ mDelete.isLoading ? "Deleting..." : "Yes, I'm sure" }}
+          </button>
+        </div>
+      </div>
+    </BaseModal>
+  </div>
+</template>
+
 <script setup>
 import { reactive, ref, computed, watch, onMounted, onBeforeUnmount, defineProps, defineEmits } from "vue";
 import BaseModal from "../base/BaseModal.vue";
@@ -7,6 +318,7 @@ import { useTagsStore } from "../../stores/TagsStore";
 import { useImageCropper } from "../../composables/useImageCropper";
 import { useToast } from "../../composables/useToast";
 import { normalizeSkills, skillsToText } from "../../utils/profileFields";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const props = defineProps({
   user: { type: Object, required: true }
@@ -24,6 +336,7 @@ const isProfileSaving = ref(false);
 
 // Form state
 const form = reactive({
+  fullname: "",
   username: "",
   gender: "male",
   bio: "",
@@ -68,11 +381,12 @@ const clearAvatarInput = () => {
 
 const resetForm = () => {
   const u = userProfilesStore.profile || props.user || {};
+  form.fullname = u.name || u.fullname || "";
   form.username = u.username || "";
   form.gender = u.gender || "male";
   form.bio = u.bio || "";
   selectedSkills.value = normalizeSkills(u.skills);
-  avatarPreview.value = u.profile_pic || "";
+  avatarPreview.value = u.profile_pic ? resolveMediaUrl(u.profile_pic) : "";
 };
 
 const availableSkillTags = computed(() => {
@@ -175,6 +489,7 @@ const closeAvatarConfirmModal = () => {
 const confirmAvatarUpload = async () => {
   if (!pendingAvatarFile.value || isAvatarUploading.value) return;
 
+  const fullnameBeforeUpload = form.fullname;
   const usernameBeforeUpload = form.username;
   const genderBeforeUpload = form.gender;
   const bioBeforeUpload = form.bio;
@@ -183,6 +498,7 @@ const confirmAvatarUpload = async () => {
   try {
     isAvatarUploading.value = true;
     await userProfilesStore.uploadAvatar(pendingAvatarFile.value);
+    form.fullname = fullnameBeforeUpload;
     form.username = usernameBeforeUpload;
     form.gender = genderBeforeUpload;
     form.bio = bioBeforeUpload;
@@ -203,7 +519,7 @@ const confirmAvatarUpload = async () => {
 
 // Validation
 const isValid = computed(() => {
-  return !!form.username.trim() && !!form.gender;
+  return !!form.username.trim() && !!form.fullname.trim() && !!form.gender;
 });
 
 // Submit
@@ -216,6 +532,7 @@ const handleSubmit = async () => {
   try {
     isProfileSaving.value = true;
     await userProfilesStore.updateProfile({
+      fullname: form.fullname,
       username: form.username,
       gender: form.gender,
       bio: form.bio.trim() || null,
@@ -238,228 +555,68 @@ const handleSubmit = async () => {
   }
 };
 
+// Social Links State and Handlers
+const newSocialPlatform = ref("");
+const newSocialUrl = ref("");
+const isAddingSocial = ref(false);
+
+const handleAddSocialLink = async () => {
+  if (!newSocialPlatform.value || !newSocialUrl.value) return;
+  isAddingSocial.value = true;
+  try {
+    await userProfilesStore.addSocialLink(newSocialPlatform.value, newSocialUrl.value);
+    toast.success("Social link added");
+    newSocialPlatform.value = "";
+    newSocialUrl.value = "";
+  } catch (error) {
+    console.error("Failed to add social link:", error);
+    toast.error("Failed to add social link");
+  } finally {
+    isAddingSocial.value = false;
+  }
+};
+
+const mDelete = reactive({
+  isVisible: false,
+  isLoading: false,
+  id: null,
+});
+
+const handleDeleteSocialLink = (id) => {
+  mDelete.isVisible = true;
+  mDelete.id = id;
+};
+
+const deleteSocialLinkConfirm = async () => {
+  if (!mDelete.id) return;
+  mDelete.isLoading = true;
+  try {
+    await userProfilesStore.deleteSocialLink(mDelete.id);
+    toast.success("Social link deleted");
+  } catch (error) {
+    console.error("Failed to delete social link:", error);
+    toast.error("Failed to delete social link");
+  } finally {
+    mDelete.isLoading = false;
+    mDelete.isVisible = false;
+    mDelete.id = null;
+  }
+};
+
+const getPlatformIcon = (platformStr) => {
+  const p = (platformStr || '').toLowerCase();
+  if (p.includes('linkedin')) return 'bi-linkedin';
+  if (p.includes('github')) return 'bi-github';
+  if (p.includes('twitter') || p.includes('x')) return 'bi-twitter-x';
+  if (p.includes('facebook')) return 'bi-facebook';
+  if (p.includes('instagram')) return 'bi-instagram';
+  if (p.includes('youtube')) return 'bi-youtube';
+  if (p.includes('discord')) return 'bi-discord';
+  if (p.includes('tiktok')) return 'bi-tiktok';
+  return 'bi-link-45deg';
+};
+
 </script>
-
-<template>
-  <div class="edit-profile-container">
-    <div class="dashboard-card-modern p-4">
-      <div class="mb-4">
-        <div>
-          <h4 class="mb-0 fw-bold header-title themed-text">Edit Profile</h4>
-          <p class="text-muted small mb-0">Update your username, gender, bio, skills, and avatar picture.</p>
-        </div>
-      </div>
-
-      <div v-if="successMessage" class="alert alert-success mt-2" role="alert">
-        {{ successMessage }}
-      </div>
-      <div v-if="errorMessage" class="alert alert-danger mt-2" role="alert">
-        {{ errorMessage }}
-      </div>
-
-      <div class="row g-4 mt-2">
-        <!-- Avatar Upload -->
-        <div class="col-md-4 text-center border-end border-slate-subtle">
-          <button
-            type="button"
-            class="mb-3 d-inline-block position-relative avatar-preview-container"
-            :disabled="isProfileSaving || isAvatarUploading"
-            aria-label="Choose profile picture"
-            @click="openAvatarFilePicker"
-          >
-            <img
-              :src="avatarPreview || 'https://via.placeholder.com/130'"
-              class="rounded-circle"
-              width="120"
-              height="120"
-              style="object-fit: cover;"
-            />
-            <div class="avatar-overlay d-flex align-items-center justify-content-center rounded-circle">
-              <i class="bi bi-camera-fill text-white fs-4"></i>
-            </div>
-          </button>
-          <div class="px-2 mt-2">
-            <label class="form-label text-muted small fw-bold d-block mb-2">Profile Picture</label>
-            <div class="custom-file-upload">
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-primary px-3 rounded-pill"
-                :disabled="isProfileSaving || isAvatarUploading"
-                @click="openAvatarFilePicker"
-              >
-                Choose Image
-              </button>
-              <input
-                ref="fileInput"
-                type="file"
-                class="d-none"
-                accept="image/*"
-                @change="handleAvatarChange"
-              />
-            </div>
-            <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">PNG, JPG up to 2MB</small>
-          </div>
-        </div>
-
-        <!-- Main Details Form -->
-        <div class="col-md-8">
-          <!-- Username -->
-          <div class="mb-3">
-            <label class="form-label fw-bold small themed-text">Username *</label>
-            <input
-              v-model="form.username"
-              class="form-control"
-              placeholder="Enter your username"
-              required
-            />
-          </div>
-
-          <!-- Gender -->
-          <div class="mb-3">
-            <label class="form-label fw-bold small themed-text">Gender *</label>
-            <select v-model="form.gender" class="form-select">
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-          </div>
-
-          <!-- Bio -->
-          <div class="mb-3">
-            <label class="form-label fw-bold small themed-text">Bio</label>
-            <textarea
-              v-model="form.bio"
-              class="form-control profile-textarea"
-              rows="4"
-              maxlength="300"
-              placeholder="Share your background, interests, or what you are building."
-            ></textarea>
-            <small class="text-muted d-block text-end mt-1">{{ form.bio.length }}/300</small>
-          </div>
-
-          <!-- Skills from Admin Tags -->
-          <div class="mb-0">
-            <label class="form-label fw-bold small themed-text">Skills</label>
-            <div class="skill-picker">
-              <div v-if="tagsStore.isLoading" class="skill-picker-loading">
-                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                <span>Loading skill tags...</span>
-              </div>
-
-              <div v-else-if="availableSkillTags.length" class="skill-tag-grid">
-                <button
-                  v-for="tag in availableSkillTags"
-                  :key="tag.id || tag.name"
-                  type="button"
-                  :class="['skill-tag-option', { active: isSkillSelected(tag.name) }]"
-                  :title="tag.description || tag.name"
-                  @click="toggleSkill(tag.name)"
-                >
-                  <i :class="['bi', isSkillSelected(tag.name) ? 'bi-check2-circle' : 'bi-plus-circle']"></i>
-                  <span>{{ tag.name }}</span>
-                </button>
-              </div>
-
-              <div v-else class="skill-picker-empty">
-                <i class="bi bi-tags"></i>
-                <span>No admin-created tags available yet.</span>
-              </div>
-            </div>
-
-            <div v-if="selectedSkills.length" class="selected-skills-row" aria-label="Selected skills">
-              <span
-                v-for="skill in selectedSkills"
-                :key="skill"
-                class="selected-skill-chip"
-              >
-                {{ skill }}
-                <button type="button" title="Remove skill" @click="toggleSkill(skill)">
-                  <i class="bi bi-x"></i>
-                </button>
-              </span>
-            </div>
-            <small class="text-muted d-block mt-2">Skills are selected from tags created by admins.</small>
-          </div>
-        </div>
-      </div>
-
-      <div class="profile-form-actions">
-        <button
-          type="button"
-          class="btn btn-secondary px-4"
-          @click="handleCancel"
-          :disabled="isProfileSaving"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="btn btn-primary px-4 d-flex align-items-center gap-2"
-          :disabled="!isValid || isProfileSaving"
-          @click="handleSubmit"
-        >
-          <span
-            v-if="isProfileSaving"
-            class="spinner-border spinner-border-sm"
-            role="status"
-            aria-hidden="true"
-          ></span>
-          {{ isProfileSaving ? "Saving..." : "Save Changes" }}
-        </button>
-      </div>
-    </div>
-
-    <BaseModal
-      v-if="showAvatarConfirmModal"
-      title="Use this profile picture?"
-      icon="bi bi-camera-fill"
-      theme="primary"
-      @closeModal="closeAvatarConfirmModal"
-    >
-      <div class="avatar-confirm-body">
-        <img
-          :src="pendingAvatarPreview"
-          alt="Selected profile picture preview"
-          class="avatar-confirm-preview"
-        >
-        <p class="mb-1 fw-bold themed-text">Update your profile picture now?</p>
-        <small class="text-muted">
-          This uploads immediately after you confirm. You do not need to click Save Changes.
-        </small>
-      </div>
-
-      <template #footer>
-        <button
-          type="button"
-          class="btn btn-secondary px-4"
-          :disabled="isAvatarUploading"
-          @click="closeAvatarConfirmModal"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="btn btn-primary px-4 d-inline-flex align-items-center gap-2"
-          :disabled="isAvatarUploading"
-          @click="confirmAvatarUpload"
-        >
-          <span
-            v-if="isAvatarUploading"
-            class="spinner-border spinner-border-sm"
-            aria-hidden="true"
-          ></span>
-          <span>{{ isAvatarUploading ? "Updating..." : "Confirm Picture" }}</span>
-        </button>
-      </template>
-    </BaseModal>
-
-    <ImageCropModal
-      v-if="isAvatarCropOpen"
-      :source="avatarCropSource"
-      @confirm="confirmAvatarCrop"
-      @cancel="cancelAvatarCrop"
-    />
-  </div>
-</template>
 
 <style scoped>
 .dashboard-card-modern {

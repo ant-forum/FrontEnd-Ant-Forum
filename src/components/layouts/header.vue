@@ -87,8 +87,8 @@ onMounted(() => {
     <div class="container py-3 d-flex align-items-center justify-content-between">
       <!-- Logo Section -->
       <div class="header-left d-flex align-items-center flex-1">
-        <router-link to="/" class="text-decoration-none d-flex align-items-center">
-          <span class="logo-text fw-black fs-3 text-gradient">ANTFORUM</span>
+        <router-link to="/" class="brand-logo-link text-decoration-none d-flex align-items-center" aria-label="ANT Forum home">
+          <img src="/antforum-clean.png" alt="ANT Forum" class="brand-logo-img">
         </router-link>
       </div>
 
@@ -256,14 +256,16 @@ onMounted(() => {
   flex: 1;
 }
 
-.logo-text {
-  letter-spacing: -1px;
+.brand-logo-link {
+  min-height: 44px;
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.brand-logo-img {
+  display: block;
+  width: 118px;
+  height: auto;
+  max-height: 64px;
+  object-fit: contain;
 }
 
 .nav-pills-modern {
@@ -378,6 +380,11 @@ onMounted(() => {
 @media (max-width: 768px) {
   .header-center {
     display: none !important;
+  }
+
+  .brand-logo-img {
+    width: 108px;
+    max-height: 54px;
   }
 }
 
