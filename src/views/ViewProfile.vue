@@ -13,6 +13,8 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const forumStore = useForumStore();
+import { useProjectStore } from "../stores/ProjectStore";
+const projectStore = useProjectStore();
 
 // Tab state: 'profile' | 'projects'
 const activeTab = ref("profile");
@@ -293,6 +295,7 @@ const cleanUsername = (usernameStr) => {
 const loadProfileData = async () => {
   isLoading.value = true;
   await forumStore.fetchDiscussions().catch(e => console.error("Could not fetch discussions:", e));
+  await projectStore.fetchProjects().catch(e => console.error("Could not fetch projects:", e));
   const rawParam = route.params.username;
   const username = cleanUsername(rawParam);
 
@@ -392,7 +395,24 @@ const populateProfile = (data) => {
   }
   
   profile.skills = normalizeSkills(data.skills);
-  profile.projects = Array.isArray(data.projects) ? data.projects : [];
+  
+  const allProjects = projectStore.projects || [];
+  const currentUsername = profile.username.replace('@', '').toLowerCase();
+  const currentName = (profile.name || '').toLowerCase();
+  const userProjects = allProjects.filter(p => {
+    const authorUsername = p.author?.username?.replace('@', '').toLowerCase();
+    const authorName = p.author?.name?.toLowerCase();
+    return authorUsername === currentUsername || authorName === currentName;
+  }).map(p => ({
+    id: p.id,
+    title: p.title,
+    desc: p.description,
+    stars: p.average_rating || 0,
+    tags: p.tags || []
+  }));
+
+  const fallbackProjects = [];
+  profile.projects = userProjects.length > 0 ? userProjects : fallbackProjects;
   
   const userDiscussions = forumStore.discussions.filter(d => {
     const authorName = (typeof d.author === 'object' && d.author !== null) ? (d.author.username || d.author.name) : d.author;
@@ -576,7 +596,12 @@ const handleSendMessage = () => {
                     <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
                       <div>
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                          <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                          <router-link v-slot="{ href, navigate }" :to="'/showcase/' + project.id" custom>
+                            <a v-if="project.id" :href="href" @click="navigate" class="text-decoration-none">
+                              <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                            </a>
+                            <h6 v-else class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                          </router-link>
                           <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
                         </div>
                         <p class="text-muted small mb-4 line-clamp-3">
@@ -694,7 +719,12 @@ const handleSendMessage = () => {
               <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
                 <div>
                   <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                    <router-link v-slot="{ href, navigate }" :to="'/showcase/' + project.id" custom>
+                      <a v-if="project.id" :href="href" @click="navigate" class="text-decoration-none">
+                        <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                      </a>
+                      <h6 v-else class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                    </router-link>
                     <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
                   </div>
                   <p class="text-muted small mb-4 line-clamp-3">

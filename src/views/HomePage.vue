@@ -2,12 +2,14 @@
 import { useAuthStore } from '../stores/AuthStore'
 import Navbar from '../components/layouts/header.vue'
 import { useForumStore } from '../stores/ForumStore'
+import { useProjectStore } from '../stores/ProjectStore'
 import { useRouter } from 'vue-router'
 import { computed, onMounted } from 'vue'
 import { resolveMediaUrl } from '../utils/mediaUrl'
 
 const auth = useAuthStore()
 const forumStore = useForumStore()
+const projectStore = useProjectStore()
 const router = useRouter()
 
 const features = [
@@ -32,12 +34,18 @@ const features = [
 ]
 
 onMounted(async () => {
+  if (!auth.token) return;
   if (!forumStore.allDiscussions || forumStore.allDiscussions.length === 0) {
     try {
       await forumStore.fetchDiscussions()
     } catch (e) {
       console.error('Error loading homepage discussions:', e)
     }
+  }
+  try {
+    await projectStore.fetchProjects()
+  } catch (e) {
+    console.error('Error loading homepage projects:', e)
   }
 })
 
@@ -87,35 +95,24 @@ const recentThreadsLive = computed(() => {
 });
 
 const latestProjectsLive = computed(() => {
-  const showcaseThreads = liveDiscussions.value.filter(d => String(d.category).toLowerCase() === 'showcase');
-  
-  return showcaseThreads.slice(0, 3).map(d => {
+  return projectStore.projects.slice(0, 3).map(p => {
     let authorName = 'Anonymous';
     let authorAvatar = 'https://i.pravatar.cc/150?u=anonymous';
-    if (d.user) {
-      authorName = d.user.username || d.user.name || authorName;
-      const rawPic = d.user.profile_pic || d.user.avatar;
-      authorAvatar = resolveMediaUrl(rawPic) || authorAvatar;
-    } else if (d.author) {
-      authorName = typeof d.author === 'object' ? (d.author.username || d.author.name) : d.author;
-      const rawPic = d.author_avatar || (typeof d.author === 'object' ? (d.author.profile_pic || d.author.avatar) : null);
-      authorAvatar = resolveMediaUrl(rawPic) || authorAvatar;
+    if (p.author) {
+      authorName = p.author.name || authorName;
+      authorAvatar = p.author.avatar || authorAvatar;
     }
 
-    const tagLabels = Array.isArray(d.tags) 
-      ? d.tags.map(t => typeof t === 'object' ? (t.label || t.name) : t)
-      : [];
-
     return {
-      id: d.id,
-      title: d.title || '',
-      desc: d.description || d.excerpt || d.body || '',
+      id: p.id,
+      title: p.title || '',
+      desc: p.description || '',
       author: authorName,
       avatar: authorAvatar,
-      tags: tagLabels.slice(0, 3),
-      stars: d.likes !== undefined ? d.likes : (d.votes !== undefined ? d.votes : 0),
-      views: d.views !== undefined ? d.views : 0,
-      image: resolveMediaUrl(d.thumbnail || d.image) || 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=600'
+      tags: p.tags?.slice(0, 3) || [],
+      stars: p.average_rating || 0,
+      views: p.views || 0,
+      image: p.thumbnail || p.image || 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=600'
     };
   });
 });
@@ -244,7 +241,7 @@ const latestProjectsLive = computed(() => {
         </div>
 
         <div class="row g-4">
-          <div v-for="project in latestProjectsLive" :key="project.id" class="col-lg-4" @click="router.push('/forum/' + project.id)" style="cursor: pointer;">
+          <div v-for="project in latestProjectsLive" :key="project.id" class="col-lg-4" @click="router.push('/showcase/' + project.id)" style="cursor: pointer;">
             <div class="project-card rounded-4 overflow-hidden bg-surface border-0 h-100 shadow-sm transition-up">
               <!-- Project Image with Hover Overlay -->
               <div class="project-image position-relative">

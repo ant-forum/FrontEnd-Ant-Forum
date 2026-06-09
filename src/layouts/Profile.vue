@@ -13,13 +13,15 @@ import ProfileProject from "../components/profile/ProfileProject.vue";
 import ProfileSetting from "../components/profile/ProfileSetting.vue";
 
 // Stores
-const authStore = useAuthStore();
-const router = useRouter();
 import { useUserProfilesStore } from "../stores/UserProfilesStore";
 import { useForumStore } from "../stores/ForumStore";
+import { useProjectStore } from "../stores/ProjectStore";
 
+const authStore = useAuthStore();
+const router = useRouter();
 const userProfilesStore = useUserProfilesStore();
 const forumStore = useForumStore();
+const projectStore = useProjectStore();
 
 const activeTab = ref("profile");
 const showLogoutModal = ref(false);
@@ -50,8 +52,9 @@ onMounted(async () => {
   try {
     await userProfilesStore.fetchProfile();
     await forumStore.fetchDiscussions();
+    await projectStore.fetchMyProjects();
   } catch (err) {
-    console.error("Failed to load user profile or discussions:", err);
+    console.error("Failed to load user profile or discussions or projects:", err);
   }
 });
 
@@ -75,8 +78,16 @@ const profileLinkedin = computed(() => authStore.user?.linkedin || "");
 const profileSkills = computed(() => normalizeSkills(authStore.user?.skills));
 const profileAvatar = computed(() => authStore.user?.profile_pic || "");
 
-// Empty arrays since these are not part of the current API schema
-const defaultProjects = ref([]);
+// Dynamic user projects loaded via ProjectStore
+const defaultProjects = computed(() => {
+  return (projectStore.myProjects || []).map(p => ({
+    id: p.id,
+    title: p.title,
+    desc: p.description,
+    stars: p.average_rating || 0,
+    tags: p.tags || []
+  }));
+});
 const additionalProjects = ref([]);
 
 const activityFeed = computed(() => {
