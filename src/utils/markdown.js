@@ -13,11 +13,6 @@ export function renderInlineMarkdown(text = "") {
   let html = escapeHtml(text);
 
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
-    // Skip blob URLs since they're temporary and won't persist
-    if (url.startsWith("blob:")) {
-      return `<span class="text-muted small"><i class="bi bi-image"></i> ${alt || "[image]"}</span>`;
-    }
-    // Otherwise render the image normally
     return `<img class="markdown-image" src="${url}" alt="${alt}" loading="lazy">`;
   });
 
