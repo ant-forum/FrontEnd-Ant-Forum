@@ -1,33 +1,185 @@
 <script setup>
-import { ref, reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { storeToRefs } from 'pinia';
 import Navbar from "../../../components/layouts/header.vue";
+import { useProjectStore } from '../../../stores/ProjectStore.js';
+import { useTagsStore } from '../../../stores/TagsStore.js';
+import { useToast } from '../../../composables/useToast.js';
 
 const router = useRouter();
-const currentStep = ref(1);
+const route = useRoute();
+const projectStore = useProjectStore();
+const tagsStore = useTagsStore();
+const toast = useToast();
+const { createForm: form } = storeToRefs(projectStore);
 
-const steps = [
-  { id: 1, name: 'Project Info' },
-  { id: 2, name: 'Assets' },
-  { id: 3, name: 'Review' }
-];
+const logoInput = ref(null);
+const isDragging = ref(false);
+const agreeToTerms = ref(false);
+const isSubmitting = ref(false);
 
-const form = reactive({
-  projectName: '',
-  tagline: '',
-  description: '',
-  repositoryUrl: '',
-  liveDemoUrl: ''
-});
+const isEditMode = computed(() => route.name === 'EditProject');
 
 const guidelines = [
   { title: 'Technical Accuracy', desc: 'Ensure all repository and demo links are functional and public.', icon: 'bi-check-circle' },
-  { title: 'Clear Documentation', desc: 'A well-written description helps other developers understand your work.', icon: 'bi-file-text' },
-  { title: 'Visual Impact', desc: 'Use high-quality logos and screenshots in the next step.', icon: 'bi-image' }
+  { title: 'Clear Description', desc: 'A well-written description helps other developers and teachers understand your work.', icon: 'bi-file-text' },
+  { title: 'Visual Representation', desc: 'Upload a clear, high-quality logo or screenshot as your project thumbnail.', icon: 'bi-image' }
 ];
 
-const handleContinue = () => {
-  router.push('/showcase/create/assets');
+onMounted(async () => {
+  if (tagsStore.tags.length === 0) {
+    await tagsStore.fetchTags();
+  }
+
+  if (isEditMode.value) {
+    const projectId = route.params.id;
+    await projectStore.fetchProject(projectId);
+    const p = projectStore.project;
+    if (p) {
+      form.value.projectName = p.title || p.projectName || '';
+      form.value.description = p.description || '';
+      form.value.liveDemoUrl = p.link || p.liveDemoUrl || '';
+      form.value.thumbnailUrl = p.thumbnail || p.image || '';
+      
+      // Map tags
+      if (p.tag && Array.isArray(p.tag)) {
+        form.value.tag_ids = p.tag.map(t => t.id !== undefined && t.id !== null ? t.id : t.tag_id).filter(Boolean);
+        form.value.tagsList = p.tag.map(t => ({
+          id: t.id !== undefined && t.id !== null ? t.id : t.tag_id,
+          name: t.name || t.tag_name,
+          tag_name: t.name || t.tag_name
+        }));
+      } else if (p.tags && Array.isArray(p.tags)) {
+        form.value.tagsList = p.tags.map(tagName => {
+          const matchedTag = tagsStore.tags.find(t => (t.name || t.tag_name) === tagName);
+          return matchedTag || { id: null, name: tagName };
+        });
+        form.value.tag_ids = form.value.tagsList.map(t => t.id).filter(Boolean);
+      }
+    }
+  } else {
+    projectStore.resetCreateForm();
+  }
+});
+
+const addTag = (tag) => {
+  const id = tag.id !== undefined && tag.id !== null ? tag.id : tag.tag_id;
+  if (id !== undefined && id !== null && !form.value.tag_ids.includes(id)) {
+    form.value.tag_ids.push(id);
+    form.value.tagsList.push(tag);
+  }
+};
+
+const removeTag = (index) => {
+  form.value.tag_ids.splice(index, 1);
+  form.value.tagsList.splice(index, 1);
+};
+
+const logoPreviewUrl = computed(() => {
+  return form.value.thumbnailUrl || '';
+});
+
+const triggerLogoUpload = () => {
+  logoInput.value?.click();
+};
+
+const handleLogoChange = (event) => {
+  const file = event.target.files?.[0];
+  if (file) {
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image file size must be less than 5 MB.");
+      return;
+    }
+    form.value.thumbnail = file;
+    form.value.thumbnailUrl = URL.createObjectURL(file);
+  }
+};
+
+const handleDragOver = () => {
+  isDragging.value = true;
+};
+
+const handleDragLeave = () => {
+  isDragging.value = false;
+};
+
+const handleDrop = (event) => {
+  isDragging.value = false;
+  const file = event.dataTransfer?.files?.[0];
+  if (file) {
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image file size must be less than 5 MB.");
+      return;
+    }
+    form.value.thumbnail = file;
+    form.value.thumbnailUrl = URL.createObjectURL(file);
+  }
+};
+
+const removeLogo = () => {
+  form.value.thumbnail = null;
+  form.value.thumbnailUrl = '';
+  if (logoInput.value) {
+    logoInput.value.value = '';
+  }
+};
+
+const handleCancel = () => {
+  projectStore.resetCreateForm();
+  router.push('/showcase');
+};
+
+const handleSubmit = async () => {
+  if (!form.value.projectName || !form.value.description) {
+    alert("Project name and description are required.");
+    return;
+  }
+  if (form.value.tag_ids.length === 0) {
+    alert("Please select at least one tag.");
+    return;
+  }
+  if (!agreeToTerms.value) {
+    alert('Please agree to the developer terms and conditions.');
+    return;
+  }
+
+  isSubmitting.value = true;
+  try {
+    if (!isEditMode.value && !form.value.thumbnail) {
+      try {
+        // Fetch default placeholder image and assign it as the thumbnail file
+        const response = await fetch("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600");
+        const blob = await response.blob();
+        form.value.thumbnail = new File([blob], "default-thumbnail.jpg", { type: "image/jpeg" });
+      } catch (err) {
+        // Safe offline fallback: generate a tiny 1x1 transparent PNG file
+        const byteString = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=");
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        const placeholderBlob = new Blob([ab], { type: "image/png" });
+        form.value.thumbnail = new File([placeholderBlob], "default-thumbnail.png", { type: "image/png" });
+      }
+    }
+
+    if (isEditMode.value) {
+      await projectStore.updateProject(route.params.id, form.value);
+      toast.success("Project updated successfully!");
+    } else {
+      await projectStore.createProject(form.value);
+      toast.success("Project submitted successfully!");
+    }
+    projectStore.resetCreateForm();
+    router.push('/showcase');
+  } catch (error) {
+    console.error("[CreateProject] handleSubmit error:", error);
+    toast.error("Failed to submit project. Please try again.");
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 </script>
 
@@ -37,34 +189,17 @@ const handleContinue = () => {
 
     <main class="container py-4 flex-grow-1">
       <div class="row g-4">
-        <!-- Header & Stepper -->
         <div class="col-12">
           <div class="mb-4">
-            <h1 class="fw-bold h2 mb-2">Create New Project</h1>
-            <p class="text-muted">Submit your work to the ANT-Forum ecosystem. Ensure all technical details are accurate.</p>
-          </div>
-
-          <div class="stepper-modern mb-5">
-            <div class="d-flex align-items-center justify-content-between">
-              <div v-for="(step, index) in steps" :key="step.id" class="step-modern-item" :class="{ 'active': currentStep >= step.id, 'current': currentStep === step.id }">
-                <div class="step-modern-circle">
-                  <i v-if="currentStep > step.id" class="bi bi-check-lg"></i>
-                  <span v-else>{{ step.id }}</span>
-                </div>
-                <div class="step-modern-content">
-                  <span class="step-modern-label">Step {{ step.id }}</span>
-                  <span class="step-modern-name">{{ step.name }}</span>
-                </div>
-                <div v-if="index < steps.length - 1" class="step-modern-line"></div>
-              </div>
-            </div>
+            <h1 class="fw-bold h2 mb-2">{{ isEditMode ? 'Edit Project' : 'Create New Project' }}</h1>
+            <p class="text-muted">{{ isEditMode ? 'Update your project showcase details below.' : 'Submit your work to the ANT-Forum ecosystem. Ensure all technical details are accurate.' }}</p>
           </div>
         </div>
 
         <!-- Form Section -->
         <div class="col-lg-8">
           <div class="card border-0 shadow-sm rounded-5 p-4 p-lg-5 bg-surface border">
-            <form @submit.prevent="handleContinue">
+            <form @submit.prevent="handleSubmit">
               <!-- Basic Information -->
               <section class="mb-5">
                 <div class="section-header d-flex align-items-center gap-3 mb-4">
@@ -75,28 +210,57 @@ const handleContinue = () => {
                 </div>
                 
                 <div class="form-group-custom mb-4">
-                  <label class="form-label-custom">Project Name</label>
+                  <label class="form-label-custom">Project Name <span class="required text-danger">*</span></label>
                   <div class="input-wrapper">
                     <i class="bi bi-rocket-takeoff input-icon"></i>
-                    <input type="text" v-model="form.projectName" class="form-control-modern" placeholder="e.g., Nexus Core Engine">
+                    <input type="text" v-model="form.projectName" class="form-control-modern" placeholder="e.g., Nexus Core Engine" required>
                   </div>
                   <div class="form-text small opacity-75 mt-2">A unique and memorable name for your project.</div>
                 </div>
 
                 <div class="form-group-custom mb-4">
-                  <label class="form-label-custom">Tagline</label>
-                  <div class="input-wrapper">
-                    <i class="bi bi-lightning-charge input-icon"></i>
-                    <input type="text" v-model="form.tagline" class="form-control-modern" placeholder="A brief description of what your project does">
+                  <label class="form-label-custom">Full Description <span class="required text-danger">*</span></label>
+                  <textarea v-model="form.description" class="form-control-modern py-3" rows="6" placeholder="Detail the problem it solves and its main features..." required></textarea>
+                  <div class="d-flex justify-content-between mt-2">
+                    <div class="form-text small opacity-75">Markdown is supported.</div>
+                    <div class="form-text small opacity-75">{{ form.description?.length || 0 }} / 2000</div>
                   </div>
                 </div>
 
                 <div class="form-group-custom mb-4">
-                  <label class="form-label-custom">Full Description</label>
-                  <textarea v-model="form.description" class="form-control-modern py-3" rows="6" placeholder="Detail the problem it solves and its main features..."></textarea>
-                  <div class="d-flex justify-content-between mt-2">
-                    <div class="form-text small opacity-75">Markdown is supported.</div>
-                    <div class="form-text small opacity-75">{{ form.description.length }} / 2000</div>
+                  <label class="form-label-custom">Select Tags <span class="required text-danger">*</span></label>
+                  <div class="tags-input-container p-3 border rounded-3 bg-surface-hover mb-2">
+                    <div class="tags-list d-flex flex-wrap gap-2">
+                      <span
+                        v-for="(tag, idx) in form.tagsList"
+                        :key="(tag.id || tag.tag_id) + '-' + idx"
+                        class="badge bg-primary text-white p-2 rounded-3 d-inline-flex align-items-center gap-2"
+                      >
+                        {{ tag.name || tag.tag_name }}
+                        <button
+                          type="button"
+                          class="btn-close btn-close-white"
+                          style="font-size: 0.65rem;"
+                          @click="removeTag(idx)"
+                        ></button>
+                      </span>
+                      <span v-if="form.tagsList.length === 0" class="text-muted small">
+                        Please choose one or more tags for your project.
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="tag-suggestions d-flex flex-wrap gap-2">
+                    <button
+                      v-for="tag in tagsStore.tags"
+                      :key="tag.id || tag.tag_id"
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary rounded-pill"
+                      :disabled="form.tag_ids.includes(tag.id || tag.tag_id)"
+                      @click="addTag(tag)"
+                    >
+                      + {{ tag.name || tag.tag_name }}
+                    </button>
                   </div>
                 </div>
               </section>
@@ -111,16 +275,7 @@ const handleContinue = () => {
                 </div>
 
                 <div class="row g-4">
-                  <div class="col-md-6">
-                    <div class="form-group-custom">
-                      <label class="form-label-custom">Repository URL</label>
-                      <div class="input-group-modern">
-                        <span class="prefix">https://</span>
-                        <input type="text" v-model="form.repositoryUrl" class="form-control-modern" placeholder="github.com/user/repo">
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
+                  <div class="col-12">
                     <div class="form-group-custom">
                       <label class="form-label-custom">Live Demo URL</label>
                       <div class="input-group-modern">
@@ -132,11 +287,74 @@ const handleContinue = () => {
                 </div>
               </section>
 
+              <!-- Gallery & Media -->
+              <section class="mb-5">
+                <div class="section-header d-flex align-items-center gap-3 mb-4">
+                  <div class="section-icon bg-primary-light text-primary rounded-3">
+                    <i class="bi bi-image"></i>
+                  </div>
+                  <h5 class="fw-bold mb-0 text-adaptive">Gallery & Media</h5>
+                </div>
+                <p class="text-muted x-small mb-4">Upload a high-quality thumbnail image (max 5 MB) to represent your project.</p>
+                
+                <div 
+                  class="screenshot-dropzone-modern d-flex flex-column align-items-center justify-content-center border-dashed-modern rounded-4 py-5 bg-surface-hover position-relative overflow-hidden cursor-pointer"
+                  :class="{ 'dragging': isDragging }"
+                  @click="triggerLogoUpload"
+                  @dragover.prevent="handleDragOver"
+                  @dragleave="handleDragLeave"
+                  @drop.prevent="handleDrop"
+                  style="min-height: 220px;"
+                >
+                  <div v-if="logoPreviewUrl" class="w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center bg-dark">
+                    <img :src="logoPreviewUrl" class="w-100 h-100 object-fit-cover" style="max-height: 100%;" />
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-danger position-absolute top-0 end-0 m-3 rounded-circle p-0 d-flex align-items-center justify-content-center"
+                      style="width: 28px; height: 28px; z-index: 10;"
+                      @click.stop="removeLogo"
+                      title="Remove Image"
+                    >
+                      <i class="bi bi-x" style="font-size: 1.25rem;"></i>
+                    </button>
+                  </div>
+                  <div v-else class="d-flex flex-column align-items-center justify-content-center">
+                    <div class="drop-icon-animated mb-3">
+                      <i class="bi bi-cloud-arrow-up-fill text-primary" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-adaptive">Drag & Drop Thumbnail Image</h6>
+                    <p class="text-muted x-small mb-4">Support for PNG, JPG and WEBP up to 5MB</p>
+                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold small">
+                      Browse Files
+                    </button>
+                  </div>
+                  <input 
+                    type="file" 
+                    ref="logoInput" 
+                    class="d-none" 
+                    accept="image/*" 
+                    @change="handleLogoChange" 
+                  />
+                </div>
+              </section>
+
+              <!-- Submission Agreement -->
+              <div class="agreement-card-modern p-4 rounded-4 border mb-4" :class="{ 'agreed': agreeToTerms }">
+                <div class="form-check d-flex gap-3 align-items-center">
+                  <input class="form-check-input custom-checkbox" type="checkbox" v-model="agreeToTerms" id="termsCheck" required>
+                  <label class="form-check-label small text-muted fw-medium lh-sm cursor-pointer" for="termsCheck">
+                    I confirm that I am the owner of this project and agree to the 
+                    <a href="#" class="text-primary text-decoration-none fw-bold" @click.prevent>Developer Terms</a>.
+                  </label>
+                </div>
+              </div>
+
               <!-- Form Actions -->
               <div class="d-flex justify-content-end align-items-center gap-4 mt-5 pt-4 border-top-theme">
-                <button type="button" class="btn btn-link text-decoration-none fw-bold text-primary">Save Draft</button>
-                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2">
-                  Continue <i class="bi bi-arrow-right"></i>
+                <button type="button" @click="handleCancel" class="btn btn-link text-decoration-none fw-bold text-muted">Cancel</button>
+                <button type="submit" :disabled="!agreeToTerms || isSubmitting" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2">
+                  <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status"></span>
+                  <span v-else>{{ isEditMode ? 'Save Changes' : 'Publish Project' }} <i class="bi" :class="isEditMode ? 'bi-save-fill' : 'bi-rocket-takeoff-fill'"></i></span>
                 </button>
               </div>
             </form>
@@ -193,85 +411,6 @@ const handleContinue = () => {
 .create-project-page {
   background-color: var(--color-bg);
   color: var(--color-text);
-}
-
-/* Modern Stepper */
-.stepper-modern {
-  background: var(--color-surface);
-  padding: 24px;
-  border-radius: 20px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-border);
-}
-
-.step-modern-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  position: relative;
-  flex: 1;
-}
-
-.step-modern-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--color-surface-hover);
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid var(--color-border);
-}
-
-.step-modern-item.active .step-modern-circle {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-  box-shadow: 0 10px 15px -3px var(--color-primary-light);
-}
-
-.step-modern-item.current .step-modern-circle {
-  border-color: var(--color-primary);
-  background: var(--color-surface);
-  color: var(--color-primary);
-}
-
-.step-modern-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.step-modern-label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: var(--color-text-muted);
-}
-
-.step-modern-name {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--color-text-muted);
-}
-
-.step-modern-item.active .step-modern-name {
-  color: var(--color-text);
-}
-
-.step-modern-line {
-  flex-grow: 1;
-  height: 2px;
-  background: var(--color-border);
-  margin: 0 20px;
-}
-
-.step-modern-item.active .step-modern-line {
-  background: var(--color-primary-light);
 }
 
 /* Modern Form Elements */
@@ -372,8 +511,60 @@ textarea.form-control-modern {
   box-shadow: 0 6px 20px var(--color-primary-light);
 }
 
-@media (max-width: 991px) {
-  .step-modern-line { display: none; }
-  .step-modern-name { display: none; }
+/* Upload Elements Modern */
+.screenshot-dropzone-modern {
+  border: 2px dashed var(--color-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.screenshot-dropzone-modern:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-hover);
+}
+
+.screenshot-dropzone-modern.dragging {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-light) !important;
+}
+
+.drop-icon-animated {
+  font-size: 2.5rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.border-dashed-modern {
+  border-style: dashed !important;
+}
+
+/* Agreement Card */
+.agreement-card-modern {
+  background: var(--color-surface-hover);
+  transition: all 0.3s ease;
+}
+
+.agreement-card-modern.agreed {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary) !important;
+}
+
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.x-small {
+  font-size: 0.85rem;
 }
 </style>

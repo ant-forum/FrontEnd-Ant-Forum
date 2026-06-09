@@ -57,7 +57,9 @@
             <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
               <div>
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                  <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                  <router-link :to="'/showcase/' + project.id" class="text-decoration-none">
+                    <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                  </router-link>
                   <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
                 </div>
                 <p class="text-muted small mb-4 line-clamp-3">

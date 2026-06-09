@@ -5,11 +5,14 @@ import Navbar from '../components/layouts/header.vue'
 import Footer from '../components/layouts/footer.vue'
 import { useAuthStore } from '../stores/AuthStore'
 import { useForumStore } from '../stores/ForumStore'
-import { resolveMediaUrl } from '@/utils/mediaUrl'
-import heroStack from '@/assets/hero.png'
+import { useProjectStore } from '../stores/ProjectStore'
+import { useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { resolveMediaUrl } from '../utils/mediaUrl'
 
 const auth = useAuthStore()
 const forumStore = useForumStore()
+const projectStore = useProjectStore()
 const router = useRouter()
 
 /* ── typing animation ── */
@@ -180,6 +183,7 @@ const previewProjects = [
 ]
 
 onMounted(async () => {
+  if (!auth.token) return;
   if (!forumStore.allDiscussions || forumStore.allDiscussions.length === 0) {
     try {
       await forumStore.fetchDiscussions()
@@ -187,13 +191,11 @@ onMounted(async () => {
       console.error('Error loading homepage discussions:', error)
     }
   }
-  typeLoop()
-  setupScrollReveal()
-})
-
-onUnmounted(() => {
-  clearTimeout(typingTimer)
-  if (observer) observer.disconnect()
+  try {
+    await projectStore.fetchProjects()
+  } catch (e) {
+    console.error('Error loading homepage projects:', e)
+  }
 })
 
 const liveDiscussions = computed(() => {
@@ -301,43 +303,58 @@ const recentThreadsLive = computed(() => {
         replies: countReplies(discussion),
         time
       }
-    })
-})
+    }
+    
+    let authorName = 'Anonymous';
+    let authorAvatar = 'https://i.pravatar.cc/150?u=anonymous';
+    if (d.user) {
+      authorName = d.user.username || d.user.name || authorName;
+      const rawPic = d.user.profile_pic || d.user.avatar;
+      authorAvatar = resolveMediaUrl(rawPic) || authorAvatar;
+    } else if (d.author) {
+      authorName = typeof d.author === 'object' ? (d.author.username || d.author.name) : d.author;
+      const rawPic = d.author_avatar || (typeof d.author === 'object' ? (d.author.profile_pic || d.author.avatar) : null);
+      authorAvatar = resolveMediaUrl(rawPic) || authorAvatar;
+    }
+
+    return {
+      id: d.id,
+      title: d.title || '',
+      desc: d.description || d.excerpt || d.body || '',
+      author: authorName,
+      avatar: authorAvatar,
+      category: d.category || 'General',
+      replies: d.replies !== undefined ? d.replies : 0,
+      views: d.views !== undefined ? d.views : 0,
+      isSolved: d.is_solved || false,
+      isHot: (d.likes || d.votes || 0) > 5,
+      time: timeDisplay
+    };
+  });
+});
 
 const latestProjectsLive = computed(() => {
-  return liveDiscussions.value
-    .filter(isShowcaseThread)
-    .slice(0, 2)
-    .map((discussion) => {
-      const { author, avatar } = getAuthorInfo(discussion)
-      const tags = Array.isArray(discussion.tags)
-        ? discussion.tags.map((tag) => typeof tag === 'object' ? (tag.label || tag.name) : tag).filter(Boolean)
-        : []
+  return projectStore.projects.slice(0, 3).map(p => {
+    let authorName = 'Anonymous';
+    let authorAvatar = 'https://i.pravatar.cc/150?u=anonymous';
+    if (p.author) {
+      authorName = p.author.name || authorName;
+      authorAvatar = p.author.avatar || authorAvatar;
+    }
 
-      return {
-        id: discussion.id,
-        title: discussion.title || 'Untitled project',
-        desc: cleanText(discussion.description || discussion.excerpt || discussion.body || ''),
-        author,
-        avatar,
-        tags: tags.slice(0, 3),
-        stars: discussion.likes !== undefined ? discussion.likes : (discussion.votes || 0),
-        image: resolveMediaUrl(
-          discussion.thumbnail || discussion.image,
-          'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=900'
-        )
-      }
-    })
-})
-
-const displayThreads = computed(() => recentThreadsLive.value.length ? recentThreadsLive.value : previewThreads)
-const displayProjects = computed(() => latestProjectsLive.value.length ? latestProjectsLive.value : previewProjects)
-const heroThread = computed(() => displayThreads.value[0])
-const primaryProject = computed(() => displayProjects.value[0])
-
-const goToThread = (id) => {
-  router.push(id ? `/forum/${id}` : '/forum')
-}
+    return {
+      id: p.id,
+      title: p.title || '',
+      desc: p.description || '',
+      author: authorName,
+      avatar: authorAvatar,
+      tags: p.tags?.slice(0, 3) || [],
+      stars: p.average_rating || 0,
+      views: p.views || 0,
+      image: p.thumbnail || p.image || 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=600'
+    };
+  });
+});
 </script>
 
 <template>
@@ -483,17 +500,31 @@ const goToThread = (id) => {
           </router-link>
         </div>
 
-        <div class="activity-grid">
-          <article class="project-spotlight glass-card scroll-reveal" @click="goToThread(primaryProject?.id)">
-            <img :src="primaryProject?.image" :alt="primaryProject?.title" />
-            <div class="project-body">
-              <span class="section-label">Showcase</span>
-              <h3>{{ primaryProject?.title }}</h3>
-              <p>{{ primaryProject?.desc }}</p>
-              <div class="project-meta">
-                <div class="author-inline">
-                  <img :src="primaryProject?.avatar" :alt="primaryProject?.author" />
-                  <span>{{ primaryProject?.author }}</span>
+        <div class="row g-4">
+          <div v-for="project in latestProjectsLive" :key="project.id" class="col-lg-4" @click="router.push('/showcase/' + project.id)" style="cursor: pointer;">
+            <div class="project-card rounded-4 overflow-hidden bg-surface border-0 h-100 shadow-sm transition-up">
+              <!-- Project Image with Hover Overlay -->
+              <div class="project-image position-relative">
+                <img :src="project.image" :alt="project.title" class="img-fluid w-100 object-fit-cover" style="height: 240px;">
+                <div class="project-overlay-v2 d-flex flex-column justify-content-between p-3">
+                  <div class="d-flex justify-content-end">
+                    <button class="btn btn-glass-blur rounded-circle p-2">
+                      <i class="bi bi-heart"></i>
+                    </button>
+                  </div>
+                  <div class="tags-row-v2">
+                    <span v-for="tag in project.tags" :key="tag" class="badge-v2">{{ tag }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Project Content -->
+              <div class="p-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h4 class="fw-bold mb-0 project-title-link">{{ project.title }}</h4>
+                  <div class="d-flex align-items-center gap-2 text-muted small">
+                    <span class="d-flex align-items-center gap-1"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
+                  </div>
                 </div>
                 <div class="tag-list">
                   <span v-for="tag in primaryProject?.tags" :key="tag">{{ tag }}</span>

@@ -11,8 +11,6 @@ import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
 import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 import ShowcaseProjectDetail from '../views/showcase/ShowcaseProjectDetail.vue';
 import CreateProject from '../views/showcase/showcaseCRUD/createProject.vue';
-import VisualProject from '../views/showcase/showcaseCRUD/visaulProject.vue';
-import ReviewProject from '../views/showcase/showcaseCRUD/reviewCreateProject.vue';
 
 
 import AdminDashboard from '../views/admin/adminDashboard.vue';
@@ -139,16 +137,10 @@ const routes = [
     component: CreateProject,
   },
   {
-    path: "/showcase/create/assets",
-    name: "VisualProject",
+    path: "/showcase/edit/:id",
+    name: "EditProject",
     meta: { requiresAuth: true },
-    component: VisualProject,
-  },
-  {
-    path: "/showcase/create/review",
-    name: "ReviewProject",
-    meta: { requiresAuth: true },
-    component: ReviewProject,
+    component: CreateProject,
   },
   {
     path: "/admin",

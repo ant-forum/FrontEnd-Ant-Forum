@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useForumStore } from '@/stores/ForumStore';
 import { useToast } from "vue-toastification";
+import { resolveMediaUrl } from '@/utils/mediaUrl';
 
 const router = useRouter();
 const toast = useToast();
@@ -29,11 +30,13 @@ function getAuthorName(author) {
 function getAuthorAvatar(d) {
   if (!d) return null;
   const author = d.author || d.user;
-  if (d.author_avatar || d.avatar) return d.author_avatar || d.avatar;
-  if (typeof author === 'object' && author !== null) {
-    return author.profile_pic || author.avatar || author.avatarUrl || null;
+  let rawUrl = null;
+  if (d.author_avatar || d.avatar) {
+    rawUrl = d.author_avatar || d.avatar;
+  } else if (typeof author === 'object' && author !== null) {
+    rawUrl = author.profile_pic || author.avatar || author.avatarUrl || null;
   }
-  return null;
+  return resolveMediaUrl(rawUrl);
 }
 
 function getAuthorInitials(author) {

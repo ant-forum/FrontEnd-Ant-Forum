@@ -4,10 +4,12 @@ import { useRouter, useRoute } from 'vue-router';
 import Navbar from '../../components/layouts/header.vue';
 import BaseFooter from '../../components/layouts/footer.vue';
 import { useProjectStore } from '../../stores/ProjectStore.js';
+import { useTagsStore } from '../../stores/TagsStore.js';
 
 const router = useRouter();
 const route = useRoute();
 const projectStore = useProjectStore();
+const tagsStore = useTagsStore();
 
 const filterTab = ref('latest');
 const searchLoading = ref(false);
@@ -15,7 +17,21 @@ const searchQuery = ref('');
 const selectedTag = ref('All');
 const activeTab = ref('projects');
 
-const availableTags = ['All', 'VUE.JS', 'NODE.JS', 'REACT', 'D3.JS', 'TYPESCRIPT', 'REDIS', 'GRAPHQL', 'TAILWIND'];
+const availableTags = computed(() => {
+  const list = ['All'];
+  if (tagsStore.tags) {
+    tagsStore.tags.forEach(t => {
+      const name = t.name || t.tag_name;
+      if (name) {
+        const nameUpper = name.toUpperCase();
+        if (!list.includes(nameUpper)) {
+          list.push(nameUpper);
+        }
+      }
+    });
+  }
+  return list;
+});
 const filters = ['Latest', 'Top Rated', 'Most Viewed'];
 
 const projects = computed(() => projectStore.projects);
@@ -74,6 +90,7 @@ const clearFilters = () => {
 
 onMounted(() => {
   projectStore.fetchProjects();
+  tagsStore.fetchTags();
 });
 </script>
 
@@ -210,10 +227,14 @@ onMounted(() => {
                     <span class="meta-item"><i class="bi bi-eye"></i> {{ formatNumber(project.views) }}</span>
                   </div>
                   <div class="author-avatars">
+                    <span class="author-name-text" v-if="project.author && project.author.name !== 'Unknown'" :title="project.author.username">
+                      by {{ project.author.name }}
+                    </span>
                     <div class="avatar-stack">
                       <img v-for="(author, idx) in project.authors.slice(0, 3)" :key="idx" 
                            :src="author.avatar" class="stack-avatar" 
-                           width="28" height="28" :style="{ zIndex: 10 - idx }">
+                           width="28" height="28" :style="{ zIndex: 10 - idx }"
+                           :title="author.name">
                       <div v-if="project.authors.length > 3" class="stack-more" 
                            style="width: 28px; height: 28px; z-index: 0;">+{{ project.authors.length - 3 }}</div>
                     </div>
@@ -671,6 +692,27 @@ onMounted(() => {
   font-weight: 700;
   color: var(--color-text);
   margin-left: -8px;
+}
+
+.author-avatars {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.author-name-text {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+
+.project-card:hover .author-name-text {
+  color: var(--color-text);
 }
 
 /* Skeletons Styling */
