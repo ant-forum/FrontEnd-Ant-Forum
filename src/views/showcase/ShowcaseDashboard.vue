@@ -270,7 +270,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr;
   gap: 28px;
-  max-width: 1040px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 32px 24px 60px;
 }

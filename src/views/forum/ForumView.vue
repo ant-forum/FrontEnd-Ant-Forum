@@ -573,8 +573,8 @@ const clearFilters = () => {
 
 .forum-feed-content {
   display: grid;
-  grid-template-columns: 1fr 292px;
-  gap: 28px;
+  grid-template-columns: 1fr 240px;
+  gap: 24px;
   margin-top: 24px;
 }
 
