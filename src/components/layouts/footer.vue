@@ -52,18 +52,8 @@ const resourceLinks = [
     <div class="footer-content pt-5 pb-4">
       <div class="container">
         <div class="row g-5">
-          <!-- Newsletter Section -->
-          <div class="col-12 col-lg-3">
-            <h6 class="text-footer fw-bold mb-4">Stay Updated</h6>
-            <p class="text-footer-muted small mb-3">Get the latest project updates and community highlights.</p>
-            <div class="newsletter-form">
-              <input type="email" class="form-control mb-3" placeholder="Enter your email">
-              <button class="btn btn-subscribe w-100 fw-bold">SUBSCRIBE</button>
-            </div>
-          </div>
-
           <!-- Community Links -->
-          <div class="col-6 col-lg-3">
+          <div class="col-6 col-md-4">
             <h6 class="text-footer fw-bold mb-4">Community</h6>
             <ul class="list-unstyled">
               <li v-for="link in communityLinks" :key="link.name" class="mb-2">
@@ -78,7 +68,7 @@ const resourceLinks = [
           </div>
 
           <!-- Resources -->
-          <div class="col-6 col-lg-3">
+          <div class="col-6 col-md-4">
             <h6 class="text-footer fw-bold mb-4">Resources</h6>
             <ul class="list-unstyled">
               <li v-for="link in resourceLinks" :key="link.name" class="mb-2">
@@ -88,7 +78,7 @@ const resourceLinks = [
           </div>
 
           <!-- Branding & Contact -->
-          <div class="col-12 col-lg-3">
+          <div class="col-12 col-md-4">
             <div class="d-flex align-items-center mb-4">
               <div class="logo-wrapper-footer me-2">
                 <img src="/antforum-clean.png" alt="ANT Forum" class="footer-brand-logo" />
@@ -209,34 +199,6 @@ const resourceLinks = [
   object-fit: contain;
 }
 
-.newsletter-form .form-control {
-  background-color: var(--color-footer-border);
-  border: 1px solid var(--color-footer-border);
-  color: var(--color-footer-text);
-  border-radius: 12px;
-  padding: 12px 16px;
-}
-
-.newsletter-form .form-control:focus {
-  background-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 3px var(--color-purple-light);
-  border-color: var(--color-purple);
-}
-
-.btn-subscribe {
-  background: linear-gradient(135deg, var(--color-purple) 0%, #D946EF 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 12px;
-  letter-spacing: 1px;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.btn-subscribe:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px -5px var(--color-purple-light);
-}
 
 .footer-bottom {
   border-top: 1px solid var(--color-footer-border) !important;
