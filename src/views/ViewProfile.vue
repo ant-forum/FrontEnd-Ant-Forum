@@ -981,6 +981,8 @@ const handleSendMessage = () => {
   font-size: 0.92rem;
   line-height: 1.65;
   color: var(--color-text-muted) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .themed-text {
