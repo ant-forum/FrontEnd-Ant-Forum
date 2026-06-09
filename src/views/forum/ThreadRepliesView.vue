@@ -22,19 +22,37 @@ const loading = ref(true);
 const newReplyText = ref('');
 const repliesEnd = ref(null);
 
-const categoryMap = {
-  question:   { label: 'Question', icon: 'bi-question-circle-fill', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', shadow: 'rgba(59, 130, 246, 0.25)' },
-  discussion: { label: 'Discussion', icon: 'bi-chat-left-text-fill', gradient: 'linear-gradient(135deg, #10b981, #047857)', shadow: 'rgba(16, 185, 129, 0.25)' },
-  showcase:   { label: 'Show & Tell', icon: 'bi-rocket-takeoff-fill', gradient: 'linear-gradient(135deg, #a855f7, #6d28d9)', shadow: 'rgba(168, 85, 247, 0.25)' },
-  tutorial:   { label: 'Tutorial', icon: 'bi-book-half', gradient: 'linear-gradient(135deg, #f59e0b, #b45309)', shadow: 'rgba(245, 158, 11, 0.25)' },
-  idea:       { label: 'Idea', icon: 'bi-lightbulb-fill', gradient: 'linear-gradient(135deg, #0d9488, #0f766e)', shadow: 'rgba(13, 148, 136, 0.25)' }
+const categoryGradients = [
+  'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+  'linear-gradient(135deg, #10b981, #047857)',
+  'linear-gradient(135deg, #a855f7, #6d28d9)',
+  'linear-gradient(135deg, #f59e0b, #b45309)',
+  'linear-gradient(135deg, #0d9488, #0f766e)',
+  'linear-gradient(135deg, #ef4444, #b91c1c)',
+];
+
+const hashString = (value = '') => String(value).split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
+
+const getCategoryIcon = (label = '') => {
+  const lower = label.toLowerCase();
+  if (lower.includes('question') || lower.includes('answer')) return 'bi-question-circle-fill';
+  if (lower.includes('tutorial') || lower.includes('guide')) return 'bi-book-half';
+  if (lower.includes('showcase') || lower.includes('project')) return 'bi-rocket-takeoff-fill';
+  if (lower.includes('announce') || lower.includes('news')) return 'bi-megaphone-fill';
+  if (lower.includes('resource') || lower.includes('link')) return 'bi-link-45deg';
+  if (lower.includes('idea') || lower.includes('feature')) return 'bi-lightbulb-fill';
+  return 'bi-chat-left-text-fill';
 };
 
-const getCategoryMeta = (cat) => {
-  if (cat && Object.prototype.hasOwnProperty.call(categoryMap, cat)) {
-    return categoryMap[cat];
-  }
-  return null;
+const getCategoryMeta = (item) => {
+  const label = item?.categoryLabel || item?.categoryMeta?.label || item?.category || '';
+  if (!label) return null;
+
+  return {
+    label,
+    icon: item?.categoryMeta?.icon || getCategoryIcon(label),
+    gradient: categoryGradients[hashString(label) % categoryGradients.length],
+  };
 };
 
 // We'll try to fetch the discussion using the ID.
@@ -74,6 +92,13 @@ const discussionBody = computed(() => {
   const titlePlain = normalizePlain(discussion.value.title);
   const body = candidates.find((candidate) => normalizePlain(candidate) !== titlePlain);
   return body || '';
+});
+
+const separateThreadCode = computed(() => {
+  const code = discussion.value?.code;
+  if (!discussion.value?.hasCode || !code) return '';
+
+  return discussionBody.value.includes(code) ? '' : code;
 });
 
 const replyCount = computed(() => {
@@ -234,6 +259,8 @@ const postReply = async () => {
 const canDeleteDiscussion = computed(() => {
   if (!discussion.value || !authStore.user) return false;
 
+  if (String(authStore.user.role || '').toLowerCase() === 'admin') return true;
+
   const currentUserId = authStore.user.id;
   const discussionUserId = discussion.value.user_id || discussion.value.userId;
   if (currentUserId && discussionUserId && currentUserId == discussionUserId) return true;
@@ -369,15 +396,16 @@ function getAvatarStyle(author) {
   return { background: grad };
 }
 
-function goToProfile(author) {
-  let username = 'user';
-  if (typeof author === 'object' && author !== null) {
-    username = author.username || author.name || 'user';
-  } else if (typeof author === 'string') {
-    username = author;
+function goToProfile(item) {
+  if (!item) return;
+
+  let identifier = item.user_id || item.author || item;
+
+  if (typeof identifier === 'string') {
+    identifier = identifier.replace('@', '').trim();
   }
-  username = username.replace('@', '').trim();
-  router.push(`/viewprofile/${username}`);
+  
+  router.push(`/viewprofile/${identifier}`);
 }
 
 // Search and inject copy buttons in pre tags dynamically
@@ -503,9 +531,9 @@ function getAvatarUrl(author) {
             <div class="thread-header-top-row" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 12px; flex-wrap: wrap;">
               <div class="thread-header-meta" style="margin-bottom: 0;">
                 <!-- Styled Category badge -->
-                <span v-if="discussion.category && getCategoryMeta(discussion.category)" class="category-badge" :style="{ background: getCategoryMeta(discussion.category).gradient }">
-                  <i :class="['bi', getCategoryMeta(discussion.category).icon]"></i>
-                  {{ getCategoryMeta(discussion.category).label }}
+                <span v-if="getCategoryMeta(discussion)" class="category-badge" :style="{ background: getCategoryMeta(discussion).gradient }">
+                  <i :class="['bi', getCategoryMeta(discussion).icon]"></i>
+                  {{ getCategoryMeta(discussion).label }}
                 </span>
 
                 <!-- Code indicator -->
@@ -525,12 +553,12 @@ function getAvatarUrl(author) {
             <h1 class="thread-title">{{ discussion.title }}</h1>
             
             <div class="thread-meta">
-              <div class="thread-avatar" :style="getAvatarStyle(discussionAuthor)" @click="goToProfile(discussionAuthor)">
+              <div class="thread-avatar" :style="getAvatarStyle(discussionAuthor)" @click="goToProfile(discussion)">
                 <img v-if="getAvatarUrl(discussionAuthor)" :src="getAvatarUrl(discussionAuthor)" alt="avatar" class="avatar-img" />
                 <span v-else>{{ getAvatarInitials(discussionAuthor) }}</span>
               </div>
               <div class="thread-user-info">
-                <span class="author" @click="goToProfile(discussionAuthor)">{{ getAvatarName(discussionAuthor) }}</span>
+                <span class="author" @click="goToProfile(discussion)">{{ getAvatarName(discussionAuthor) }}</span>
                 <span class="time">Created {{ getCreatedAt(discussion) }}</span>
               </div>
             </div>
@@ -540,14 +568,14 @@ function getAvatarUrl(author) {
           </div>
 
           <!-- Codeblock if present -->
-          <div v-if="discussion.hasCode && discussion.code" class="thread-code-block">
+          <div v-if="separateThreadCode" class="thread-code-block">
             <div class="code-header">
               <span class="code-lang">Code Block</span>
               <div class="code-dots">
                 <span></span><span></span><span></span>
               </div>
             </div>
-            <pre><code>{{ discussion.code }}</code></pre>
+            <pre><code>{{ separateThreadCode }}</code></pre>
           </div>
 
 
@@ -620,12 +648,12 @@ function getAvatarUrl(author) {
                 <div class="reply-content">
                   <div class="reply-header">
                     <div class="reply-author-block">
-                      <div class="reply-avatar" :style="getAvatarStyle(reply.author)" @click="goToProfile(reply.author)">
+                      <div class="reply-avatar" :style="getAvatarStyle(reply.author)" @click="goToProfile(reply)">
                         <img v-if="getAvatarUrl(reply.author)" :src="getAvatarUrl(reply.author)" alt="avatar" class="avatar-img" />
                         <span v-else>{{ getAvatarInitials(reply.author) }}</span>
                       </div>
                       <div class="reply-user-info">
-                        <span class="reply-author" @click="goToProfile(reply.author)">{{ getAvatarName(reply.author) }}</span>
+                        <span class="reply-author" @click="goToProfile(reply)">{{ getAvatarName(reply.author) }}</span>
                         <span class="reply-time">{{ getCreatedAt(reply) }}</span>
                       </div>
                     </div>
@@ -936,9 +964,11 @@ function getAvatarUrl(author) {
 .thread-body :deep(pre),
 .reply-body :deep(pre) {
   background: #110e1a !important;
-  padding: 14px 18px !important;
+  padding: 18px 112px 18px 22px !important;
   border-radius: 14px !important;
-  overflow-x: auto !important;
+  overflow-x: hidden !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   margin: 18px 0;
   box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
@@ -953,6 +983,10 @@ function getAvatarUrl(author) {
   border-radius: 0 !important;
   border: none !important;
   font-size: 13px !important;
+  line-height: 1.7 !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
 }
 
 /* Floating copy code buttons inside pre blocks */
@@ -1033,7 +1067,9 @@ function getAvatarUrl(author) {
 .thread-code-block pre {
   margin: 0;
   padding: 14px 18px 18px;
-  overflow-x: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .thread-code-block code {
@@ -1041,6 +1077,9 @@ function getAvatarUrl(author) {
   font-size: 13px;
   line-height: 1.7;
   color: #e9d5ff;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .thread-tags-box {

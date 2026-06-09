@@ -13,7 +13,6 @@ const resourceLinks = [
   { name: "Terms of Service", path: "#" },
 ];
 
-import logo from "../../assets/ANT-Forum.png";
 </script>
 
 <template>
@@ -92,9 +91,8 @@ import logo from "../../assets/ANT-Forum.png";
           <div class="col-12 col-lg-3">
             <div class="d-flex align-items-center mb-4">
               <div class="logo-wrapper-footer me-2">
-                <img :src="logo" width="32" height="28" />
+                <img src="/antforum-clean.png" alt="ANT Forum" class="footer-brand-logo" />
               </div>
-              <h6 class="text-footer fw-bold mb-0">ANT Forum</h6>
             </div>
             <div class="contact-details text-footer small">
               <p class="mb-2 text-footer-muted">
@@ -199,17 +197,16 @@ import logo from "../../assets/ANT-Forum.png";
 }
 
 .logo-wrapper-footer {
-  background: white;
-  padding: 4px;
-  border-radius: 8px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s ease;
+  justify-content: flex-start;
 }
 
-[data-theme='dark'] .logo-wrapper-footer {
-  background: rgba(255, 255, 255, 0.9);
+.footer-brand-logo {
+  display: block;
+  width: 132px;
+  height: auto;
+  object-fit: contain;
 }
 
 .newsletter-form .form-control {

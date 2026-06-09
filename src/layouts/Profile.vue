@@ -66,6 +66,7 @@ const openProfileEditor = () => selectTab("edit");
 const handleProfileSaved = () => selectTab("profile");
 
 // Profile Dashboard Dynamic Data from AuthStore (which is globally synced and normalized)
+const profileFullname = computed(() => authStore.user?.fullname || authStore.user?.name || "");
 const profileName = computed(() => authStore.user?.username || "ANT Developer");
 const profileRole = computed(() => {
   const role = authStore.user?.role || "Student";
@@ -147,6 +148,7 @@ const activityFeed = computed(() => {
         <!-- Tab 1: Profile Dashboard -->
         <div v-if="activeTab === 'profile'" class="fade-in-content">
           <ProfileOverview
+            :profileFullname="profileFullname"
             :profileName="profileName"
             :profileRole="profileRole"
             :profileBio="profileBio"

@@ -3,7 +3,6 @@ import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import { Markdown } from "tiptap-markdown";
@@ -34,7 +33,6 @@ const toast = useToast();
 const editor = ref(null);
 const imageInputRef = ref(null);
 const isEditorFocused = ref(false);
-
 const wordCount = ref(0);
 const charCount = ref(0);
 
@@ -45,9 +43,118 @@ const updateWordAndCharCount = (text) => {
   wordCount.value = words ? words.split(/\s+/).length : 0;
 };
 
+const getMarkdown = () => editor.value?.storage.markdown.getMarkdown() || "";
+
+const createTextContent = (text = "") => {
+  const lines = String(text || "").split("\n");
+  const content = [];
+
+  lines.forEach((line, index) => {
+    if (index > 0) {
+      content.push({ type: "hardBreak" });
+    }
+    if (line) {
+      content.push({ type: "text", text: line });
+    }
+  });
+
+  return content;
+};
+
+const appendMarkdownTextNodes = (nodes, markdown = "") => {
+  String(markdown || "")
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .forEach((block) => {
+      if (block.startsWith("### ")) {
+        nodes.push({
+          type: "heading",
+          attrs: { level: 3 },
+          content: createTextContent(block.slice(4)),
+        });
+        return;
+      }
+
+      if (block.startsWith("## ")) {
+        nodes.push({
+          type: "heading",
+          attrs: { level: 2 },
+          content: createTextContent(block.slice(3)),
+        });
+        return;
+      }
+
+      if (block.startsWith("# ")) {
+        nodes.push({
+          type: "heading",
+          attrs: { level: 1 },
+          content: createTextContent(block.slice(2)),
+        });
+        return;
+      }
+
+      nodes.push({
+        type: "paragraph",
+        content: createTextContent(block),
+      });
+    });
+};
+
+const markdownWithCodeToDoc = (markdown = "") => {
+  const source = String(markdown || "");
+  const nodes = [];
+  const fencePattern = /```([^\n`]*)\n?([\s\S]*?)(?:```|$)/g;
+  let cursor = 0;
+  let match;
+
+  while ((match = fencePattern.exec(source)) !== null) {
+    appendMarkdownTextNodes(nodes, source.slice(cursor, match.index));
+
+    const language = String(match[1] || "").trim();
+    const code = String(match[2] || "").replace(/\n$/, "");
+    nodes.push({
+      type: "codeBlock",
+      attrs: { language: language || null },
+      content: code ? [{ type: "text", text: code }] : [],
+    });
+
+    cursor = match.index + match[0].length;
+  }
+
+  appendMarkdownTextNodes(nodes, source.slice(cursor));
+
+  return {
+    type: "doc",
+    content: nodes.length ? nodes : [{ type: "paragraph" }],
+  };
+};
+
+const setMarkdown = (markdown = "", options = {}) => {
+  if (!editor.value) return;
+
+  const content = String(markdown || "");
+  try {
+    if (content.includes("```")) {
+      editor.value.commands.setContent(markdownWithCodeToDoc(content), { emitUpdate: false });
+    } else {
+      editor.value.commands.setContent(content, { emitUpdate: false });
+    }
+  } catch (error) {
+    console.warn("[MarkdownEditor] Failed to parse markdown, falling back to plain text:", error);
+    editor.value.commands.setContent(markdownWithCodeToDoc(content), { emitUpdate: false });
+  }
+
+  updateWordAndCharCount(editor.value.getText() || content);
+
+  if (options.emit) {
+    emit("update:modelValue", getMarkdown() || content);
+  }
+};
+
 onMounted(() => {
   editor.value = new Editor({
-    content: props.modelValue,
+    content: "",
     extensions: [
       StarterKit,
       Markdown,
@@ -55,22 +162,22 @@ onMounted(() => {
         inline: true,
         allowBase64: true,
       }),
-      Link.configure({
-        openOnClick: false,
-      }),
       Placeholder.configure({
         placeholder: props.placeholder,
       }),
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ["heading", "paragraph"],
       }),
     ],
+    editorProps: {
+      attributes: {
+        class: "forum-markdown-content",
+      },
+    },
     onUpdate: () => {
-      if (editor.value) {
-        const markdown = editor.value.storage.markdown.getMarkdown();
-        emit("update:modelValue", markdown);
-        updateWordAndCharCount(editor.value.getText());
-      }
+      const markdown = getMarkdown();
+      emit("update:modelValue", markdown);
+      updateWordAndCharCount(editor.value?.getText() || "");
     },
     onFocus: () => {
       isEditorFocused.value = true;
@@ -81,33 +188,42 @@ onMounted(() => {
       emit("blur");
     },
   });
-  
-  if (editor.value) {
-     updateWordAndCharCount(editor.value.getText());
-  }
+
+  setMarkdown(props.modelValue || "");
 });
 
 watch(() => props.modelValue, (value) => {
   if (!editor.value) return;
-  const currentMarkdown = editor.value.storage.markdown.getMarkdown();
-  if (currentMarkdown !== value) {
-    editor.value.commands.setContent(value);
+  if ((value || "") !== getMarkdown()) {
+    setMarkdown(value || "");
   }
 });
 
 onBeforeUnmount(() => {
-  if (editor.value) {
-    editor.value.destroy();
-  }
+  editor.value?.destroy();
+});
+
+defineExpose({
+  setMarkdown,
 });
 
 const toggleBold = () => editor.value?.chain().focus().toggleBold().run();
 const toggleItalic = () => editor.value?.chain().focus().toggleItalic().run();
 const toggleStrike = () => editor.value?.chain().focus().toggleStrike().run();
 const toggleCode = () => editor.value?.chain().focus().toggleCode().run();
-const toggleCodeBlock = () => editor.value?.chain().focus().toggleCodeBlock().run();
+const toggleCodeBlock = () => {
+  if (!editor.value) return;
+
+  const { empty } = editor.value.state.selection;
+  editor.value.chain().focus().toggleCodeBlock().run();
+
+  if (empty && editor.value.isActive("codeBlock") && !editor.value.getText().includes("// paste code here")) {
+    editor.value.chain().focus().insertContent("// paste code here").run();
+  }
+};
 const toggleBlockquote = () => editor.value?.chain().focus().toggleBlockquote().run();
 const toggleHeading = (level) => editor.value?.chain().focus().toggleHeading({ level }).run();
+const setParagraph = () => editor.value?.chain().focus().setParagraph().run();
 const toggleBulletList = () => editor.value?.chain().focus().toggleBulletList().run();
 const toggleOrderedList = () => editor.value?.chain().focus().toggleOrderedList().run();
 const setHorizontalRule = () => editor.value?.chain().focus().setHorizontalRule().run();
@@ -123,7 +239,6 @@ const handleImageUpload = async (event) => {
   if (!file) return;
 
   const imageUrl = URL.createObjectURL(file);
-  
   editor.value?.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
   
   event.target.value = "";
@@ -131,22 +246,19 @@ const handleImageUpload = async (event) => {
 };
 
 const setLink = () => {
-  const previousUrl = editor.value?.getAttributes('link').href;
-  const url = window.prompt('URL', previousUrl);
+  const previousUrl = editor.value?.getAttributes("link").href;
+  const url = window.prompt("URL", previousUrl);
 
-  // cancelled
   if (url === null) {
     return;
   }
 
-  // empty
-  if (url === '') {
-    editor.value?.chain().focus().extendMarkRange('link').unsetLink().run();
+  if (url === "") {
+    editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
     return;
   }
 
-  // update link
-  editor.value?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  editor.value?.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
 };
 
 const showTextMenu = ref(false);
@@ -200,7 +312,7 @@ const showTextMenu = ref(false);
             </button>
             <button
               type="button"
-              @mousedown.prevent="editor.chain().focus().setParagraph().run(); showTextMenu = false"
+              @mousedown.prevent="setParagraph(); showTextMenu = false"
               :class="{ 'is-active': editor.isActive('paragraph') }"
             >
               <i class="bi bi-paragraph"></i> Paragraph
@@ -212,13 +324,13 @@ const showTextMenu = ref(false);
 
         <!-- Inline formatting -->
         <div class="toolbar-group">
-          <button @mousedown.prevent="toggleBold" :class="{ 'is-active': editor.isActive('bold') }" class="toolbar-btn" title="Bold">
+          <button type="button" @mousedown.prevent="toggleBold" :class="{ 'is-active': editor.isActive('bold') }" class="toolbar-btn" title="Bold">
             <i class="bi bi-type-bold"></i>
           </button>
-          <button @mousedown.prevent="toggleItalic" :class="{ 'is-active': editor.isActive('italic') }" class="toolbar-btn" title="Italic">
+          <button type="button" @mousedown.prevent="toggleItalic" :class="{ 'is-active': editor.isActive('italic') }" class="toolbar-btn" title="Italic">
             <i class="bi bi-type-italic"></i>
           </button>
-          <button @mousedown.prevent="toggleStrike" :class="{ 'is-active': editor.isActive('strike') }" class="toolbar-btn" title="Strikethrough">
+          <button type="button" @mousedown.prevent="toggleStrike" :class="{ 'is-active': editor.isActive('strike') }" class="toolbar-btn" title="Strikethrough">
             <i class="bi bi-type-strikethrough"></i>
           </button>
         </div>
@@ -226,10 +338,10 @@ const showTextMenu = ref(false);
         <div class="toolbar-divider"></div>
         
         <div class="toolbar-group">
-          <button @mousedown.prevent="toggleCode" :class="{ 'is-active': editor.isActive('code') }" class="toolbar-btn" title="Inline code">
+          <button type="button" @mousedown.prevent="toggleCode" :class="{ 'is-active': editor.isActive('code') }" class="toolbar-btn" title="Inline code">
             <i class="bi bi-code-slash"></i>
           </button>
-          <button @mousedown.prevent="toggleCodeBlock" :class="{ 'is-active': editor.isActive('codeBlock') }" class="toolbar-btn" title="Code block">
+          <button type="button" @mousedown.prevent="toggleCodeBlock" :class="{ 'is-active': editor.isActive('codeBlock') }" class="toolbar-btn" title="Code block">
             <i class="bi bi-braces"></i>
           </button>
         </div>
@@ -238,13 +350,13 @@ const showTextMenu = ref(false);
 
         <!-- Link, Quote, Image -->
         <div class="toolbar-group">
-          <button @mousedown.prevent="setLink" :class="{ 'is-active': editor.isActive('link') }" class="toolbar-btn" title="Link">
+          <button type="button" @mousedown.prevent="setLink" :class="{ 'is-active': editor.isActive('link') }" class="toolbar-btn" title="Link">
             <i class="bi bi-link-45deg"></i>
           </button>
-          <button @mousedown.prevent="toggleBlockquote" :class="{ 'is-active': editor.isActive('blockquote') }" class="toolbar-btn" title="Blockquote">
+          <button type="button" @mousedown.prevent="toggleBlockquote" :class="{ 'is-active': editor.isActive('blockquote') }" class="toolbar-btn" title="Blockquote">
             <i class="bi bi-quote"></i>
           </button>
-          <button @mousedown.prevent="triggerImageUpload" class="toolbar-btn" title="Upload Image">
+          <button type="button" @mousedown.prevent="triggerImageUpload" class="toolbar-btn" title="Upload Image">
             <i class="bi bi-card-image"></i>
           </button>
         </div>
@@ -253,10 +365,10 @@ const showTextMenu = ref(false);
 
         <!-- Lists -->
         <div class="toolbar-group">
-          <button @mousedown.prevent="toggleOrderedList" :class="{ 'is-active': editor.isActive('orderedList') }" class="toolbar-btn" title="Numbered list">
+          <button type="button" @mousedown.prevent="toggleOrderedList" :class="{ 'is-active': editor.isActive('orderedList') }" class="toolbar-btn" title="Numbered list">
             <i class="bi bi-list-ol"></i>
           </button>
-          <button @mousedown.prevent="toggleBulletList" :class="{ 'is-active': editor.isActive('bulletList') }" class="toolbar-btn" title="Bulleted list">
+          <button type="button" @mousedown.prevent="toggleBulletList" :class="{ 'is-active': editor.isActive('bulletList') }" class="toolbar-btn" title="Bulleted list">
             <i class="bi bi-list-ul"></i>
           </button>
         </div>
@@ -264,20 +376,20 @@ const showTextMenu = ref(false);
         <div class="toolbar-divider"></div>
         
         <div class="toolbar-group">
-           <button @mousedown.prevent="setHorizontalRule" class="toolbar-btn" title="Divider">
+           <button type="button" @mousedown.prevent="setHorizontalRule" class="toolbar-btn" title="Divider">
             <i class="bi bi-hr"></i>
           </button>
-          <button @mousedown.prevent="undo" :disabled="!editor.can().undo()" class="toolbar-btn" title="Undo">
+          <button type="button" @mousedown.prevent="undo" :disabled="!editor.can().undo()" class="toolbar-btn" title="Undo">
             <i class="bi bi-arrow-counterclockwise"></i>
           </button>
-          <button @mousedown.prevent="redo" :disabled="!editor.can().redo()" class="toolbar-btn" title="Redo">
+          <button type="button" @mousedown.prevent="redo" :disabled="!editor.can().redo()" class="toolbar-btn" title="Redo">
             <i class="bi bi-arrow-clockwise"></i>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- TIPTAP EDITOR CONTENT -->
+    <!-- MARKDOWN EDITOR CONTENT -->
     <div class="editor-workspace">
       <editor-content :editor="editor" class="editor-textarea" />
     </div>
@@ -464,6 +576,7 @@ const showTextMenu = ref(false);
 /* Tiptap specific styling */
 :deep(.tiptap) {
   outline: none;
+  min-height: 360px;
   font-size: 15px;
   line-height: 1.6;
   color: var(--color-text);
@@ -523,20 +636,23 @@ const showTextMenu = ref(false);
 }
 
 :deep(.tiptap pre) {
-  background: #1e1e2e;
-  color: #cdd6f4;
-  padding: 16px;
+  background: color-mix(in srgb, #050816 92%, var(--color-surface) 8%);
+  color: #f4efff;
+  padding: 18px 22px;
   border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-purple) 54%, transparent);
   overflow-x: auto;
   margin: 16px 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 :deep(.tiptap pre code) {
   background: transparent;
   color: inherit;
   padding: 0;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.6;
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
 }
 
 :deep(.tiptap a) {

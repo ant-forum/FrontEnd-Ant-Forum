@@ -41,7 +41,7 @@ const getAuthorName = (thread) => {
 };
 
 const getThreadCategory = (thread) => {
-  const raw = thread?.category || 'discussion';
+  const raw = thread?.categoryLabel || thread?.categoryMeta?.label || thread?.category || 'Discussion';
   return String(raw)
     .replace(/[-_]/g, ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
