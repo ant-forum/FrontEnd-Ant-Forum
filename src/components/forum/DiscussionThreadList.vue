@@ -7,15 +7,16 @@ import { useToast } from "vue-toastification";
 const router = useRouter();
 const toast = useToast();
 
-function goToProfile(author) {
-  let username = 'user';
-  if (typeof author === 'object' && author !== null) {
-    username = author.username || author.name || 'user';
-  } else if (typeof author === 'string') {
-    username = author;
+function goToProfile(d) {
+  if (!d) return;
+  
+  let identifier = d.user_id || d.author || 'user';
+  
+  if (typeof identifier === 'string') {
+    identifier = identifier.replace('@', '').trim();
   }
-  username = username.replace('@', '').trim();
-  router.push(`/viewprofile/${username}`);
+  
+  router.push(`/viewprofile/${identifier}`);
 }
 
 function getAuthorName(author) {
@@ -147,19 +148,37 @@ function handleVote(id, direction) {
   toast.success(direction === 'up' ? "Upvoted!" : "Downvoted!");
 }
 
-const categoryMap = {
-  question:   { label: 'Question', icon: 'bi-question-circle-fill', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' },
-  discussion: { label: 'Discussion', icon: 'bi-chat-left-text-fill', gradient: 'linear-gradient(135deg, #10b981, #047857)' },
-  showcase:   { label: 'Show & Tell', icon: 'bi-rocket-takeoff-fill', gradient: 'linear-gradient(135deg, #a855f7, #6d28d9)' },
-  tutorial:   { label: 'Tutorial', icon: 'bi-book-half', gradient: 'linear-gradient(135deg, #f59e0b, #b45309)' },
-  idea:       { label: 'Idea', icon: 'bi-lightbulb-fill', gradient: 'linear-gradient(135deg, #0d9488, #0f766e)' }
-};
+const categoryGradients = [
+  'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+  'linear-gradient(135deg, #10b981, #047857)',
+  'linear-gradient(135deg, #a855f7, #6d28d9)',
+  'linear-gradient(135deg, #f59e0b, #b45309)',
+  'linear-gradient(135deg, #0d9488, #0f766e)',
+  'linear-gradient(135deg, #ef4444, #b91c1c)',
+];
 
-function getCategoryMeta(cat) {
-  if (cat && Object.prototype.hasOwnProperty.call(categoryMap, cat)) {
-    return categoryMap[cat];
-  }
-  return categoryMap['discussion']; // Fallback
+function hashString(value = '') {
+  return String(value).split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
+}
+
+function getCategoryIcon(label = '') {
+  const lower = label.toLowerCase();
+  if (lower.includes('question') || lower.includes('answer')) return 'bi-question-circle-fill';
+  if (lower.includes('tutorial') || lower.includes('guide')) return 'bi-book-half';
+  if (lower.includes('showcase') || lower.includes('project')) return 'bi-rocket-takeoff-fill';
+  if (lower.includes('announce') || lower.includes('news')) return 'bi-megaphone-fill';
+  if (lower.includes('resource') || lower.includes('link')) return 'bi-link-45deg';
+  if (lower.includes('idea') || lower.includes('feature')) return 'bi-lightbulb-fill';
+  return 'bi-chat-left-text-fill';
+}
+
+function getCategoryMeta(d) {
+  const label = d.categoryLabel || d.categoryMeta?.label || d.category || 'Discussion';
+  return {
+    label,
+    icon: d.categoryMeta?.icon || getCategoryIcon(label),
+    gradient: categoryGradients[hashString(label) % categoryGradients.length],
+  };
 }
 
 function selectTag(tagName) {
@@ -188,7 +207,7 @@ function selectTag(tagName) {
       <!-- Content Column -->
       <div class="thread-content">
         <div class="thread-header">
-          <button class="author-chip" type="button" @click.stop="goToProfile(d.author)">
+          <button class="author-chip" type="button" @click.stop="goToProfile(d)">
             <span class="author-avatar">
               <img v-if="getAuthorAvatar(d)" :src="getAuthorAvatar(d)" alt="">
               <span v-else>{{ getAuthorInitials(d.author) }}</span>
@@ -201,9 +220,9 @@ function selectTag(tagName) {
 
           <div class="thread-status">
             <!-- Category Badge -->
-            <span v-if="d.category && getCategoryMeta(d.category)" class="category-badge" :style="{ background: getCategoryMeta(d.category).gradient }">
-              <i :class="['bi', getCategoryMeta(d.category).icon]"></i>
-              {{ getCategoryMeta(d.category).label }}
+            <span v-if="d.category || d.categoryLabel || d.categoryMeta" class="category-badge" :style="{ background: getCategoryMeta(d).gradient }">
+              <i :class="['bi', getCategoryMeta(d).icon]"></i>
+              {{ getCategoryMeta(d).label }}
             </span>
             <!-- Tags -->
             <div v-if="d.tags && d.tags.length" class="thread-tags">
@@ -310,10 +329,12 @@ function selectTag(tagName) {
 
 .vote-btn.up.active {
   color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 .vote-btn.down.active {
   color: var(--color-danger);
+  background: var(--color-danger-light);
 }
 
 .vote-num {
@@ -582,6 +603,8 @@ function selectTag(tagName) {
 .foot-btn.bookmark.is-saved {
   color: var(--color-primary);
   font-weight: 600;
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
 }
 
 .foot-btn.share.is-copied {
