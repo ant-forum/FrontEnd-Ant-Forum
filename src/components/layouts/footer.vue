@@ -71,9 +71,9 @@ const resourceLinks = [
               </li>
             </ul>
             <div class="social-links mt-4">
-              <a href="#" class="text-footer me-3"><i class="bi bi-github fs-5"></i></a>
-              <a href="#" class="text-footer me-3"><i class="bi bi-discord fs-5"></i></a>
-              <a href="#" class="text-footer"><i class="bi bi-twitter-x fs-5"></i></a>
+              <a href="https://www.facebook.com/share/18MnpdqbMZ/" class="text-footer me-3"><i class="bi bi-facebook fs-5"></i></a>
+              <a href="https://t.me/AntTechnologyTrainingCenter" class="text-footer me-3"><i class="bi bi-telegram fs-5"></i></a>
+              <a href="http://training.antkh.com/" class="text-footer"><i class="bi bi-globe2 fs-5"></i></a>
             </div>
           </div>
 
