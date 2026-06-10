@@ -9,7 +9,7 @@ const communityLinks = [
 
 const resourceLinks = [
   { name: "FAQs", path: "#" },
-  { name: "About ANT", path: "#" },
+  { name: "About Us", path: "/about" },
   { name: "Terms of Service", path: "#" },
 ];
 

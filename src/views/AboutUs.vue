@@ -11,22 +11,23 @@ const teamMembers = [
   {
     id: 1,
     name: "Sophearom",
-    role: "Project Manager & Tech Lead",
-    image: "/team/member1.jpg",
+    role: "Project Manager",
+    image: new URL('../assets/DSC_5424.JPG', import.meta.url).href,
     bio: "I'm a leader of ANT-Forum Team.",
     skills: ["Project Management", "Agile", "Architecture", "System Design"],
     accent: "purple",
-    github: "vathana-ant",
+    github: "PhearomDev",
     linkedin: "vathana-ant",
     email: "phearom@antforum.io"
   },
   {
     id: 2,
     name: "Vathana",
-    role: "Frontend & Hosting Server",
-    image: "/team/member2.jpg",
+    role: "Frontend Developer & Hosting Server",
+    image: new URL('../assets/DSC_5427.JPG', import.meta.url).href,
     bio: "I'm a member of ANT-Forum ANT.",
-    skills: ["Node.js", "Express", "Vue.js", "MySQL", "Hosting Server"],
+    skills: ["Node.js", "Vue.js", "MySQL", "Hosting Server", "APIs"],
+    accent: "pink",
     github: "Asycn2006",
     linkedin: "vathana-ant",
     email: "vongvathana18@gmail.com"
@@ -34,36 +35,36 @@ const teamMembers = [
   {
     id: 3,
     name: "Sopanha",
-    role: "Frontend",
-    image: "/team/member3.jpg",
+    role: "Frontend Developer",
+    image: new URL('../assets/DSC_5482.JPG', import.meta.url).href,
     bio: "I'm a member of ANT-Forum ANT.",
-    skills: ["Vue.js", "JavaScript", "CSS3", "Figma", "UI/UX"],
+    skills: ["Vue.js", "JavaScript","Node.js", "Express", "Vue.js", "MySQL",],
     accent: "cyan",
-    github: "zin-ant",
+    github: "V-Sopanha",
     linkedin: "zin-ant",
     email: "panha@antforum.io"
   },
   {
     id: 4,
     name: "Khikhe",
-    role: "Backend & DB",
-    image: "/team/member4.jpg",
+    role: "Backend Developer & DB",
+    image: new URL('../assets/DSC_5480.JPG', import.meta.url).href,
     bio: "I'm a member of ANT-Forum ANT.",
     skills: ["PostgreSQL", "Node.js", "SQL Tuning", "Git", "APIs"],
     accent: "emerald",
-    github: "panha-ant",
+    github: "khikhetun168",
     linkedin: "panha-ant",
     email: "khikhe@antforum.io"
   },
   {
     id: 5,
     name: "Yeanlang",
-    role: "Backend",
-    image: "/team/member5.jpg",
+    role: "Backend Developer",
+    image: new URL('../assets/DSC_5433.JPG', import.meta.url).href,
     bio: "I'm a member of ANT-Forum ANT.",
     skills: ["Jest", "Cypress", "SecOps", "CI/CD", "Testing"],
     accent: "rose",
-    github: "sopanha-ant",
+    github: "songhai-yeanlang",
     linkedin: "sopanha-ant",
     email: "yeanlang@antforum.io"
   }
@@ -90,7 +91,7 @@ const stats = [
             Meet The Creators
           </span>
           <h1 class="fw-black mb-3 text-gradient-title">ANT Forum</h1>
-          <p class="text-muted fs-5 mb-0 mx-auto text-lead" style="max-width: 680px;">
+          <p class="text-muted fs-5 mb-0 mx-auto text-lead px-5">
             ANT-Forum – វេទិកាពហុបំណងសម្រាប់បង្ហាញស្នាដៃឌីជីថល (Digital Portfolio) បង្កើតសហគមន៍សួរ-ឆ្លើយចែករំលែកចំណេះដឹង (Q&A Community) និង ជាប្រភពនៃអត្ថបទបច្ចេកវិទ្យា (Tech Blog Post) សម្រាប់សិស្សានុសិស្ស និងអតីតសិស្សនៃសាលា ANT ទាំងអស់។
           </p>
         </div>
@@ -242,7 +243,7 @@ const stats = [
             Ecosystem
           </span>
           <h1 class="fw-black mb-3 text-gradient-title">សេចក្តីសន្និដ្ឋាន (Conclusion)</h1>
-          <p class="text-muted fs-5 mb-0 mx-auto text-lead" style="max-width: 680px;">
+          <p class="text-muted fs-5 mb-0 mx-auto text-lead px-5">
             ANT-Forum មិនត្រឹមតែជាកន្លែងសម្រាប់ដោះស្រាយបញ្ហាកូដប៉ុណ្ណោះទេ ប៉ុន្តែវាគឺជា Ecosystem ពេញលេញមួយសម្រាប់អ្នកអភិវឌ្ឍន៍ជំនាន់ថ្មីនៅ ANT។ វានឹងក្លាយជា Portfolio ដ៏រស់រវើក ជាសហគមន៍ដែលពោរពេញដោយការចែករំលែក និងជាប្រភពចំណេះដឹងឥតចេះរីងស្ងួត ដែលជាសក្ខីភាពនៃភាពជោគជ័យ និងការរីកចម្រើនឥតឈប់ឈររបស់សិស្សគ្រប់រូប។
           </p>
         </div>
