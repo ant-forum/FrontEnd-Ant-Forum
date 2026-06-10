@@ -227,12 +227,6 @@ function selectTag(tagName) {
               <i :class="['bi', getCategoryMeta(d).icon]"></i>
               {{ getCategoryMeta(d).label }}
             </span>
-            <!-- Tags -->
-            <div v-if="d.tags && d.tags.length" class="thread-tags">
-              <span v-for="tag in d.tags" :key="tag.label" class="tag-chip" :style="getTagStyle(tag.label, tag.color)" @click.stop="selectTag(tag.label)" style="cursor: pointer;">
-                #{{ tag.label.replace('#', '') }}
-              </span>
-            </div>
           </div>
         </div>
 
