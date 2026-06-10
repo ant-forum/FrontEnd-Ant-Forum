@@ -15,6 +15,8 @@ import CreateProject from '../views/showcase/showcaseCRUD/createProject.vue';
 import VisualProject from '../views/showcase/showcaseCRUD/visaulProject.vue';
 import ReviewProject from '../views/showcase/showcaseCRUD/reviewCreateProject.vue';
 
+import BlogDetail from "../views/blog/BlogDetail.vue";
+import AboutUs from "../views/AboutUs.vue";
 
 import AdminDashboard from '../views/admin/adminDashboard.vue';
 import UserManagement from '../views/admin/UserManagement.vue';
@@ -98,6 +100,12 @@ const routes = [
     name: "Profile",
     meta: { requiresAuth: true },
     component: Profile,
+  },
+  {
+    path: "/about",
+    name: "AboutUs",
+    meta: { public: true, title: "About Us" },
+    component: AboutUs,
   },
   {
     path: "/viewprofile/:username",

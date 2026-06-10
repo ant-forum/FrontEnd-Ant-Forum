@@ -81,20 +81,51 @@ onMounted(() => {
         </div>
 
         <!-- Authenticated Profile Pill -->
-        <router-link 
-          v-if="authStore.isAuthenticated" 
-          to="/profile" 
-          class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 border rounded-pill shadow-sm cursor-pointer text-decoration-none"
-        >
-          <img 
-            :src="authStore.user?.profile_pic || '/charles_leclerc.png'" 
-            class="rounded-circle border border-2 border-primary-subtle object-fit-cover" 
-            width="32" 
-            height="32" 
-            alt="User"
+        <div v-if="authStore.isAuthenticated" class="dropdown">
+          <button 
+            class="user-profile-pill d-flex align-items-center gap-2 ps-1 pe-3 py-1 border rounded-pill shadow-sm cursor-pointer text-decoration-none bg-transparent"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            type="button"
           >
-          <span class="small fw-bold d-none d-xl-block">{{ authStore.user?.username}}</span>
-        </router-link>
+            <img 
+              :src="authStore.user?.profile_pic || '/charles_leclerc.png'" 
+              class="rounded-circle border border-2 border-primary-subtle object-fit-cover" 
+              width="32" 
+              height="32" 
+              alt="User"
+            >
+            <span class="small fw-bold d-none d-xl-block">{{ authStore.user?.username}}</span>
+            <i class="bi bi-chevron-down small text-muted ms-1"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-2 rounded-3">
+            <li>
+              <router-link to="/profile" class="dropdown-item rounded-2 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-person-circle"></i>
+                <span>My Profile</span>
+              </router-link>
+            </li>
+            <li>
+              <router-link to="/about" class="dropdown-item rounded-2 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle"></i>
+                <span>About Us</span>
+              </router-link>
+            </li>
+            <li>
+              <router-link to="/help" class="dropdown-item rounded-2 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-question-circle"></i>
+                <span>Help Center</span>
+              </router-link>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <button @click="authStore.logout()" class="dropdown-item rounded-2 py-2 d-flex align-items-center gap-2 text-danger bg-transparent border-0 w-100 text-start">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Log Out</span>
+              </button>
+            </li>
+          </ul>
+        </div>
 
         <!-- Guest / Unauthenticated Profile Pill -->
         <router-link 
@@ -309,5 +340,33 @@ onMounted(() => {
 .slide-fade-menu-enter-from, .slide-fade-menu-leave-to {
   transform: translateY(-10px);
   opacity: 0;
+}
+
+/* Custom Profile Dropdown Styles */
+.dropdown-menu {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  min-width: 180px;
+}
+
+.dropdown-item {
+  color: var(--color-text) !important;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: all var(--transition-fast) !important;
+}
+
+.dropdown-item:hover {
+  background: var(--color-surface-hover) !important;
+  color: var(--color-primary) !important;
+}
+
+.dropdown-item.text-danger:hover {
+  background: var(--color-danger-light) !important;
+  color: var(--color-danger) !important;
+}
+
+.dropdown-divider {
+  border-color: var(--color-border) !important;
 }
 </style>
