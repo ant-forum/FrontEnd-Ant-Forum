@@ -4,407 +4,752 @@ import Navbar from "../components/layouts/header.vue";
 import BaseFooter from "../components/layouts/footer.vue";
 import { sanitizeHtml } from "../utils/sanitizeHtml";
 
-// Active Tab: 'student' | 'teacher'
 const activeRole = ref('student');
 
 onMounted(() => {
   document.title = "Help Center - ANTFORUM";
 });
 
-// Guide Sections Data
+// Quick links
+const quickLinks = [
+  { icon: 'bi-chat-text-fill',   label: 'Go to Forum',      to: '/forum',         color: 'purple' },
+  { icon: 'bi-plus-circle-fill', label: 'Create Post',      to: '/forum/create',  color: 'blue'   },
+  { icon: 'bi-grid-fill',        label: 'Browse Showcase',  to: '/showcase',      color: 'emerald'},
+  { icon: 'bi-question-circle-fill', label: 'FAQ',          to: '/faq',           color: 'amber'  },
+];
+
+// Stats
+const stats = [
+  { value: '5 min', label: 'Avg. response time', icon: 'bi-clock-fill' },
+  { value: '94%',   label: 'Questions answered',  icon: 'bi-check-circle-fill' },
+  { value: '1.2k+', label: 'Active members',      icon: 'bi-people-fill' },
+];
+
+// Student steps – richer detail
 const studentSteps = [
   {
-    title: "1. Choose Your Forum Category",
-    desc: "Locate the most relevant category. Use the <strong>Questions</strong> section for troubleshooting/code queries, <strong>Showcase</strong> for projects, or <strong>General</strong> for open discussions.",
+    title: "Choose the Right Category",
+    desc: "Navigate to the forum and select the category that best fits your question. Use <strong>Questions</strong> for help-seeking &amp; debugging, <strong>Showcase</strong> to share projects, and <strong>General</strong> for broad discussions. Posting in the correct category increases visibility by 60%.",
+    tip: "Tip: When in doubt, use the <em>Questions</em> category.",
     icon: "bi-tag-fill",
-    color: "bg-purple-subtle text-purple"
+    color: "purple",
   },
   {
-    title: "2. Write a Clear, Descriptive Title",
-    desc: "Be specific. Instead of writing <em>'Help with React'</em>, write <em>'How do I handle state sharing between non-adjacent siblings in React?'</em>. This increases responses by 80%.",
+    title: "Write a Specific Title",
+    desc: "Your title is the first thing others read. Be explicit: instead of <em>'React doesn't work'</em>, write <em>'useEffect fires twice in React 18 StrictMode — how do I prevent it?'</em>. Specific titles attract experts and reduce back-and-forth clarification.",
+    tip: "Good titles include the technology, symptom, and context.",
     icon: "bi-card-heading",
-    color: "bg-blue-subtle text-blue"
+    color: "blue",
   },
   {
-    title: "3. Format Your Code Blocks",
-    desc: "Use markdown code blocks to format code cleanly. Wrap your code in triple backticks (```) followed by the language name (e.g., vue, javascript, python).",
-    icon: "bi-code-slash",
-    color: "bg-emerald-subtle text-emerald"
-  },
-  {
-    title: "4. Provide Context & What You Tried",
-    desc: "Describe the error, attach stack traces, and mention any workarounds or solutions you have already attempted. This saves everyone's time.",
+    title: "Describe the Problem Fully",
+    desc: "Include: what you were trying to do, what happened, what you expected, and your environment (OS, browser, framework version). Attach relevant error messages or stack traces in <strong>code blocks</strong> so they are easy to read.",
+    tip: "More context = faster resolution. Never skip environment details.",
     icon: "bi-info-circle-fill",
-    color: "bg-amber-subtle text-amber"
-  }
+    color: "emerald",
+  },
+  {
+    title: "Format Code with Markdown",
+    desc: "Always wrap code in triple backticks followed by the language name. Raw, unformatted code is difficult to read and less likely to receive a helpful reply. ANTFORUM renders syntax highlighting automatically.",
+    tip: "Press the {} button in the editor toolbar to insert a code block template.",
+    icon: "bi-code-slash",
+    color: "amber",
+  },
+  {
+    title: "Add Relevant Tags",
+    desc: "Tags like <code>#Vue.js</code>, <code>#Python</code>, or <code>#API</code> help developers with the right expertise discover your post quickly. Add at least 2–3 tags that describe your technology stack and topic area.",
+    tip: "Use the tag autocomplete in the post editor to find existing tags.",
+    icon: "bi-hash",
+    color: "rose",
+  },
+  {
+    title: "Engage with Replies",
+    desc: "When someone answers, acknowledge their reply, ask follow-up questions if needed, and mark the thread as resolved once your problem is solved. This helps future members with the same issue find the correct answer instantly.",
+    tip: "Mark the best answer as 'Accepted' so it appears at the top.",
+    icon: "bi-reply-fill",
+    color: "cyan",
+  },
 ];
 
 const teacherSteps = [
   {
-    title: "1. Structure Announcements Clearly",
-    desc: "Pin announcements to the top of the course category. Use clear headings, bullet points, and high-contrast alert callouts to highlight deadlines.",
+    title: "Structure Announcements Clearly",
+    desc: "Pin critical announcements (deadlines, schedule changes, assignment releases) to the top of the course category. Use clear headings, numbered lists, and bold text to highlight key dates and actions required from students.",
+    tip: "Pin your most important post so it always stays visible.",
     icon: "bi-megaphone-fill",
-    color: "bg-rose-subtle text-rose"
+    color: "rose",
   },
   {
-    title: "2. Post Weekly Challenges/Tutorials",
-    desc: "Introduce technical challenges or post mini-tutorials. Provide starter templates, repository links, and clear acceptance criteria.",
+    title: "Post Detailed Assignment Briefs",
+    desc: "When posting an assignment or challenge, include: the objective, acceptance criteria, starter code (GitHub link), deadline, and evaluation rubric. Clear briefs reduce repeat questions and improve completion rates by 40%.",
+    tip: "Include a link to any required reading or repository.",
     icon: "bi-journal-code",
-    color: "bg-indigo-subtle text-indigo"
+    color: "indigo",
   },
   {
-    title: "3. Drive Engagement with Discussion Prompts",
-    desc: "Ask open-ended questions at the end of posts to invite students to comment, share their ideas, or discuss implementation trade-offs.",
+    title: "Drive Engagement with Prompts",
+    desc: "End each post with an open-ended discussion prompt (e.g. <em>\"What was the most challenging part for you?\"</em>). This encourages shy students to participate and builds a culture of collaborative learning.",
+    tip: "Prompt-based posts receive 3× more replies on average.",
     icon: "bi-chat-left-text-fill",
-    color: "bg-cyan-subtle text-cyan"
+    color: "cyan",
   },
   {
-    title: "4. Moderate and Pin Solutions",
-    desc: "Identify outstanding student comments or correct answers and mark them as solutions or pin them to the top of the thread for visibility.",
+    title: "Respond Publicly, Not Privately",
+    desc: "When a student sends you a direct question that other students might also have, answer it publicly in the forum thread. This benefits the whole class and reduces repeated one-on-one clarifications.",
+    tip: "Public answers build a searchable knowledge base for your class.",
+    icon: "bi-broadcast",
+    color: "teal",
+  },
+  {
+    title: "Recognize Outstanding Contributions",
+    desc: "Actively upvote, reply to, and highlight insightful student posts. Publicly calling out exceptional contributions by name (e.g. <em>\"Great approach by @username!\"</em>) motivates the whole class.",
+    tip: "Recognition builds a positive classroom community culture.",
+    icon: "bi-trophy-fill",
+    color: "amber",
+  },
+  {
+    title: "Moderate and Pin Solutions",
+    desc: "When a correct, high-quality answer is posted, pin it or mark it as the accepted solution. This helps future students searching the thread immediately find the best resolution without reading every reply.",
+    tip: "Pin the accepted reply to put it at the top of the thread.",
     icon: "bi-pin-angle-fill",
-    color: "bg-teal-subtle text-teal"
-  }
+    color: "purple",
+  },
+];
+
+// Do / Don't lists
+const studentDos = [
+  "Write a clear, specific, searchable title",
+  "Include your tech stack, framework version, and OS",
+  "Format all code using Markdown code blocks",
+  "Attach relevant error messages and stack traces",
+  "Add 2–3 relevant tags to your post",
+  "Reply to those who help you and mark solutions",
+];
+const studentDonts = [
+  "Post vague titles like 'It doesn't work'",
+  "Share unformatted, raw code in plain text",
+  "Skip environment details (OS, browser, version)",
+  "Cross-post the same question across multiple threads",
+  "Leave threads unresolved after receiving a correct answer",
 ];
 </script>
 
 <template>
-  <Navbar />
+  <div class="help-page">
+    <div class="orb-container">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
 
-  <main class="help-center-layout min-vh-100 py-5">
-    <div class="container max-w-4xl">
-      <!-- Header Banner -->
-      <section class="help-hero text-center mb-5 p-5 rounded-5 shadow-sm position-relative overflow-hidden">
-        <div class="hero-overlay"></div>
-        <div class="position-relative z-1">
-          <span class="badge bg-purple-subtle text-purple mb-2 px-3 py-2 rounded-pill fw-bold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Support Guide</span>
-          <h1 id="help-page-title" class="fw-black mb-3 text-gradient-title">ANTFORUM Help Center</h1>
-          <p class="text-muted fs-5 mb-0 mx-auto" style="max-width: 600px;">
-            Learn how to write high-quality, engaging, and well-formatted posts on our platform. Choose your guide below.
-          </p>
+    <Navbar />
+
+    <main class="help-container">
+      <div class="help-inner">
+
+        <!-- ── HERO ─────────────────────────────────── -->
+        <section class="help-hero glass-card text-center mb-5 position-relative overflow-hidden">
+          <div class="hero-glow"></div>
+          <div class="position-relative z-1">
+            <span class="section-label d-inline-flex align-items-center gap-2 mb-3">
+              <span class="pulse-indicator"></span>
+              Help Center
+            </span>
+            <h1 id="help-page-title" class="help-title mb-3">ANTFORUM Help Center</h1>
+            <p class="help-subtitle mb-5 mx-auto">
+              Everything you need to write effective posts, get better answers, and contribute meaningfully to our developer community.
+            </p>
+
+            <!-- Quick Links -->
+            <div class="quick-links-row">
+              <router-link v-for="link in quickLinks" :key="link.to" :to="link.to"
+                :class="['quick-link-btn', `color-${link.color}`]">
+                <i :class="['bi', link.icon]"></i>
+                {{ link.label }}
+              </router-link>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── STATS BAR ─────────────────────────────── -->
+        <div class="stats-bar glass-card mb-5">
+          <div v-for="stat in stats" :key="stat.label" class="stat-item">
+            <i :class="['bi', stat.icon, 'stat-icon']"></i>
+            <span class="stat-value">{{ stat.value }}</span>
+            <span class="stat-label">{{ stat.label }}</span>
+          </div>
         </div>
-      </section>
 
-      <!-- Role Selector Toggle -->
-      <div class="d-flex justify-content-center mb-5">
-        <div class="role-toggle-container p-1 rounded-pill shadow-sm border">
-          <button 
-            id="toggle-student-btn"
-            @click="activeRole = 'student'" 
-            class="btn-toggle" 
-            :class="{ 'active': activeRole === 'student' }"
-          >
-            <i class="bi bi-mortarboard-fill me-2"></i>
-            I am a Student
-          </button>
-          <button 
-            id="toggle-teacher-btn"
-            @click="activeRole = 'teacher'" 
-            class="btn-toggle" 
-            :class="{ 'active': activeRole === 'teacher' }"
-          >
-            <i class="bi bi-person-workspace me-2"></i>
-            I am a Teacher / Mentor
-          </button>
+        <!-- ── ROLE TOGGLE ───────────────────────────── -->
+        <div class="d-flex justify-content-center mb-5">
+          <div class="role-toggle-container">
+            <button id="toggle-student-btn" @click="activeRole = 'student'"
+              class="btn-toggle" :class="{ active: activeRole === 'student' }">
+              <i class="bi bi-mortarboard-fill me-2"></i> Student Guide
+            </button>
+            <button id="toggle-teacher-btn" @click="activeRole = 'teacher'"
+              class="btn-toggle" :class="{ active: activeRole === 'teacher' }">
+              <i class="bi bi-person-workspace me-2"></i> Teacher & Mentor
+            </button>
+          </div>
         </div>
-      </div>
 
-      <!-- Content Area with Transition -->
-      <div class="help-content-container">
+        <!-- ── CONTENT ─────────────────────────────── -->
         <Transition name="fade-slide" mode="out-in">
-          <!-- Student Content -->
-          <div v-if="activeRole === 'student'" key="student" class="role-content">
-            <div class="d-flex align-items-center gap-3 mb-4">
-              <div class="icon-header-box bg-purple-subtle text-purple rounded-4">
-                <i class="bi bi-mortarboard fs-3"></i>
+
+          <!-- STUDENT -->
+          <div v-if="activeRole === 'student'" key="student">
+
+            <!-- Section header -->
+            <div class="section-header mb-4">
+              <div class="section-icon-box bg-purple-subtle text-purple">
+                <i class="bi bi-mortarboard"></i>
               </div>
               <div>
-                <h3 class="fw-bold mb-1 themed-text">Student's Posting Guide</h3>
-                <p class="text-muted small mb-0">How to request technical help and share projects successfully.</p>
+                <h2 class="themed-text fw-bold mb-1">Student's Posting Guide</h2>
+                <p class="text-muted small mb-0">Follow these 6 steps to get faster, more helpful responses from the community.</p>
               </div>
             </div>
 
-            <!-- Steps Grid -->
+            <!-- Steps -->
             <div class="row g-4 mb-5">
-              <div v-for="step in studentSteps" :key="step.title" class="col-md-6">
-                <div class="card step-card border-0 shadow-sm rounded-4 p-4 h-100">
+              <div v-for="(step, idx) in studentSteps" :key="step.title" class="col-md-6">
+                <div :class="['step-card', `step-glow-${step.color}`]">
+                  <div class="step-number">{{ String(idx + 1).padStart(2, '0') }}</div>
                   <div class="d-flex align-items-start gap-3">
-                    <div :class="['step-icon-box rounded-3 flex-shrink-0', step.color]">
+                    <div :class="['step-icon-box', `bg-${step.color}-subtle`, `text-${step.color}`]">
                       <i :class="['bi', step.icon]"></i>
                     </div>
-                    <div>
+                    <div class="flex-1">
                       <h5 class="fw-bold mb-2 themed-text">{{ step.title }}</h5>
-                      <p class="text-muted small mb-0" v-html="sanitizeHtml(step.desc)"></p>
+                      <p class="text-muted small mb-2" v-html="sanitizeHtml(step.desc)"></p>
+                      <div :class="['step-tip', `tip-${step.color}`]">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        <span v-html="sanitizeHtml(step.tip)"></span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Editor Formatting Card -->
-            <div class="card markdown-tip-card border-0 shadow-sm rounded-4 p-4 bg-dark text-light overflow-hidden position-relative">
+            <!-- Do / Don't -->
+            <div class="row g-4 mb-5">
+              <div class="col-md-6">
+                <div class="do-dont-card dos-card">
+                  <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <span class="do-badge"><i class="bi bi-check-lg"></i></span>
+                    Best Practices
+                  </h5>
+                  <ul class="do-dont-list">
+                    <li v-for="item in studentDos" :key="item">
+                      <i class="bi bi-check2-circle text-success me-2"></i>{{ item }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="do-dont-card donts-card">
+                  <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <span class="dont-badge"><i class="bi bi-x-lg"></i></span>
+                    Common Mistakes to Avoid
+                  </h5>
+                  <ul class="do-dont-list">
+                    <li v-for="item in studentDonts" :key="item">
+                      <i class="bi bi-x-circle text-danger me-2"></i>{{ item }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Code Formatting Card -->
+            <div class="markdown-tip-card position-relative overflow-hidden">
               <div class="tip-card-overlay"></div>
               <div class="position-relative z-1">
-                <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
                   <i class="bi bi-lightbulb-fill text-warning fs-4"></i>
-                  <h5 class="fw-bold mb-0 text-white">How to Format Code Snippets</h5>
+                  <h5 class="fw-bold mb-0 text-white">Markdown Code Formatting</h5>
                 </div>
-                <p class="text-light-subtle small mb-4">
-                  To insert syntax-highlighted code in your forum post, wrap it in triple backticks and specify the programming language:
-                </p>
-                <div class="code-preview-box p-3 rounded-3 text-start bg-black border border-secondary mb-3">
-                  <pre class="mb-0 text-emerald-light"><code>```javascript
-const app = createApp(App);
-app.mount('#app');
-```</code></pre>
+                <p class="text-light-subtle small mb-4">Wrap code in triple backticks with a language name for syntax highlighting.</p>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="code-editor-window rounded-3 overflow-hidden h-100">
+                      <div class="code-editor-header d-flex align-items-center justify-content-between px-3 py-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="dot" style="background:#ef4444"></span>
+                          <span class="dot" style="background:#f59e0b"></span>
+                          <span class="dot" style="background:#10b981"></span>
+                          <span class="ms-2 text-muted-code small">write-post.md</span>
+                        </div>
+                        <span class="editor-badge">MARKDOWN</span>
+                      </div>
+                      <div class="code-preview-box p-3">
+                        <pre class="mb-0" style="font-size:0.8rem; line-height:1.6;">Here is my Vue code:
+
+<span style="color:#818cf8;">```javascript</span>
+<span style="color:#f43f5e;">const</span> app = createApp(App);
+app.mount(<span style="color:#34d399;">'#app'</span>);
+<span style="color:#818cf8;">```</span></pre>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="code-editor-window rounded-3 overflow-hidden h-100">
+                      <div class="code-editor-header d-flex align-items-center justify-content-between px-3 py-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="dot" style="background:#ef4444"></span>
+                          <span class="dot" style="background:#f59e0b"></span>
+                          <span class="dot" style="background:#10b981"></span>
+                          <span class="ms-2 text-muted-code small">forum-thread</span>
+                        </div>
+                        <span class="editor-badge" style="color:#34d399; border-color:rgba(52,211,153,0.3)">RENDERED</span>
+                      </div>
+                      <div class="code-preview-box p-3">
+                        <p class="text-light small mb-2">Here is my Vue code:</p>
+                        <div class="p-3 rounded-2" style="background:#090f24; border:1px solid rgba(255,255,255,0.05)">
+                          <pre class="mb-0" style="font-size:0.8rem; line-height:1.6; color:#a5b4fc;"><span style="color:#c084fc;">const</span> app = <span style="color:#60a5fa;">createApp</span>(App);
+app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app'</span>);</pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="d-flex align-items-center gap-2 text-warning small fw-bold">
+                <div class="d-flex align-items-center gap-2 text-warning small fw-bold mt-4">
                   <i class="bi bi-check2-circle"></i>
-                  <span>Result: Beautifully highlighted code that developers can read easily.</span>
+                  Result: Beautifully syntax-highlighted code that other developers can read at a glance.
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Teacher Content -->
-          <div v-else key="teacher" class="role-content">
-            <div class="d-flex align-items-center gap-3 mb-4">
-              <div class="icon-header-box bg-indigo-subtle text-indigo rounded-4">
-                <i class="bi bi-person-workspace fs-3"></i>
+          <!-- TEACHER -->
+          <div v-else key="teacher">
+
+            <div class="section-header mb-4">
+              <div class="section-icon-box bg-indigo-subtle text-indigo">
+                <i class="bi bi-person-workspace"></i>
               </div>
               <div>
-                <h3 class="fw-bold mb-1 themed-text">Teacher & Mentor Guide</h3>
-                <p class="text-muted small mb-0">Best practices for posting announcements and structuring course assignments.</p>
+                <h2 class="themed-text fw-bold mb-1">Teacher & Mentor Guide</h2>
+                <p class="text-muted small mb-0">Six best practices for facilitating an active and productive learning forum.</p>
               </div>
             </div>
 
-            <!-- Steps Grid -->
             <div class="row g-4 mb-5">
-              <div v-for="step in teacherSteps" :key="step.title" class="col-md-6">
-                <div class="card step-card border-0 shadow-sm rounded-4 p-4 h-100">
+              <div v-for="(step, idx) in teacherSteps" :key="step.title" class="col-md-6">
+                <div :class="['step-card', `step-glow-${step.color}`]">
+                  <div class="step-number">{{ String(idx + 1).padStart(2, '0') }}</div>
                   <div class="d-flex align-items-start gap-3">
-                    <div :class="['step-icon-box rounded-3 flex-shrink-0', step.color]">
+                    <div :class="['step-icon-box', `bg-${step.color}-subtle`, `text-${step.color}`]">
                       <i :class="['bi', step.icon]"></i>
                     </div>
-                    <div>
+                    <div class="flex-1">
                       <h5 class="fw-bold mb-2 themed-text">{{ step.title }}</h5>
-                      <p class="text-muted small mb-0" v-html="sanitizeHtml(step.desc)"></p>
+                      <p class="text-muted small mb-2" v-html="sanitizeHtml(step.desc)"></p>
+                      <div :class="['step-tip', `tip-${step.color}`]">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        <span>{{ step.tip }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Classroom Engagement Tips -->
-            <div class="card teachers-tip-card border-0 shadow-sm rounded-4 p-4 themed-text">
-              <div class="d-flex align-items-center gap-2 mb-3">
-                <i class="bi bi-stars text-indigo fs-4"></i>
-                <h5 class="fw-bold mb-0 themed-text">Classroom Engagement Tip</h5>
+            <!-- Engagement Tip Banner -->
+            <div class="teachers-tip-card">
+              <div class="d-flex align-items-start gap-3">
+                <div class="teacher-tip-icon">
+                  <i class="bi bi-stars"></i>
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-2 themed-text">Pro Engagement Insight</h5>
+                  <p class="text-muted small mb-0">
+                    Research shows students are <strong>3× more likely</strong> to participate when a teacher includes a clear, approachable discussion prompt (e.g. <em>"What was the trickiest part for you and how did you solve it?"</em>). Formatting, starter code links, and explicit deadlines in announcements reduce confusion by up to 55%.
+                  </p>
+                </div>
               </div>
-              <p class="text-muted small mb-0">
-                Students are <strong>3x more likely</strong> to reply if a teacher includes a specific, approachable prompt in the post (e.g. <em>"What challenges did you face when implementing this hook?"</em>). Using formatted outlines and links to GitHub repositories for starter files also yields much higher project completion rates.
-              </p>
             </div>
           </div>
+
         </Transition>
+
+        <!-- ── CTA ───────────────────────────────────── -->
+        <section class="cta-section text-center mt-5 glass-card position-relative overflow-hidden">
+          <div class="cta-glow"></div>
+          <div class="position-relative z-1">
+            <h4 class="fw-bold mb-2 themed-text">Ready to get started?</h4>
+            <p class="text-muted mb-4 mx-auto" style="max-width:480px;">
+              Apply these best practices and start a conversation on ANTFORUM right now.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+              <router-link id="cta-create-post-btn" to="/forum/create"
+                class="btn-primary-gradient text-decoration-none">
+                <i class="bi bi-plus-lg me-1"></i> Create Discussion
+              </router-link>
+              <router-link to="/faq" class="btn-secondary-outline text-decoration-none">
+                <i class="bi bi-question-circle me-1"></i> Browse FAQ
+              </router-link>
+            </div>
+          </div>
+        </section>
+
       </div>
+    </main>
 
-      <!-- Call to Action -->
-      <section class="cta-section text-center mt-5 p-4 rounded-4 border shadow-sm">
-        <h5 class="fw-bold mb-2 themed-text">Ready to write your post?</h5>
-        <p class="text-muted small mb-4">Put these tips into practice now on the main forum page.</p>
-        <router-link id="cta-create-post-btn" to="/forum/create" class="btn btn-primary-gradient px-4 py-2 fw-bold shadow-sm text-decoration-none">
-          <i class="bi bi-plus-lg me-1"></i> Create Discussion
-        </router-link>
-      </section>
-    </div>
-  </main>
-
-  <BaseFooter />
+    <BaseFooter />
+  </div>
 </template>
 
 <style scoped>
-.help-center-layout {
-  font-family: var(--font-family-base, 'Inter', sans-serif);
-  transition: background-color var(--transition-slow);
-}
-
-.max-w-4xl {
-  max-width: 900px;
-}
-
-.themed-text {
+/* ── PAGE SHELL ─────────────────────────────────────── */
+.help-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  background-image:
+    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
+  background-size: 34px 34px;
   color: var(--color-text);
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color var(--transition-slow), color var(--transition-slow);
 }
 
-/* Hero Section */
-.help-hero {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  transition: background-color var(--transition-slow), border-color var(--transition-slow);
+.orb-container { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.orb { position: absolute; border-radius: 999px; filter: blur(90px); }
+.orb-1 { width:480px; height:480px; background: radial-gradient(circle, rgba(99,102,241,.14), transparent 70%); top:-120px; left:-120px; }
+.orb-2 { width:400px; height:400px; background: radial-gradient(circle, rgba(139,92,246,.12), transparent 70%); bottom:-80px; right:-60px; }
+.orb-3 { width:300px; height:300px; background: radial-gradient(circle, rgba(16,185,129,.07), transparent 70%); top:40%; left:55%; }
+
+.help-container {
+  position: relative;
+  z-index: 1;
+  padding: 5rem 1.5rem 6rem;
+}
+.help-inner { max-width: 960px; margin: 0 auto; }
+
+/* ── GLASS CARD ─────────────────────────────────────── */
+.glass-card {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  transition: all .3s ease;
 }
 
-.text-gradient-title {
-  background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+/* ── HERO ───────────────────────────────────────────── */
+.help-hero { padding: 3.5rem 3rem; }
+.hero-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, rgba(99,102,241,.08), transparent 50%, rgba(167,139,250,.08));
+}
+.help-title {
+  font-family: var(--font-family-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 850;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-
-/* Toggle Switch Styles */
-.role-toggle-container {
-  display: flex;
-  gap: 0.25rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+.help-subtitle { color: var(--color-text-muted); font-size: 1.05rem; max-width: 600px; }
+.section-label {
+  color: var(--color-primary);
+  font-size: .75rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
 }
-
-.btn-toggle {
-  border: none;
-  background: transparent;
-  padding: 0.65rem 1.75rem;
-  border-radius: 50px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-}
-
-.btn-toggle:hover {
-  color: var(--color-text);
-  background-color: var(--color-surface-hover);
-}
-
-.btn-toggle.active {
+.pulse-indicator {
+  width: 8px; height: 8px; border-radius: 999px;
   background: var(--color-primary);
+  box-shadow: 0 0 0 5px rgba(99,102,241,.2);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ── QUICK LINKS ────────────────────────────────────── */
+.quick-links-row {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem;
+}
+.quick-link-btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .55rem 1.25rem;
+  border-radius: var(--radius-pill);
+  font-weight: 700; font-size: .88rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all .25s ease;
+}
+.quick-link-btn:active { transform: scale(.96); }
+
+.quick-link-btn.color-purple  { background: rgba(124,58,237,.1); color: #7c3aed; border-color: rgba(124,58,237,.2); }
+.quick-link-btn.color-blue    { background: rgba(37,99,235,.1);  color: #2563eb; border-color: rgba(37,99,235,.2);  }
+.quick-link-btn.color-emerald { background: rgba(5,150,105,.1);  color: #059669; border-color: rgba(5,150,105,.2);  }
+.quick-link-btn.color-amber   { background: rgba(217,119,6,.1);  color: #d97706; border-color: rgba(217,119,6,.2);  }
+
+.quick-link-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+/* ── STATS BAR ──────────────────────────────────────── */
+.stats-bar {
+  display: flex; justify-content: center; gap: 0;
+  padding: 1.5rem;
+  flex-wrap: wrap;
+}
+.stat-item {
+  display: flex; flex-direction: column; align-items: center; gap: .25rem;
+  flex: 1; min-width: 120px;
+  padding: .75rem 1rem;
+  border-right: 1px solid var(--color-border);
+}
+.stat-item:last-child { border-right: none; }
+.stat-icon { font-size: 1.3rem; color: var(--color-primary); }
+.stat-value { font-size: 1.4rem; font-weight: 800; color: var(--color-text); }
+.stat-label { font-size: .75rem; color: var(--color-text-muted); font-weight: 600; text-align: center; }
+
+/* ── ROLE TOGGLE ────────────────────────────────────── */
+.role-toggle-container {
+  display: flex; gap: .3rem;
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(10px);
+  padding: 6px; border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-md);
+}
+.btn-toggle {
+  border: none; background: transparent;
+  padding: .7rem 1.8rem; border-radius: 50px;
+  font-weight: 700; font-size: .95rem;
+  color: var(--color-text-muted);
+  display: flex; align-items: center;
+  transition: all .3s cubic-bezier(.4,0,.2,1); cursor: pointer;
+}
+.btn-toggle:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.btn-toggle:active { transform: scale(.97); }
+.btn-toggle.active {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
   color: white;
-  box-shadow: 0 4px 12px var(--color-primary-light);
+  box-shadow: 0 4px 15px rgba(99,102,241,.25);
 }
 
-/* Header Info Icon box */
-.icon-header-box {
-  width: 52px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* ── SECTION HEADER ─────────────────────────────────── */
+.section-header {
+  display: flex; align-items: center; gap: 1rem;
 }
+.section-icon-box {
+  width: 54px; height: 54px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); font-size: 1.4rem; flex-shrink: 0;
+}
+.themed-text { color: var(--color-text); }
 
-/* Step Card Styles */
+/* ── STEP CARDS ─────────────────────────────────────── */
 .step-card {
-  background: var(--color-surface);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid var(--color-border) !important;
+  position: relative;
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  height: 100%;
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
 }
+.step-card:hover { transform: translateY(-5px); }
+.step-number {
+  position: absolute; top: 1rem; right: 1.1rem;
+  font-size: 2.2rem; font-weight: 900;
+  color: var(--color-border);
+  line-height: 1; user-select: none;
+  letter-spacing: -.04em;
+}
+.step-card:hover .step-icon-box { transform: scale(1.06) rotate(2deg); }
 
-.step-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md) !important;
-  border-color: var(--color-primary) !important;
-}
+/* Category-specific hover glows */
+.step-glow-purple:hover  { border-color: rgba(124,58,237,.4)!important; box-shadow: 0 14px 32px rgba(124,58,237,.12)!important; }
+.step-glow-blue:hover    { border-color: rgba(37,99,235,.4)!important;  box-shadow: 0 14px 32px rgba(37,99,235,.12)!important;  }
+.step-glow-emerald:hover { border-color: rgba(5,150,105,.4)!important;  box-shadow: 0 14px 32px rgba(5,150,105,.12)!important;  }
+.step-glow-amber:hover   { border-color: rgba(217,119,6,.4)!important;  box-shadow: 0 14px 32px rgba(217,119,6,.12)!important;  }
+.step-glow-rose:hover    { border-color: rgba(225,29,72,.4)!important;  box-shadow: 0 14px 32px rgba(225,29,72,.12)!important;  }
+.step-glow-indigo:hover  { border-color: rgba(79,70,229,.4)!important;  box-shadow: 0 14px 32px rgba(79,70,229,.12)!important;  }
+.step-glow-cyan:hover    { border-color: rgba(8,145,178,.4)!important;  box-shadow: 0 14px 32px rgba(8,145,178,.12)!important;  }
+.step-glow-teal:hover    { border-color: rgba(13,148,136,.4)!important; box-shadow: 0 14px 32px rgba(13,148,136,.12)!important; }
 
 .step-icon-box {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; border-radius: var(--radius-sm); flex-shrink: 0;
+  transition: all .3s ease;
 }
 
-/* Teachers Tip Card */
-.teachers-tip-card {
-  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+/* Step tip pills */
+.step-tip {
+  display: inline-flex; align-items: flex-start; gap: .3rem;
+  font-size: .75rem; font-weight: 600;
+  padding: .35rem .7rem; border-radius: var(--radius-sm);
+  line-height: 1.4;
 }
+.tip-purple  { background: rgba(124,58,237,.1); color: #7c3aed; }
+.tip-blue    { background: rgba(37,99,235,.1);  color: #2563eb; }
+.tip-emerald { background: rgba(5,150,105,.1);  color: #059669; }
+.tip-amber   { background: rgba(217,119,6,.1);  color: #d97706; }
+.tip-rose    { background: rgba(225,29,72,.1);  color: #e11d48; }
+.tip-indigo  { background: rgba(79,70,229,.1);  color: #4f46e5; }
+.tip-cyan    { background: rgba(8,145,178,.1);  color: #0891b2; }
+.tip-teal    { background: rgba(13,148,136,.1); color: #0d9488; }
 
-[data-theme='dark'] .teachers-tip-card {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-}
-
-/* Markdown Card styling */
-.markdown-tip-card {
-  background: #0f172a !important;
-}
-
-.code-preview-box {
-  background: #020617;
-  font-family: 'Fira Code', monospace;
-  font-size: 0.85rem;
-}
-
-.text-emerald-light {
-  color: #34d399;
-}
-
-/* CTA */
-.cta-section {
-  background: var(--color-surface);
+/* ── DO / DON'T ─────────────────────────────────────── */
+.do-dont-card {
+  height: 100%; padding: 1.5rem;
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  backdrop-filter: blur(12px);
+}
+.dos-card {
+  background: rgba(16,185,129,.04);
+  border-color: rgba(16,185,129,.15);
+}
+.donts-card {
+  background: rgba(239,68,68,.04);
+  border-color: rgba(239,68,68,.15);
+}
+.do-badge {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(16,185,129,.15); color: #10b981;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .8rem;
+}
+.dont-badge {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(239,68,68,.15); color: #ef4444;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .8rem;
+}
+.do-dont-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: .6rem;
+}
+.do-dont-list li { font-size: .9rem; color: var(--color-text-muted); display: flex; align-items: flex-start; gap: .3rem; }
+
+/* ── MARKDOWN TIP CARD ──────────────────────────────── */
+.markdown-tip-card {
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+}
+.tip-card-overlay {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 100% 0%, rgba(99,102,241,.15), transparent 50%);
+  pointer-events: none;
+}
+.code-editor-window { background: #020617; border: 1px solid rgba(255,255,255,.08); }
+.code-editor-header { background: #090f24; border-bottom: 1px solid rgba(255,255,255,.06); }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.text-muted-code { color: #64748b; font-size: .8rem; }
+.editor-badge {
+  font-size: .6rem; font-weight: 700; letter-spacing: .06em;
+  padding: 2px 6px; border-radius: 4px;
+  border: 1px solid rgba(99,102,241,.3); color: #818cf8;
+}
+.code-preview-box {
+  background: transparent;
+  font-family: 'Fira Code', 'Courier New', monospace;
 }
 
+/* ── TEACHER TIP ────────────────────────────────────── */
+.teachers-tip-card {
+  background: linear-gradient(135deg, rgba(238,242,255,.5), rgba(224,231,255,.5));
+  border: 1px solid rgba(99,102,241,.2);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 1.75rem;
+  backdrop-filter: blur(12px);
+}
+[data-theme='dark'] .teachers-tip-card {
+  background: linear-gradient(135deg, rgba(30,27,75,.4), rgba(49,46,129,.4));
+  border-color: rgba(139,92,246,.25);
+  border-left-color: var(--color-purple);
+}
+.teacher-tip-icon {
+  width: 48px; height: 48px; flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 1.3rem;
+}
+
+/* ── CTA ────────────────────────────────────────────── */
+.cta-section { padding: 3rem 2rem; }
+.cta-glow {
+  position: absolute; top:50%; left:50%;
+  transform: translate(-50%,-50%);
+  width: 320px; height: 130px;
+  background: radial-gradient(circle, rgba(99,102,241,.15), transparent 70%);
+  pointer-events: none;
+}
 .btn-primary-gradient {
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  transition: all 0.2s ease;
+  display: inline-flex; align-items: center;
+  background: linear-gradient(135deg, #7c3aed, #6366f1);
+  color: white; border: none; border-radius: 50px;
+  padding: .7rem 1.6rem; font-weight: 700; font-size: .95rem;
+  transition: all .3s ease; cursor: pointer;
 }
-
 .btn-primary-gradient:hover {
-  background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.2);
+  background: linear-gradient(135deg, #6d28d9, #4f46e5);
+  transform: translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,.3); color: white;
+}
+.btn-secondary-outline {
+  display: inline-flex; align-items: center;
+  background: var(--color-glass-bg);
+  color: var(--color-text); border: 1px solid var(--color-border);
+  border-radius: 50px; padding: .7rem 1.6rem;
+  font-weight: 700; font-size: .95rem;
+  transition: all .3s ease; cursor: pointer;
+}
+.btn-secondary-outline:hover {
+  border-color: var(--color-primary); color: var(--color-primary);
+  transform: translateY(-2px);
 }
 
-/* Color Palette Subtles */
-.bg-purple-subtle { background-color: #f3e8ff; }
-.text-purple { color: #7c3aed; }
+/* ── SUBTLE COLORS ──────────────────────────────────── */
+.bg-purple-subtle  { background-color: #f3e8ff; } .text-purple  { color: #7c3aed; }
+.bg-blue-subtle    { background-color: #dbeafe; } .text-blue    { color: #2563eb; }
+.bg-emerald-subtle { background-color: #d1fae5; } .text-emerald { color: #059669; }
+.bg-amber-subtle   { background-color: #fef3c7; } .text-amber   { color: #d97706; }
+.bg-rose-subtle    { background-color: #ffe4e6; } .text-rose    { color: #e11d48; }
+.bg-indigo-subtle  { background-color: #e0e7ff; } .text-indigo  { color: #4f46e5; }
+.bg-cyan-subtle    { background-color: #ecfeff; } .text-cyan    { color: #0891b2; }
+.bg-teal-subtle    { background-color: #ccfbf1; } .text-teal    { color: #0d9488; }
 
-.bg-blue-subtle { background-color: #dbeafe; }
-.text-blue { color: #2563eb; }
+[data-theme='dark'] .bg-purple-subtle  { background-color: rgba(124,58,237,.15); }
+[data-theme='dark'] .bg-blue-subtle    { background-color: rgba(37,99,235,.15);  }
+[data-theme='dark'] .bg-emerald-subtle { background-color: rgba(5,150,105,.15);  }
+[data-theme='dark'] .bg-amber-subtle   { background-color: rgba(217,119,6,.15);  }
+[data-theme='dark'] .bg-rose-subtle    { background-color: rgba(225,29,72,.15);  }
+[data-theme='dark'] .bg-indigo-subtle  { background-color: rgba(79,70,229,.15);  }
+[data-theme='dark'] .bg-cyan-subtle    { background-color: rgba(8,145,178,.15);  }
+[data-theme='dark'] .bg-teal-subtle    { background-color: rgba(13,148,136,.15); }
 
-.bg-emerald-subtle { background-color: #d1fae5; }
-.text-emerald { color: #059669; }
-
-.bg-amber-subtle { background-color: #fef3c7; }
-.text-amber { color: #d97706; }
-
-.bg-rose-subtle { background-color: #ffe4e6; }
-.text-rose { color: #e11d48; }
-
-.bg-indigo-subtle { background-color: #e0e7ff; }
-.text-indigo { color: #4f46e5; }
-
-.bg-cyan-subtle { background-color: #ecfeff; }
-.text-cyan { color: #0891b2; }
-
-.bg-teal-subtle { background-color: #ccfbf1; }
-.text-teal { color: #0d9488; }
-
-/* Dark Mode Overrides for Subtles */
-[data-theme='dark'] .bg-purple-subtle { background-color: rgba(124, 58, 237, 0.15); }
-[data-theme='dark'] .bg-blue-subtle { background-color: rgba(37, 99, 235, 0.15); }
-[data-theme='dark'] .bg-emerald-subtle { background-color: rgba(5, 150, 105, 0.15); }
-[data-theme='dark'] .bg-amber-subtle { background-color: rgba(217, 119, 6, 0.15); }
-[data-theme='dark'] .bg-rose-subtle { background-color: rgba(225, 29, 72, 0.15); }
-[data-theme='dark'] .bg-indigo-subtle { background-color: rgba(79, 70, 229, 0.15); }
-[data-theme='dark'] .bg-cyan-subtle { background-color: rgba(8, 145, 178, 0.15); }
-[data-theme='dark'] .bg-teal-subtle { background-color: rgba(13, 148, 136, 0.15); }
-
-/* Transitions */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+/* ── TRANSITIONS ────────────────────────────────────── */
+@keyframes pulse-glow {
+  0%,100% { box-shadow: 0 0 0 4px rgba(99,102,241,.15); }
+  50%     { box-shadow: 0 0 0 8px rgba(99,102,241,.05), 0 0 15px rgba(99,102,241,.2); }
 }
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
+.fade-slide-enter-active, .fade-slide-leave-active {
+  transition: opacity .25s ease, transform .25s ease;
 }
+.fade-slide-enter-from { opacity: 0; transform: translateY(12px); }
+.fade-slide-leave-to   { opacity: 0; transform: translateY(-12px); }
 
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
+/* ── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 576px) {
+  .help-hero { padding: 2rem 1.25rem; }
+  .glass-card { padding: 1.5rem; }
+  .stats-bar { flex-direction: column; gap: .5rem; }
+  .stat-item { border-right: none; border-bottom: 1px solid var(--color-border); }
+  .stat-item:last-child { border-bottom: none; }
+  .btn-toggle { padding: .6rem 1rem; font-size: .85rem; }
 }
 </style>

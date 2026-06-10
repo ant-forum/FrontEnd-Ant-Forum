@@ -88,7 +88,7 @@ onMounted(() => {
       <!-- Logo Section -->
       <div class="header-left d-flex align-items-center flex-1">
         <router-link to="/" class="brand-logo-link text-decoration-none d-flex align-items-center" aria-label="ANT Forum home">
-          <img src="/antforum-clean.png" alt="ANT Forum" class="brand-logo-img">
+          <img src="/antforum.png" alt="ANT Forum" class="brand-logo-img">
         </router-link>
       </div>
 
@@ -241,6 +241,10 @@ onMounted(() => {
 
 <style scoped>
 .global-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   background: var(--color-surface);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);

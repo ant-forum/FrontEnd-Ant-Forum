@@ -4,6 +4,100 @@ import { useRoute, useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
 import SkeletonLoader from "../../components/SkeletonLoader.vue";
+
+// ── Text-to-Speech ────────────────────────────────────────────────────────
+const ttsState    = ref('idle'); // 'idle' | 'playing' | 'paused'
+const ttsProgress = ref(0);
+const ttsError    = ref('');
+const ttsRate     = ref(0.9);   // speed: 0.5 – 2
+const ttsVoices   = ref([]);
+const ttsVoice    = ref(null);  // selected SpeechSynthesisVoice
+
+const isTTSSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+// Priority list – first match wins
+const PREFERRED_VOICE_NAMES = [
+  'Google US English',
+  'Google UK English Female',
+  'Google UK English Male',
+  'Microsoft Aria Online (Natural)',
+  'Microsoft Guy Online (Natural)',
+  'Samantha',      // macOS
+  'Karen',         // macOS AU
+  'Daniel',        // macOS UK
+  'Alex',          // macOS
+];
+
+const loadVoices = () => {
+  const all = window.speechSynthesis.getVoices();
+  if (!all.length) return;
+  // Only show English voices
+  const enVoices = all.filter(v => v.lang.startsWith('en'));
+  ttsVoices.value = enVoices;
+  // Pick best default
+  for (const name of PREFERRED_VOICE_NAMES) {
+    const found = enVoices.find(v => v.name === name);
+    if (found) { ttsVoice.value = found; break; }
+  }
+  if (!ttsVoice.value && enVoices.length) ttsVoice.value = enVoices[0];
+};
+
+if (isTTSSupported) {
+  window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+  loadVoices(); // may already be ready
+}
+
+const getArticleText = () => {
+  const el = document.querySelector('.article-body');
+  return el ? el.innerText : '';
+};
+
+const ttsPlay = () => {
+  if (!isTTSSupported) return;
+  if (ttsState.value === 'paused') {
+    window.speechSynthesis.resume();
+    ttsState.value = 'playing';
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const text = getArticleText();
+  if (!text) return;
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang  = 'en-US';
+  utt.rate  = ttsRate.value;
+  utt.pitch = 1;
+  if (ttsVoice.value) utt.voice = ttsVoice.value;
+  utt.onstart    = () => { ttsState.value = 'playing'; ttsProgress.value = 0; };
+  utt.onend      = () => { ttsState.value = 'idle';    ttsProgress.value = 100; };
+  utt.onerror    = (e) => { ttsState.value = 'idle';   ttsError.value = e.error; };
+  utt.onboundary = (e) => {
+    if (e.charLength != null)
+      ttsProgress.value = Math.round((e.charIndex / text.length) * 100);
+  };
+  window.speechSynthesis.speak(utt);
+};
+
+const ttsPause = () => {
+  if (!isTTSSupported) return;
+  window.speechSynthesis.pause();
+  ttsState.value = 'paused';
+};
+
+const ttsStop = () => {
+  if (!isTTSSupported) return;
+  window.speechSynthesis.cancel();
+  ttsState.value = 'idle';
+  ttsProgress.value = 0;
+};
+
+const ttsSpeedLabel = computed(() => {
+  const r = ttsRate.value;
+  if (r <= 0.6) return 'Slow';
+  if (r <= 0.85) return 'Normal';
+  if (r <= 1.1) return 'Fast';
+  return 'Very Fast';
+});
+// ─────────────────────────────────────────────────────────────────────────
 import { useBlogStore } from '../../stores/BlogStore';
 import { useAuthStore } from '../../stores/AuthStore';
 import { renderStoredContent } from '../../utils/richContent';
@@ -99,6 +193,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', updateScrollProgress);
+  ttsStop();
 });
 
 const handleImgError = (e) => {
@@ -192,6 +287,90 @@ const handleImgError = (e) => {
               <!-- Hero Image -->
               <img :src="post.image" @error.once="handleImgError" class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme" style="max-height: 400px;" alt="Hero Image">
 
+              <!-- ── Read Article bar ── -->
+              <div class="read-article-bar mb-4">
+
+                <!-- Row 1: label + controls + status -->
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                  <!-- Wave + label -->
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="tts-wave-icon" :class="{ active: ttsState === 'playing' }">
+                      <span></span><span></span><span></span><span></span>
+                    </span>
+                    <span class="fw-bold text-adaptive" style="font-size:.9rem">Read Article</span>
+                    <span v-if="!isTTSSupported" class="text-muted" style="font-size:.75rem">(unsupported)</span>
+                  </div>
+
+                  <!-- Play / Pause -->
+                  <button
+                    id="tts-play-pause-btn"
+                    @click="ttsState === 'playing' ? ttsPause() : ttsPlay()"
+                    :disabled="!isTTSSupported"
+                    :class="['tts-btn', ttsState === 'playing' ? 'tts-btn-active' : '']"
+                    :title="ttsState === 'playing' ? 'Pause' : 'Play'"
+                  >
+                    <i :class="['bi', ttsState === 'playing' ? 'bi-pause-fill' : 'bi-play-fill']"></i>
+                  </button>
+
+                  <!-- Stop -->
+                  <button
+                    id="tts-stop-btn"
+                    @click="ttsStop"
+                    :disabled="!isTTSSupported || ttsState === 'idle'"
+                    class="tts-btn" title="Stop"
+                  >
+                    <i class="bi bi-stop-fill"></i>
+                  </button>
+
+                  <!-- Progress (only while active) -->
+                  <div v-if="ttsState !== 'idle'" class="tts-progress-wrap flex-grow-1">
+                    <div class="tts-progress-track">
+                      <div class="tts-progress-fill" :style="{ width: ttsProgress + '%' }"></div>
+                    </div>
+                  </div>
+
+                  <span v-if="ttsState !== 'idle'" class="tts-status-badge" :class="ttsState">
+                    {{ ttsState === 'playing' ? 'Reading…' : 'Paused' }}
+                  </span>
+                </div>
+
+                <!-- Row 2: Voice + Speed settings -->
+                <div class="tts-settings-row d-flex align-items-center gap-3 flex-wrap mt-2">
+
+                  <!-- Voice selector -->
+                  <div class="d-flex align-items-center gap-2" v-if="ttsVoices.length">
+                    <i class="bi bi-mic-fill text-muted" style="font-size:.8rem"></i>
+                    <select
+                      id="tts-voice-select"
+                      class="tts-select"
+                      :disabled="ttsState === 'playing'"
+                      :value="ttsVoice?.name"
+                      @change="e => ttsVoice = ttsVoices.find(v => v.name === e.target.value)"
+                    >
+                      <option v-for="v in ttsVoices" :key="v.name" :value="v.name">
+                        {{ v.name.replace('Google ', '').replace(' Online (Natural)', '') }}
+                        {{ v.localService ? '' : '(Online)' }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Speed slider -->
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-speedometer2 text-muted" style="font-size:.8rem"></i>
+                    <span class="tts-speed-label">{{ ttsSpeedLabel }}</span>
+                    <input
+                      id="tts-speed-slider"
+                      type="range"
+                      class="tts-slider"
+                      min="0.5" max="1.5" step="0.05"
+                      :disabled="ttsState === 'playing'"
+                      v-model.number="ttsRate"
+                    >
+                  </div>
+
+                </div>
+              </div>
+
               <!-- Article Body -->
               <div class="article-body text-adaptive lh-lg" v-html="articleContent"></div>
             </div>
@@ -269,6 +448,157 @@ const handleImgError = (e) => {
 .font-sm { font-size: 0.875rem; }
 .tracking-wide { letter-spacing: 0.05em; }
 .lh-lg { line-height: 1.8; }
+
+/* ── Read Article / TTS ──────────────────────────────────────────── */
+.read-article-bar {
+  background: var(--color-glass-bg, rgba(255,255,255,.06));
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-glass-border, rgba(255,255,255,.1));
+  border-radius: 999px;
+  padding: .6rem 1.1rem;
+  flex-wrap: wrap;
+  gap: .5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all .3s ease;
+}
+
+/* Wave icon animation */
+.tts-wave-icon {
+  display: flex; align-items: center; gap: 2px; height: 18px;
+}
+.tts-wave-icon span {
+  display: block;
+  width: 3px; height: 6px;
+  background: var(--color-primary);
+  border-radius: 4px;
+  transition: height .2s ease;
+}
+.tts-wave-icon.active span:nth-child(1) { animation: tts-wave 1s ease-in-out infinite .0s; }
+.tts-wave-icon.active span:nth-child(2) { animation: tts-wave 1s ease-in-out infinite .15s; }
+.tts-wave-icon.active span:nth-child(3) { animation: tts-wave 1s ease-in-out infinite .3s; }
+.tts-wave-icon.active span:nth-child(4) { animation: tts-wave 1s ease-in-out infinite .45s; }
+@keyframes tts-wave {
+  0%,100% { height: 6px; }
+  50%      { height: 16px; }
+}
+
+/* Control buttons */
+.tts-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all .2s ease;
+  flex-shrink: 0;
+}
+.tts-btn:hover:not(:disabled) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  transform: scale(1.08);
+}
+.tts-btn-active {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #fff !important;
+}
+.tts-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Progress track */
+.tts-progress-wrap { min-width: 80px; }
+.tts-progress-track {
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.tts-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-purple));
+  border-radius: 999px;
+  transition: width .3s linear;
+}
+
+/* Status badge */
+.tts-status-badge {
+  font-size: .7rem; font-weight: 800;
+  padding: .25rem .65rem;
+  border-radius: 999px;
+  letter-spacing: .04em;
+}
+.tts-status-badge.playing {
+  background: rgba(99,102,241,.12);
+  color: var(--color-primary);
+}
+.tts-status-badge.paused {
+  background: rgba(217,119,6,.12);
+  color: #d97706;
+}
+
+/* Voice selector */
+.tts-select {
+  max-width: 200px;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .3rem .65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .65rem center;
+  padding-right: 1.8rem;
+  transition: border-color .2s;
+}
+.tts-select:focus { border-color: var(--color-primary); }
+.tts-select:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Speed label */
+.tts-speed-label {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  min-width: 56px;
+}
+
+/* Speed slider */
+.tts-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+  outline: none;
+  cursor: pointer;
+  transition: background .2s;
+}
+.tts-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  transition: transform .15s;
+}
+.tts-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.tts-slider:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Settings row divider */
+.tts-settings-row {
+  border-top: 1px solid var(--color-border);
+  padding-top: .5rem;
+  margin-top: .25rem !important;
+}
+/* ──────────────────────────────────────────────────────────────── */
 
 .text-adaptive {
   color: var(--color-text) !important;

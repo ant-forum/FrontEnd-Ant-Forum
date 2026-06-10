@@ -1,10 +1,16 @@
 <script setup>
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useForumStore } from '@/stores/ForumStore';
 import { useUsersStore } from '@/stores/UsersStore';
 
 const forumStore = useForumStore();
 const usersStore = useUsersStore();
+
+const isCollapsed = ref(localStorage.getItem('forum_network_status_collapsed') === 'true');
+const toggleCollapse = () => {
+  isCollapsed.value = !isCollapsed.value;
+  localStorage.setItem('forum_network_status_collapsed', isCollapsed.value);
+};
 
 onMounted(async () => {
   // Fetch discussions to make sure we have the latest forums list
@@ -50,24 +56,28 @@ const networkStatus = computed(() => [
 
 <template>
   <div class="status-section">
-    <h3 class="section-title">
-      <span class="title-icon">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-      </span>
-      Network Status
-    </h3>
-
-    <div class="status-rows">
-      <div v-for="item in networkStatus" :key="item.id" class="status-row">
-        <span class="status-label">{{ item.label }}</span>
-        <span class="status-value">
-          <span v-if="item.online" class="live-dot"></span>
-          {{ item.value }}
+    <div class="d-flex align-items-center justify-content-between w-100">
+      <h3 class="section-title">
+        <span class="title-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
         </span>
-      </div>
+        Network Status
+      </h3>
+      <button class="collapse-btn" @click="toggleCollapse" :aria-expanded="!isCollapsed" aria-label="Toggle network status">
+        <i class="bi" :class="isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
+      </button>
     </div>
+
+    <Transition name="collapse">
+      <div v-show="!isCollapsed" class="status-grid">
+        <div v-for="item in networkStatus" :key="item.id" class="status-card-inner">
+          <span class="status-value">{{ item.value }}</span>
+          <span class="status-label">{{ item.id === 1 ? 'Users' : 'Forums' }}</span>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -75,65 +85,104 @@ const networkStatus = computed(() => [
 .status-section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
 .section-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-text);
-  margin: 0 0 8px 0;
+  margin: 0;
 }
 
 .title-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   background: var(--color-purple-light);
   border-radius: 6px;
   color: var(--color-purple);
   flex-shrink: 0;
 }
 
-.status-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
 }
 
-.status-row {
+.status-card-inner {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 4px 0;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 4px;
+  transition: all 0.2s ease;
+}
+
+.status-card-inner:hover {
+  border-color: var(--color-primary);
 }
 
 .status-label {
-  font-size: 13.5px;
+  font-size: 10px;
   color: var(--color-text-muted);
-  font-weight: 500;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+  text-align: center;
 }
 
 .status-value {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13.5px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--color-text);
+  line-height: 1;
 }
 
-.live-dot {
-  width: 7px;
-  height: 7px;
-  background: var(--color-success);
-  border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
-  display: inline-block;
+.collapse-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.collapse-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.collapse-enter-active,
+.collapse-leave-active {
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-top 0.3s ease;
+  overflow: hidden;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+  max-height: 0 !important;
+  opacity: 0;
+  margin-top: 0 !important;
+}
+
+.collapse-enter-to,
+.collapse-leave-from {
+  max-height: 100px !important;
+  opacity: 1;
 }
 </style>

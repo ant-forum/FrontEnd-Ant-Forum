@@ -25,11 +25,11 @@ import TrendingTags from './TrendingTags.vue';
 }
 
 .sidebar-card {
-  background: var(--color-surface);
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  background: transparent;
+  border-radius: 0;
+  padding: 6px 0;
+  border: none;
+  box-shadow: none;
   transition: all var(--transition-base);
 }
 </style>
