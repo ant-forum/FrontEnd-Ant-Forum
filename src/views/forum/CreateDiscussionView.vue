@@ -1875,80 +1875,80 @@ const handleSubmit = async () => {
 .readiness-widget, .tips-widget {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   transition: all 0.3s ease;
 }
 
 .readiness-widget.completed {
   border-color: var(--color-success);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.1);
 }
 
 .widget-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 16px;
+  gap: 8px;
+  font-size: 14px;
   border-bottom: 1px solid var(--color-border);
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 
 .widget-header i {
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .readiness-progress-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .readiness-progress-bar-bg {
   flex: 1;
-  height: 8px;
+  height: 6px;
   background: var(--color-surface-hover);
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .readiness-progress-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--color-purple, #8b5cf6), var(--color-primary));
-  border-radius: 4px;
+  border-radius: 3px;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .readiness-percentage {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--color-primary);
-  width: 40px;
+  width: 32px;
   text-align: right;
 }
 
 .readiness-checklist-vertical {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
 .readiness-check-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   color: var(--color-text-muted);
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .readiness-check-item i {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--color-border);
 }
 
@@ -1964,13 +1964,13 @@ const handleSubmit = async () => {
 .tips-vertical-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .tip-box {
   background: var(--color-surface-hover);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 10px 12px;
   border: 1px solid var(--color-border);
   transition: all 0.2s ease;
 }
@@ -1978,29 +1978,29 @@ const handleSubmit = async () => {
 .tip-box:hover {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .tip-box-title {
   display: block;
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--color-text);
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .tip-box p {
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--color-text-muted);
-  line-height: 1.5;
+  line-height: 1.4;
   margin: 0;
 }
 
 .tip-box code {
   background: var(--color-surface);
-  padding: 2px 6px;
+  padding: 1px 4px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   color: var(--color-primary);
   border: 1px solid var(--color-border);

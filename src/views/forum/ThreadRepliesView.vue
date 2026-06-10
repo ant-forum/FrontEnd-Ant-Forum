@@ -3,7 +3,6 @@ import { onMounted, ref, nextTick, watch, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Navbar from '@/components/layouts/header.vue';
 import LeftSidebar from '@/components/forum/LeftSidebar.vue';
-import ForumSidebar from '@/components/forum/ForumSidebar.vue';
 import { useForumStore } from '@/stores/ForumStore';
 import { useAuthStore } from '@/stores/AuthStore';
 import MarkdownEditor from '@/components/forum/create/MarkdownEditor.vue';
@@ -712,8 +711,6 @@ function getAvatarUrl(author) {
         Thread not found or could not be loaded.
       </div>
     </div>
-
-    <ForumSidebar class="replies-right-sidebar" />
     </div>
 
     <!-- Delete Discussion Modal -->
@@ -753,38 +750,21 @@ function getAvatarUrl(author) {
 
 .replies-page-grid-layout {
   display: grid;
-  grid-template-columns: 240px 1fr 292px;
+  grid-template-columns: 240px 1fr;
   max-width: 1280px;
   margin: 0 auto;
   gap: 28px;
   padding: 32px 24px 60px;
 }
 
-.replies-left-sidebar,
-.replies-right-sidebar {
+.replies-left-sidebar {
   padding-top: 0px;
-}
-
-@media (max-width: 1200px) {
-  .replies-page-grid-layout {
-    grid-template-columns: 240px 1fr;
-  }
-  .replies-right-sidebar {
-    display: none;
-  }
 }
 
 @media (max-width: 1024px) {
   .replies-page-grid-layout {
     grid-template-columns: 1fr;
     padding: 24px;
-  }
-  .replies-right-sidebar {
-    display: block;
-    padding: 24px 0;
-    max-width: 900px;
-    margin: 0 auto;
-    width: 100%;
   }
 }
 

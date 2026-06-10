@@ -7,6 +7,8 @@ import Profile from "../views/Profile.vue"
 import LoginView from '../views/auth/LoginView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
 import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
+import TermsOfService from '../views/TermsOfService.vue';
+import FAQView from '../views/FAQView.vue';
 
 import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 import ShowcaseProjectDetail from '../views/showcase/ShowcaseProjectDetail.vue';
@@ -117,6 +119,18 @@ const routes = [
     name: "Help",
     meta: { requiresAuth: true },
     component: () => import("../views/HelpView.vue"),
+  },
+  {
+    path: "/terms-of-service",
+    name: "TermsOfService",
+    meta: { public: true, title: "Terms of Service" },
+    component: TermsOfService,
+  },
+  {
+    path: "/faq",
+    name: "FAQ",
+    meta: { public: true, title: "FAQ" },
+    component: FAQView,
   },
   {
     path: "/showcase",

@@ -2,9 +2,9 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "@/api/api.js";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
-import { useAuthStore } from "./AuthStore";
-import { useForumStore } from "./ForumStore";
-import { useUsersStore } from "./UsersStore";
+import { resolveAuthor } from "@/utils/author";
+import { useAuthStore } from "./AuthStore.js";
+import { useForumStore } from "./ForumStore.js";
 
 export const useProjectStore = defineStore("project", () => {
   const projects = ref([]);
@@ -12,6 +12,7 @@ export const useProjectStore = defineStore("project", () => {
   const myProjects = ref([]);
   const ratedProjects = ref([]);
   const isLoading = ref(false);
+  const userCache = ref({}); // Cache to store users by id
   const allProjects = computed(() => projects.value);
 
   const createForm = ref({
@@ -38,115 +39,20 @@ export const useProjectStore = defineStore("project", () => {
     };
   };
 
-  const resolveAuthor = (userId, defaultAuthor) => {
-    if (!userId) {
-      if (defaultAuthor) {
-        return {
-          name: defaultAuthor.name || defaultAuthor.username || "Unknown",
-          avatar: resolveMediaUrl(
-            defaultAuthor.profile_pic || defaultAuthor.avatar,
-            "https://i.pravatar.cc/150?u=default"
-          ),
-          username: defaultAuthor.username ? `@${defaultAuthor.username}` : "@unknown",
-        };
+  const fetchAndCacheUser = async (userId) => {
+    if (!userId || userCache.value[userId]) return;
+    try {
+      const res = await api.get(`/api/admin/get-user/${userId}`);
+      const userData = res.data?.data || res.data;
+      if (userData) {
+        userCache.value[userId] = userData;
       }
-      return {
-        name: "Unknown",
-        avatar: "https://i.pravatar.cc/150?u=default",
-        username: "@unknown",
-      };
+    } catch (err) {
+      console.warn(`[ProjectStore] Failed to fetch user ${userId}:`, err);
     }
-
-    // 1. Check AuthStore (current user)
-    const authStore = useAuthStore();
-    if (authStore.user && (Number(authStore.user.id) === Number(userId) || Number(authStore.user.user_id) === Number(userId))) {
-      return {
-        name: authStore.user.name || authStore.user.username || "Unknown",
-        avatar: resolveMediaUrl(
-          authStore.user.profile_pic || authStore.user.avatar,
-          "https://i.pravatar.cc/150?u=default"
-        ),
-        username: authStore.user.username ? `@${authStore.user.username}` : "@unknown",
-      };
-    }
-
-    // 2. Check UsersStore (admin users list)
-    const usersStore = useUsersStore();
-    if (usersStore.users && usersStore.users.length > 0) {
-      const u = usersStore.users.find(u => Number(u.id) === Number(userId) || Number(u.user_id) === Number(userId));
-      if (u) {
-        return {
-          name: u.name || u.username || "Unknown",
-          avatar: resolveMediaUrl(
-            u.profile_pic || u.avatar,
-            "https://i.pravatar.cc/150?u=default"
-          ),
-          username: u.username ? `@${u.username}` : "@unknown",
-        };
-      }
-    }
-
-    // 3. Check ForumStore discussions
-    const forumStore = useForumStore();
-    if (forumStore.discussions && forumStore.discussions.length > 0) {
-      const d = forumStore.discussions.find(d => {
-        const dUserId = d.user_id || d.userId;
-        return dUserId && Number(dUserId) === Number(userId);
-      });
-      if (d) {
-        const u = d.user || d.author;
-        if (u && typeof u === 'object') {
-          return {
-            name: u.name || u.username || "Unknown",
-            avatar: resolveMediaUrl(
-              u.profile_pic || u.avatar || d.author_avatar,
-              "https://i.pravatar.cc/150?u=default"
-            ),
-            username: u.username ? `@${u.username}` : "@unknown",
-          };
-        }
-      }
-    }
-
-    // 4. Check ForumStore comments
-    if (forumStore.comments && forumStore.comments.length > 0) {
-      const c = forumStore.comments.find(c => {
-        const cUserId = c.user_id || c.userId;
-        return cUserId && Number(cUserId) === Number(userId);
-      });
-      if (c) {
-        const u = c.author || c.user;
-        if (u && typeof u === 'object') {
-          return {
-            name: u.name || u.username || "Unknown",
-            avatar: resolveMediaUrl(
-              u.profile_pic || u.avatar,
-              "https://i.pravatar.cc/150?u=default"
-            ),
-            username: u.username ? `@${u.username}` : "@unknown",
-          };
-        }
-      }
-    }
-
-    // Fallback to defaultAuthor or Unknown
-    if (defaultAuthor) {
-      return {
-        name: defaultAuthor.name || defaultAuthor.username || "Unknown",
-        avatar: resolveMediaUrl(
-          defaultAuthor.profile_pic || defaultAuthor.avatar,
-          "https://i.pravatar.cc/150?u=default"
-        ),
-        username: defaultAuthor.username ? `@${defaultAuthor.username}` : "@unknown",
-      };
-    }
-
-    return {
-      name: "Unknown",
-      avatar: "https://i.pravatar.cc/150?u=default",
-      username: "@unknown",
-    };
   };
+
+
 
   const normalizeProject = (item) => {
     if (!item) return null;
@@ -166,7 +72,10 @@ export const useProjectStore = defineStore("project", () => {
     );
     const averageRating = Number(item.average_rating) || 0;
     const views = Number(item.views) || 0;
-    const myRating = item.my_rating ? Number(item.my_rating) : null;
+    let myRating = null;
+    if (item.my_rating !== undefined && item.my_rating !== null) {
+      myRating = Number(item.my_rating);
+    }
 
     const normalized = {
       ...item,
@@ -183,7 +92,8 @@ export const useProjectStore = defineStore("project", () => {
       average_rating: averageRating,
       my_rating: myRating,
       get author() {
-        return resolveAuthor(item.user_id || item.userId, defaultAuthor);
+        const cachedUser = userCache.value[item.user_id || item.userId];
+        return resolveAuthor(item.user_id || item.userId, defaultAuthor, item, cachedUser);
       },
       get authors() {
         return [this.author];
@@ -225,6 +135,9 @@ export const useProjectStore = defineStore("project", () => {
       const res = await api.get("/api/projects");
       ensureSuccess(res);
       const list = extractList(res.data);
+      // Fetch all unique user_ids in the list
+      const uniqueUserIds = [...new Set(list.map(item => item.user_id || item.userId).filter(Boolean))];
+      await Promise.all(uniqueUserIds.map(id => fetchAndCacheUser(id)));
       projects.value = list.map(normalizeProject);
     } catch (err) {
       console.error("[ProjectStore] fetchProjects failed:", err);
@@ -250,7 +163,19 @@ export const useProjectStore = defineStore("project", () => {
       ensureSuccess(res);
       const raw = res.data?.data?.row || res.data?.row || res.data?.data || res.data;
       const rawTags = res.data?.data?.tag || res.data?.tag || [];
-      project.value = normalizeProject({ ...raw, tag: rawTags });
+      // Fetch the user if we have user_id
+      if (raw.user_id || raw.userId) {
+        await fetchAndCacheUser(raw.user_id || raw.userId);
+      }
+      
+      // Preserve existing my_rating if the new data doesn't have it
+      const existingRating = project.value && project.value.id == id ? project.value.my_rating : null;
+      const normalized = normalizeProject({ ...raw, tag: rawTags });
+      if (existingRating && !normalized.my_rating) {
+        normalized.my_rating = existingRating;
+      }
+      
+      project.value = normalized;
       return project.value;
     } catch (err) {
       console.error(`[ProjectStore] fetchProject ${id} failed:`, err);
@@ -268,6 +193,9 @@ export const useProjectStore = defineStore("project", () => {
       const res = await api.get("/api/projects/my");
       ensureSuccess(res);
       const list = extractList(res.data);
+      // Fetch all unique user_ids in the list
+      const uniqueUserIds = [...new Set(list.map(item => item.user_id || item.userId).filter(Boolean))];
+      await Promise.all(uniqueUserIds.map(id => fetchAndCacheUser(id)));
       myProjects.value = list.map(normalizeProject);
     } catch (err) {
       console.error("[ProjectStore] fetchMyProjects failed:", err);
@@ -275,20 +203,21 @@ export const useProjectStore = defineStore("project", () => {
     } finally {
       isLoading.value = false;
     }
+
   };
 
   const fetchRatedProjects = async () => {
-    isLoading.value = true;
     try {
-      const res = await api.get("/api/projects/rated");
+      const res = await api.get("/api/projects/getRatedProjects");
       ensureSuccess(res);
       const list = extractList(res.data);
+      // Fetch all unique user_ids in the list
+      const uniqueUserIds = [...new Set(list.map(item => item.user_id || item.userId).filter(Boolean))];
+      await Promise.all(uniqueUserIds.map(id => fetchAndCacheUser(id)));
       ratedProjects.value = list.map(normalizeProject);
     } catch (err) {
-      console.error("[ProjectStore] fetchRatedProjects failed:", err);
-      ratedProjects.value = [];
-    } finally {
-      isLoading.value = false;
+      console.warn("[ProjectStore] fetchRatedProjects failed:", err);
+      // Don't overwrite ratedProjects if it fails
     }
   };
 
@@ -397,35 +326,73 @@ export const useProjectStore = defineStore("project", () => {
     }
   };
 
-  const rateProject = async (id, rateStar) => {
+  const updateProjectRatingLocally = (id, newRating) => {
+    // Update current project
+    if (project.value && project.value.id == id) {
+      project.value.my_rating = newRating;
+    }
+    // Update projects list
+    const projectIndex = projects.value.findIndex(p => p.id == id);
+    if (projectIndex !== -1) {
+      projects.value[projectIndex].my_rating = newRating;
+    }
+    // Update my projects
+    const myProjectIndex = myProjects.value.findIndex(p => p.id == id);
+    if (myProjectIndex !== -1) {
+      myProjects.value[myProjectIndex].my_rating = newRating;
+    }
+    // Update rated projects
+    const ratedProjectIndex = ratedProjects.value.findIndex(p => p.id == id);
+    if (ratedProjectIndex !== -1) {
+      ratedProjects.value[ratedProjectIndex].my_rating = newRating;
+    }
+  };
+
+  const submitRating = async (id, rateStar) => {
+    // Optimistic update
+    updateProjectRatingLocally(id, rateStar);
     isLoading.value = true;
     try {
-      const res = await api.post(`/api/projects/${id}/rate`, { rate_star: rateStar });
-      ensureSuccess(res);
+      // First try to rate
+      try {
+        const res = await api.post(`/api/projects/rateProject/${id}`, { rate_star: rateStar });
+        ensureSuccess(res);
+      } catch (rateErr) {
+        // If rate fails (already rated), try to update
+        const res = await api.put(`/api/projects/updateRateProject/${id}`, { rate_star: rateStar });
+        ensureSuccess(res);
+      }
+      // Refresh project data
       await fetchProject(id);
-      await fetchRatedProjects(); // ✅ removed argument
     } catch (err) {
-      console.error(`[ProjectStore] rateProject ${id} failed:`, err);
+      console.error(`[ProjectStore] submitRating ${id} failed:`, err);
       throw err;
     } finally {
       isLoading.value = false;
     }
   };
 
-  const updateRateProject = async (id, rateStar) => {
+  const deleteRating = async (id) => {
+    // Optimistic update - remove the rating locally
+    updateProjectRatingLocally(id, 0);
     isLoading.value = true;
     try {
-      const res = await api.put(`/api/projects/${id}/rate`, { rate_star: rateStar });
+      // Call the API to delete the rating
+      const res = await api.delete(`/api/projects/rateProject/${id}`);
       ensureSuccess(res);
+      // Refresh project data
       await fetchProject(id);
-      await fetchRatedProjects(); // ✅ removed argument
     } catch (err) {
-      console.error(`[ProjectStore] updateRateProject ${id} failed:`, err);
+      console.error(`[ProjectStore] deleteRating ${id} failed:`, err);
       throw err;
     } finally {
       isLoading.value = false;
     }
   };
+
+  // Aliases for backward compatibility
+  const rateProject = submitRating;
+  const updateRateProject = submitRating;
 
   return {
     projects,
@@ -433,6 +400,7 @@ export const useProjectStore = defineStore("project", () => {
     myProjects,
     ratedProjects,
     isLoading,
+    userCache,
     allProjects,
     createForm,
     resetCreateForm,
@@ -445,5 +413,9 @@ export const useProjectStore = defineStore("project", () => {
     deleteProject,
     rateProject,
     updateRateProject,
+    fetchAndCacheUser,
+    updateProjectRatingLocally,
+    submitRating,
+    deleteRating,
   };
 });
