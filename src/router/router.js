@@ -3,7 +3,9 @@ import { useAuthStore } from "../stores/AuthStore";
 
 
 import HomePage from '../views/HomePage.vue';
+import Dashboard from '../views/Dashboard.vue';
 import Profile from "../views/Profile.vue"
+import ViewProfile from "../views/ViewProfile.vue"
 import LoginView from '../views/auth/LoginView.vue';
 import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
 import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
@@ -13,21 +15,32 @@ import FAQView from '../views/FAQView.vue';
 import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 import ShowcaseProjectDetail from '../views/showcase/ShowcaseProjectDetail.vue';
 import CreateProject from '../views/showcase/showcaseCRUD/createProject.vue';
+import VisualProject from '../views/showcase/showcaseCRUD/visaulProject.vue';
+import ReviewProject from '../views/showcase/showcaseCRUD/reviewCreateProject.vue';
+import HelpView from "../views/HelpView.vue";
+
+import CreateDiscussionView from "../views/forum/CreateDiscussionView.vue";
+import ThreadRepliesView from "../views/forum/ThreadRepliesView.vue"
+
+
+
+import BlogDetail from "../views/blog/BlogDetail.vue";
+import AboutUs from '../views/AboutUs.vue';
+import Blog from "../views/blog/Blog.vue";
+import UserSettingsView from "../views/settings/UserSettingsView.vue";
+import NotificationsView from "../views/notification/NotificationsView.vue"
 
 
 import AdminDashboard from '../views/admin/adminDashboard.vue';
-import AdminAnalyticsView from '../views/admin/AdminAnalyticsView.vue';
-import AdminBlogCreateView from '../views/admin/AdminBlogCreateView.vue';
-import AdminBlogsView from '../views/admin/AdminBlogsView.vue';
-import AdminCategoriesView from '../views/admin/AdminCategoriesView.vue';
-import AdminCreateUserView from '../views/admin/AdminCreateUserView.vue';
-import AdminSettingsView from '../views/admin/AdminSettingsView.vue';
-import AdminTagsView from '../views/admin/AdminTagsView.vue';
-import AdminUsersView from '../views/admin/AdminUsersView.vue';
-import AdminReportsView from '../views/admin/AdminReportsView.vue';
-import AdminActivityView from '../views/admin/AdminActivityView.vue';
-import ProjectReviewManagement from '../views/admin/ProjectReviewManagement.vue';
-import ThreadModerationView from '../views/admin/ThreadModerationView.vue';
+import UserManagement from '../views/admin/UserManagement.vue';
+import CreateUserView from '../views/admin/CreateUserView.vue';
+import ProjectManagement from '../views/admin/ProjectManagement.vue';
+import CreateProjectView from '../views/admin/CreateProjectView.vue';
+import ThreadManagement from '../views/admin/ThreadManagement.vue';
+// import AnalyticsView from '../views/admin/AnalyticsView.vue'; 
+import AnalyticsView from '../views/admin/AnalyticsView.vue';
+import SettingsView from '../views/admin/SettingsView.vue';
+// import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
 
 //this is new
@@ -43,7 +56,7 @@ const routes = [
     path: "/",
     name: "HomePage",
     component: HomePage,
-    meta: { public: true },
+    meta: { requiresAuth: true },
   },
   {
     path: "/loading",
@@ -82,13 +95,19 @@ const routes = [
     path: "/blog",
     name: "Blog",
     meta: { requiresAuth: true },
-    component: () => import("../views/blog/Blog.vue"),
+    component: Blog,
   },
   {
     path: "/blog/:id",
     name: "BlogDetail",
     meta: { requiresAuth: true },
-    component: () => import("../views/blog/BlogDetail.vue"),
+    component: BlogDetail,
+  },
+  {
+    path: "/dashboard",
+    name: "Dashboard",
+    meta: { requiresAuth: true },
+    component: Dashboard,
   },
   {
     path: "/profile",
@@ -97,28 +116,34 @@ const routes = [
     component: Profile,
   },
   {
+    path: "/about",
+    name: "AboutUs",
+    meta: { public: true, title: "About Us" },
+    component: AboutUs,
+  },
+  {
     path: "/settings/:section?",
     name: "UserSettings",
     meta: { requiresAuth: true, title: "Settings" },
-    component: () => import("../views/settings/UserSettingsView.vue"),
+    component: UserSettingsView,
   },
   {
-    path: "/viewprofile/:id",
+    path: "/viewprofile/:username",
     name: "ViewProfile",
     meta: { requiresAuth: true },
-    component: () => import("../views/ViewProfile.vue"),
+    component: ViewProfile,
   },
   {
     path: "/notifications",
     name: "Notifications",
     meta: { requiresAuth: true, title: "Notifications" },
-    component: () => import("../views/notification/NotificationsView.vue"),
+    component: NotificationsView,
   },
   {
     path: "/help",
     name: "Help",
     meta: { requiresAuth: true },
-    component: () => import("../views/HelpView.vue"),
+    component: HelpView,
   },
   {
     path: "/terms-of-service",
@@ -151,10 +176,16 @@ const routes = [
     component: CreateProject,
   },
   {
-    path: "/showcase/edit/:id",
-    name: "EditProject",
+    path: "/showcase/create/assets",
+    name: "VisualProject",
     meta: { requiresAuth: true },
-    component: CreateProject,
+    component: VisualProject,
+  },
+  {
+    path: "/showcase/create/review",
+    name: "ReviewProject",
+    meta: { requiresAuth: true },
+    component: ReviewProject,
   },
   {
     path: "/admin",
@@ -163,100 +194,46 @@ const routes = [
     component: AdminDashboard,
   },
   {
-    path: "/admin/profile",
-    name: "AdminProfile",
-    meta: { requiresAuth: true, role: "admin", title: "Admin Account" },
-    component: () => import("../views/admin/AdminProfileView.vue"),
-  },
-  {
-    path: "/admin/profile/edit",
-    name: "AdminProfileEdit",
-    meta: { requiresAuth: true, role: "admin", title: "Edit Admin Account" },
-    component: () => import("../views/admin/AdminProfileEditView.vue"),
-  },
-  {
     path: "/admin/users",
     name: "UserManagement",
     meta: { requiresAuth: true, role: "admin" },
-    component: AdminUsersView,
+    component: UserManagement,
   },
   {
     path: "/admin/users/create",
     name: "CreateUser",
     meta: { requiresAuth: true, role: "admin" },
-    component: AdminCreateUserView,
+    component: CreateUserView,
   },
   {
     path: "/admin/projects",
     name: "ProjectManagement",
     meta: { requiresAuth: true, role: "admin" },
-    component: ProjectReviewManagement,
+    component: ProjectManagement,
   },
   {
     path: "/admin/projects/create",
     name: "CreateProjectAdmin",
     meta: { requiresAuth: true, role: "admin" },
-    redirect: "/admin/projects",
+    component: CreateProjectView,
   },
   {
     path: "/admin/threads",
     name: "ThreadManagement",
     meta: { requiresAuth: true, role: "admin" },
-    component: ThreadModerationView,
-  },
-  {
-    path: "/admin/reports",
-    name: "ReportManagement",
-    meta: { requiresAuth: true, role: "admin" },
-    component: AdminReportsView,
-  },
-  {
-    path: "/admin/blogs",
-    name: "BlogManagement",
-    meta: { requiresAuth: true, role: "admin" },
-    component: AdminBlogsView,
-  },
-  {
-    path: "/admin/blogs/create",
-    name: "CreateBlog",
-    meta: { requiresAuth: true, role: "admin" },
-    component: AdminBlogCreateView,
-  },
-  {
-    path: "/admin/categories",
-    name: "CategoryManagement",
-    meta: { requiresAuth: true, role: "admin" },
-    component: AdminCategoriesView,
-  },
-  {
-    path: "/admin/categories/:id",
-    name: "CategoryDetail",
-    meta: { requiresAuth: true, role: "admin" },
-    component: () => import("../views/admin/AdminCategoryDetailView.vue"),
-  },
-  {
-    path: "/admin/tags",
-    name: "TagManagement",
-    meta: { requiresAuth: true, role: "admin" },
-    component: AdminTagsView,
+    component: ThreadManagement,
   },
   {
     path: "/admin/analytics",
     name: "Analytics",
     meta: { requiresAuth: true, role: "admin" },
-    component: AdminAnalyticsView,
-  },
-  {
-    path: "/admin/activity",
-    name: "AdminActivity",
-    meta: { requiresAuth: true, role: "admin" },
-    component: AdminActivityView,
+    component: AnalyticsView,
   },
   {
     path: "/admin/settings",
     name: "Settings",
     meta: { requiresAuth: true, role: "admin" },
-    component: AdminSettingsView,
+    component: SettingsView,
   },
   {
     path: "/forum",
@@ -268,19 +245,13 @@ const routes = [
     path: "/forum/create",
     name: "CreateDiscussion",
     meta: { requiresAuth: true },
-    component: () => import("../views/forum/CreateDiscussionView.vue"),
-  },
-  {
-    path: "/forum/edit/:id",
-    name: "EditDiscussion",
-    meta: { requiresAuth: true },
-    component: () => import("../views/forum/CreateDiscussionView.vue"),
+    component: CreateDiscussionView,
   },
   {
     path: "/forum/:id",
     name: "ThreadReplies",
     meta: { requiresAuth: true },
-    component: () => import("../views/forum/ThreadRepliesView.vue"),
+    component: ThreadRepliesView,
   },
   {
     path: "/:pathMatch(.*)*",
@@ -288,26 +259,11 @@ const routes = [
   },
 ];
 
-const userHomeRoute = { name: "HomePage" };
-const adminHomeRoute = { name: "AdminDashboard" };
-
-const safeLastPath = (path) => {
-  if (!path || typeof path !== "string") {
-    return null;
-  }
-
-  if (path.startsWith("/admin") || path.startsWith("/login")) {
-    return null;
-  }
-
-  return path;
-};
-
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior() {
+  scrollBehavior(to, from, savedPosition) {
     // always scroll to top
     return { top: 0 }
   },
@@ -320,48 +276,44 @@ router.beforeEach(async (to, from) => {
   if (authStore.token && !authStore.user) {
     try {
       await authStore.fetchProfile();
-    } catch {
+    } catch (err) {
       // Ignored: fetchProfile handles token invalidation on 401s internally
     }
   }
 
   const isLoggedIn = !!authStore.token && !!authStore.user;
-  const userRole = String(authStore.user?.role || "").toLowerCase();
 
   // 2. Redirect logged-in users away from login page to their dashboard
   if (to.name === "login" && isLoggedIn) {
-    return userRole === "admin"
-      ? adminHomeRoute
-      : userHomeRoute;
+    return authStore.user?.role === "admin"
+      ? { name: "AdminDashboard" }
+      : { name: "Dashboard" };
   }
 
   // 3. Enforce authentication and role constraints
   if (to.meta.requiresAuth) {
     if (!isLoggedIn) {
-      return {
-        name: "login",
-        query: { redirect: to.fullPath },
-      };
+      return { name: "login" };
     }
 
     // Role verification guard
-    if (to.meta.role && userRole !== String(to.meta.role).toLowerCase()) {
+    if (to.meta.role && authStore.user?.role !== to.meta.role) {
       console.warn(`[Route Guard] Unauthorized access attempt to ${to.path}. Required: ${to.meta.role}. Current: ${authStore.user?.role}`);
-      
+
       // Cancel navigation if user was already browsing a valid page inside the app
       if (from && from.name && from.path !== "/") {
         return false;
       }
-      
+
       // Fallback reload redirect to their last successfully visited page
-      const lastPath = safeLastPath(localStorage.getItem("ANT_LastPath"));
+      const lastPath = localStorage.getItem("ANT_LastPath");
       if (lastPath && lastPath !== to.path) {
         return lastPath;
       }
-      
-      return userRole === "admin"
-        ? adminHomeRoute
-        : userHomeRoute;
+
+      return authStore.user?.role === "admin"
+        ? { name: "AdminDashboard" }
+        : { name: "Dashboard" };
     }
   }
 
@@ -370,8 +322,7 @@ router.beforeEach(async (to, from) => {
 
 router.afterEach((to) => {
   if (typeof window === "undefined") return;
-  document.body.classList.toggle("admin-route", to.path.startsWith("/admin"));
-  
+
   // Save last successfully visited valid student page (excluding login / restricted routes)
   if (to.meta.requiresAuth && !to.meta.role) {
     localStorage.setItem("ANT_LastPath", to.fullPath);
@@ -386,7 +337,7 @@ router.afterEach((to) => {
   const saved = localStorage.getItem("theme");
   const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
   const theme = saved ? saved : (prefersDark ? "dark" : "light");
-  
+
   if (theme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
     document.body.classList.add('dark-mode');
