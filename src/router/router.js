@@ -325,6 +325,13 @@ router.afterEach((to) => {
     document.title = `${to.meta.title} | ANT Forum`;
   }
 
+  // Handle admin route class on body
+  if (to.path.startsWith('/admin')) {
+    document.body.classList.add('admin-route');
+  } else {
+    document.body.classList.remove('admin-route');
+  }
+
   // Ensure theme is applied based on localStorage or system preference
   const saved = localStorage.getItem("theme");
   const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;

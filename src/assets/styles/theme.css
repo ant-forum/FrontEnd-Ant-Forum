@@ -75,8 +75,8 @@
   --color-tag-purple-text: #6d28d9;
 
   /* FONTS */
-  --font-family-base: "Kantumruy", "Inter", system-ui, -apple-system, sans-serif;
-  --font-family-display: "Sora", "Kantumruy", "Inter", system-ui, sans-serif;
+  --font-family-base: "MiSans Khmer", "Kantumruy", "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Sora", "MiSans Khmer", "Kantumruy", "Inter", system-ui, sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.25rem;

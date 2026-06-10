@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
@@ -19,6 +19,28 @@ const showDrafts = ref(false);
 const initialLoading = ref(true);
 const BLOGS_PER_PAGE = 6;
 const visibleBlogCount = ref(BLOGS_PER_PAGE);
+
+// Custom Dropdown State & Methods
+const isDropdownOpen = ref(false);
+const dropdownRef = ref(null);
+const selectSort = (val) => {
+  sortBy.value = val;
+  isDropdownOpen.value = false;
+};
+
+const handleClickOutside = (e) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+    isDropdownOpen.value = false;
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleClickOutside);
+});
 
 const fallbackCategories = [
   { id: 1, name: 'Frontend' },
@@ -332,9 +354,8 @@ const formatNumber = (num) => {
           <div class="header-text-main" style="max-width: 600px;">
             <span class="blog-page-kicker">Engineering Blog</span>
             <h1>Knowledge Base</h1>
-            <p class="mt-2 mb-2 fs-5 fw-medium text-light">Insights, tutorials, and deep dives from our developer community.</p>
             <p class="text-muted text-sm mb-0">
-              Explore hundreds of technical articles covering everything from frontend system design and React performance tuning, to backend scaling with Node and GraphQL. Stay up to date with the latest patterns, written by engineers, for engineers.
+              Explore technical articles, system design guides, and coding patterns written by engineers, for engineers.
             </p>
             <div class="d-flex gap-2 mt-4">
               <span class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"><i class="bi bi-journal-text me-1"></i> {{ blogStore.blogs.length }} Articles</span>
@@ -372,10 +393,40 @@ const formatNumber = (num) => {
             </span>
           </div>
 
-          <select v-model="sortBy" class="form-select form-select-sm rounded-pill sort-select w-auto">
-            <option value="latest">Sort: Latest first</option>
-            <option value="popular">Sort: Most viewed</option>
-          </select>
+          <!-- Custom Premium Dropdown -->
+          <div class="custom-dropdown-container" ref="dropdownRef">
+            <button 
+              type="button" 
+              class="sort-select-trigger" 
+              @click.stop="isDropdownOpen = !isDropdownOpen"
+            >
+              <i class="bi bi-arrow-down-up sort-icon-leading"></i>
+              <span>{{ sortBy === 'latest' ? 'Latest' : 'Most Viewed' }}</span>
+              <i class="bi bi-chevron-down chevron-icon" :class="{ 'rotate-180': isDropdownOpen }"></i>
+            </button>
+            <transition name="dropdown-fade-slide">
+              <div v-if="isDropdownOpen" class="custom-dropdown-menu">
+                <button 
+                  type="button" 
+                  class="custom-dropdown-item" 
+                  :class="{ active: sortBy === 'latest' }"
+                  @click="selectSort('latest')"
+                >
+                  <i class="bi bi-check2 check-icon"></i>
+                  <span>Latest first</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="custom-dropdown-item" 
+                  :class="{ active: sortBy === 'popular' }"
+                  @click="selectSort('popular')"
+                >
+                  <i class="bi bi-check2 check-icon"></i>
+                  <span>Most viewed</span>
+                </button>
+              </div>
+            </transition>
+          </div>
         </div>
 
         <!-- Blog Grid -->
@@ -426,11 +477,6 @@ const formatNumber = (num) => {
                   </div>
                   <h5 class="fw-bold mb-2 blog-title line-clamp-2">{{ post.title }}</h5>
                   
-                  <!-- Card Tags -->
-                  <div class="d-flex flex-wrap gap-1 mb-3">
-                    <span v-for="tag in post.tags" :key="tag" class="text-xxs text-muted">#{{ tag }}</span>
-                  </div>
-                  
                   <p class="text-muted text-sm mb-4 line-clamp-2">{{ post.excerpt || post.description }}</p>
                   
                   <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
@@ -461,23 +507,6 @@ const formatNumber = (num) => {
           </button>
         </div>
 
-        <!-- Newsletter Soft Section -->
-        <div class="mt-5 pt-5">
-          <div class="newsletter-card-soft text-center position-relative overflow-hidden">
-            <div class="position-relative z-2">
-              <h3 class="fw-bold mb-2">Engineering Weekly</h3>
-              <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
-                Subscribe to get the latest technical patterns and community highlights delivered to your inbox.
-              </p>
-              <div class="d-flex justify-content-center mx-auto" style="max-width: 450px;">
-                <div class="input-group rounded-pill overflow-hidden bg-surface border">
-                  <input type="email" class="form-control border-0 ps-4 py-3 bg-transparent" placeholder="your@email.com">
-                  <button class="btn-purple px-4 fw-bold" type="button">Subscribe</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -904,26 +933,122 @@ const formatNumber = (num) => {
   font-size: 0.95rem;
 }
 
-.sort-select {
-  appearance: none;
+/* Custom Dropdown Styling */
+.custom-dropdown-container {
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+
+.sort-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text);
   font-size: 13px;
   font-weight: 700;
-  padding: 8px 36px 8px 16px;
+  padding: 6px 14px;
   border-radius: 99px;
   cursor: pointer;
   outline: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.sort-select-trigger:hover {
+  border-color: var(--color-purple);
+  background-color: var(--color-surface-hover);
+  transform: translateY(-1px);
+}
+
+.sort-select-trigger:focus-visible {
+  border-color: var(--color-purple);
+  box-shadow: 0 0 0 3px var(--color-purple-light);
+}
+
+.sort-icon-leading {
+  font-size: 13px;
+  color: var(--color-purple);
+}
+
+.chevron-icon {
+  font-size: 12px;
+  color: var(--color-purple);
+  transition: transform 0.25s ease;
+}
+
+.chevron-icon.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  min-width: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.custom-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.sort-select:focus {
-  border-color: var(--color-purple);
-  box-shadow: 0 0 0 3px var(--color-purple-light);
+.custom-dropdown-item:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-purple);
+}
+
+.custom-dropdown-item.active {
+  background-color: var(--color-purple-light);
+  color: var(--color-purple);
+  font-weight: 700;
+}
+
+.check-icon {
+  font-size: 14px;
+  opacity: 0;
+  color: var(--color-purple);
+  transition: opacity 0.2s ease;
+}
+
+.custom-dropdown-item.active .check-icon {
+  opacity: 1;
+}
+
+/* Transition animations */
+.dropdown-fade-slide-enter-active,
+.dropdown-fade-slide-leave-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dropdown-fade-slide-enter-from,
+.dropdown-fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 @media (max-width: 992px) {
