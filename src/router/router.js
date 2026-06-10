@@ -32,14 +32,12 @@ import NotificationsView from "../views/notification/NotificationsView.vue"
 
 
 import AdminDashboard from '../views/admin/adminDashboard.vue';
-import UserManagement from '../views/admin/UserManagement.vue';
-import CreateUserView from '../views/admin/CreateUserView.vue';
-import ProjectManagement from '../views/admin/ProjectManagement.vue';
-import CreateProjectView from '../views/admin/CreateProjectView.vue';
-import ThreadManagement from '../views/admin/ThreadManagement.vue';
-// import AnalyticsView from '../views/admin/AnalyticsView.vue'; 
-import AnalyticsView from '../views/admin/AnalyticsView.vue';
-import SettingsView from '../views/admin/SettingsView.vue';
+import AdminUsersView from '../views/admin/AdminUsersView.vue';
+import AdminCreateUserView from '../views/admin/AdminCreateUserView.vue';
+import ProjectReviewManagement from '../views/admin/ProjectReviewManagement.vue';
+import ThreadModerationView from '../views/admin/ThreadModerationView.vue';
+import AdminAnalyticsView from '../views/admin/AdminAnalyticsView.vue';
+import AdminSettingsView from '../views/admin/AdminSettingsView.vue';
 // import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
 
 
@@ -197,43 +195,37 @@ const routes = [
     path: "/admin/users",
     name: "UserManagement",
     meta: { requiresAuth: true, role: "admin" },
-    component: UserManagement,
+    component: AdminUsersView,
   },
   {
     path: "/admin/users/create",
     name: "CreateUser",
     meta: { requiresAuth: true, role: "admin" },
-    component: CreateUserView,
+    component: AdminCreateUserView,
   },
   {
     path: "/admin/projects",
     name: "ProjectManagement",
     meta: { requiresAuth: true, role: "admin" },
-    component: ProjectManagement,
-  },
-  {
-    path: "/admin/projects/create",
-    name: "CreateProjectAdmin",
-    meta: { requiresAuth: true, role: "admin" },
-    component: CreateProjectView,
+    component: ProjectReviewManagement,
   },
   {
     path: "/admin/threads",
     name: "ThreadManagement",
     meta: { requiresAuth: true, role: "admin" },
-    component: ThreadManagement,
+    component: ThreadModerationView,
   },
   {
     path: "/admin/analytics",
     name: "Analytics",
     meta: { requiresAuth: true, role: "admin" },
-    component: AnalyticsView,
+    component: AdminAnalyticsView,
   },
   {
     path: "/admin/settings",
     name: "Settings",
     meta: { requiresAuth: true, role: "admin" },
-    component: SettingsView,
+    component: AdminSettingsView,
   },
   {
     path: "/forum",
