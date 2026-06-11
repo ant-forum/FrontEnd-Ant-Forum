@@ -26,7 +26,7 @@
             @click="openAvatarFilePicker"
           >
             <img
-              :src="avatarPreview || 'https://via.placeholder.com/130'"
+              :src="avatarPreview || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default&backgroundColor=b6e3f4,c0aede,d1d4f9'"
               class="rounded-circle"
               width="120"
               height="120"
@@ -229,6 +229,12 @@
       </div>
     </div>
 
+    <ImageCropModal
+      v-if="isAvatarCropOpen"
+      :source="avatarCropSource"
+      @confirm="handleAvatarCropConfirm"
+      @cancel="cancelAvatarCrop"
+    />
     <BaseModal
       v-if="showAvatarConfirmModal"
       title="Use this profile picture?"
@@ -266,6 +272,7 @@
           <span
             v-if="isAvatarUploading"
             class="spinner-border spinner-border-sm"
+            role="status"
             aria-hidden="true"
           ></span>
           <span>{{ isAvatarUploading ? "Updating..." : "Confirm Picture" }}</span>
@@ -455,25 +462,27 @@ const handleAvatarChange = async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
-  if (!file.type.startsWith("image/")) {
-    toast.error("Only image files allowed");
+  if (!file.type.startsWith('image/')) {
+    toast.error('Only image files allowed');
     clearAvatarInput();
     return;
   }
 
   if (file.size > 2 * 1024 * 1024) {
-    toast.error("Max size is 2MB");
+    toast.error('Max size is 2MB');
     clearAvatarInput();
     return;
   }
 
   clearAvatarInput();
-  const cropped = await openAvatarCropper(file);
-  if (!cropped) return;
+  await openAvatarCropper(file);
+};
 
+const handleAvatarCropConfirm = (result) => {
+  if (!result) return;
   revokePendingAvatarPreview();
-  pendingAvatarFile.value = cropped.file;
-  pendingAvatarPreview.value = cropped.previewUrl;
+  pendingAvatarFile.value = result.file;
+  pendingAvatarPreview.value = result.previewUrl;
   showAvatarConfirmModal.value = true;
 };
 
@@ -623,7 +632,7 @@ const getPlatformIcon = (platformStr) => {
   background: var(--color-surface) !important;
   backdrop-filter: blur(10px);
   border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   transition: background-color var(--transition-slow), border-color var(--transition-slow);
 }

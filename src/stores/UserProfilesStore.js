@@ -153,7 +153,7 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
   const addSocialLink = async (platform, url) => {
     try {
       isLoading.value = true;
-      const res = await api.post('/api/sociallink/createSocialLink', { platform, url });
+      const res = await api.post('/api/sociallink/createSocialLink', { platform, url, user_id: profile.value?.id });
       if (res.data && res.data.result === false) throw new Error(res.data.message);
       
       // Refetch

@@ -39,14 +39,14 @@
 
           <!-- Sidebar Header: User Info -->
           <div class="sidebar-user-info d-flex flex-column align-items-center text-center gap-2 mb-4">
-            <div class="position-relative mb-2">
-              <img :src="profile.avatar" class="rounded-circle border border-3 border-primary-subtle" width="80" height="80" alt="Profile avatar" style="object-fit: cover;">
+            <div class="avatar-wrapper mb-2">
+              <img :src="profile.avatar" class="avatar-img" alt="Profile avatar">
               <span class="status-indicator-dot"></span>
             </div>
             <div class="user-meta overflow-hidden w-100">
               <h5 class="mb-0 fw-bold text-truncate" style="font-size: 1.1rem; color: var(--color-text);">{{ profile.name }}</h5>
               <div class="text-muted small mb-2">{{ profile.username }}</div>
-              <span class="role-badge-sidebar">{{ profile.role }}</span>
+              <span class="role-badge-sidebar mb-2 d-inline-block">{{ profile.role }}</span>
             </div>
           </div>
           
@@ -91,11 +91,39 @@
             <!-- Left Info Block -->
             <div class="col-xl-8 col-lg-7 d-flex flex-column gap-4">
               <!-- Biography -->
-              <div class="profile-hero-card p-4">
-                <h5 class="fw-bold mb-3 themed-text">Biography</h5>
-                <p class="bio-text text-muted mb-0">
+              <div class="profile-hero-card p-4 position-relative overflow-hidden">
+                <div class="bio-quote-icon">
+                  <i class="bi bi-quote"></i>
+                </div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                  <div class="heading-accent"></div>
+                  <h5 class="fw-bold mb-0 themed-text">Biography</h5>
+                </div>
+                <p class="bio-text text-muted mb-4">
                   {{ profile.bio }}
                 </p>
+                <div class="row g-3 bio-meta-grid pt-3 border-top border-slate">
+                  <div class="col-6 col-sm-4">
+                    <div class="meta-item-box">
+                      <span class="meta-label">ROLE</span>
+                      <span class="meta-value">{{ profile.role }}</span>
+                    </div>
+                  </div>
+                  <div class="col-6 col-sm-4">
+                    <div class="meta-item-box">
+                      <span class="meta-label">STATUS</span>
+                      <span class="meta-value text-success d-flex align-items-center gap-1">
+                        <span class="status-pulse-dot"></span> Active
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-6 col-sm-4">
+                    <div class="meta-item-box">
+                      <span class="meta-label">COMMUNITY</span>
+                      <span class="meta-value">ANT Ecosystem</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Showcase Projects Brief -->
@@ -117,12 +145,18 @@
 
                 <div v-else class="row g-3">
                   <div v-for="project in profile.projects.slice(0, 2)" :key="project.title" class="col-md-6">
-                    <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
+                    <div 
+                      class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between"
+                      @click="router.push(`/showcase/${project.id || project.title}`)"
+                    >
                       <div>
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                          <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
-                          <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                          <div class="project-icon-box">
+                            <i class="bi bi-folder2-open text-primary-purple"></i>
+                          </div>
+                          <span class="star-badge"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
                         </div>
+                        <h6 class="fw-bold mb-2 themed-text project-title-v2">{{ project.title }}</h6>
                         <p class="text-muted small mb-4 line-clamp-3">
                           {{ project.desc }}
                         </p>
@@ -171,25 +205,28 @@
             <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
               <!-- Stack Proficiency -->
               <div class="dashboard-card-modern p-4">
-                <h6 class="themed-text fw-bold mb-4" style="font-size: 0.9rem; letter-spacing: 0.3px;">Platform Statistics</h6>
+                <div class="d-flex align-items-center gap-2 mb-4">
+                  <div class="heading-accent"></div>
+                  <h6 class="themed-text fw-bold mb-0" style="font-size: 0.9rem; letter-spacing: 0.3px;">Platform Statistics</h6>
+                </div>
                 
-                <div class="d-flex flex-column gap-3 mb-4">
-                  <div class="proficiency-item">
-                    <div class="d-flex justify-content-between mb-1">
-                      <span class="proficiency-label">FORUM REPUTATION</span>
-                      <span class="proficiency-percentage">1.2k</span>
-                    </div>
-                    <div class="proficiency-progress">
-                      <div class="proficiency-progress-fill" style="width: 80%;"></div>
+                <div class="row g-3 mb-4">
+                  <div class="col-6">
+                    <div class="stat-card-mini text-center p-3">
+                      <div class="stat-icon mx-auto mb-2 rep-icon">
+                        <i class="bi bi-award-fill"></i>
+                      </div>
+                      <div class="stat-num">1.2k</div>
+                      <div class="stat-label">REPUTATION</div>
                     </div>
                   </div>
-                  <div class="proficiency-item">
-                    <div class="d-flex justify-content-between mb-1">
-                      <span class="proficiency-label">THREAD ENGAGEMENT</span>
-                      <span class="proficiency-percentage">92%</span>
-                    </div>
-                    <div class="proficiency-progress">
-                      <div class="proficiency-progress-fill" style="width: 92%;"></div>
+                  <div class="col-6">
+                    <div class="stat-card-mini text-center p-3">
+                      <div class="stat-icon mx-auto mb-2 engage-icon">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                      </div>
+                      <div class="stat-num">92%</div>
+                      <div class="stat-label">ENGAGEMENT</div>
                     </div>
                   </div>
                 </div>
@@ -239,12 +276,18 @@
 
           <div v-else class="row g-4">
             <div v-for="project in profile.projects" :key="project.title" class="col-md-6 col-lg-4">
-              <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
+              <div 
+                class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between"
+                @click="router.push(`/showcase/${project.id || project.title}`)"
+              >
                 <div>
-                  <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
-                    <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
+                  <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="project-icon-box">
+                      <i class="bi bi-folder2-open text-primary-purple"></i>
+                    </div>
+                    <span class="star-badge"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
                   </div>
+                  <h6 class="fw-bold mb-2 themed-text project-title-v2">{{ project.title }}</h6>
                   <p class="text-muted small mb-4 line-clamp-3">
                     {{ project.desc }}
                   </p>
@@ -347,12 +390,12 @@ const profile = reactive({
 const isOwnProfile = computed(() => {
   if (!authStore.user) return false;
   
-  const currentUsername = (authStore.user.username || "").toLowerCase().replace("@", "");
-  const visitedId = String(route.params.id || "").toLowerCase().replace("@", "");
+  const currentId = String(authStore.user.id || "");
+  const currentUsername = cleanUsername(authStore.user.username);
+  const currentName = cleanUsername(authStore.user.name);
+  const visitedId = cleanParam(route.params.id || "");
   
-  return currentUsername === visitedId || 
-         (authStore.user.id && String(authStore.user.id) === visitedId) ||
-         (authStore.user.name && authStore.user.name.toLowerCase().replace(/\s+/g, "_") === visitedId);
+  return currentId === visitedId || currentUsername === visitedId || currentName === visitedId;
 });
 
 const socialLinks = ref([]);
@@ -376,15 +419,17 @@ const loadSocialLinks = async () => {
 };
 
 const addSocialLink = async () => {
-  if (!newSocialPlatform.value || !newSocialUrl.value) return;
+  if (!newSocialPlatform.value || !newSocialUrl.value || !authStore.user) return;
   isAddingSocial.value = true;
   try {
     await api.post('/api/sociallink/createSocialLink', {
       platform: newSocialPlatform.value,
-      url: newSocialUrl.value
+      url: newSocialUrl.value,
+      user_id: authStore.user.id
     });
     newSocialPlatform.value = '';
     newSocialUrl.value = '';
+    showSocialModal.value = false;
     toast.success("Social link added!");
     await loadSocialLinks();
   } catch (err) {
@@ -418,6 +463,35 @@ const getPlatformIcon = (platformStr) => {
   if (p.includes('discord')) return 'bi-discord';
   if (p.includes('tiktok')) return 'bi-tiktok';
   return 'bi-link-45deg';
+};
+
+const loadUserProjects = async (userId) => {
+  try {
+    const res = await api.get('/api/projects');
+    const allProjects = res.data?.data || res.data || [];
+    // Filter projects to only those belonging to the current user
+    const userProjects = allProjects.filter(p => 
+      Number(p.user_id) === Number(userId) || Number(p.created_by) === Number(userId)
+    );
+    
+    // Map API project data to UI format
+    return userProjects.map(p => {
+      const avgRating = Number(p.average_rating) || 0;
+      const stars = avgRating > 0 ? `${avgRating.toFixed(1)}/5` : (p.stars || '0.0');
+      
+      return {
+        id: p.id,
+        title: p.title || p.name,
+        desc: p.description || p.desc || 'No description available.',
+        tags: p.tags ? (typeof p.tags === 'string' ? p.tags.split(',').map(t => t.trim().toUpperCase()) : p.tags) : ['GENERAL'],
+        stars: stars,
+        image: p.thumbnail || p.image_url || p.screenshot
+      };
+    });
+  } catch (err) {
+    console.warn("Failed to load user projects:", err);
+    return [];
+  }
 };
 
 // Mock database for standard ANT users
@@ -666,6 +740,11 @@ const cleanParam = (paramStr) => {
   return String(paramStr).toLowerCase().trim().replace("@", "");
 };
 
+const cleanUsername = (str) => {
+  if (!str) return "";
+  return String(str).toLowerCase().trim().replace("@", "").replace(/\s+/g, "_");
+};
+
 const loadProfileData = async () => {
   isLoading.value = true;
   await forumStore.fetchDiscussions().catch(e => console.error("Could not fetch discussions:", e));
@@ -754,7 +833,17 @@ const populateProfile = async (data) => {
   }
   
   profile.skills = normalizeSkills(data.skills);
-  profile.projects = Array.isArray(data.projects) ? data.projects : [];
+  
+  // Load and map user projects from API
+  let userProjects = Array.isArray(data.projects) ? data.projects : [];
+  if (profile.id) {
+    const apiProjects = await loadUserProjects(profile.id);
+    if (apiProjects.length > 0) {
+      userProjects = apiProjects;
+    }
+    await loadSocialLinks(); // Load social links after we have profile.id
+  }
+  profile.projects = userProjects;
   
   const userDiscussions = forumStore.discussions.filter(d => {
     // Primary check: match by exact user_id from the backend
@@ -780,8 +869,6 @@ const populateProfile = async (data) => {
   const fallbackActivity = Array.isArray(data.activity) && data.activity.length ? data.activity : [];
   profile.activity = userDiscussions.length > 0 ? userDiscussions : fallbackActivity;
 
-  // Load social links dynamically after getting profile ID
-  await loadSocialLinks();
 };
 
 onMounted(loadProfileData);
@@ -812,20 +899,49 @@ const handleSendMessage = () => {
 /* Sidebar Styling */
 .sidebar-card-modern {
   background: var(--color-surface) !important;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
   border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-sm);
-  transition: background-color var(--transition-slow), border-color var(--transition-slow);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  transition: all var(--transition-slow);
+}
+.sidebar-card-modern:hover {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--color-purple) 0%, var(--color-primary) 100%);
+  border-radius: 50%;
+  box-shadow: 0 8px 20px -6px rgba(139, 92, 246, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-base);
+}
+.avatar-wrapper:hover {
+  transform: scale(1.05);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-surface);
 }
 
 .btn-back-profile {
-  transition: color var(--transition-base);
+  transition: all var(--transition-base);
 }
 .btn-back-profile:hover {
   color: var(--color-primary) !important;
+  transform: translateX(-3px);
 }
 
 .sidebar-user-info {
@@ -837,11 +953,12 @@ const handleSendMessage = () => {
   position: absolute;
   bottom: 2px;
   right: 2px;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   background-color: var(--color-success);
-  border: 2px solid var(--color-surface) !important;
+  border: 3px solid var(--color-surface) !important;
   border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .role-badge-sidebar {
@@ -850,11 +967,12 @@ const handleSendMessage = () => {
   color: var(--color-purple) !important;
   font-size: 0.65rem;
   font-weight: 800;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
-  padding: 0.25rem 0.75rem;
+  padding: 0.3rem 0.85rem;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--color-purple-light) !important;
+  border: 1px solid rgba(139, 92, 246, 0.15) !important;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.05);
 }
 
 .sidebar-nav {
@@ -880,14 +998,15 @@ const handleSendMessage = () => {
 .nav-btn-modern:hover {
   background: var(--color-surface-hover) !important;
   color: var(--color-text) !important;
-  transform: translateX(2px);
+  transform: translateX(4px);
 }
 
 .nav-btn-modern.active {
-  background: var(--color-surface-hover);
+  background: linear-gradient(90deg, var(--color-primary-light) 0%, transparent 100%);
   color: var(--color-primary) !important;
-  border-left: 3px solid var(--color-primary);
+  border-left: 4px solid var(--color-primary);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  transform: translateX(4px);
 }
 
 .border-slate {
@@ -909,28 +1028,30 @@ const handleSendMessage = () => {
 }
 
 .btn-follow {
-  background: var(--color-primary);
-  color: #ffffff;
-  border: 1px solid var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  color: #ffffff !important;
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px -4px var(--color-primary-light);
+  box-shadow: 0 4px 15px -3px rgba(139, 92, 246, 0.4);
   transition: all var(--transition-base);
 }
 .btn-follow:hover {
-  background: var(--color-primary-hover);
-  color: #ffffff;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -3px rgba(139, 92, 246, 0.5);
+  filter: brightness(1.1);
 }
 
 .btn-following {
-  background: var(--color-surface-hover);
+  background: var(--color-success-light) !important;
   color: var(--color-success) !important;
-  border: 1px solid var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: var(--radius-md);
   transition: all var(--transition-base);
+  box-shadow: 0 4px 12px -4px rgba(16, 185, 129, 0.2);
 }
 .btn-following:hover {
-  background: var(--color-success-light);
+  background: rgba(16, 185, 129, 0.2) !important;
+  transform: translateY(-1px);
 }
 
 .btn-message {
@@ -938,33 +1059,44 @@ const handleSendMessage = () => {
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   transition: all var(--transition-base);
 }
 .btn-message:hover {
   background: var(--color-surface-hover);
   color: var(--color-text);
-  border-color: var(--color-primary);
+  border-color: var(--color-purple);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(139, 92, 246, 0.1);
 }
 
 /* Main Cards */
 .dashboard-card-modern {
   background: var(--color-surface) !important;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
   border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
   color: var(--color-text);
+  transition: box-shadow var(--transition-base);
+}
+.dashboard-card-modern:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
 }
 
 .profile-hero-card {
   background: var(--color-surface) !important;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
   border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
   position: relative;
   overflow: hidden;
   color: var(--color-text);
+  transition: all var(--transition-base);
+}
+.profile-hero-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
 }
 
 .profile-hero-card::before {
@@ -973,7 +1105,7 @@ const handleSendMessage = () => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 4px;
+  height: 5px;
   background: linear-gradient(90deg, var(--color-purple) 0%, var(--color-primary) 100%);
 }
 
@@ -996,31 +1128,180 @@ const handleSendMessage = () => {
 .card-empty-state {
   border: 1px dashed var(--color-border);
   background: var(--color-surface-hover);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
 }
 
 /* Projects */
 .project-card-modern-v2 {
   background: var(--color-surface) !important;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(16px);
   border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl);
-  transition: all var(--transition-base);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
   color: var(--color-text);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.project-card-modern-v2::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-purple), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-base);
 }
 .project-card-modern-v2:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md) !important;
-  border-color: var(--color-purple-light) !important;
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(139, 92, 246, 0.12) !important;
+  border-color: rgba(139, 92, 246, 0.25) !important;
+}
+.project-card-modern-v2:hover::after {
+  opacity: 1;
 }
 .project-title-v2 {
   font-size: 0.95rem;
+  font-weight: 700;
   color: var(--color-text) !important;
   transition: color var(--transition-base);
 }
 .project-card-modern-v2:hover .project-title-v2 {
   color: var(--color-purple) !important;
+}
+
+.project-icon-box {
+  width: 42px;
+  height: 42px;
+  background: var(--color-purple-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.05);
+}
+
+.star-badge {
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Stat Widgets */
+.stat-card-mini {
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+.stat-card-mini:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.05);
+}
+.stat-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+.rep-icon {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+.engage-icon {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--color-purple);
+}
+.stat-num {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.stat-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+
+/* Biography elements */
+.bio-quote-icon {
+  position: absolute;
+  right: 15px;
+  bottom: 0;
+  font-size: 6rem;
+  color: var(--color-border);
+  opacity: 0.2;
+  pointer-events: none;
+  line-height: 1;
+}
+.heading-accent {
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(180deg, var(--color-purple) 0%, var(--color-primary) 100%);
+  border-radius: var(--radius-pill);
+}
+
+.bio-meta-grid {
+  margin-top: 1rem;
+}
+.meta-item-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.meta-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+.meta-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.status-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-success);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse 1.6s infinite;
+}
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
 
 .tag-badge-v2 {
