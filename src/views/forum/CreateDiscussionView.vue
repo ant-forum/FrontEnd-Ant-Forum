@@ -22,6 +22,10 @@ const backendCategories = ref([]);
 
 const isEditorFocused = ref(false);
 const isSubmitting = ref(false);
+const showReadiness = ref(true);
+const descriptionEditorRef = ref(null);
+const CODE_SNIPPET_HEADING = "### Code Snippet";
+const attachedCodeSnippetRegex = /\n{0,2}### Code Snippet\s*\n```[^\n`]*\n([\s\S]*?)\n```\s*$/i;
 
 // Form State
 const form = ref({
@@ -96,6 +100,48 @@ const tagColorMap = {
 const getTagChipStyle = (color) => {
   const t = (color && Object.prototype.hasOwnProperty.call(tagColorMap, color)) ? tagColorMap[color] : tagColorMap.gray;
   return { background: t.bg, color: t.color };
+};
+
+const extractAttachedCodeSnippet = (body = "") => {
+  const text = String(body || "");
+  const match = text.match(attachedCodeSnippetRegex);
+
+  if (!match) {
+    return {
+      body: text,
+      code: "",
+    };
+  }
+
+  return {
+    body: text.replace(attachedCodeSnippetRegex, "").trim(),
+    code: match[1].trimEnd(),
+  };
+};
+
+const getDiscussionDescription = (disc = {}) => {
+  return disc.description ||
+    disc.Description ||
+    disc.body ||
+    disc.Body ||
+    disc.content ||
+    disc.Content ||
+    disc.details ||
+    disc.detail ||
+    disc.excerpt ||
+    "";
+};
+
+const buildDescriptionPayload = () => {
+  const { body } = extractAttachedCodeSnippet(form.value.excerpt);
+  const cleanBody = body.trim();
+  const cleanCode = form.value.hasCode ? form.value.code.trim() : "";
+
+  if (!cleanCode) {
+    return cleanBody;
+  }
+
+  return `${cleanBody}\n\n${CODE_SNIPPET_HEADING}\n\`\`\`\n${cleanCode}\n\`\`\``;
 };
 
 const addTag = (tagInputObj) => {
@@ -255,6 +301,8 @@ const isDraftSaved = ref(false);
 const lastSavedTime = ref("");
 
 const saveDraft = () => {
+  if (isEditMode.value) return;
+
   const draft = {
     title: form.value.title,
     excerpt: form.value.excerpt,
@@ -279,6 +327,8 @@ let autosaveTimeout = null;
 watch(
   [form, tagsList],
   () => {
+    if (isEditMode.value) return;
+
     if (autosaveTimeout) clearTimeout(autosaveTimeout);
     autosaveTimeout = setTimeout(() => {
       if (form.value.title.trim() || form.value.excerpt.trim()) {
@@ -359,12 +409,14 @@ const isFormReady = computed(() => {
     isTitleValid.value &&
     isBodyValid.value &&
     isCategoryValid.value &&
-    hasTags.value
+    (isEditMode.value || hasTags.value)
   );
 });
 
 onMounted(async () => {
-  checkDraft();
+  if (!isEditMode.value) {
+    checkDraft();
+  }
 
   // Fetch real categories from backend so we can resolve numeric IDs
   try {
@@ -392,16 +444,26 @@ onMounted(async () => {
       const discId = route.params.id;
       await forumStore.fetchDiscussion(discId);
       const disc = forumStore.discussion;
-      console.log("[CreateDiscussionView] loaded disc for editing:", JSON.parse(JSON.stringify(disc)));
       if (disc) {
+        const rawBody = getDiscussionDescription(disc);
+        const attachedSnippet = extractAttachedCodeSnippet(rawBody);
         form.value.title = disc.title || "";
-        form.value.excerpt = disc.description || disc.Description || disc.body || disc.excerpt || "";
-        form.value.code = disc.code || "";
-        form.value.hasCode = disc.hasCode || false;
+        form.value.excerpt = attachedSnippet.body;
+        form.value.code = disc.code || attachedSnippet.code || "";
+        form.value.hasCode = Boolean(disc.hasCode || disc.code || attachedSnippet.code);
 
         // Match category ID directly
         if (disc.category_id) {
           form.value.category = Number(disc.category_id);
+        } else if (disc.category) {
+          const matchedCategory = backendCategories.value.find((cat) => {
+            const candidates = [cat.id, cat.name, cat.type]
+              .filter(Boolean)
+              .map((value) => String(value).toLowerCase());
+
+            return candidates.includes(String(disc.category).toLowerCase());
+          });
+          form.value.category = matchedCategory?.id || form.value.category || 1;
         } else {
           form.value.category = 1;
         }
@@ -415,12 +477,25 @@ onMounted(async () => {
             color: getTagColor(t),
             id: disc.tag_id || null
           }));
+        } else if (disc.tag_name || disc.tag || disc.tag_names) {
+          const tagName = disc.tag_name || disc.tag || disc.tag_names;
+          tagsList.value = String(tagName)
+            .split(',')
+            .map(t => t.trim())
+            .filter(Boolean)
+            .map(t => ({
+              label: t,
+              color: getTagColor(t),
+              id: disc.tag_id || null
+            }));
         }
       }
     } catch (err) {
       toast.error("Failed to load discussion details for editing.");
     } finally {
       isFetchingData.value = false;
+      await nextTick();
+      descriptionEditorRef.value?.setMarkdown(form.value.excerpt);
     }
   } else {
     if (!form.value.title) {
@@ -443,7 +518,7 @@ const handleSubmit = async () => {
     return;
   }
 
-  if (tagsList.value.length === 0) {
+  if (!isEditMode.value && tagsList.value.length === 0) {
     toast.error("Please add at least one tag to categorise your post.");
     return;
   }
@@ -452,17 +527,21 @@ const handleSubmit = async () => {
 
   try {
     let resolvedCategoryId = Number(form.value.category) || 1;
+    const descriptionPayload = buildDescriptionPayload();
+    const codePayload = form.value.hasCode && form.value.code.trim()
+      ? form.value.code.trim()
+      : null;
 
     if (isEditMode.value) {
       await forumStore.updateDiscussion(route.params.id, {
         title: form.value.title,
-        description: form.value.excerpt,
+        description: descriptionPayload,
         category_id: resolvedCategoryId,
-        excerpt: form.value.excerpt,
+        excerpt: descriptionPayload,
         category: form.value.category,
         tags: tagsList.value,
-        code: form.value.hasCode ? form.value.code : null,
-        hasCode: form.value.hasCode,
+        code: codePayload,
+        hasCode: Boolean(codePayload),
       });
       localStorage.removeItem("ant_forum_discussion_draft");
       toast.success("Discussion updated successfully!");
@@ -470,13 +549,13 @@ const handleSubmit = async () => {
     } else {
       await forumStore.createDiscussion({
         title: form.value.title,
-        description: form.value.excerpt,
+        description: descriptionPayload,
         category_id: resolvedCategoryId,
-        excerpt: form.value.excerpt,
+        excerpt: descriptionPayload,
         category: form.value.category,
         tags: tagsList.value,
-        code: form.value.hasCode ? form.value.code : null,
-        hasCode: form.value.hasCode,
+        code: codePayload,
+        hasCode: Boolean(codePayload),
       });
       localStorage.removeItem("ant_forum_discussion_draft");
       toast.success("Discussion posted successfully!");
@@ -675,6 +754,7 @@ const handleSubmit = async () => {
               </p>
 
               <MarkdownEditor
+                ref="descriptionEditorRef"
                 v-model="form.excerpt"
                 :is-draft-saved="isDraftSaved"
                 :last-saved-time="lastSavedTime"
@@ -763,57 +843,40 @@ const handleSubmit = async () => {
       <div class="sidebar-column">
         <!-- Sleek Readiness Widget -->
         <div class="readiness-widget" :class="{ completed: isFormReady }">
-          <div class="widget-header">
+          <div class="widget-header clickable" @click="showReadiness = !showReadiness" style="cursor: pointer; display: flex; align-items: center; width: 100%;">
             <i class="bi bi-stars text-gradient-purple"></i>
             <strong>Post Readiness</strong>
+            <i class="bi ms-auto chevron-toggle" :class="showReadiness ? 'bi-chevron-up' : 'bi-chevron-down'" style="font-size: 11px; color: var(--color-text-muted);"></i>
           </div>
-          <div class="readiness-progress-wrapper">
-            <div class="readiness-progress-bar-bg">
-              <div class="readiness-progress-bar-fill" :style="{ width: checklistProgress + '%' }"></div>
-            </div>
-            <span class="readiness-percentage">{{ checklistProgress }}%</span>
-          </div>
+          <transition name="slide-fade">
+            <div v-if="showReadiness" class="readiness-content-body" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+              <div class="readiness-progress-wrapper" style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <div class="readiness-progress-bar-bg" style="flex: 1; height: 6px; background: var(--color-surface-hover); border-radius: 3px;">
+                  <div class="readiness-progress-bar-fill" :style="{ width: checklistProgress + '%' }" style="height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-success)); border-radius: 3px; transition: width 0.3s ease;"></div>
+                </div>
+                <span class="readiness-percentage" style="font-size: 12px; font-weight: 700; color: var(--color-text-muted);">{{ checklistProgress }}%</span>
+              </div>
 
-          <div class="readiness-checklist-vertical">
-            <div class="readiness-check-item" :class="{ active: isTitleValid }">
-              <i class="bi" :class="isTitleValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-              <span>Title (12+ chars)</span>
+              <div class="readiness-checklist-vertical" style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="readiness-check-item" :class="{ active: isTitleValid }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
+                  <i class="bi" :class="isTitleValid ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
+                  <span>Title (12+ chars)</span>
+                </div>
+                <div class="readiness-check-item" :class="{ active: isBodyValid }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
+                  <i class="bi" :class="isBodyValid ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
+                  <span>Description (25+ chars)</span>
+                </div>
+                <div class="readiness-check-item" :class="{ active: isCategoryValid }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
+                  <i class="bi" :class="isCategoryValid ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
+                  <span>Select Category</span>
+                </div>
+                <div class="readiness-check-item" :class="{ active: hasTags }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
+                  <i class="bi" :class="hasTags ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
+                  <span>Add at least 1 Tag</span>
+                </div>
+              </div>
             </div>
-            <div class="readiness-check-item" :class="{ active: isBodyValid }">
-              <i class="bi" :class="isBodyValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-              <span>Description (25+ chars)</span>
-            </div>
-            <div class="readiness-check-item" :class="{ active: isCategoryValid }">
-              <i class="bi" :class="isCategoryValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-              <span>Select Category</span>
-            </div>
-            <div class="readiness-check-item" :class="{ active: hasTags }">
-              <i class="bi" :class="hasTags ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-              <span>Add at least 1 Tag</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pro Writing Tips Widget -->
-        <div class="tips-widget">
-          <div class="widget-header">
-            <i class="bi bi-lightning-charge-fill text-warning"></i>
-            <strong>Pro Writing Tips</strong>
-          </div>
-          <div class="tips-vertical-list">
-            <div class="tip-box">
-              <span class="tip-box-title">Provide Context</span>
-              <p>Describe your environment, system config, frameworks, and versions.</p>
-            </div>
-            <div class="tip-box">
-              <span class="tip-box-title">Format Code Blocks</span>
-              <p>Surround snippets with <code>```</code> to highlight your code dynamically.</p>
-            </div>
-            <div class="tip-box">
-              <span class="tip-box-title">Add Descriptive Tags</span>
-              <p>Tags like <code>Vue.js</code> help developers easily discover your thread.</p>
-            </div>
-          </div>
+          </transition>
         </div>
       </div>
     </div>
@@ -1011,7 +1074,7 @@ const handleSubmit = async () => {
 /* 2-Column Grid Layout */
 .create-layout-grid {
   display: grid;
-  grid-template-columns: 1fr 310px;
+  grid-template-columns: 1fr 220px;
   gap: 28px;
   align-items: start;
 }
@@ -1796,80 +1859,80 @@ const handleSubmit = async () => {
 .readiness-widget, .tips-widget {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   transition: all 0.3s ease;
 }
 
 .readiness-widget.completed {
   border-color: var(--color-success);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.1);
 }
 
 .widget-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 16px;
+  gap: 8px;
+  font-size: 14px;
   border-bottom: 1px solid var(--color-border);
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 
 .widget-header i {
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .readiness-progress-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .readiness-progress-bar-bg {
   flex: 1;
-  height: 8px;
+  height: 6px;
   background: var(--color-surface-hover);
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .readiness-progress-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--color-purple, #8b5cf6), var(--color-primary));
-  border-radius: 4px;
+  border-radius: 3px;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .readiness-percentage {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--color-primary);
-  width: 40px;
+  width: 32px;
   text-align: right;
 }
 
 .readiness-checklist-vertical {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
 .readiness-check-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   color: var(--color-text-muted);
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .readiness-check-item i {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--color-border);
 }
 
@@ -1885,13 +1948,13 @@ const handleSubmit = async () => {
 .tips-vertical-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .tip-box {
   background: var(--color-surface-hover);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 10px 12px;
   border: 1px solid var(--color-border);
   transition: all 0.2s ease;
 }
@@ -1899,29 +1962,29 @@ const handleSubmit = async () => {
 .tip-box:hover {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .tip-box-title {
   display: block;
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--color-text);
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .tip-box p {
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--color-text-muted);
-  line-height: 1.5;
+  line-height: 1.4;
   margin: 0;
 }
 
 .tip-box code {
   background: var(--color-surface);
-  padding: 2px 6px;
+  padding: 1px 4px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   color: var(--color-primary);
   border: 1px solid var(--color-border);

@@ -21,9 +21,11 @@ body {
   overflow-x: hidden;
   position: relative;
   transition: background-color var(--transition-slow), color var(--transition-slow);
+  padding-top: 90px; /* Account for fixed header */
 }
 
 body.admin-route {
+  padding-top: 0; /* Admin uses its own sticky topbar, no fixed public header */
   background-color: var(--color-bg);
   background-image:
     linear-gradient(var(--color-border-soft) 1px, transparent 1px),

@@ -141,7 +141,6 @@
               <select id="blog-status" v-model="form.status" class="form-select">
                 <option value="draft">Save as draft</option>
                 <option value="published">Publish now</option>
-                <option value="scheduled">Schedule for later</option>
               </select>
             </div>
           </div>
@@ -456,8 +455,7 @@ const savePost = async () => {
     const formData = new FormData();
     const content = form.description;
     formData.append('title', form.title);
-    formData.append('description', createPlainTextExcerpt(content, 180));
-    formData.append('content', content);
+    formData.append('description', content);
     formData.append('category_id', form.category_id);
     formData.append('status', form.status);
     

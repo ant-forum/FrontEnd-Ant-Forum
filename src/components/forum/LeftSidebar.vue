@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useForumStore } from '@/stores/ForumStore';
 
 // Disable automatic attribute inheritance
 defineOptions({
@@ -11,8 +12,28 @@ const emit = defineEmits(['selectTab']);
 
 const router = useRouter();
 const route = useRoute();
+const forumStore = useForumStore();
 
 const isDrawerMobileOpen = ref(false);
+
+const getCategoryIcon = (category) => {
+  const label = String(category.name || category.label || category.type || '').toLowerCase();
+  if (label.includes('question') || label.includes('answer')) return 'bi-question-circle';
+  if (label.includes('tutorial') || label.includes('guide')) return 'bi-book';
+  if (label.includes('showcase') || label.includes('project')) return 'bi-rocket-takeoff';
+  if (label.includes('announce') || label.includes('news')) return 'bi-megaphone';
+  if (label.includes('resource') || label.includes('link')) return 'bi-link-45deg';
+  if (label.includes('idea') || label.includes('feature')) return 'bi-lightbulb';
+  return 'bi-chat-left-text';
+};
+
+const displayCategories = computed(() => {
+  return forumStore.categories.map((category) => ({
+    id: String(category.id),
+    label: category.name || category.label || category.type || `Category ${category.id}`,
+    icon: category.icon || getCategoryIcon(category),
+  }));
+});
 
 const handleItemClick = (category, tabId) => {
   isDrawerMobileOpen.value = false;
@@ -28,6 +49,12 @@ const handleItemClick = (category, tabId) => {
 // Computed active states
 const isCategoryActive = (cat) => route.query.category === cat || (!route.query.category && !route.query.tab && cat === 'all');
 const isTabActive = (tab) => route.query.tab === tab;
+
+onMounted(() => {
+  if (forumStore.categories.length === 0) {
+    forumStore.fetchCategories().catch(() => {});
+  }
+});
 </script>
 
 <template>
@@ -70,30 +97,14 @@ const isTabActive = (tab) => route.query.tab === tab;
         </button>
 
         <button 
+          v-for="category in displayCategories"
+          :key="category.id"
           class="sidebar-menu-item" 
-          :class="{ active: isCategoryActive('question') }" 
-          @click="handleItemClick('question', null)"
+          :class="{ active: isCategoryActive(category.id) }" 
+          @click="handleItemClick(category.id, null)"
         >
-          <i class="bi bi-question-circle"></i>
-          <span>Questions</span>
-        </button>
-
-        <button 
-          class="sidebar-menu-item" 
-          :class="{ active: isCategoryActive('tutorial') }" 
-          @click="handleItemClick('tutorial', null)"
-        >
-          <i class="bi bi-book"></i>
-          <span>Tutorials</span>
-        </button>
-        
-        <button 
-          class="sidebar-menu-item" 
-          :class="{ active: isCategoryActive('showcase') }" 
-          @click="handleItemClick('showcase', null)"
-        >
-          <i class="bi bi-rocket-takeoff"></i>
-          <span>Showcase</span>
+          <i :class="['bi', category.icon]"></i>
+          <span>{{ category.label }}</span>
         </button>
       </div>
     </div>

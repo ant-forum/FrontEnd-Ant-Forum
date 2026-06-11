@@ -1,3 +1,311 @@
+<template>
+  <Navbar />
+  
+  <div class="container profile-dashboard py-4">
+    <!-- Skeleton loader state -->
+    <div v-if="isLoading" class="row g-4 fade-in-content">
+      <!-- Left Skeleton -->
+      <aside class="col-lg-3 col-md-4">
+        <div class="sidebar-card-modern p-4">
+          <div class="skeleton-shimmer rounded-circle mb-4 mx-auto" style="width: 80px; height: 80px;"></div>
+          <div class="skeleton-shimmer rounded mb-2 w-75 mx-auto" style="height: 18px;"></div>
+          <div class="skeleton-shimmer rounded w-50 mx-auto mb-4" style="height: 12px;"></div>
+          <hr class="my-4 border-slate">
+          <div class="skeleton-shimmer rounded mb-2" style="height: 32px;"></div>
+          <div class="skeleton-shimmer rounded" style="height: 32px;"></div>
+        </div>
+      </aside>
+      <!-- Right Skeleton -->
+      <main class="col-lg-9 col-md-8">
+        <div class="dashboard-card-modern p-4 mb-4">
+          <div class="skeleton-shimmer rounded mb-3 w-50" style="height: 24px;"></div>
+          <div class="skeleton-shimmer rounded mb-2 w-100" style="height: 14px;"></div>
+          <div class="skeleton-shimmer rounded w-75" style="height: 14px;"></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Loaded profile state -->
+    <div v-else class="row g-4 fade-in-content">
+      
+      <!-- Left Sidebar Column -->
+      <aside class="col-lg-3 col-md-4">
+        <div class="sidebar-card-modern shadow-sm p-4">
+          <!-- Back button -->
+          <button @click="router.back()" class="btn-back-profile mb-4 d-inline-flex align-items-center gap-2 border-0 bg-transparent text-muted small fw-bold ps-0">
+            <i class="bi bi-arrow-left"></i>
+            <span>Go Back</span>
+          </button>
+
+          <!-- Sidebar Header: User Info -->
+          <div class="sidebar-user-info d-flex flex-column align-items-center text-center gap-2 mb-4">
+            <div class="position-relative mb-2">
+              <img :src="profile.avatar" class="rounded-circle border border-3 border-primary-subtle" width="80" height="80" alt="Profile avatar" style="object-fit: cover;">
+              <span class="status-indicator-dot"></span>
+            </div>
+            <div class="user-meta overflow-hidden w-100">
+              <h5 class="mb-0 fw-bold text-truncate" style="font-size: 1.1rem; color: var(--color-text);">{{ profile.name }}</h5>
+              <div class="text-muted small mb-2">{{ profile.username }}</div>
+              <span class="role-badge-sidebar">{{ profile.role }}</span>
+            </div>
+          </div>
+          
+          <!-- Navigation Menu -->
+          <nav class="sidebar-nav mb-4">
+            <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+              <li>
+                <button 
+                  @click="activeTab = 'profile'" 
+                  class="nav-btn-modern" 
+                  :class="{ 'active': activeTab === 'profile' }"
+                >
+                  <i class="bi bi-person-fill fs-5"></i>
+                  <span>About Profile</span>
+                </button>
+              </li>
+              <li>
+                <button 
+                  @click="activeTab = 'projects'" 
+                  class="nav-btn-modern" 
+                  :class="{ 'active': activeTab === 'projects' }"
+                >
+                  <i class="bi bi-folder-fill fs-5"></i>
+                  <span>Showcase Projects ({{ profile.projects.length }})</span>
+                </button>
+              </li>
+            </ul>
+          </nav>
+          
+          <hr class="my-3 border-slate">
+      
+        </div>
+      </aside>
+      
+      <!-- Main Content Column -->
+      <main class="col-lg-9 col-md-8">
+        
+        <!-- Tab 1: Profile Overview -->
+        <div v-if="activeTab === 'profile'" class="fade-in-content">
+          <div class="row g-4">
+            
+            <!-- Left Info Block -->
+            <div class="col-xl-8 col-lg-7 d-flex flex-column gap-4">
+              <!-- Biography -->
+              <div class="profile-hero-card p-4">
+                <h5 class="fw-bold mb-3 themed-text">Biography</h5>
+                <p class="bio-text text-muted mb-0">
+                  {{ profile.bio }}
+                </p>
+              </div>
+
+              <!-- Showcase Projects Brief -->
+              <div class="featured-projects-section">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-rocket-takeoff text-primary-purple fs-4"></i>
+                    <h5 class="mb-0 fw-bold header-title themed-text">Showcase Projects</h5>
+                  </div>
+                  <button v-if="profile.projects.length > 0" @click="activeTab = 'projects'" class="btn btn-link-premium p-0 text-decoration-none">
+                    View All
+                  </button>
+                </div>
+                
+                <div v-if="profile.projects.length === 0" class="card-empty-state p-4 text-center">
+                  <i class="bi bi-folder2-open text-muted fs-3 mb-2 d-block"></i>
+                  <span class="text-muted small">No showcased projects created yet.</span>
+                </div>
+
+                <div v-else class="row g-3">
+                  <div v-for="project in profile.projects.slice(0, 2)" :key="project.title" class="col-md-6">
+                    <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
+                      <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                          <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                          <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
+                        </div>
+                        <p class="text-muted small mb-4 line-clamp-3">
+                          {{ project.desc }}
+                        </p>
+                      </div>
+                      
+                      <div class="d-flex flex-wrap gap-2">
+                        <span v-for="tag in project.tags" :key="tag" class="tag-badge-v2" :class="tag.toLowerCase()">
+                          {{ tag }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recent Activities -->
+              <div class="recent-activity-section">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                  <i class="bi bi-clock-history text-primary-purple fs-4"></i>
+                  <h5 class="mb-0 fw-bold header-title themed-text">Recent Feed Activity</h5>
+                </div>
+                
+                <div v-if="profile.activity.length === 0" class="card-empty-state p-4 text-center">
+                  <i class="bi bi-activity text-muted fs-3 mb-2 d-block"></i>
+                  <span class="text-muted small">No recent forum activity recorded.</span>
+                </div>
+
+                <div v-else class="d-flex flex-column gap-3">
+                  <div v-for="act in profile.activity" :key="act.id || act.title" 
+                       class="activity-row-modern p-3 d-flex align-items-center gap-3"
+                       style="cursor: pointer;"
+                       @click="act.link ? router.push(act.link) : null">
+                    <div class="activity-icon-container">
+                      <i :class="['bi', act.icon, 'text-primary-purple']"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                      <h6 class="mb-1 fw-bold themed-text text-truncate small-title">{{ act.title }}</h6>
+                      <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ act.meta }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Info Block -->
+            <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
+              <!-- Stack Proficiency -->
+              <div class="dashboard-card-modern p-4">
+                <h6 class="themed-text fw-bold mb-4" style="font-size: 0.9rem; letter-spacing: 0.3px;">Platform Statistics</h6>
+                
+                <div class="d-flex flex-column gap-3 mb-4">
+                  <div class="proficiency-item">
+                    <div class="d-flex justify-content-between mb-1">
+                      <span class="proficiency-label">FORUM REPUTATION</span>
+                      <span class="proficiency-percentage">1.2k</span>
+                    </div>
+                    <div class="proficiency-progress">
+                      <div class="proficiency-progress-fill" style="width: 80%;"></div>
+                    </div>
+                  </div>
+                  <div class="proficiency-item">
+                    <div class="d-flex justify-content-between mb-1">
+                      <span class="proficiency-label">THREAD ENGAGEMENT</span>
+                      <span class="proficiency-percentage">92%</span>
+                    </div>
+                    <div class="proficiency-progress">
+                      <div class="proficiency-progress-fill" style="width: 92%;"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <hr class="my-3 border-slate">
+                
+                <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 0.5px;">LANGUAGES & STACK</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  <span v-for="skill in profile.skills" :key="skill" class="language-badge">
+                    {{ skill }}
+                  </span>
+                </div>
+                
+                <hr class="my-3 border-slate">
+                
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <h6 class="text-muted text-uppercase fw-bold mb-0" style="font-size: 0.7rem; letter-spacing: 0.5px;">SOCIAL LINKS</h6>
+                  <button v-if="isOwnProfile" @click="showSocialModal = true" class="btn btn-sm btn-link text-primary-purple p-0 text-decoration-none" style="font-size: 0.8rem;">
+                    <i class="bi bi-pencil-square"></i> Manage
+                  </button>
+                </div>
+                
+                <div v-if="socialLinks.length === 0" class="text-muted small">No social links added.</div>
+                <div v-else class="d-flex flex-wrap gap-3">
+                  <a v-for="link in socialLinks" :key="link.id" :href="link.url" target="_blank" class="social-icon-btn d-flex align-items-center justify-content-center rounded-circle text-decoration-none" :title="link.platform">
+                    <i :class="getPlatformIcon(link.platform)"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        
+        <!-- Tab 2: Projects Showcase -->
+        <div v-else-if="activeTab === 'projects'" class="fade-in-content">
+          <div class="dashboard-card-modern p-4 mb-4">
+            <h4 class="fw-bold mb-2 header-title themed-text">{{ profile.name }}'s Projects</h4>
+            <p class="text-muted mb-0 subtitle-text">Showcase of web application architectures, system designs, and microservices.</p>
+          </div>
+          
+          <div v-if="profile.projects.length === 0" class="card-empty-state p-5 text-center bg-surface border rounded-4">
+            <i class="bi bi-folder2-open text-muted fs-1 mb-3 d-block"></i>
+            <h5 class="fw-bold themed-text">No Projects Showcase</h5>
+            <p class="text-muted small">This developer has not added any projects to their showcase folder yet.</p>
+          </div>
+
+          <div v-else class="row g-4">
+            <div v-for="project in profile.projects" :key="project.title" class="col-md-6 col-lg-4">
+              <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                    <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
+                  </div>
+                  <p class="text-muted small mb-4 line-clamp-3">
+                    {{ project.desc }}
+                  </p>
+                </div>
+                
+                <div class="d-flex flex-wrap gap-2">
+                  <span v-for="tag in project.tags" :key="tag" class="tag-badge-v2" :class="tag.toLowerCase()">
+                    {{ tag }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </main>
+      
+    </div>
+  </div>
+  
+  <Footer />
+
+  <!-- Social Links Management Modal -->
+  <BaseModal
+    v-if="showSocialModal"
+    title="Manage Social Links"
+    @closeModal="showSocialModal = false"
+  >
+    <div class="mb-4">
+      <h6 class="mb-3 fw-bold themed-text">Add New Link</h6>
+      <div class="d-flex gap-2 mb-2">
+        <input v-model="newSocialPlatform" type="text" class="form-control" placeholder="Platform (e.g. LinkedIn)">
+        <input v-model="newSocialUrl" type="text" class="form-control" placeholder="URL (https://...)">
+      </div>
+      <button class="btn btn-primary w-100" style="background: var(--color-primary-purple); border: none;" :disabled="!newSocialPlatform || !newSocialUrl || isAddingSocial" @click="addSocialLink">
+        {{ isAddingSocial ? 'Adding...' : 'Add Social Link' }}
+      </button>
+    </div>
+    
+    <hr class="border-slate my-4">
+    
+    <h6 class="mb-3 fw-bold themed-text">Your Links</h6>
+    <div v-if="socialLinks.length === 0" class="text-muted small">You haven't added any social links yet.</div>
+    <div v-else class="d-flex flex-column gap-2">
+      <div v-for="link in socialLinks" :key="link.id" class="d-flex align-items-center justify-content-between p-3 border rounded bg-surface">
+        <div class="d-flex align-items-center gap-3">
+          <i :class="getPlatformIcon(link.platform)" class="fs-4 text-primary-purple"></i>
+          <div>
+            <strong class="d-block themed-text">{{ link.platform }}</strong>
+            <a :href="link.url" target="_blank" class="small text-muted text-decoration-none">{{ link.url }}</a>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" @click="deleteSocialLink(link.id)">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+  </BaseModal>
+
+</template>
+
 <script setup>
 import { reactive, ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -8,11 +316,14 @@ import api from "../api/api";
 import { resolveMediaUrl } from "../utils/mediaUrl";
 import { normalizeSkills } from "../utils/profileFields";
 import { useForumStore } from "../stores/ForumStore";
+import { useToast } from "vue-toastification";
+import BaseModal from "../components/base/BaseModal.vue";
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const forumStore = useForumStore();
+const toast = useToast();
 
 // Tab state: 'profile' | 'projects'
 const activeTab = ref("profile");
@@ -37,12 +348,77 @@ const isOwnProfile = computed(() => {
   if (!authStore.user) return false;
   
   const currentUsername = (authStore.user.username || "").toLowerCase().replace("@", "");
-  const visitedUsername = (route.params.username || "").toLowerCase().replace("@", "");
+  const visitedId = String(route.params.id || "").toLowerCase().replace("@", "");
   
-  return currentUsername === visitedUsername || 
-         (authStore.user.id && String(authStore.user.id) === visitedUsername) ||
-         (authStore.user.name && authStore.user.name.toLowerCase().replace(/\s+/g, "_") === visitedUsername);
+  return currentUsername === visitedId || 
+         (authStore.user.id && String(authStore.user.id) === visitedId) ||
+         (authStore.user.name && authStore.user.name.toLowerCase().replace(/\s+/g, "_") === visitedId);
 });
+
+const socialLinks = ref([]);
+const showSocialModal = ref(false);
+const newSocialPlatform = ref("");
+const newSocialUrl = ref("");
+const isAddingSocial = ref(false);
+
+const loadSocialLinks = async () => {
+  try {
+    const res = await api.get('/api/sociallink/get-all/social-link');
+    const links = res.data?.data || res.data || [];
+    if (links.length > 0 && links[0].user_id) {
+      socialLinks.value = links.filter(l => Number(l.user_id) === Number(profile.id));
+    } else {
+      socialLinks.value = links;
+    }
+  } catch (err) {
+    console.warn("Failed to load social links:", err);
+  }
+};
+
+const addSocialLink = async () => {
+  if (!newSocialPlatform.value || !newSocialUrl.value) return;
+  isAddingSocial.value = true;
+  try {
+    await api.post('/api/sociallink/createSocialLink', {
+      platform: newSocialPlatform.value,
+      url: newSocialUrl.value
+    });
+    newSocialPlatform.value = '';
+    newSocialUrl.value = '';
+    toast.success("Social link added!");
+    await loadSocialLinks();
+  } catch (err) {
+    toast.error("Failed to add social link.");
+    console.error(err);
+  } finally {
+    isAddingSocial.value = false;
+  }
+};
+
+const deleteSocialLink = async (id) => {
+  if (!confirm("Are you sure you want to delete this link?")) return;
+  try {
+    await api.delete(`/api/sociallink/delete/social-link/${id}`);
+    toast.success("Social link deleted!");
+    await loadSocialLinks();
+  } catch (err) {
+    toast.error("Failed to delete social link.");
+    console.error(err);
+  }
+};
+
+const getPlatformIcon = (platformStr) => {
+  const p = (platformStr || '').toLowerCase();
+  if (p.includes('linkedin')) return 'bi-linkedin';
+  if (p.includes('github')) return 'bi-github';
+  if (p.includes('twitter') || p.includes('x')) return 'bi-twitter-x';
+  if (p.includes('facebook')) return 'bi-facebook';
+  if (p.includes('instagram')) return 'bi-instagram';
+  if (p.includes('youtube')) return 'bi-youtube';
+  if (p.includes('discord')) return 'bi-discord';
+  if (p.includes('tiktok')) return 'bi-tiktok';
+  return 'bi-link-45deg';
+};
 
 // Mock database for standard ANT users
 const mockProfiles = {
@@ -285,55 +661,40 @@ const mockProfiles = {
   }
 };
 
-const cleanUsername = (usernameStr) => {
-  if (!usernameStr) return "";
-  return usernameStr.toLowerCase().trim().replace("@", "");
+const cleanParam = (paramStr) => {
+  if (!paramStr) return "";
+  return String(paramStr).toLowerCase().trim().replace("@", "");
 };
 
 const loadProfileData = async () => {
   isLoading.value = true;
   await forumStore.fetchDiscussions().catch(e => console.error("Could not fetch discussions:", e));
-  const rawParam = route.params.username;
-  const username = cleanUsername(rawParam);
+  const rawParam = route.params.id;
+  const id = cleanParam(rawParam);
 
-  const useApi = import.meta.env.VITE_USE_API === "true" || import.meta.env.VITE_USE_API === true;
-  
-  if (useApi) {
-    try {
-      // Attempt 1: Fetch profile from backend
-      const res = await api.get(`/api/users/profile/${username}`);
-      const data = res.data?.data || res.data;
-      if (data && data.name) {
-        populateProfile(data);
-        isLoading.value = false;
-        return;
-      }
-    } catch (err) {
-      console.warn("Could not load from `/api/users/profile/:username`, trying `/api/users/:username`...");
-      try {
-        const res = await api.get(`/api/users/${username}`);
-        const data = res.data?.data || res.data;
-        if (data && data.name) {
-          populateProfile(data);
-          isLoading.value = false;
-          return;
-        }
-      } catch (err2) {
-        console.warn("Backend profile requests failed. Falling back to mock database...");
-      }
+  try {
+    // Attempt 1: Fetch profile from backend by id
+    const res = await api.get(`/api/admin/get-user/${id}`);
+    const data = res.data?.data || res.data;
+    if (data && (data.name || data.username || data.id)) {
+      await populateProfile(data);
+      isLoading.value = false;
+      return;
     }
+  } catch (err) {
+    console.warn("Backend profile requests failed. Falling back to mock database...");
   }
 
   // Fallback to high-fidelity mock profiles
   // Check direct username mapping first
-  let match = mockProfiles[username];
+  let match = mockProfiles[id];
   
   // If not found directly, check by matching name (e.g. "Elena Fisher" -> "elena")
   if (!match) {
-    const formattedName = username.replace(/_/g, " ").replace(/-/g, " ");
+    const formattedName = id.replace(/_/g, " ").replace(/-/g, " ");
     const matchingKey = Object.keys(mockProfiles).find(key => {
       const pName = mockProfiles[key].name.toLowerCase();
-      return pName.includes(username) || username.includes(key);
+      return pName.includes(id) || id.includes(key);
     });
     if (matchingKey) {
       match = mockProfiles[matchingKey];
@@ -347,7 +708,7 @@ const loadProfileData = async () => {
     bio: "Proud member of the ANT Forum development community. Passionate about learning web architectures, sharing coding tips, and collaborating on projects.",
     github: "https://github.com",
     linkedin: "https://linkedin.com",
-    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username || "user"}&backgroundColor=b6e3f4,c0aede,d1d4f9`,
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${id || "user"}&backgroundColor=b6e3f4,c0aede,d1d4f9`,
     skills: ["JavaScript", "HTML", "CSS", "Git"],
     projects: [
       {
@@ -362,8 +723,8 @@ const loadProfileData = async () => {
     ]
   };
 
-  populateProfile({
-    username: "@" + username,
+  await populateProfile({
+    username: "@" + id,
     ...profileFallback
   });
 
@@ -373,9 +734,10 @@ const loadProfileData = async () => {
   }, 400);
 };
 
-const populateProfile = (data) => {
+const populateProfile = async (data) => {
+  profile.id = data.id || data.user_id || null;
   profile.username = data.username || data.name?.toLowerCase().replace(/\s+/g, "_") || "";
-  profile.name = data.name || "Ecosystem Member";
+  profile.name = data.name || data.username || "Ecosystem Member";
   profile.bio = data.bio || "No biography provided yet.";
   profile.role = data.role || "Student";
   profile.github = data.github || "https://github.com";
@@ -395,6 +757,12 @@ const populateProfile = (data) => {
   profile.projects = Array.isArray(data.projects) ? data.projects : [];
   
   const userDiscussions = forumStore.discussions.filter(d => {
+    // Primary check: match by exact user_id from the backend
+    const dUserId = d.user_id;
+    const profileId = profile.id || data.id;
+    if (dUserId && profileId && Number(dUserId) === Number(profileId)) return true;
+
+    // Fallback check: match by name/username
     const authorName = (typeof d.author === 'object' && d.author !== null) ? (d.author.username || d.author.name) : d.author;
     const authorStr = (authorName || '').toLowerCase();
     const currentUsername = profile.username.replace('@', '').toLowerCase();
@@ -411,11 +779,14 @@ const populateProfile = (data) => {
 
   const fallbackActivity = Array.isArray(data.activity) && data.activity.length ? data.activity : [];
   profile.activity = userDiscussions.length > 0 ? userDiscussions : fallbackActivity;
+
+  // Load social links dynamically after getting profile ID
+  await loadSocialLinks();
 };
 
 onMounted(loadProfileData);
 
-watch(() => route.params.username, () => {
+watch(() => route.params.id, () => {
   loadProfileData();
 });
 
@@ -427,298 +798,6 @@ const handleSendMessage = () => {
   alert(`Opening chat dashboard with ${profile.name}...`);
 };
 </script>
-
-<template>
-  <Navbar />
-  
-  <div class="container profile-dashboard py-4">
-    <!-- Skeleton loader state -->
-    <div v-if="isLoading" class="row g-4 fade-in-content">
-      <!-- Left Skeleton -->
-      <aside class="col-lg-3 col-md-4">
-        <div class="sidebar-card-modern p-4">
-          <div class="skeleton-shimmer rounded-circle mb-4 mx-auto" style="width: 80px; height: 80px;"></div>
-          <div class="skeleton-shimmer rounded mb-2 w-75 mx-auto" style="height: 18px;"></div>
-          <div class="skeleton-shimmer rounded w-50 mx-auto mb-4" style="height: 12px;"></div>
-          <hr class="my-4 border-slate">
-          <div class="skeleton-shimmer rounded mb-2" style="height: 32px;"></div>
-          <div class="skeleton-shimmer rounded" style="height: 32px;"></div>
-        </div>
-      </aside>
-      <!-- Right Skeleton -->
-      <main class="col-lg-9 col-md-8">
-        <div class="dashboard-card-modern p-4 mb-4">
-          <div class="skeleton-shimmer rounded mb-3 w-50" style="height: 24px;"></div>
-          <div class="skeleton-shimmer rounded mb-2 w-100" style="height: 14px;"></div>
-          <div class="skeleton-shimmer rounded w-75" style="height: 14px;"></div>
-        </div>
-      </main>
-    </div>
-
-    <!-- Loaded profile state -->
-    <div v-else class="row g-4 fade-in-content">
-      
-      <!-- Left Sidebar Column -->
-      <aside class="col-lg-3 col-md-4">
-        <div class="sidebar-card-modern shadow-sm p-4">
-          <!-- Back button -->
-          <button @click="router.back()" class="btn-back-profile mb-4 d-inline-flex align-items-center gap-2 border-0 bg-transparent text-muted small fw-bold ps-0">
-            <i class="bi bi-arrow-left"></i>
-            <span>Go Back</span>
-          </button>
-
-          <!-- Sidebar Header: User Info -->
-          <div class="sidebar-user-info d-flex flex-column align-items-center text-center gap-2 mb-4">
-            <div class="position-relative mb-2">
-              <img :src="profile.avatar" class="rounded-circle border border-3 border-primary-subtle" width="80" height="80" alt="Profile avatar" style="object-fit: cover;">
-              <span class="status-indicator-dot"></span>
-            </div>
-            <div class="user-meta overflow-hidden w-100">
-              <h5 class="mb-0 fw-bold text-truncate" style="font-size: 1.1rem; color: var(--color-text);">{{ profile.name }}</h5>
-              <div class="text-muted small mb-2">{{ profile.username }}</div>
-              <span class="role-badge-sidebar">{{ profile.role }}</span>
-            </div>
-          </div>
-          
-          <!-- Navigation Menu -->
-          <nav class="sidebar-nav mb-4">
-            <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
-              <li>
-                <button 
-                  @click="activeTab = 'profile'" 
-                  class="nav-btn-modern" 
-                  :class="{ 'active': activeTab === 'profile' }"
-                >
-                  <i class="bi bi-person-fill fs-5"></i>
-                  <span>About Profile</span>
-                </button>
-              </li>
-              <li>
-                <button 
-                  @click="activeTab = 'projects'" 
-                  class="nav-btn-modern" 
-                  :class="{ 'active': activeTab === 'projects' }"
-                >
-                  <i class="bi bi-folder-fill fs-5"></i>
-                  <span>Showcase Projects ({{ profile.projects.length }})</span>
-                </button>
-              </li>
-            </ul>
-          </nav>
-          
-          <hr class="my-3 border-slate">
-          
-          <!-- Action Buttons / Edit Link -->
-          <div class="sidebar-actions d-flex flex-column gap-2">
-            <template v-if="isOwnProfile">
-              <router-link to="/profile" class="btn btn-edit-self py-2 fw-bold d-flex align-items-center justify-content-center gap-2 text-decoration-none w-100">
-                <i class="bi bi-pencil-fill"></i>
-                <span>Edit Profile</span>
-              </router-link>
-            </template>
-            <template v-else>
-              <button 
-                @click="handleFollowToggle" 
-                class="btn py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"
-                :class="isFollowing ? 'btn-following' : 'btn-follow'"
-              >
-                <i :class="isFollowing ? 'bi bi-person-check-fill' : 'bi bi-person-plus-fill'"></i>
-                <span>{{ isFollowing ? 'Following' : 'Follow User' }}</span>
-              </button>
-              <button 
-                @click="handleSendMessage" 
-                class="btn btn-message py-2 fw-bold w-100 d-flex align-items-center justify-content-center gap-2"
-              >
-                <i class="bi bi-chat-left-text-fill"></i>
-                <span>Send Message</span>
-              </button>
-            </template>
-          </div>
-        </div>
-      </aside>
-      
-      <!-- Main Content Column -->
-      <main class="col-lg-9 col-md-8">
-        
-        <!-- Tab 1: Profile Overview -->
-        <div v-if="activeTab === 'profile'" class="fade-in-content">
-          <div class="row g-4">
-            
-            <!-- Left Info Block -->
-            <div class="col-xl-8 col-lg-7 d-flex flex-column gap-4">
-              <!-- Biography -->
-              <div class="profile-hero-card p-4">
-                <h5 class="fw-bold mb-3 themed-text">Biography</h5>
-                <p class="bio-text text-muted mb-0">
-                  {{ profile.bio }}
-                </p>
-              </div>
-
-              <!-- Showcase Projects Brief -->
-              <div class="featured-projects-section">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-rocket-takeoff text-primary-purple fs-4"></i>
-                    <h5 class="mb-0 fw-bold header-title themed-text">Showcase Projects</h5>
-                  </div>
-                  <button v-if="profile.projects.length > 0" @click="activeTab = 'projects'" class="btn btn-link-premium p-0 text-decoration-none">
-                    View All
-                  </button>
-                </div>
-                
-                <div v-if="profile.projects.length === 0" class="card-empty-state p-4 text-center">
-                  <i class="bi bi-folder2-open text-muted fs-3 mb-2 d-block"></i>
-                  <span class="text-muted small">No showcased projects created yet.</span>
-                </div>
-
-                <div v-else class="row g-3">
-                  <div v-for="project in profile.projects.slice(0, 2)" :key="project.title" class="col-md-6">
-                    <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
-                      <div>
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                          <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
-                          <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
-                        </div>
-                        <p class="text-muted small mb-4 line-clamp-3">
-                          {{ project.desc }}
-                        </p>
-                      </div>
-                      
-                      <div class="d-flex flex-wrap gap-2">
-                        <span v-for="tag in project.tags" :key="tag" class="tag-badge-v2" :class="tag.toLowerCase()">
-                          {{ tag }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Recent Activities -->
-              <div class="recent-activity-section">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                  <i class="bi bi-clock-history text-primary-purple fs-4"></i>
-                  <h5 class="mb-0 fw-bold header-title themed-text">Recent Feed Activity</h5>
-                </div>
-                
-                <div v-if="profile.activity.length === 0" class="card-empty-state p-4 text-center">
-                  <i class="bi bi-activity text-muted fs-3 mb-2 d-block"></i>
-                  <span class="text-muted small">No recent forum activity recorded.</span>
-                </div>
-
-                <div v-else class="d-flex flex-column gap-3">
-                  <div v-for="act in profile.activity" :key="act.id || act.title" 
-                       class="activity-row-modern p-3 d-flex align-items-center gap-3"
-                       style="cursor: pointer;"
-                       @click="act.link ? router.push(act.link) : null">
-                    <div class="activity-icon-container">
-                      <i :class="['bi', act.icon, 'text-primary-purple']"></i>
-                    </div>
-                    <div class="overflow-hidden">
-                      <h6 class="mb-1 fw-bold themed-text text-truncate small-title">{{ act.title }}</h6>
-                      <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ act.meta }}</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Info Block -->
-            <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
-              <!-- Stack Proficiency -->
-              <div class="dashboard-card-modern p-4">
-                <h6 class="themed-text fw-bold mb-4" style="font-size: 0.9rem; letter-spacing: 0.3px;">Platform Statistics</h6>
-                
-                <div class="d-flex flex-column gap-3 mb-4">
-                  <div class="proficiency-item">
-                    <div class="d-flex justify-content-between mb-1">
-                      <span class="proficiency-label">FORUM REPUTATION</span>
-                      <span class="proficiency-percentage">1.2k</span>
-                    </div>
-                    <div class="proficiency-progress">
-                      <div class="proficiency-progress-fill" style="width: 80%;"></div>
-                    </div>
-                  </div>
-                  <div class="proficiency-item">
-                    <div class="d-flex justify-content-between mb-1">
-                      <span class="proficiency-label">THREAD ENGAGEMENT</span>
-                      <span class="proficiency-percentage">92%</span>
-                    </div>
-                    <div class="proficiency-progress">
-                      <div class="proficiency-progress-fill" style="width: 92%;"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <hr class="my-3 border-slate">
-                
-                <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 0.5px;">LANGUAGES & STACK</h6>
-                <div class="d-flex flex-wrap gap-2">
-                  <span v-for="skill in profile.skills" :key="skill" class="language-badge">
-                    {{ skill }}
-                  </span>
-                </div>
-                
-                <hr class="my-3 border-slate">
-                
-                <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.7rem; letter-spacing: 0.5px;">SOCIAL LINKS</h6>
-                <div class="d-flex gap-3">
-                  <a :href="profile.github" target="_blank" class="social-icon-btn d-flex align-items-center justify-content-center rounded-circle text-decoration-none">
-                    <i class="bi bi-github"></i>
-                  </a>
-                  <a :href="profile.linkedin" target="_blank" class="social-icon-btn d-flex align-items-center justify-content-center rounded-circle text-decoration-none">
-                    <i class="bi bi-linkedin"></i>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-        
-        <!-- Tab 2: Projects Showcase -->
-        <div v-else-if="activeTab === 'projects'" class="fade-in-content">
-          <div class="dashboard-card-modern p-4 mb-4">
-            <h4 class="fw-bold mb-2 header-title themed-text">{{ profile.name }}'s Projects</h4>
-            <p class="text-muted mb-0 subtitle-text">Showcase of web application architectures, system designs, and microservices.</p>
-          </div>
-          
-          <div v-if="profile.projects.length === 0" class="card-empty-state p-5 text-center bg-surface border rounded-4">
-            <i class="bi bi-folder2-open text-muted fs-1 mb-3 d-block"></i>
-            <h5 class="fw-bold themed-text">No Projects Showcase</h5>
-            <p class="text-muted small">This developer has not added any projects to their showcase folder yet.</p>
-          </div>
-
-          <div v-else class="row g-4">
-            <div v-for="project in profile.projects" :key="project.title" class="col-md-6 col-lg-4">
-              <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
-                <div>
-                  <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
-                    <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
-                  </div>
-                  <p class="text-muted small mb-4 line-clamp-3">
-                    {{ project.desc }}
-                  </p>
-                </div>
-                
-                <div class="d-flex flex-wrap gap-2">
-                  <span v-for="tag in project.tags" :key="tag" class="tag-badge-v2" :class="tag.toLowerCase()">
-                    {{ tag }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-      </main>
-      
-    </div>
-  </div>
-  
-  <Footer />
-</template>
 
 <style scoped>
 .profile-dashboard {
@@ -750,10 +829,8 @@ const handleSendMessage = () => {
 }
 
 .sidebar-user-info {
-  background: var(--color-surface-hover) !important;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border) !important;
-  padding: 1rem 0.75rem;
+  background: transparent !important;
+  padding: 1rem 0;
 }
 
 .status-indicator-dot {
@@ -807,9 +884,10 @@ const handleSendMessage = () => {
 }
 
 .nav-btn-modern.active {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
-  color: #ffffff !important;
-  box-shadow: 0 8px 20px -6px var(--color-primary-light);
+  background: var(--color-surface-hover);
+  color: var(--color-primary) !important;
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 
 .border-slate {
@@ -818,29 +896,28 @@ const handleSendMessage = () => {
 
 /* Action buttons */
 .btn-edit-self {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
-  color: #ffffff;
-  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius-md);
-  box-shadow: 0 6px 16px -4px var(--color-primary-light);
   transition: all var(--transition-base);
 }
 .btn-edit-self:hover {
-  background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-purple-hover, #6d28d9) 100%);
-  color: #ffffff;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
   transform: translateY(-1px);
 }
 
 .btn-follow {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  background: var(--color-primary);
   color: #ffffff;
-  border: none;
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius-md);
-  box-shadow: 0 6px 16px -4px var(--color-primary-light);
+  box-shadow: 0 4px 12px -4px var(--color-primary-light);
   transition: all var(--transition-base);
 }
 .btn-follow:hover {
-  background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-purple-hover, #6d28d9) 100%);
+  background: var(--color-primary-hover);
   color: #ffffff;
   transform: translateY(-1px);
 }
@@ -904,6 +981,8 @@ const handleSendMessage = () => {
   font-size: 0.92rem;
   line-height: 1.65;
   color: var(--color-text-muted) !important;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .themed-text {

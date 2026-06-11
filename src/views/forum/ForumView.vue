@@ -3,7 +3,6 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Navbar from '@/components/layouts/header.vue';
 import BaseFooter from '@/components/layouts/footer.vue';
-import FeaturedDiscussion from '@/components/forum/FeaturedDiscussion.vue';
 import DiscussionThreadList from '@/components/forum/DiscussionThreadList.vue';
 import ForumSidebar from '@/components/forum/ForumSidebar.vue';
 import LeftSidebar from '@/components/forum/LeftSidebar.vue';
@@ -33,14 +32,35 @@ const searchInput = ref(null);
 
 const filters = ['Latest', 'Top Rated', 'Unanswered'];
 
-const categories = [
-  { id: 'all', label: 'All Topics', icon: 'bi-grid-fill', color: 'purple', gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)' },
-  { id: 'question', label: 'Questions', icon: 'bi-question-circle-fill', color: 'blue', gradient: 'linear-gradient(135deg, #60a5fa, #3b82f6)' },
-  { id: 'discussion', label: 'Discussions', icon: 'bi-chat-left-text-fill', color: 'green', gradient: 'linear-gradient(135deg, #34d399, #10b981)' },
-  { id: 'showcase', label: 'Show & Tell', icon: 'bi-rocket-takeoff-fill', color: 'fuchsia', gradient: 'linear-gradient(135deg, #c084fc, #a855f7)' },
-  { id: 'tutorial', label: 'Tutorials', icon: 'bi-book-half', color: 'amber', gradient: 'linear-gradient(135deg, #f59e0b, #d97706)' },
-  { id: 'idea', label: 'Ideas', icon: 'bi-lightbulb-fill', color: 'teal', gradient: 'linear-gradient(135deg, #2dd4bf, #0d9488)' },
-];
+const normalizeCategoryValue = (value = '') => String(value || '').trim().toLowerCase();
+
+const categoryMatches = (discussion, selected) => {
+  const target = normalizeCategoryValue(selected);
+  if (!target || target === 'all') return true;
+
+  return [
+    discussion.category_id,
+    discussion.categoryId,
+    discussion.category,
+    discussion.categoryLabel,
+    discussion.categoryMeta?.id,
+    discussion.categoryMeta?.slug,
+    discussion.categoryMeta?.label,
+  ]
+    .filter((value) => value !== undefined && value !== null)
+    .some((value) => normalizeCategoryValue(value) === target);
+};
+
+const getDiscussionCategoryText = (discussion) => {
+  return [
+    discussion.categoryLabel,
+    discussion.categoryMeta?.label,
+    discussion.category,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+};
 
 const filteredDiscussions = computed(() => {
   let list = Array.isArray(forumStore.allDiscussions) ? [...forumStore.allDiscussions] : [];
@@ -79,10 +99,7 @@ const filteredDiscussions = computed(() => {
         return label.toLowerCase().includes(q);
       });
 
-      const categoryId = (d.category || '').toString().toLowerCase();
-      const categoryObj = categories.find(c => c.id === categoryId);
-      const categoryLabel = categoryObj ? categoryObj.label.toLowerCase() : '';
-      const matchesCategory = categoryId.includes(q) || categoryLabel.includes(q);
+      const matchesCategory = getDiscussionCategoryText(d).includes(q);
 
       return title.includes(q) || excerpt.includes(q) || authorName.includes(q) || matchesTags || matchesCategory;
     });
@@ -104,7 +121,7 @@ const filteredDiscussions = computed(() => {
 
   // 2. Category filter
   if (selectedCategory.value !== 'all') {
-    list = list.filter(d => (d.category || '').toLowerCase() === selectedCategory.value.toLowerCase());
+    list = list.filter(d => categoryMatches(d, selectedCategory.value));
   }
 
   // 3. Tab Sort / Unanswered Filter
@@ -266,8 +283,6 @@ const clearFilters = () => {
 
       <!-- Right Column: Main Content Container -->
       <div class="forum-main-container">
-        <FeaturedDiscussion />
-
         <!-- Clean Local Search Bar with clickable button inside it -->
         <div class="forum-search-section">
           <div class="search-input-wrapper">
@@ -324,10 +339,6 @@ const clearFilters = () => {
               {{ filter }}
             </button>
           </div>
-          <!-- <button class="create-btn" @click="$router.push('/forum/create')">
-            <i class="bi bi-plus-lg"></i>
-            <span>Create Question</span>
-          </button> -->
         </div>
 
         <!-- Inner Content Grid (Discussions Feed + Right Sidebar) -->
@@ -384,8 +395,10 @@ const clearFilters = () => {
             </div>
           </div>
 
-          <!-- Right: Sidebar -->
-          <ForumSidebar />
+          <!-- Right: Sidebar Column containing ForumSidebar -->
+          <div class="forum-sidebar-column">
+            <ForumSidebar />
+          </div>
         </div>
       </div>
     </div>
@@ -555,9 +568,15 @@ const clearFilters = () => {
 
 .forum-feed-content {
   display: grid;
-  grid-template-columns: 1fr 292px;
-  gap: 28px;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
   margin-top: 24px;
+}
+
+.forum-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .discussions-column {
