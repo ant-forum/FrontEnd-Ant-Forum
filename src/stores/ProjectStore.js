@@ -116,6 +116,10 @@ export const useProjectStore = defineStore("project", () => {
 
   const ensureSuccess = (res) => {
     if (res.data && (res.data.result === false || res.data.success === false)) {
+      const msg = String(res.data.message || res.data.msg || "").toLowerCase();
+      if (msg.includes("no project") || msg.includes("no rating") || msg.includes("not found")) {
+        return; // Treat empty states as successful empty collections
+      }
       throw new Error(res.data.message || res.data.msg || "API request failed");
     }
   };
