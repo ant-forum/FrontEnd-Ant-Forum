@@ -1,5 +1,37 @@
 @import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Kantumruy:wght@400;500;600;700&display=swap");
 
+@font-face {
+  font-family: 'MiSans Khmer';
+  src: url('../fonts/MiSans Khmer/WOFF2/MiSansKhmer-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MiSans Khmer';
+  src: url('../fonts/MiSans Khmer/WOFF2/MiSansKhmer-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MiSans Khmer';
+  src: url('../fonts/MiSans Khmer/WOFF2/MiSansKhmer-Semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MiSans Khmer';
+  src: url('../fonts/MiSans Khmer/WOFF2/MiSansKhmer-Semibold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --brand: var(--color-primary);
   --brand-light: var(--color-primary-light);

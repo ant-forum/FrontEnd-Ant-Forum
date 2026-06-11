@@ -22,6 +22,7 @@ const backendCategories = ref([]);
 
 const isEditorFocused = ref(false);
 const isSubmitting = ref(false);
+const showReadiness = ref(true);
 const descriptionEditorRef = ref(null);
 const CODE_SNIPPET_HEADING = "### Code Snippet";
 const attachedCodeSnippetRegex = /\n{0,2}### Code Snippet\s*\n```[^\n`]*\n([\s\S]*?)\n```\s*$/i;
@@ -842,57 +843,40 @@ const handleSubmit = async () => {
       <div class="sidebar-column">
         <!-- Sleek Readiness Widget -->
         <div class="readiness-widget" :class="{ completed: isFormReady }">
-          <div class="widget-header">
+          <div class="widget-header clickable" @click="showReadiness = !showReadiness" style="cursor: pointer; display: flex; align-items: center; width: 100%;">
             <i class="bi bi-stars text-gradient-purple"></i>
             <strong>Post Readiness</strong>
+            <i class="bi ms-auto chevron-toggle" :class="showReadiness ? 'bi-chevron-up' : 'bi-chevron-down'" style="font-size: 11px; color: var(--color-text-muted);"></i>
           </div>
-          <div class="readiness-progress-wrapper">
-            <div class="readiness-progress-bar-bg">
-              <div class="readiness-progress-bar-fill" :style="{ width: checklistProgress + '%' }"></div>
-            </div>
-            <span class="readiness-percentage">{{ checklistProgress }}%</span>
-          </div>
+          <transition name="slide-fade">
+            <div v-if="showReadiness" class="readiness-content-body" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+              <div class="readiness-progress-wrapper" style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <div class="readiness-progress-bar-bg" style="flex: 1; height: 6px; background: var(--color-surface-hover); border-radius: 3px;">
+                  <div class="readiness-progress-bar-fill" :style="{ width: checklistProgress + '%' }" style="height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-success)); border-radius: 3px; transition: width 0.3s ease;"></div>
+                </div>
+                <span class="readiness-percentage" style="font-size: 12px; font-weight: 700; color: var(--color-text-muted);">{{ checklistProgress }}%</span>
+              </div>
 
-          <div class="readiness-checklist-vertical">
-            <div class="readiness-check-item" :class="{ active: isTitleValid }">
-              <i class="bi" :class="isTitleValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-              <span>Title (12+ chars)</span>
+              <div class="readiness-checklist-vertical" style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="readiness-check-item" :class="{ active: isTitleValid }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
+                  <i class="bi" :class="isTitleValid ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
+                  <span>Title (12+ chars)</span>
+                </div>
+                <div class="readiness-check-item" :class="{ active: isBodyValid }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
+                  <i class="bi" :class="isBodyValid ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
+                  <span>Description (25+ chars)</span>
+                </div>
+                <div class="readiness-check-item" :class="{ active: isCategoryValid }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
+                  <i class="bi" :class="isCategoryValid ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
+                  <span>Select Category</span>
+                </div>
+                <div class="readiness-check-item" :class="{ active: hasTags }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
+                  <i class="bi" :class="hasTags ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
+                  <span>Add at least 1 Tag</span>
+                </div>
+              </div>
             </div>
-            <div class="readiness-check-item" :class="{ active: isBodyValid }">
-              <i class="bi" :class="isBodyValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-              <span>Description (25+ chars)</span>
-            </div>
-            <div class="readiness-check-item" :class="{ active: isCategoryValid }">
-              <i class="bi" :class="isCategoryValid ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-              <span>Select Category</span>
-            </div>
-            <div class="readiness-check-item" :class="{ active: hasTags }">
-              <i class="bi" :class="hasTags ? 'bi-check-circle-fill' : 'bi-circle'"></i>
-              <span>Add at least 1 Tag</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pro Writing Tips Widget -->
-        <div class="tips-widget">
-          <div class="widget-header">
-            <i class="bi bi-lightning-charge-fill text-warning"></i>
-            <strong>Pro Writing Tips</strong>
-          </div>
-          <div class="tips-vertical-list">
-            <div class="tip-box">
-              <span class="tip-box-title">Provide Context</span>
-              <p>Describe your environment, system config, frameworks, and versions.</p>
-            </div>
-            <div class="tip-box">
-              <span class="tip-box-title">Format Code Blocks</span>
-              <p>Surround snippets with <code>```</code> to highlight your code dynamically.</p>
-            </div>
-            <div class="tip-box">
-              <span class="tip-box-title">Add Descriptive Tags</span>
-              <p>Tags like <code>Vue.js</code> help developers easily discover your thread.</p>
-            </div>
-          </div>
+          </transition>
         </div>
       </div>
     </div>
@@ -1090,7 +1074,7 @@ const handleSubmit = async () => {
 /* 2-Column Grid Layout */
 .create-layout-grid {
   display: grid;
-  grid-template-columns: 1fr 310px;
+  grid-template-columns: 1fr 220px;
   gap: 28px;
   align-items: start;
 }
