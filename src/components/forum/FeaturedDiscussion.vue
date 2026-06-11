@@ -172,16 +172,14 @@ const openTag = (tag) => {
 
 <style scoped>
 .featured-section {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
+  display: flex;
+  flex-direction: column;
   gap: 18px;
-  min-height: 240px;
-  padding: 18px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-surface) 94%, var(--color-purple) 6%), var(--color-surface));
-  border: 1px solid color-mix(in srgb, var(--color-border) 84%, var(--color-purple) 16%);
-  border-radius: 18px;
-  box-shadow: var(--shadow-sm);
+  min-height: auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .spotlight-panel,

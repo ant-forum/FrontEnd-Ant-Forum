@@ -38,7 +38,15 @@ import ProjectReviewManagement from '../views/admin/ProjectReviewManagement.vue'
 import ThreadModerationView from '../views/admin/ThreadModerationView.vue';
 import AdminAnalyticsView from '../views/admin/AdminAnalyticsView.vue';
 import AdminSettingsView from '../views/admin/AdminSettingsView.vue';
-// import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
+import AdminBlogsView from '../views/admin/AdminBlogsView.vue';
+import AdminBlogCreateView from '../views/admin/AdminBlogCreateView.vue';
+import AdminCategoriesView from '../views/admin/AdminCategoriesView.vue';
+import AdminCategoryDetailView from '../views/admin/AdminCategoryDetailView.vue';
+import AdminTagsView from '../views/admin/AdminTagsView.vue';
+import AdminReportsView from '../views/admin/AdminReportsView.vue';
+import AdminProfileView from '../views/admin/AdminProfileView.vue';
+import AdminProfileEditView from '../views/admin/AdminProfileEditView.vue';
+import AdminActivityView from '../views/admin/AdminActivityView.vue';
 
 
 //this is new
@@ -228,6 +236,66 @@ const routes = [
     component: AdminSettingsView,
   },
   {
+    path: "/admin/blogs",
+    name: "AdminBlogs",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminBlogsView,
+  },
+  {
+    path: "/admin/blogs/create",
+    name: "AdminBlogCreate",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminBlogCreateView,
+  },
+  {
+    path: "/admin/blogs/edit/:id",
+    name: "AdminBlogEdit",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminBlogCreateView,
+  },
+  {
+    path: "/admin/categories",
+    name: "AdminCategories",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminCategoriesView,
+  },
+  {
+    path: "/admin/categories/:id",
+    name: "AdminCategoryDetail",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminCategoryDetailView,
+  },
+  {
+    path: "/admin/tags",
+    name: "AdminTags",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminTagsView,
+  },
+  {
+    path: "/admin/reports",
+    name: "AdminReports",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminReportsView,
+  },
+  {
+    path: "/admin/profile",
+    name: "AdminProfile",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminProfileView,
+  },
+  {
+    path: "/admin/profile/edit",
+    name: "AdminProfileEdit",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminProfileEditView,
+  },
+  {
+    path: "/admin/activity",
+    name: "AdminActivity",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminActivityView,
+  },
+  {
     path: "/forum",
     name: "Forum",
     meta: { requiresAuth: true },
@@ -323,6 +391,13 @@ router.afterEach((to) => {
   // Update page title
   if (to.meta.title) {
     document.title = `${to.meta.title} | ANT Forum`;
+  }
+
+  // Handle admin route class on body
+  if (to.path.startsWith('/admin')) {
+    document.body.classList.add('admin-route');
+  } else {
+    document.body.classList.remove('admin-route');
   }
 
   // Ensure theme is applied based on localStorage or system preference

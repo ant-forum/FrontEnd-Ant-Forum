@@ -227,12 +227,6 @@ function selectTag(tagName) {
               <i :class="['bi', getCategoryMeta(d).icon]"></i>
               {{ getCategoryMeta(d).label }}
             </span>
-            <!-- Tags -->
-            <div v-if="d.tags && d.tags.length" class="thread-tags">
-              <span v-for="tag in d.tags" :key="tag.label" class="tag-chip" :style="getTagStyle(tag.label, tag.color)" @click.stop="selectTag(tag.label)" style="cursor: pointer;">
-                #{{ tag.label.replace('#', '') }}
-              </span>
-            </div>
           </div>
         </div>
 
@@ -420,7 +414,7 @@ function selectTag(tagName) {
   overflow: hidden;
   color: var(--color-text);
   font-size: 0.9rem;
-  font-weight: 850;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -496,9 +490,9 @@ function selectTag(tagName) {
 .thread-title {
   margin: 0;
   font-size: 20px;
-  font-weight: 850;
+  font-weight: 700;
   color: var(--color-text);
-  line-height: 1.35;
+  line-height: 1.2;
   overflow-wrap: anywhere;
   transition: color 0.2s ease;
 }
@@ -511,7 +505,7 @@ function selectTag(tagName) {
   margin: 0;
   font-size: 14px;
   color: var(--color-text-muted);
-  line-height: 1.6;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -587,7 +581,7 @@ function selectTag(tagName) {
   border: 1px solid transparent;
   color: var(--color-text-muted);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 600;
   cursor: pointer;
   padding: 0 11px;
   border-radius: 999px;
