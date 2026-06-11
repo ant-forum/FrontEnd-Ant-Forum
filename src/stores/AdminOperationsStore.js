@@ -57,13 +57,7 @@ const defaultState = {
       notes: [{ text: 'Locked after posting the verified update.', createdAt: '2026-05-29T14:00:00.000Z' }],
     },
   ],
-  projects: [
-    { id: 201, name: 'ANT Forum Redesign', description: 'Student forum interface and moderation experience.', status: 'In Review', author: 'Sopanha Voeun', category: 'Web App', updated: 'Today', dateOrder: 6, likes: 184, comments: 32, feedback: '', reviewedBy: '', reviewedAt: '' },
-    { id: 202, name: 'Portfolio Showcase', description: 'Public project gallery with profile and publishing flow.', status: 'Published', author: 'Mony Rath', category: 'Showcase', updated: 'Yesterday', dateOrder: 5, likes: 241, comments: 44, feedback: 'Strong presentation and a clear submission flow.', reviewedBy: 'Admin Team', reviewedAt: '2026-05-31T09:30:00.000Z' },
-    { id: 203, name: 'Learning Tracker', description: 'Dashboard for assignments, tasks, and class progress.', status: 'Published', author: 'Dara Kim', category: 'Education', updated: 'May 24', dateOrder: 4, likes: 163, comments: 18, feedback: 'Approved for the student showcase.', reviewedBy: 'Admin Team', reviewedAt: '2026-05-24T10:15:00.000Z' },
-    { id: 204, name: 'Dormitory Helper', description: 'Student utility app for room reports and maintenance requests.', status: 'In Review', author: 'Lina Sok', category: 'Mobile App', updated: 'May 21', dateOrder: 3, likes: 98, comments: 11, feedback: '', reviewedBy: '', reviewedAt: '' },
-    { id: 205, name: 'Code Snippet Library', description: 'Reusable snippets with tags, copy actions, and search.', status: 'Changes Requested', author: 'Rithy Heng', category: 'Developer Tool', updated: 'May 18', dateOrder: 2, likes: 207, comments: 29, feedback: 'Add screenshots and clarify how snippets are reviewed before publishing.', reviewedBy: 'Admin Team', reviewedAt: '2026-05-19T13:00:00.000Z' },
-  ],
+  projects: [],
   settings: {
     forumName: 'ANT Forum',
     supportEmail: 'support@ant.dev',

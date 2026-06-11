@@ -158,24 +158,39 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 import { useToast } from '../../composables/useToast';
 import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
+import { useProjectStore } from '../../stores/ProjectStore';
 
 const adminStore = useAdminOperationsStore();
+const projectStore = useProjectStore();
 const toast = useToast();
 const periods = ['7 Days', '30 Days', '90 Days'];
 const selectedPeriod = ref('7 Days');
 
+onMounted(() => {
+  if (projectStore.projects.length === 0) {
+    projectStore.fetchProjects().catch(() => {});
+  }
+});
+
 const percentage = (value, total) => total ? Math.round((value / total) * 100) : 0;
 
-const metrics = computed(() => [
-  { label: 'Open Reports', value: String(adminStore.pendingReports.length), change: `${adminStore.highPriorityReports.length} high priority`, icon: 'bi-flag', className: 'orange' },
-  { label: 'Pending Projects', value: String(adminStore.pendingProjects.length), change: 'Waiting for review', icon: 'bi-hourglass-split', className: 'blue' },
-  { label: 'Published', value: String(adminStore.publishedProjects.length), change: `${percentage(adminStore.publishedProjects.length, adminStore.projects.length)}% of projects`, icon: 'bi-cloud-check', className: 'green' },
-  { label: 'Admin Actions', value: String(adminStore.activityLog.length), change: 'Recorded locally', icon: 'bi-activity', className: 'purple' },
-]);
+const metrics = computed(() => {
+  const pendingCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
+  const publishedCount = projectStore.projects.filter(p => {
+    const s = String(p.status || '').toLowerCase();
+    return s === 'published' || s === 'active';
+  }).length;
+  return [
+    { label: 'Open Reports', value: String(adminStore.pendingReports.length), change: `${adminStore.highPriorityReports.length} high priority`, icon: 'bi-flag', className: 'orange' },
+    { label: 'Pending Projects', value: String(pendingCount), change: 'Waiting for review', icon: 'bi-hourglass-split', className: 'blue' },
+    { label: 'Published', value: String(publishedCount), change: `${percentage(publishedCount, projectStore.projects.length)}% of projects`, icon: 'bi-cloud-check', className: 'green' },
+    { label: 'Admin Actions', value: String(adminStore.activityLog.length), change: 'Recorded locally', icon: 'bi-activity', className: 'purple' },
+  ];
+});
 
 const chartSeries = [
   { key: 'reports', label: 'Reports', className: 'orange' },
@@ -217,47 +232,60 @@ const chartTotals = computed(() => chartSeries.map((series) => ({
 })));
 const barHeight = (value) => Math.max(5, (value / chartMaximum.value) * 100);
 
-const signals = computed(() => [
-  {
-    label: `${adminStore.pendingReports.length} reports need a decision`,
-    detail: `${adminStore.highPriorityReports.length} marked high priority.`,
-    className: adminStore.pendingReports.length ? 'orange' : 'green',
-    icon: 'bi-flag',
-    to: '/admin/reports',
-    action: 'Review reports',
-    disabled: adminStore.pendingReports.length === 0,
-  },
-  {
-    label: `${adminStore.pendingProjects.length} projects await review`,
-    detail: 'Approve, reject, or request student changes.',
-    className: adminStore.pendingProjects.length ? 'blue' : 'green',
-    icon: 'bi-folder2-open',
-    to: '/admin/projects',
-    action: 'Review projects',
-    disabled: adminStore.pendingProjects.length === 0,
-  },
-  {
-    label: `${adminStore.lockedThreads.length} threads are locked`,
-    detail: 'Check whether locked discussions need follow-up.',
-    className: adminStore.lockedThreads.length ? 'purple' : 'green',
-    icon: 'bi-lock',
-    to: '/admin/threads',
-    action: 'View threads',
-    disabled: adminStore.lockedThreads.length === 0,
-  },
-]);
+const signals = computed(() => {
+  const pendingProjectsCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
+  return [
+    {
+      label: `${adminStore.pendingReports.length} reports need a decision`,
+      detail: `${adminStore.highPriorityReports.length} marked high priority.`,
+      className: adminStore.pendingReports.length ? 'orange' : 'green',
+      icon: 'bi-flag',
+      to: '/admin/reports',
+      action: 'Review reports',
+      disabled: adminStore.pendingReports.length === 0,
+    },
+    {
+      label: `${pendingProjectsCount} projects await review`,
+      detail: 'Approve, reject, or request student changes.',
+      className: pendingProjectsCount ? 'blue' : 'green',
+      icon: 'bi-folder2-open',
+      to: '/admin/projects',
+      action: 'Review projects',
+      disabled: pendingProjectsCount === 0,
+    },
+    {
+      label: `${adminStore.lockedThreads.length} threads are locked`,
+      detail: 'Check whether locked discussions need follow-up.',
+      className: adminStore.lockedThreads.length ? 'purple' : 'green',
+      icon: 'bi-lock',
+      to: '/admin/threads',
+      action: 'View threads',
+      disabled: adminStore.lockedThreads.length === 0,
+    },
+  ];
+});
 
-const attentionCount = computed(() => adminStore.pendingReports.length + adminStore.pendingProjects.length + adminStore.lockedThreads.length);
-const breakdown = computed(() => [
-  { label: 'Open Reports', value: adminStore.pendingReports.length, className: 'orange' },
-  { label: 'Resolved Reports', value: adminStore.resolvedReports.length, className: 'green' },
-  { label: 'Projects In Review', value: adminStore.pendingProjects.length, className: 'blue' },
-  { label: 'Published Projects', value: adminStore.publishedProjects.length, className: 'purple' },
-]);
+const attentionCount = computed(() => {
+  const pendingProjectsCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
+  return adminStore.pendingReports.length + pendingProjectsCount + adminStore.lockedThreads.length;
+});
+const breakdown = computed(() => {
+  const pendingProjectsCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
+  const publishedCount = projectStore.projects.filter(p => {
+    const s = String(p.status || '').toLowerCase();
+    return s === 'published' || s === 'active';
+  }).length;
+  return [
+    { label: 'Open Reports', value: adminStore.pendingReports.length, className: 'orange' },
+    { label: 'Resolved Reports', value: adminStore.resolvedReports.length, className: 'green' },
+    { label: 'Projects In Review', value: pendingProjectsCount, className: 'blue' },
+    { label: 'Published Projects', value: publishedCount, className: 'purple' },
+  ];
+});
 const breakdownMaximum = computed(() => Math.max(1, ...breakdown.value.map((item) => item.value)));
 const breakdownWidth = (value) => value ? Math.max(8, (value / breakdownMaximum.value) * 100) : 0;
 const recentActivity = computed(() => adminStore.activityLog.slice(0, 5));
-const hasExportData = computed(() => Boolean(adminStore.threadReports.length || adminStore.projects.length || adminStore.activityLog.length));
+const hasExportData = computed(() => Boolean(adminStore.threadReports.length || projectStore.projects.length || adminStore.activityLog.length));
 const lastUpdated = computed(() => adminStore.activityLog.length ? formatDate(adminStore.activityLog[0].createdAt) : 'Not available');
 
 const activityIcon = (type) => ({ moderation: 'bi-shield-check', project: 'bi-folder-check', settings: 'bi-gear' }[type] || 'bi-activity');
