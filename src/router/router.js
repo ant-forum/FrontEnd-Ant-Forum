@@ -61,8 +61,8 @@ const routes = [
   {
     path: "/",
     name: "HomePage",
-    component: HomePage,
-    meta: { requiresAuth: true },
+    component: HomePage
+    // meta: { requiresAuth: true },
   },
   {
     path: "/loading",
@@ -134,7 +134,7 @@ const routes = [
     component: UserSettingsView,
   },
   {
-    path: "/viewprofile/:username",
+    path: "/viewprofile/:id",
     name: "ViewProfile",
     meta: { requiresAuth: true },
     component: ViewProfile,

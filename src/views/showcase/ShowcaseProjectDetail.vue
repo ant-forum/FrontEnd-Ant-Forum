@@ -112,6 +112,16 @@ const undoTeacherRating = async () => {
   }
 };
 
+const authorProfileId = computed(() => {
+  if (!project.value) return '';
+  const uId = project.value.user_id || project.value.userId;
+  if (uId) return String(uId);
+  if (project.value.author?.username) {
+    return project.value.author.username.replace('@', '').trim();
+  }
+  return '';
+});
+
 onMounted(async () => {
   const projectId = route.params.id;
   if (projectId) {
@@ -359,7 +369,11 @@ onMounted(async () => {
               </div>
 
               <!-- Author Profile Widget -->
-              <div v-if="project.author" class="author-widget glass-card">
+              <router-link 
+                v-if="project.author" 
+                :to="`/viewprofile/${authorProfileId}`" 
+                class="author-widget glass-card text-decoration-none d-block cursor-pointer"
+              >
                 <h5 class="fw-bold mb-4 small text-uppercase tracking-wider text-adaptive widget-subtitle">Project Creator</h5>
                 <div class="d-flex align-items-center gap-3">
                   <img :src="project.author.avatar" class="author-avatar rounded-circle border shadow-sm" width="54" height="54" alt="Author">
@@ -368,7 +382,7 @@ onMounted(async () => {
                     <div class="text-muted small text-truncate">{{ project.author.username }}</div>
                   </div>
                 </div>
-              </div>
+              </router-link>
 
             </div>
           </div>
@@ -579,6 +593,16 @@ onMounted(async () => {
 }
 
 /* Author widget styling */
+.author-widget {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+}
+.author-widget:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--shadow-lg);
+}
+
 .author-avatar {
   border-color: var(--color-surface) !important;
 }

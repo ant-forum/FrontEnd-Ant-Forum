@@ -244,7 +244,7 @@ const displayedActivities = computed(() => {
   background: var(--color-surface) !important;
   backdrop-filter: blur(10px);
   border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   color: var(--color-text);
 }
@@ -253,7 +253,7 @@ const displayedActivities = computed(() => {
   background: var(--color-surface) !important;
   backdrop-filter: blur(10px);
   border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
@@ -368,7 +368,7 @@ const displayedActivities = computed(() => {
   background: var(--color-surface) !important;
   backdrop-filter: blur(8px);
   border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   transition: all var(--transition-base);
   box-shadow: var(--shadow-sm);
   color: var(--color-text);
