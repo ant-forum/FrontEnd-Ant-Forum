@@ -8,16 +8,16 @@
       <div class="toolbar-controls">
         <label class="search-box">
           <i class="bi bi-search"></i>
-          <input v-model.trim="query" type="search" placeholder="Search threads">
+          <input v-model.trim="query" type="search" placeholder="Search Thread">
         </label>
         <select v-model="statusFilter" class="form-select compact-select" aria-label="Filter by status">
-          <option value="all">All statuses</option>
+          <option value="all">All Status</option>
           <option value="Open">Open</option>
           <option value="Resolved">Resolved</option>
           <option value="Dismissed">Dismissed</option>
         </select>
         <select v-model="priorityFilter" class="form-select compact-select" aria-label="Filter by priority">
-          <option value="all">All priorities</option>
+          <option value="all">All Priority</option>
           <option value="High">High</option>
           <option value="Medium">Medium</option>
           <option value="Low">Low</option>
