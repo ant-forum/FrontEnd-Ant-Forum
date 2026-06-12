@@ -6,5 +6,4 @@
 <script setup>
 import Profile from "../layouts/Profile.vue";
 </script>
-<style scoped>
-</style>
+<style scoped></style>

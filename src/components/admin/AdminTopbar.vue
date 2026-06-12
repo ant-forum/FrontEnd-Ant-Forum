@@ -6,7 +6,9 @@
         <template v-if="breadcrumbs && breadcrumbs.length">
           <template v-for="(crumb, idx) in breadcrumbs" :key="idx">
             <i class="bi bi-chevron-right"></i>
-            <router-link v-if="crumb.to" :to="crumb.to">{{ crumb.label }}</router-link>
+            <router-link v-if="crumb.to" :to="crumb.to">{{
+              crumb.label
+            }}</router-link>
             <span v-else>{{ crumb.label }}</span>
           </template>
         </template>
@@ -20,48 +22,83 @@
     <div class="topbar-right">
       <label class="topbar-search">
         <i class="bi bi-search"></i>
-        <input type="search" placeholder="Search admin">
+        <input type="search" placeholder="Search admin" />
       </label>
 
-      <button class="topbar-icon" type="button" :title="isDark ? 'Light mode' : 'Dark mode'" @click="toggleDarkMode">
+      <button
+        class="topbar-icon"
+        type="button"
+        :title="isDark ? 'Light mode' : 'Dark mode'"
+        @click="toggleDarkMode"
+      >
         <i :class="['bi', isDark ? 'bi-moon-stars-fill' : 'bi-sun-fill']"></i>
       </button>
 
       <!-- Premium Notification Dropdown Wrapper -->
       <div class="notification-dropdown-wrapper">
-        <button class="topbar-icon notification-button" type="button" title="Notifications" @click.stop="toggleNotifications">
+        <button
+          class="topbar-icon notification-button"
+          type="button"
+          title="Notifications"
+          @click.stop="toggleNotifications"
+        >
           <i class="bi bi-bell"></i>
           <span v-if="unreadCount > 0"></span>
         </button>
-        
+
         <!-- Notifications Dropdown Menu -->
-        <div v-if="isDropdownOpen" class="dropdown-menu-premium shadow-lg fade-in-scale">
-          <div class="dropdown-header-premium d-flex justify-content-between align-items-center">
+        <div
+          v-if="isDropdownOpen"
+          class="dropdown-menu-premium shadow-lg fade-in-scale"
+        >
+          <div
+            class="dropdown-header-premium d-flex justify-content-between align-items-center"
+          >
             <strong>Notifications ({{ unreadCount }})</strong>
-            <button class="btn btn-link btn-sm text-primary p-0 text-decoration-none fw-bold" @click="markAllRead" v-if="unreadCount > 0">
+            <button
+              class="btn btn-link btn-sm text-primary p-0 text-decoration-none fw-bold"
+              @click="markAllRead"
+              v-if="unreadCount > 0"
+            >
               Mark all as read
             </button>
           </div>
-          
+
           <div class="dropdown-body-premium">
-            <div v-if="notifications.length === 0" class="empty-notifications text-center py-4 text-muted">
+            <div
+              v-if="notifications.length === 0"
+              class="empty-notifications text-center py-4 text-muted"
+            >
               <i class="bi bi-bell-slash fs-3 mb-2 d-block"></i>
               <span>No new alerts</span>
             </div>
-            
+
             <div v-else class="notifications-scroll">
-              <div 
-                v-for="item in notifications" 
-                :key="item.id" 
+              <div
+                v-for="item in notifications"
+                :key="item.id"
                 class="notification-item-premium"
                 :class="{ unread: !item.read }"
                 @click="clickNotification(item)"
               >
-                <img :src="item.sender?.avatar || 'https://i.pravatar.cc/150?u=default'" class="avatar-sm rounded-circle" alt="Sender avatar" @error="handleAvatarError">
+                <img
+                  :src="
+                    item.sender?.avatar || 'https://i.pravatar.cc/150?u=default'
+                  "
+                  class="avatar-sm rounded-circle"
+                  alt="Sender avatar"
+                  @error="handleAvatarError"
+                />
                 <div class="flex-grow-1 min-width-0">
-                  <div class="d-flex justify-content-between align-items-baseline mb-1">
-                    <span class="sender-name text-truncate">{{ item.title }}</span>
-                    <span class="notification-time text-nowrap">{{ formatTimeAgo(item.created_at) }}</span>
+                  <div
+                    class="d-flex justify-content-between align-items-baseline mb-1"
+                  >
+                    <span class="sender-name text-truncate">{{
+                      item.title
+                    }}</span>
+                    <span class="notification-time text-nowrap">{{
+                      formatTimeAgo(item.created_at)
+                    }}</span>
                   </div>
                   <p class="notification-text">{{ item.message }}</p>
                 </div>
@@ -69,9 +106,13 @@
               </div>
             </div>
           </div>
-          
+
           <div class="dropdown-footer-premium text-center">
-            <router-link to="/notifications" class="text-decoration-none fw-bold" @click="isDropdownOpen = false">
+            <router-link
+              to="/notifications"
+              class="text-decoration-none fw-bold"
+              @click="isDropdownOpen = false"
+            >
               View all notifications
             </router-link>
           </div>
@@ -87,17 +128,41 @@
           title="Admin account menu"
           @click.stop="toggleProfileMenu"
         >
-          <img v-if="adminAvatar" :src="adminAvatar" class="profile-avatar border border-1 border-primary-subtle" style="object-fit: cover; border-radius: 50%;" width="38" height="38">
+          <img
+            v-if="adminAvatar"
+            :src="adminAvatar"
+            class="profile-avatar border border-1 border-primary-subtle"
+            style="object-fit: cover; border-radius: 50%"
+            width="38"
+            height="38"
+          />
           <span v-else class="profile-avatar">{{ adminInitials }}</span>
           <div class="topbar-profile-name">
             <strong>{{ adminName }}</strong>
           </div>
         </button>
 
-        <div v-if="isProfileMenuOpen" class="admin-profile-dropdown shadow-lg fade-in-scale" role="menu">
-          <router-link to="/admin/profile" class="admin-profile-card" role="menuitem" @click="isProfileMenuOpen = false">
-            <img v-if="adminAvatar" :src="adminAvatar" width="54" height="54" alt="Admin avatar">
-            <span v-else class="profile-avatar profile-avatar-menu">{{ adminInitials }}</span>
+        <div
+          v-if="isProfileMenuOpen"
+          class="admin-profile-dropdown shadow-lg fade-in-scale"
+          role="menu"
+        >
+          <router-link
+            to="/admin/profile"
+            class="admin-profile-card"
+            role="menuitem"
+            @click="isProfileMenuOpen = false"
+          >
+            <img
+              v-if="adminAvatar"
+              :src="adminAvatar"
+              width="54"
+              height="54"
+              alt="Admin avatar"
+            />
+            <span v-else class="profile-avatar profile-avatar-menu">{{
+              adminInitials
+            }}</span>
             <span class="admin-profile-card-copy">
               <strong>{{ adminName }}</strong>
               <small>{{ adminRole }} profile</small>
@@ -125,7 +190,12 @@
             <i class="bi bi-chevron-right admin-profile-menu-chevron"></i>
           </router-link>
 
-          <button type="button" class="admin-profile-menu-item logout" role="menuitem" @click="handleLogout">
+          <button
+            type="button"
+            class="admin-profile-menu-item logout"
+            role="menuitem"
+            @click="handleLogout"
+          >
             <span class="admin-profile-menu-icon">
               <i class="bi bi-box-arrow-right"></i>
             </span>
@@ -136,11 +206,17 @@
           </button>
 
           <footer class="admin-profile-menu-footer">
-            <router-link to="/help" @click="isProfileMenuOpen = false">Privacy</router-link>
+            <router-link to="/help" @click="isProfileMenuOpen = false"
+              >Privacy</router-link
+            >
             <span>·</span>
-            <router-link to="/help" @click="isProfileMenuOpen = false">Terms</router-link>
+            <router-link to="/help" @click="isProfileMenuOpen = false"
+              >Terms</router-link
+            >
             <span>·</span>
-            <router-link to="/help" @click="isProfileMenuOpen = false">Community guidelines</router-link>
+            <router-link to="/help" @click="isProfileMenuOpen = false"
+              >Community guidelines</router-link
+            >
           </footer>
         </div>
       </div>
@@ -149,16 +225,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { useDarkMode } from '../../composables/useDarkMode';
-import { useAuthStore } from '../../stores/AuthStore';
-import { useNotificationStore } from '../../stores/NotificationStore';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, onUnmounted, computed } from "vue";
+import { useDarkMode } from "../../composables/useDarkMode";
+import { useAuthStore } from "../../stores/AuthStore";
+import { useNotificationStore } from "../../stores/NotificationStore";
+import { useRouter } from "vue-router";
 
 defineProps({
   currentTitle: {
     type: String,
-    default: 'Overview',
+    default: "Overview",
   },
   breadcrumbs: {
     type: Array,
@@ -174,39 +250,48 @@ const router = useRouter();
 const isDropdownOpen = ref(false);
 const isProfileMenuOpen = ref(false);
 
-const adminName = computed(() => authStore.user?.name || authStore.user?.username || 'Alex Rivera');
+const adminName = computed(
+  () => authStore.user?.name || authStore.user?.username || "Alex Rivera",
+);
 const adminRole = computed(() => {
-  const r = authStore.user?.role || 'Super Admin';
+  const r = authStore.user?.role || "Super Admin";
   return r.charAt(0).toUpperCase() + r.slice(1).toLowerCase();
 });
 const adminInitials = computed(() => {
-  return adminName.value
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase() || 'AR';
+  return (
+    adminName.value
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "AR"
+  );
 });
-const adminAvatar = computed(() => authStore.user?.avatar || authStore.user?.profile_pic || authStore.user?.avatarUrl);
+const adminAvatar = computed(
+  () =>
+    authStore.user?.avatar ||
+    authStore.user?.profile_pic ||
+    authStore.user?.avatarUrl,
+);
 const profileMenuItems = [
   {
-    label: 'Settings & privacy',
-    description: 'Manage privacy and account preferences',
-    icon: 'bi bi-gear-fill',
-    to: '/admin/settings',
+    label: "Settings & privacy",
+    description: "Manage privacy and account preferences",
+    icon: "bi bi-gear-fill",
+    to: "/admin/settings",
   },
   {
-    label: 'Help & support',
-    description: 'Guides and community support',
-    icon: 'bi bi-question-circle-fill',
-    to: '/help',
+    label: "Help & support",
+    description: "Guides and community support",
+    icon: "bi bi-question-circle-fill",
+    to: "/help",
   },
   {
-    label: 'Report a problem',
-    description: 'Tell us when something is not working',
-    icon: 'bi bi-exclamation-square-fill',
-    to: '/help',
+    label: "Report a problem",
+    description: "Tell us when something is not working",
+    icon: "bi bi-exclamation-square-fill",
+    to: "/help",
   },
 ];
 
@@ -239,18 +324,18 @@ const clickNotification = (item) => {
 const handleLogout = async () => {
   isProfileMenuOpen.value = false;
   await authStore.logout();
-  router.push('/login');
+  router.push("/login");
 };
 
 const handleAvatarError = (e) => {
-  e.target.src = 'https://i.pravatar.cc/150?u=default';
+  e.target.src = "https://i.pravatar.cc/150?u=default";
 };
 
 const formatTimeAgo = (dateStr) => {
-  if (!dateStr) return 'Just now';
+  if (!dateStr) return "Just now";
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
+  if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
@@ -259,21 +344,21 @@ const formatTimeAgo = (dateStr) => {
 
 // Handle clicks outside of dropdown to close it
 const closeDropdown = (e) => {
-  if (!e.target.closest('.notification-dropdown-wrapper')) {
+  if (!e.target.closest(".notification-dropdown-wrapper")) {
     isDropdownOpen.value = false;
   }
-  if (!e.target.closest('.admin-profile-menu-wrapper')) {
+  if (!e.target.closest(".admin-profile-menu-wrapper")) {
     isProfileMenuOpen.value = false;
   }
 };
 
 onMounted(() => {
   notificationStore.fetchNotifications();
-  document.addEventListener('click', closeDropdown);
+  document.addEventListener("click", closeDropdown);
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', closeDropdown);
+  document.removeEventListener("click", closeDropdown);
 });
 </script>
 
@@ -342,7 +427,10 @@ onUnmounted(() => {
   background: var(--color-input-bg);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background-color var(--transition-base);
 }
 
 .topbar-search:focus-within {
@@ -421,7 +509,11 @@ onUnmounted(() => {
 
 .topbar-profile:hover {
   background: var(--color-surface-hover);
-  border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+  border-color: color-mix(
+    in srgb,
+    var(--color-primary) 28%,
+    var(--color-border)
+  );
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }

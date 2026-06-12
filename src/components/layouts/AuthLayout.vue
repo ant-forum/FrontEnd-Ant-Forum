@@ -16,12 +16,16 @@ import Navbar from "../layouts/header.vue";
 .auth-container {
   font-family: "Sora", sans-serif;
   background-color: var(--color-bg);
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, var(--glow-purple) 0px, transparent 50%),
     radial-gradient(at 100% 100%, var(--glow-pink) 0px, transparent 50%),
     linear-gradient(var(--color-border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  background-size:
+    100% 100%,
+    100% 100%,
+    40px 40px,
+    40px 40px;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -38,7 +42,11 @@ import Navbar from "../layouts/header.vue";
   right: -10%;
   width: 40%;
   height: 40%;
-  background: radial-gradient(circle, var(--color-primary-light) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    var(--color-primary-light) 0%,
+    transparent 70%
+  );
   filter: blur(80px);
   z-index: 0;
   pointer-events: none;
@@ -61,10 +69,12 @@ import Navbar from "../layouts/header.vue";
   backdrop-filter: blur(8px);
 }
 
-[data-theme='dark'] .auth-card {
+[data-theme="dark"] .auth-card {
   background: var(--color-glass-bg);
   border-color: var(--color-glass-border);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--color-glass-border);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px var(--color-glass-border);
 }
 
 @keyframes cardIn {

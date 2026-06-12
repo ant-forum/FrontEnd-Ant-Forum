@@ -24,7 +24,7 @@
           :style="imageStyle"
           draggable="false"
           @load="prepareImage"
-        >
+        />
         <div class="crop-scrim"></div>
         <div
           ref="cropBoxRef"
@@ -52,7 +52,7 @@
           max="3"
           step="0.01"
           @input="clampOffset"
-        >
+        />
         <button type="button" class="btn-reset-crop" @click="resetCrop">
           Reset
         </button>
@@ -64,11 +64,25 @@
     </div>
 
     <template #footer>
-      <button class="btn btn-light border" type="button" :disabled="isCropping" @click="emitCancel">
+      <button
+        class="btn btn-light border"
+        type="button"
+        :disabled="isCropping"
+        @click="emitCancel"
+      >
         Cancel
       </button>
-      <button class="btn btn-primary" type="button" :disabled="isCropping || !isReady" @click="applyCrop">
-        <span v-if="isCropping" class="spinner-border spinner-border-sm me-1" role="status"></span>
+      <button
+        class="btn btn-primary"
+        type="button"
+        :disabled="isCropping || !isReady"
+        @click="applyCrop"
+      >
+        <span
+          v-if="isCropping"
+          class="spinner-border spinner-border-sm me-1"
+          role="status"
+        ></span>
         <i v-else class="bi bi-check2"></i>
         <span>Use Image</span>
       </button>
@@ -77,8 +91,8 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
-import BaseModal from './BaseModal.vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import BaseModal from "./BaseModal.vue";
 
 const props = defineProps({
   source: {
@@ -87,7 +101,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['confirm', 'cancel']);
+const emit = defineEmits(["confirm", "cancel"]);
 
 const stageRef = ref(null);
 const cropBoxRef = ref(null);
@@ -105,15 +119,18 @@ const dragStart = ref({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
 
 const cropOptions = computed(() => props.source?.options || {});
 const aspectRatio = computed(() => {
-  if (cropOptions.value.aspectRatio === 'original') {
+  if (cropOptions.value.aspectRatio === "original") {
     return naturalAspectRatio.value || 1;
   }
 
   return Number(cropOptions.value.aspectRatio) || 1;
 });
-const cropShape = computed(() => cropOptions.value.shape || 'rect');
-const modalTitle = computed(() => cropOptions.value.title || 'Crop Image');
-const outputType = computed(() => cropOptions.value.outputType || props.source?.file?.type || 'image/jpeg');
+const cropShape = computed(() => cropOptions.value.shape || "rect");
+const modalTitle = computed(() => cropOptions.value.title || "Crop Image");
+const outputType = computed(
+  () =>
+    cropOptions.value.outputType || props.source?.file?.type || "image/jpeg",
+);
 const outputQuality = computed(() => Number(cropOptions.value.quality) || 0.92);
 
 const cropBoxStyle = computed(() => ({
@@ -129,14 +146,14 @@ const imageStyle = computed(() => ({
 }));
 
 const getContainedOutputName = () => {
-  const fileName = props.source?.file?.name || 'cropped-image.jpg';
-  const dotIndex = fileName.lastIndexOf('.');
+  const fileName = props.source?.file?.name || "cropped-image.jpg";
+  const dotIndex = fileName.lastIndexOf(".");
   const baseName = dotIndex > -1 ? fileName.slice(0, dotIndex) : fileName;
-  const extension = outputType.value.includes('png')
-    ? 'png'
-    : outputType.value.includes('webp')
-      ? 'webp'
-      : 'jpg';
+  const extension = outputType.value.includes("png")
+    ? "png"
+    : outputType.value.includes("webp")
+      ? "webp"
+      : "jpg";
 
   return `${baseName}-cropped.${extension}`;
 };
@@ -219,9 +236,10 @@ const stopDrag = (event) => {
   event.currentTarget?.releasePointerCapture?.(event.pointerId);
 };
 
-const canvasToBlob = (canvas) => new Promise((resolve) => {
-  canvas.toBlob(resolve, outputType.value, outputQuality.value);
-});
+const canvasToBlob = (canvas) =>
+  new Promise((resolve) => {
+    canvas.toBlob(resolve, outputType.value, outputQuality.value);
+  });
 
 const applyCrop = async () => {
   const image = imageRef.value;
@@ -233,25 +251,42 @@ const applyCrop = async () => {
   try {
     const cropRect = cropBox.getBoundingClientRect();
     const imageRect = image.getBoundingClientRect();
-    const sourceX = ((cropRect.left - imageRect.left) / imageRect.width) * image.naturalWidth;
-    const sourceY = ((cropRect.top - imageRect.top) / imageRect.height) * image.naturalHeight;
+    const sourceX =
+      ((cropRect.left - imageRect.left) / imageRect.width) * image.naturalWidth;
+    const sourceY =
+      ((cropRect.top - imageRect.top) / imageRect.height) * image.naturalHeight;
     const sourceWidth = (cropRect.width / imageRect.width) * image.naturalWidth;
-    const sourceHeight = (cropRect.height / imageRect.height) * image.naturalHeight;
-    const canvas = document.createElement('canvas');
-    const requestedWidth = cropOptions.value.outputWidth || Math.min(sourceWidth, 1600);
-    const requestedHeight = cropOptions.value.outputHeight || (requestedWidth / aspectRatio.value);
-    const outputScale = Math.min(1, sourceWidth / requestedWidth, sourceHeight / requestedHeight);
+    const sourceHeight =
+      (cropRect.height / imageRect.height) * image.naturalHeight;
+    const canvas = document.createElement("canvas");
+    const requestedWidth =
+      cropOptions.value.outputWidth || Math.min(sourceWidth, 1600);
+    const requestedHeight =
+      cropOptions.value.outputHeight || requestedWidth / aspectRatio.value;
+    const outputScale = Math.min(
+      1,
+      sourceWidth / requestedWidth,
+      sourceHeight / requestedHeight,
+    );
     const outputWidth = Math.round(requestedWidth * outputScale);
     const outputHeight = Math.round(requestedHeight * outputScale);
 
     canvas.width = outputWidth;
     canvas.height = outputHeight;
 
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext("2d");
     const safeSourceX = clamp(sourceX, 0, image.naturalWidth - 1);
     const safeSourceY = clamp(sourceY, 0, image.naturalHeight - 1);
-    const safeSourceWidth = clamp(sourceWidth, 1, image.naturalWidth - safeSourceX);
-    const safeSourceHeight = clamp(sourceHeight, 1, image.naturalHeight - safeSourceY);
+    const safeSourceWidth = clamp(
+      sourceWidth,
+      1,
+      image.naturalWidth - safeSourceX,
+    );
+    const safeSourceHeight = clamp(
+      sourceHeight,
+      1,
+      image.naturalHeight - safeSourceY,
+    );
 
     context.drawImage(
       image,
@@ -266,18 +301,21 @@ const applyCrop = async () => {
     );
 
     const blob = await canvasToBlob(canvas);
-    if (!blob) throw new Error('Unable to crop this image.');
+    if (!blob) throw new Error("Unable to crop this image.");
 
     const file = new File([blob], getContainedOutputName(), {
       type: blob.type || outputType.value,
       lastModified: Date.now(),
     });
 
-    emit('confirm', {
+    emit("confirm", {
       file,
       blob,
       previewUrl: URL.createObjectURL(blob),
-      dataUrl: canvas.toDataURL(blob.type || outputType.value, outputQuality.value),
+      dataUrl: canvas.toDataURL(
+        blob.type || outputType.value,
+        outputQuality.value,
+      ),
       width: outputWidth,
       height: outputHeight,
     });
@@ -288,7 +326,7 @@ const applyCrop = async () => {
 
 const emitCancel = () => {
   if (isCropping.value) return;
-  emit('cancel');
+  emit("cancel");
 };
 
 const handleResize = () => {
@@ -303,10 +341,10 @@ watch(
   },
 );
 
-window.addEventListener('resize', handleResize);
+window.addEventListener("resize", handleResize);
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleResize);
+  window.removeEventListener("resize", handleResize);
 });
 </script>
 
@@ -333,7 +371,11 @@ onBeforeUnmount(() => {
     linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.05) 75%),
     linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.05) 75%),
     #080a10;
-  background-position: 0 0, 0 16px, 16px -16px, -16px 0;
+  background-position:
+    0 0,
+    0 16px,
+    16px -16px,
+    -16px 0;
   background-size: 32px 32px;
   border: 1px solid var(--color-border);
   border-radius: 8px;

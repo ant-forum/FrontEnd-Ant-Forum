@@ -1,12 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import Navbar from '../../components/layouts/header.vue';
-import BaseFooter from '../../components/layouts/footer.vue';
-import SkeletonLoader from '../../components/SkeletonLoader.vue';
-import { useProjectStore } from '../../stores/ProjectStore.js';
-import { useAuthStore } from '../../stores/AuthStore.js';
-import { useToast } from '../../composables/useToast.js';
+import { ref, computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import Navbar from "../../components/layouts/header.vue";
+import BaseFooter from "../../components/layouts/footer.vue";
+import SkeletonLoader from "../../components/SkeletonLoader.vue";
+import { useProjectStore } from "../../stores/ProjectStore.js";
+import { useAuthStore } from "../../stores/AuthStore.js";
+import { useToast } from "../../composables/useToast.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -16,16 +16,19 @@ const toast = useToast();
 
 const loading = ref(true);
 
-const project = computed(() => projectStore.project || {
-  id: null,
-  title: 'Loading...',
-  description: '',
-  longDescription: '',
-  lead: '',
-  leadAvatar: '',
-  tags: [],
-  stats: { stars: '0', forks: '0', contributors: '0' }
-});
+const project = computed(
+  () =>
+    projectStore.project || {
+      id: null,
+      title: "Loading...",
+      description: "",
+      longDescription: "",
+      lead: "",
+      leadAvatar: "",
+      tags: [],
+      stats: { stars: "0", forks: "0", contributors: "0" },
+    },
+);
 
 const formattedDemoLink = computed(() => {
   const link = project.value.link;
@@ -37,16 +40,29 @@ const formattedDemoLink = computed(() => {
 });
 
 const technicalSpecs = computed(() => [
-  { label: 'Frontend', value: 'Vue 3, Pinia' },
-  { label: 'Tags', value: project.value.tags?.join(', ') || 'N/A' },
-  { label: 'Link', value: project.value.link || 'Not provided' },
-  { label: 'Created At', value: new Date(project.value.createdAt).toLocaleDateString() || 'N/A' }
+  { label: "Frontend", value: "Vue 3, Pinia" },
+  { label: "Tags", value: project.value.tags?.join(", ") || "N/A" },
+  { label: "Link", value: project.value.link || "Not provided" },
+  {
+    label: "Created At",
+    value: new Date(project.value.createdAt).toLocaleDateString() || "N/A",
+  },
 ]);
 
 const isOwner = computed(() => {
   if (!authStore.user || !project.value || !project.value.author) return false;
-  const loggedInUser = (authStore.user.username || authStore.user.name || "").toLowerCase().replace('@', '').trim();
-  const projectAuthor = (project.value.author.username || project.value.author.name || "").toLowerCase().replace('@', '').trim();
+  const loggedInUser = (authStore.user.username || authStore.user.name || "")
+    .toLowerCase()
+    .replace("@", "")
+    .trim();
+  const projectAuthor = (
+    project.value.author.username ||
+    project.value.author.name ||
+    ""
+  )
+    .toLowerCase()
+    .replace("@", "")
+    .trim();
   return loggedInUser && projectAuthor && loggedInUser === projectAuthor;
 });
 
@@ -54,7 +70,11 @@ const deleting = ref(false);
 // const hoveredStar = ref(0);
 
 const handleDelete = async () => {
-  if (!confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+  if (
+    !confirm(
+      "Are you sure you want to delete this project? This action cannot be undone.",
+    )
+  ) {
     return;
   }
   deleting.value = true;
@@ -62,7 +82,7 @@ const handleDelete = async () => {
     const projectId = route.params.id;
     await projectStore.deleteProject(projectId);
     toast.success("Project deleted successfully!");
-    router.push('/showcase');
+    router.push("/showcase");
   } catch (err) {
     console.error("Failed to delete project:", err);
     toast.error("Failed to delete project. Please try again.");
@@ -72,12 +92,12 @@ const handleDelete = async () => {
 };
 
 const isTeacher = computed(() => {
-  return authStore.user?.role?.toLowerCase() === 'teacher';
+  return authStore.user?.role?.toLowerCase() === "teacher";
 });
 
 const isTeacherOrAdmin = computed(() => {
   const role = authStore.user?.role?.toLowerCase();
-  return role === 'teacher' || role === 'admin';
+  return role === "teacher" || role === "admin";
 });
 
 const submittingRating = ref(false);
@@ -113,13 +133,13 @@ const undoTeacherRating = async () => {
 };
 
 const authorProfileId = computed(() => {
-  if (!project.value) return '';
+  if (!project.value) return "";
   const uId = project.value.user_id || project.value.userId;
   if (uId) return String(uId);
   if (project.value.author?.username) {
-    return project.value.author.username.replace('@', '').trim();
+    return project.value.author.username.replace("@", "").trim();
   }
-  return '';
+  return "";
 });
 
 onMounted(async () => {
@@ -138,7 +158,10 @@ onMounted(async () => {
     <main class="container py-5 project-detail-container">
       <!-- Breadcrumb -->
       <nav aria-label="breadcrumb" class="mb-4">
-        <router-link to="/showcase" class="back-link d-inline-flex align-items-center gap-2">
+        <router-link
+          to="/showcase"
+          class="back-link d-inline-flex align-items-center gap-2"
+        >
           <i class="bi bi-arrow-left"></i> Back to Showcase
         </router-link>
       </nav>
@@ -160,8 +183,11 @@ onMounted(async () => {
                 <SkeletonLoader width="80%" height="20px" />
               </div>
             </div>
-            
-            <div class="glass-card mb-4 p-0 border-0 overflow-hidden" style="height: 400px;">
+
+            <div
+              class="glass-card mb-4 p-0 border-0 overflow-hidden"
+              style="height: 400px"
+            >
               <SkeletonLoader width="100%" height="100%" variant="image" />
             </div>
 
@@ -186,13 +212,19 @@ onMounted(async () => {
               </div>
               <SkeletonLoader width="100%" height="60px" />
             </div>
-            
+
             <div class="glass-card mb-4 p-4">
               <SkeletonLoader width="120px" height="18px" class="mb-3" />
               <div class="row g-2">
-                <div class="col-4"><SkeletonLoader width="100%" height="60px" variant="card" /></div>
-                <div class="col-4"><SkeletonLoader width="100%" height="60px" variant="card" /></div>
-                <div class="col-4"><SkeletonLoader width="100%" height="60px" variant="card" /></div>
+                <div class="col-4">
+                  <SkeletonLoader width="100%" height="60px" variant="card" />
+                </div>
+                <div class="col-4">
+                  <SkeletonLoader width="100%" height="60px" variant="card" />
+                </div>
+                <div class="col-4">
+                  <SkeletonLoader width="100%" height="60px" variant="card" />
+                </div>
               </div>
             </div>
           </div>
@@ -205,69 +237,132 @@ onMounted(async () => {
           <div class="col-lg-8">
             <!-- Project Header Info -->
             <div class="project-card glass-card mb-4">
-              <div class="d-flex align-items-center gap-4 mb-4 flex-wrap flex-sm-nowrap">
-                <div class="project-icon-wrapper bg-primary-light text-primary rounded-4 d-flex align-items-center justify-content-center flex-shrink-0">
+              <div
+                class="d-flex align-items-center gap-4 mb-4 flex-wrap flex-sm-nowrap"
+              >
+                <div
+                  class="project-icon-wrapper bg-primary-light text-primary rounded-4 d-flex align-items-center justify-content-center flex-shrink-0"
+                >
                   <i class="bi bi-layers-fill fs-2"></i>
                 </div>
                 <div class="flex-grow-1">
-                  <h1 class="fw-bold mb-2 text-adaptive project-title">{{ project.title }}</h1>
-                  <p class="lead text-muted mb-0 fs-6">{{ project.description }}</p>
+                  <h1 class="fw-bold mb-2 text-adaptive project-title">
+                    {{ project.title }}
+                  </h1>
+                  <p class="lead text-muted mb-0 fs-6">
+                    {{ project.description }}
+                  </p>
                 </div>
               </div>
 
               <div class="d-flex flex-wrap gap-2 mb-4">
-                <span v-for="tag in project.tags" :key="tag" class="minimal-tag">{{ tag }}</span>
+                <span
+                  v-for="tag in project.tags"
+                  :key="tag"
+                  class="minimal-tag"
+                  >{{ tag }}</span
+                >
               </div>
 
               <div class="d-flex gap-3 align-items-center flex-wrap">
-                <a v-if="project.link" :href="formattedDemoLink" target="_blank" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2">
+                <a
+                  v-if="project.link"
+                  :href="formattedDemoLink"
+                  target="_blank"
+                  class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2"
+                >
                   <i class="bi bi-box-arrow-up-right"></i> Live Demo
                 </a>
-                <button v-else class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" disabled>No Demo</button>
-                
-                <router-link v-if="isOwner" :to="`/showcase/edit/${project.id}`" class="btn btn-outline-adaptive rounded-pill px-4 py-2 fw-bold shadow-sm">
+                <button
+                  v-else
+                  class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm"
+                  disabled
+                >
+                  No Demo
+                </button>
+
+                <router-link
+                  v-if="isOwner"
+                  :to="`/showcase/edit/${project.id}`"
+                  class="btn btn-outline-adaptive rounded-pill px-4 py-2 fw-bold shadow-sm"
+                >
                   <i class="bi bi-pencil-square me-1"></i> Edit Project
                 </router-link>
-                
-                <button v-if="isOwner" @click="handleDelete" :disabled="deleting" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-bold shadow-sm">
-                  <span v-if="deleting" class="spinner-border spinner-border-sm" role="status"></span>
-                  <span v-else><i class="bi bi-trash3 me-1"></i> Delete Project</span>
+
+                <button
+                  v-if="isOwner"
+                  @click="handleDelete"
+                  :disabled="deleting"
+                  class="btn btn-outline-danger rounded-pill px-4 py-2 fw-bold shadow-sm"
+                >
+                  <span
+                    v-if="deleting"
+                    class="spinner-border spinner-border-sm"
+                    role="status"
+                  ></span>
+                  <span v-else
+                    ><i class="bi bi-trash3 me-1"></i> Delete Project</span
+                  >
                 </button>
               </div>
             </div>
 
             <!-- Cover Visual -->
-            <div class="project-visual-card glass-card mb-4 overflow-hidden p-0 border-0">
-              <img v-if="project.thumbnail" :src="project.thumbnail" :alt="project.title" class="visual-img object-cover w-100">
-              <div v-else class="visual-empty-placeholder d-flex align-items-center justify-content-center bg-surface-hover">
+            <div
+              class="project-visual-card glass-card mb-4 overflow-hidden p-0 border-0"
+            >
+              <img
+                v-if="project.thumbnail"
+                :src="project.thumbnail"
+                :alt="project.title"
+                class="visual-img object-cover w-100"
+              />
+              <div
+                v-else
+                class="visual-empty-placeholder d-flex align-items-center justify-content-center bg-surface-hover"
+              >
                 <i class="bi bi-image text-muted opacity-25 fs-1"></i>
               </div>
             </div>
 
             <!-- About Section -->
             <div class="project-about-card glass-card mb-4">
-              <h4 class="fw-bold mb-3 text-adaptive section-subtitle">About the Project</h4>
-              <p class="text-muted lh-lg long-desc mb-0" style="white-space: pre-line;">{{ project.longDescription || project.description }}</p>
+              <h4 class="fw-bold mb-3 text-adaptive section-subtitle">
+                About the Project
+              </h4>
+              <p
+                class="text-muted lh-lg long-desc mb-0"
+                style="white-space: pre-line"
+              >
+                {{ project.longDescription || project.description }}
+              </p>
             </div>
           </div>
 
           <!-- Right Column: Sidebar Widgets -->
           <div class="col-lg-4">
             <div class="sticky-sidebar d-flex flex-column gap-4">
-              
               <!-- Rating Assessment Widget -->
               <div class="rating-widget glass-card">
                 <div class="widget-header mb-4">
                   <div class="d-flex align-items-center gap-3">
-                    <div class="rating-icon-wrapper d-flex align-items-center justify-content-center">
+                    <div
+                      class="rating-icon-wrapper d-flex align-items-center justify-content-center"
+                    >
                       <i class="bi bi-star-fill text-white fs-5"></i>
                     </div>
                     <div class="flex-grow-1">
-                      <h5 class="fw-bold mb-0 text-adaptive widget-title">Teacher Rating</h5>
-                      <span class="text-muted xx-small">Evaluation Assessment</span>
+                      <h5 class="fw-bold mb-0 text-adaptive widget-title">
+                        Teacher Rating
+                      </h5>
+                      <span class="text-muted xx-small"
+                        >Evaluation Assessment</span
+                      >
                     </div>
                     <div class="rating-score text-end">
-                      <span class="score-num text-adaptive fw-bold">{{ project.average_rating?.toFixed(1) || '0.0' }}</span>
+                      <span class="score-num text-adaptive fw-bold">{{
+                        project.average_rating?.toFixed(1) || "0.0"
+                      }}</span>
                       <span class="score-max text-muted">/5</span>
                     </div>
                   </div>
@@ -276,42 +371,77 @@ onMounted(async () => {
                 <!-- For Teacher View -->
                 <template v-if="isTeacher">
                   <p class="text-muted small mb-3">
-                    Rate the project's quality, completeness, and presentation to provide constructive feedback:
+                    Rate the project's quality, completeness, and presentation
+                    to provide constructive feedback:
                   </p>
-                  <div class="stars-container d-flex align-items-center gap-2 mb-3">
-                    <i 
-                      v-for="star in 5" 
+                  <div
+                    class="stars-container d-flex align-items-center gap-2 mb-3"
+                  >
+                    <i
+                      v-for="star in 5"
                       :key="star"
                       class="rating-star bi fs-2"
                       :class="[
-                        star <= (hoveredStar || currentTeacherRating) ? 'bi-star-fill' : 'bi-star',
-                        star <= (hoveredStar || currentTeacherRating) ? 'text-warning' : 'text-gray-400'
+                        star <= (hoveredStar || currentTeacherRating)
+                          ? 'bi-star-fill'
+                          : 'bi-star',
+                        star <= (hoveredStar || currentTeacherRating)
+                          ? 'text-warning'
+                          : 'text-gray-400',
                       ]"
                       @click="submitTeacherRating(star)"
                       @mouseenter="hoveredStar = star"
                       @mouseleave="hoveredStar = 0"
                     ></i>
                   </div>
-                  
+
                   <div class="rating-labels d-flex gap-2 flex-wrap mb-4">
-                    <span v-for="(label, index) in ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent']" :key="index" 
+                    <span
+                      v-for="(label, index) in [
+                        'Poor',
+                        'Fair',
+                        'Good',
+                        'Very Good',
+                        'Excellent',
+                      ]"
+                      :key="index"
                       class="rating-badge small fw-semibold"
                       :class="{
-                        'active': hoveredStar === index + 1 || currentTeacherRating === index + 1
+                        active:
+                          hoveredStar === index + 1 ||
+                          currentTeacherRating === index + 1,
                       }"
-                    >{{ label }}</span>
+                      >{{ label }}</span
+                    >
                   </div>
 
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div v-if="submittingRating" class="d-flex align-items-center gap-2 text-primary">
-                      <span class="spinner-border spinner-border-sm" role="status"></span>
+                  <div
+                    class="d-flex align-items-center justify-content-between"
+                  >
+                    <div
+                      v-if="submittingRating"
+                      class="d-flex align-items-center gap-2 text-primary"
+                    >
+                      <span
+                        class="spinner-border spinner-border-sm"
+                        role="status"
+                      ></span>
                       <span class="small fw-semibold">Saving...</span>
                     </div>
-                    <div v-else-if="project.my_rating" class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
-                      <div class="text-success small fw-semibold d-flex align-items-center gap-1">
-                        <i class="bi bi-check-circle-fill"></i> Saved Successfully
+                    <div
+                      v-else-if="project.my_rating"
+                      class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2"
+                    >
+                      <div
+                        class="text-success small fw-semibold d-flex align-items-center gap-1"
+                      >
+                        <i class="bi bi-check-circle-fill"></i> Saved
+                        Successfully
                       </div>
-                      <button @click="undoTeacherRating" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 fw-semibold xx-small">
+                      <button
+                        @click="undoTeacherRating"
+                        class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 fw-semibold xx-small"
+                      >
                         <i class="bi bi-arrow-counterclockwise"></i> Reset
                       </button>
                     </div>
@@ -326,31 +456,52 @@ onMounted(async () => {
                   <p class="text-muted small mb-0">
                     Average score graded by registered instructors.
                   </p>
-                  <div class="d-flex align-items-center gap-2 mt-3 justify-content-center text-warning">
-                    <i v-for="star in 5" :key="star" class="bi" :class="star <= Math.round(project.average_rating || 0) ? 'bi-star-fill' : 'bi-star'"></i>
+                  <div
+                    class="d-flex align-items-center gap-2 mt-3 justify-content-center text-warning"
+                  >
+                    <i
+                      v-for="star in 5"
+                      :key="star"
+                      class="bi"
+                      :class="
+                        star <= Math.round(project.average_rating || 0)
+                          ? 'bi-star-fill'
+                          : 'bi-star'
+                      "
+                    ></i>
                   </div>
                 </template>
               </div>
 
               <!-- Project Stats Widget -->
               <div class="stats-widget glass-card">
-                <h5 class="fw-bold mb-4 small text-uppercase tracking-wider text-adaptive widget-subtitle">Project Stats</h5>
+                <h5
+                  class="fw-bold mb-4 small text-uppercase tracking-wider text-adaptive widget-subtitle"
+                >
+                  Project Stats
+                </h5>
                 <div class="row g-3">
                   <div class="col-4">
                     <div class="stat-box text-center p-3 rounded-4">
-                      <div class="stat-num fw-bold h5 mb-1 text-adaptive">{{ project.average_rating?.toFixed(1) || '0.0' }}</div>
+                      <div class="stat-num fw-bold h5 mb-1 text-adaptive">
+                        {{ project.average_rating?.toFixed(1) || "0.0" }}
+                      </div>
                       <div class="stat-label text-muted">Rating</div>
                     </div>
                   </div>
                   <div class="col-4">
                     <div class="stat-box text-center p-3 rounded-4">
-                      <div class="stat-num fw-bold h5 mb-1 text-adaptive">{{ project.views || '0' }}</div>
+                      <div class="stat-num fw-bold h5 mb-1 text-adaptive">
+                        {{ project.views || "0" }}
+                      </div>
                       <div class="stat-label text-muted">Views</div>
                     </div>
                   </div>
                   <div class="col-4">
                     <div class="stat-box text-center p-3 rounded-4">
-                      <div class="stat-num fw-bold h5 mb-1 text-adaptive">{{ project.tags?.length || '0' }}</div>
+                      <div class="stat-num fw-bold h5 mb-1 text-adaptive">
+                        {{ project.tags?.length || "0" }}
+                      </div>
                       <div class="stat-label text-muted">Tags</div>
                     </div>
                   </div>
@@ -359,31 +510,57 @@ onMounted(async () => {
 
               <!-- Technical Details Widget -->
               <div class="details-widget glass-card">
-                <h5 class="fw-bold mb-4 small text-uppercase tracking-wider text-adaptive widget-subtitle">Technical Details</h5>
+                <h5
+                  class="fw-bold mb-4 small text-uppercase tracking-wider text-adaptive widget-subtitle"
+                >
+                  Technical Details
+                </h5>
                 <div class="d-flex flex-column gap-3">
-                  <div v-for="spec in technicalSpecs" :key="spec.label" class="spec-row d-flex justify-content-between pb-2">
-                    <span class="spec-label text-muted small">{{ spec.label }}</span>
-                    <span class="spec-value fw-semibold small text-adaptive text-end text-break">{{ spec.value }}</span>
+                  <div
+                    v-for="spec in technicalSpecs"
+                    :key="spec.label"
+                    class="spec-row d-flex justify-content-between pb-2"
+                  >
+                    <span class="spec-label text-muted small">{{
+                      spec.label
+                    }}</span>
+                    <span
+                      class="spec-value fw-semibold small text-adaptive text-end text-break"
+                      >{{ spec.value }}</span
+                    >
                   </div>
                 </div>
               </div>
 
               <!-- Author Profile Widget -->
-              <router-link 
-                v-if="project.author" 
-                :to="`/viewprofile/${authorProfileId}`" 
+              <router-link
+                v-if="project.author"
+                :to="`/viewprofile/${authorProfileId}`"
                 class="author-widget glass-card text-decoration-none d-block cursor-pointer"
               >
-                <h5 class="fw-bold mb-4 small text-uppercase tracking-wider text-adaptive widget-subtitle">Project Creator</h5>
+                <h5
+                  class="fw-bold mb-4 small text-uppercase tracking-wider text-adaptive widget-subtitle"
+                >
+                  Project Creator
+                </h5>
                 <div class="d-flex align-items-center gap-3">
-                  <img :src="project.author.avatar" class="author-avatar rounded-circle border shadow-sm" width="54" height="54" alt="Author">
+                  <img
+                    :src="project.author.avatar"
+                    class="author-avatar rounded-circle border shadow-sm"
+                    width="54"
+                    height="54"
+                    alt="Author"
+                  />
                   <div class="overflow-hidden">
-                    <div class="fw-bold text-adaptive text-truncate">{{ project.author.name }}</div>
-                    <div class="text-muted small text-truncate">{{ project.author.username }}</div>
+                    <div class="fw-bold text-adaptive text-truncate">
+                      {{ project.author.name }}
+                    </div>
+                    <div class="text-muted small text-truncate">
+                      {{ project.author.username }}
+                    </div>
                   </div>
                 </div>
               </router-link>
-
             </div>
           </div>
         </div>
@@ -398,14 +575,16 @@ onMounted(async () => {
 .minimal-detail-page {
   min-height: 100vh;
   background: var(--color-bg);
-  background-image: 
+  background-image:
     linear-gradient(var(--color-border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
   background-size: 34px 34px;
   color: var(--color-text);
   position: relative;
   overflow: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 .project-detail-container {

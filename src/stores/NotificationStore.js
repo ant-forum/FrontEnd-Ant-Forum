@@ -12,7 +12,10 @@ export const useNotificationStore = defineStore("notification", () => {
 
   const allNotifications = computed(() => {
     return [...notifications.value].sort((a, b) => {
-      return new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp);
+      return (
+        new Date(b.created_at || b.timestamp) -
+        new Date(a.created_at || a.timestamp)
+      );
     });
   });
 
@@ -33,54 +36,58 @@ export const useNotificationStore = defineStore("notification", () => {
         id: 1,
         type: "reply",
         title: "Sarah Chen replied to your thread",
-        message: '"Make sure you use multi-stage builds and choose a lightweight base image like node:18-alpine..."',
+        message:
+          '"Make sure you use multi-stage builds and choose a lightweight base image like node:18-alpine..."',
         read: false,
         created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
         link: "/forum/1",
         sender: {
           name: "Sarah Chen",
           avatar: "https://i.pravatar.cc/150?u=sarahc",
-        }
+        },
       },
       {
         id: 2,
         type: "like",
         title: "David Smith liked your post",
-        message: "David Smith liked your project showcase 'DevOps Optimization Blueprint'.",
+        message:
+          "David Smith liked your project showcase 'DevOps Optimization Blueprint'.",
         read: false,
         created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
         link: "/showcase/1",
         sender: {
           name: "David Smith",
           avatar: "https://i.pravatar.cc/150?u=david",
-        }
+        },
       },
       {
         id: 3,
         type: "system",
         title: "Project Showcase Approved",
-        message: "Administrator Alex Chen approved your project 'ANT Forum Redesign Mockups' for public view.",
+        message:
+          "Administrator Alex Chen approved your project 'ANT Forum Redesign Mockups' for public view.",
         read: true,
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
         link: "/showcase/1",
         sender: {
           name: "Alex Chen",
           avatar: "/charles_leclerc.png",
-        }
+        },
       },
       {
         id: 4,
         type: "mention",
         title: "Marcus Wright mentioned you in a comment",
-        message: "@SopanhaZin is there an endpoint `/auth/refresh` on the deployed NodeJS server?",
+        message:
+          "@SopanhaZin is there an endpoint `/auth/refresh` on the deployed NodeJS server?",
         read: true,
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(), // 3 days ago
         link: "/forum/2",
         sender: {
           name: "Marcus Wright",
           avatar: "https://i.pravatar.cc/150?u=marcus",
-        }
-      }
+        },
+      },
     ];
 
     loading.value = false;

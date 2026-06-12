@@ -1,9 +1,14 @@
-import { onBeforeUnmount, onMounted, ref, unref } from 'vue';
-import { onBeforeRouteLeave } from 'vue-router';
+import { onBeforeUnmount, onMounted, ref, unref } from "vue";
+import { onBeforeRouteLeave } from "vue-router";
 
-const DEFAULT_MESSAGE = 'You have unsaved changes. Leave this page and discard them?';
+const DEFAULT_MESSAGE =
+  "You have unsaved changes. Leave this page and discard them?";
 
-export function useUnsavedChangesGuard(hasUnsavedChanges, message = DEFAULT_MESSAGE, options = {}) {
+export function useUnsavedChangesGuard(
+  hasUnsavedChanges,
+  message = DEFAULT_MESSAGE,
+  options = {},
+) {
   const showLeaveModal = ref(false);
   const pendingLeave = ref(null);
   const shouldWarn = () => Boolean(unref(hasUnsavedChanges));
@@ -11,15 +16,15 @@ export function useUnsavedChangesGuard(hasUnsavedChanges, message = DEFAULT_MESS
   const handleBeforeUnload = (event) => {
     if (!shouldWarn()) return;
     event.preventDefault();
-    event.returnValue = '';
+    event.returnValue = "";
   };
 
   onMounted(() => {
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
   });
 
   onBeforeUnmount(() => {
-    window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener("beforeunload", handleBeforeUnload);
   });
 
   onBeforeRouteLeave(() => {

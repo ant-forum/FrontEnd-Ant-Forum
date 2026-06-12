@@ -2,10 +2,14 @@
   <AdminPageShell
     :title="route.query.id ? 'Edit Blog' : 'Create Blog'"
     kicker="Admin Publishing"
-    :subtitle="route.query.id ? 'Edit and refine your existing article.' : 'Write and prepare an official long-form article for the ANT Forum community.'"
+    :subtitle="
+      route.query.id
+        ? 'Edit and refine your existing article.'
+        : 'Write and prepare an official long-form article for the ANT Forum community.'
+    "
     :breadcrumbs="[
       { label: 'Blog Management', to: '/admin/blogs' },
-      { label: route.query.id ? 'Edit Blog' : 'Create Blog' }
+      { label: route.query.id ? 'Edit Blog' : 'Create Blog' },
     ]"
   >
     <template #before-title>
@@ -24,18 +28,24 @@
       <div class="composer-state">
         <span class="status-badge draft">{{ statusBadgeLabel }}</span>
         <span class="state-message">
-          You are editing a local draft. You have <strong>{{ blogStore.drafts.length }}</strong> drafts ready to be published.
+          You are editing a local draft. You have
+          <strong>{{ blogStore.drafts.length }}</strong> drafts ready to be
+          published.
         </span>
       </div>
       <div class="toolbar-notes">
-        <span class="action-hint">View all drafts <i class="bi bi-arrow-right"></i></span>
+        <span class="action-hint"
+          >View all drafts <i class="bi bi-arrow-right"></i
+        ></span>
       </div>
     </router-link>
 
     <!-- Normal non-clickable toolbar when not draft or when saved -->
     <div v-else class="composer-toolbar">
       <div class="composer-state">
-        <span :class="['status-badge', saved ? 'saved' : form.status]">{{ statusBadgeLabel }}</span>
+        <span :class="['status-badge', saved ? 'saved' : form.status]">{{
+          statusBadgeLabel
+        }}</span>
         <p class="state-message">{{ statusMessage }}</p>
       </div>
       <div class="toolbar-notes">
@@ -58,13 +68,20 @@
     </div>
 
     <section v-else class="blog-editor-grid">
-      <form id="blog-post-form" class="editor-column" @submit.prevent="savePost">
+      <form
+        id="blog-post-form"
+        class="editor-column"
+        @submit.prevent="savePost"
+      >
         <section class="admin-panel article-header-panel">
           <div class="panel-heading">
             <div>
               <p class="section-kicker">Article Header</p>
               <h2>Start with the story</h2>
-              <p>Add a focused title and a cover image that introduces the article.</p>
+              <p>
+                Add a focused title and a cover image that introduces the
+                article.
+              </p>
             </div>
             <span class="field-counter">{{ form.title.length }}/120</span>
           </div>
@@ -78,7 +95,7 @@
               type="text"
               maxlength="120"
               placeholder="Example: Mastering State Management in Vue 3"
-            >
+            />
           </div>
 
           <div class="field-block">
@@ -86,13 +103,28 @@
               <label>Cover Image</label>
               <small>Shown at the top of the article</small>
             </div>
-            <label class="cover-uploader" :class="{ 'has-preview': thumbnailPreview }">
-              <input ref="thumbnailInputRef" type="file" accept="image/*" @change="handleThumbnail">
-              <img v-if="thumbnailPreview" :src="thumbnailPreview" alt="Selected article cover preview">
+            <label
+              class="cover-uploader"
+              :class="{ 'has-preview': thumbnailPreview }"
+            >
+              <input
+                ref="thumbnailInputRef"
+                type="file"
+                accept="image/*"
+                @change="handleThumbnail"
+              />
+              <img
+                v-if="thumbnailPreview"
+                :src="thumbnailPreview"
+                alt="Selected article cover preview"
+              />
               <span v-else class="cover-placeholder">
                 <i class="bi bi-image"></i>
                 <strong>Upload a cover image</strong>
-                <small>JPG, PNG, or WebP. Use a wide image for the article header.</small>
+                <small
+                  >JPG, PNG, or WebP. Use a wide image for the article
+                  header.</small
+                >
               </span>
               <span v-if="thumbnailPreview" class="replace-cover">
                 <i class="bi bi-arrow-repeat"></i>
@@ -107,7 +139,10 @@
             <div>
               <p class="section-kicker">Article Body</p>
               <h2>Write the full blog post</h2>
-              <p>Write directly in the final article view with headings, links, images, lists, tables, quotes, and code blocks.</p>
+              <p>
+                Write directly in the final article view with headings, links,
+                images, lists, tables, quotes, and code blocks.
+              </p>
             </div>
             <span class="field-counter">{{ descriptionWordCount }} words</span>
           </div>
@@ -129,8 +164,16 @@
           <div class="settings-row">
             <div class="field-block">
               <label for="blog-category">Category</label>
-              <select id="blog-category" v-model="form.category_id" class="form-select">
-                <option v-for="cat in blogStore.categories" :key="cat.id" :value="cat.id.toString()">
+              <select
+                id="blog-category"
+                v-model="form.category_id"
+                class="form-select"
+              >
+                <option
+                  v-for="cat in blogStore.categories"
+                  :key="cat.id"
+                  :value="cat.id.toString()"
+                >
                   {{ cat.name || cat.title }}
                 </option>
               </select>
@@ -138,7 +181,11 @@
 
             <div class="field-block">
               <label for="blog-status">Status</label>
-              <select id="blog-status" v-model="form.status" class="form-select">
+              <select
+                id="blog-status"
+                v-model="form.status"
+                class="form-select"
+              >
                 <option value="draft">Save as draft</option>
                 <option value="published">Publish now</option>
               </select>
@@ -146,9 +193,25 @@
           </div>
 
           <div class="publish-actions">
-            <button class="btn btn-light border" type="button" @click="resetForm" :disabled="blogStore.isLoading || !hasChanges">Clear</button>
-            <button class="btn btn-primary" type="submit" form="blog-post-form" :disabled="blogStore.isLoading || !hasChanges">
-              <span v-if="blogStore.isLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            <button
+              class="btn btn-light border"
+              type="button"
+              @click="resetForm"
+              :disabled="blogStore.isLoading || !hasChanges"
+            >
+              Clear
+            </button>
+            <button
+              class="btn btn-primary"
+              type="submit"
+              form="blog-post-form"
+              :disabled="blogStore.isLoading || !hasChanges"
+            >
+              <span
+                v-if="blogStore.isLoading"
+                class="spinner-border spinner-border-sm me-1"
+                role="status"
+              ></span>
               <i v-else class="bi bi-send-check"></i>
               <span>{{ saveButtonLabel }}</span>
             </button>
@@ -160,17 +223,22 @@
         <section class="admin-panel article-preview-panel">
           <p class="section-kicker">Article Preview</p>
           <div v-if="thumbnailPreview" class="preview-cover">
-            <img :src="thumbnailPreview" alt="Selected article cover preview">
+            <img :src="thumbnailPreview" alt="Selected article cover preview" />
           </div>
           <div v-else class="preview-cover empty">
             <i class="bi bi-image"></i>
           </div>
-          <span :class="['status-badge', form.status]">{{ statusBadgeLabel }}</span>
-          <h2>{{ form.title || 'Your article title' }}</h2>
+          <span :class="['status-badge', form.status]">{{
+            statusBadgeLabel
+          }}</span>
+          <h2>{{ form.title || "Your article title" }}</h2>
           <p>{{ previewText }}</p>
           <div class="preview-meta">
             <span><i class="bi bi-folder2"></i> {{ categoryLabel }}</span>
-            <span><i class="bi bi-file-earmark-text"></i> {{ descriptionWordCount }} words</span>
+            <span
+              ><i class="bi bi-file-earmark-text"></i>
+              {{ descriptionWordCount }} words</span
+            >
           </div>
         </section>
 
@@ -185,19 +253,37 @@
 
           <ul class="readiness-list">
             <li :class="{ complete: hasClearTitle }">
-              <i :class="hasClearTitle ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
+              <i
+                :class="
+                  hasClearTitle ? 'bi bi-check-circle-fill' : 'bi bi-circle'
+                "
+              ></i>
               <span>Clear article title</span>
             </li>
             <li :class="{ complete: hasUsefulDescription }">
-              <i :class="hasUsefulDescription ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
+              <i
+                :class="
+                  hasUsefulDescription
+                    ? 'bi bi-check-circle-fill'
+                    : 'bi bi-circle'
+                "
+              ></i>
               <span>Long-form article body</span>
             </li>
             <li :class="{ complete: Boolean(form.category_id) }">
-              <i :class="form.category_id ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
+              <i
+                :class="
+                  form.category_id ? 'bi bi-check-circle-fill' : 'bi bi-circle'
+                "
+              ></i>
               <span>Category selected</span>
             </li>
             <li :class="{ complete: Boolean(form.thumbnail) }">
-              <i :class="form.thumbnail ? 'bi bi-check-circle-fill' : 'bi bi-circle'"></i>
+              <i
+                :class="
+                  form.thumbnail ? 'bi bi-check-circle-fill' : 'bi bi-circle'
+                "
+              ></i>
               <span>Cover image attached</span>
             </li>
           </ul>
@@ -207,7 +293,10 @@
           <i class="bi bi-lightbulb"></i>
           <div>
             <h2>Writing Tip</h2>
-            <p>Use the image icon in the article toolbar for images inside the post. Use the braces icon for formatted code blocks.</p>
+            <p>
+              Use the image icon in the article toolbar for images inside the
+              post. Use the braces icon for formatted code blocks.
+            </p>
           </div>
         </section>
       </aside>
@@ -222,7 +311,9 @@
     @closeModal="cancelLeave"
   >
     <p class="leave-modal-text">{{ leaveMessage }}</p>
-    <p class="leave-modal-note">Your latest title, cover, and article body edits have not been saved yet.</p>
+    <p class="leave-modal-note">
+      Your latest title, cover, and article body edits have not been saved yet.
+    </p>
 
     <template #footer>
       <button class="btn btn-light border" type="button" @click="cancelLeave">
@@ -243,17 +334,20 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import AdminPageShell from '../../components/admin/AdminPageShell.vue';
-import BaseModal from '../../components/base/BaseModal.vue';
-import ImageCropModal from '../../components/base/ImageCropModal.vue';
-import RichTextEditor from '../../components/forum/create/RichTextEditor.vue';
-import { useBlogStore } from '../../stores/BlogStore.js';
-import { useImageCropper } from '../../composables/useImageCropper.js';
-import { useToast } from '../../composables/useToast.js';
-import { useUnsavedChangesGuard } from '../../composables/useUnsavedChangesGuard.js';
-import { createPlainTextExcerpt, htmlToPlainText } from '../../utils/richContent.js';
+import { computed, onBeforeUnmount, reactive, ref, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import AdminPageShell from "../../components/admin/AdminPageShell.vue";
+import BaseModal from "../../components/base/BaseModal.vue";
+import ImageCropModal from "../../components/base/ImageCropModal.vue";
+import RichTextEditor from "../../components/forum/create/RichTextEditor.vue";
+import { useBlogStore } from "../../stores/BlogStore.js";
+import { useImageCropper } from "../../composables/useImageCropper.js";
+import { useToast } from "../../composables/useToast.js";
+import { useUnsavedChangesGuard } from "../../composables/useUnsavedChangesGuard.js";
+import {
+  createPlainTextExcerpt,
+  htmlToPlainText,
+} from "../../utils/richContent.js";
 
 const blogStore = useBlogStore();
 const router = useRouter();
@@ -262,7 +356,7 @@ const toast = useToast();
 
 const saved = ref(false);
 const thumbnailInputRef = ref(null);
-const thumbnailPreview = ref('');
+const thumbnailPreview = ref("");
 const selectedFile = ref(null);
 const isEditLoading = ref(!!route.query.id);
 const isInitializing = ref(true);
@@ -273,23 +367,27 @@ const {
   confirmCrop: confirmCoverCrop,
   cancelCrop: cancelCoverCrop,
 } = useImageCropper({
-  title: 'Crop Cover Image',
-  aspectRatio: 'original',
+  title: "Crop Cover Image",
+  aspectRatio: "original",
   outputWidth: 1200,
-  outputType: 'image/jpeg',
-  shape: 'rect',
+  outputType: "image/jpeg",
+  shape: "rect",
 });
 
 const form = reactive({
-  title: '',
-  description: '',
-  category_id: '2',
-  thumbnail: '',
-  status: 'draft',
+  title: "",
+  description: "",
+  category_id: "2",
+  thumbnail: "",
+  status: "draft",
 });
 const serializeForm = () => JSON.stringify(form);
 const formSnapshot = ref(serializeForm());
-const hasChanges = computed(() => !isInitializing.value && (serializeForm() !== formSnapshot.value || Boolean(selectedFile.value)));
+const hasChanges = computed(
+  () =>
+    !isInitializing.value &&
+    (serializeForm() !== formSnapshot.value || Boolean(selectedFile.value)),
+);
 const {
   showLeaveModal,
   message: leaveMessage,
@@ -297,30 +395,31 @@ const {
   cancelLeave,
 } = useUnsavedChangesGuard(
   hasChanges,
-  'You have unsaved blog changes. Leave this page and discard them?',
+  "You have unsaved blog changes. Leave this page and discard them?",
   { useModal: true },
 );
 
 const statusBadgeLabel = computed(() => {
-  if (saved.value) return 'Saved';
-  if (form.status === 'draft') return 'Draft';
-  if (form.status === 'published') return 'Publishing';
-  if (form.status === 'scheduled') return 'Scheduled';
+  if (saved.value) return "Saved";
+  if (form.status === "draft") return "Draft";
+  if (form.status === "published") return "Publishing";
+  if (form.status === "scheduled") return "Scheduled";
   return form.status;
 });
 
 const statusMessage = computed(() => {
-  if (saved.value) return 'All latest draft changes have been successfully saved to the database.';
-  if (form.status === 'draft') {
-    return 'You are editing a local draft. Your changes will not be visible to the community until you publish.';
+  if (saved.value)
+    return "All latest draft changes have been successfully saved to the database.";
+  if (form.status === "draft") {
+    return "You are editing a local draft. Your changes will not be visible to the community until you publish.";
   }
-  if (form.status === 'published') {
-    return 'Ready to publish: This article will become immediately visible to all community members upon submission.';
+  if (form.status === "published") {
+    return "Ready to publish: This article will become immediately visible to all community members upon submission.";
   }
-  if (form.status === 'scheduled') {
-    return 'Scheduled: This article will be queued for future release based on your calendar and date settings.';
+  if (form.status === "scheduled") {
+    return "Scheduled: This article will be queued for future release based on your calendar and date settings.";
   }
-  return 'Prepare your official long-form article for the community.';
+  return "Prepare your official long-form article for the community.";
 });
 
 onMounted(async () => {
@@ -330,12 +429,12 @@ onMounted(async () => {
       form.category_id = blogStore.categories[0].id.toString();
     }
   } catch (err) {
-    console.error('Failed to load categories:', err);
+    console.error("Failed to load categories:", err);
   }
   try {
     await blogStore.fetchAllBlogs();
   } catch (err) {
-    console.error('Failed to load blogs:', err);
+    console.error("Failed to load blogs:", err);
   }
 
   // Load for editing if query parameter 'id' is present
@@ -345,10 +444,12 @@ onMounted(async () => {
     try {
       const blogData = await blogStore.fetchBlogById(editId);
       if (blogData) {
-        form.title = blogData.title || '';
-        form.description = blogData.content || blogData.description || '';
-        form.category_id = blogData.category_id ? blogData.category_id.toString() : '2';
-        form.status = blogData.status || 'draft';
+        form.title = blogData.title || "";
+        form.description = blogData.content || blogData.description || "";
+        form.category_id = blogData.category_id
+          ? blogData.category_id.toString()
+          : "2";
+        form.status = blogData.status || "draft";
         if (blogData.thumbnail || blogData.image) {
           thumbnailPreview.value = blogData.thumbnail || blogData.image;
           // Set to a truthy value so preview is showing, but selectedFile is null unless replaced
@@ -356,8 +457,8 @@ onMounted(async () => {
         }
       }
     } catch (err) {
-      console.error('Failed to load blog for editing:', err);
-      toast.error('Failed to load blog details.');
+      console.error("Failed to load blog for editing:", err);
+      toast.error("Failed to load blog details.");
     } finally {
       isEditLoading.value = false;
     }
@@ -370,7 +471,7 @@ onMounted(async () => {
 const previewText = computed(() => {
   const text = htmlToPlainText(form.description);
 
-  return text || 'Your introduction will appear here as you start writing.';
+  return text || "Your introduction will appear here as you start writing.";
 });
 
 const descriptionWordCount = computed(() => {
@@ -379,47 +480,52 @@ const descriptionWordCount = computed(() => {
 });
 
 const categoryLabel = computed(() => {
-  const found = blogStore.categories.find(c => c.id.toString() === form.category_id.toString());
-  return found ? (found.name || found.title) : 'Guides';
+  const found = blogStore.categories.find(
+    (c) => c.id.toString() === form.category_id.toString(),
+  );
+  return found ? found.name || found.title : "Guides";
 });
 
 const hasClearTitle = computed(() => form.title.trim().length >= 8);
 const hasUsefulDescription = computed(() => descriptionWordCount.value >= 40);
 
-const readyItemCount = computed(() => [
-  hasClearTitle.value,
-  hasUsefulDescription.value,
-  Boolean(form.category_id),
-  Boolean(form.thumbnail),
-].filter(Boolean).length);
+const readyItemCount = computed(
+  () =>
+    [
+      hasClearTitle.value,
+      hasUsefulDescription.value,
+      Boolean(form.category_id),
+      Boolean(form.thumbnail),
+    ].filter(Boolean).length,
+);
 
 const saveButtonLabel = computed(() => {
-  if (form.status === 'published') return 'Publish Post';
-  if (form.status === 'scheduled') return 'Schedule Post';
-  return 'Save Draft';
+  if (form.status === "published") return "Publish Post";
+  if (form.status === "scheduled") return "Schedule Post";
+  return "Save Draft";
 });
 
 const releaseThumbnailPreview = () => {
-  if (thumbnailPreview.value?.startsWith('blob:')) {
+  if (thumbnailPreview.value?.startsWith("blob:")) {
     URL.revokeObjectURL(thumbnailPreview.value);
   }
-  thumbnailPreview.value = '';
+  thumbnailPreview.value = "";
 };
 
 const handleThumbnail = async (event) => {
   const file = event.target.files?.[0];
-  event.target.value = '';
+  event.target.value = "";
 
   if (!file) {
     if (!thumbnailPreview.value) {
       selectedFile.value = null;
-      form.thumbnail = '';
+      form.thumbnail = "";
     }
     return;
   }
 
-  if (!file.type.startsWith('image/')) {
-    toast.error('Please choose an image file.');
+  if (!file.type.startsWith("image/")) {
+    toast.error("Please choose an image file.");
     return;
   }
 
@@ -434,66 +540,69 @@ const handleThumbnail = async (event) => {
 
 const clearThumbnail = () => {
   releaseThumbnailPreview();
-  if (thumbnailInputRef.value) thumbnailInputRef.value.value = '';
+  if (thumbnailInputRef.value) thumbnailInputRef.value.value = "";
   if (!route.query.id) {
     selectedFile.value = null;
-    form.thumbnail = '';
+    form.thumbnail = "";
   }
 };
 
 const savePost = async () => {
   if (!form.title.trim()) {
-    toast.error('Please enter a blog title.');
+    toast.error("Please enter a blog title.");
     return;
   }
   if (!form.description.trim()) {
-    toast.error('Please enter the blog content.');
+    toast.error("Please enter the blog content.");
     return;
   }
 
   try {
     const formData = new FormData();
     const content = form.description;
-    formData.append('title', form.title);
-    formData.append('description', content);
-    formData.append('category_id', form.category_id);
-    formData.append('status', form.status);
-    
+    formData.append("title", form.title);
+    formData.append("description", content);
+    formData.append("category_id", form.category_id);
+    formData.append("status", form.status);
+
     if (selectedFile.value) {
-      formData.append('thumbnail', selectedFile.value);
+      formData.append("thumbnail", selectedFile.value);
     }
 
     if (route.query.id) {
       await blogStore.updateBlog(route.query.id, formData);
-      toast.success('Blog updated successfully!');
+      toast.success("Blog updated successfully!");
     } else {
       await blogStore.createBlog(formData);
-      toast.success('Blog created successfully!');
+      toast.success("Blog created successfully!");
     }
-    
+
     formSnapshot.value = serializeForm();
     selectedFile.value = null;
     saved.value = true;
 
     setTimeout(() => {
-      router.push('/admin/blogs');
+      router.push("/admin/blogs");
     }, 800);
   } catch (err) {
-    console.error('Failed to save blog:', err);
-    toast.error(err.message || 'Failed to save blog.');
+    console.error("Failed to save blog:", err);
+    toast.error(err.message || "Failed to save blog.");
   }
 };
 
 const resetForm = () => {
   clearThumbnail();
   selectedFile.value = null;
-  form.title = '';
-  form.description = '';
-  form.category_id = blogStore.categories.length > 0 ? blogStore.categories[0].id.toString() : '2';
-  form.thumbnail = '';
-  form.status = 'draft';
+  form.title = "";
+  form.description = "";
+  form.category_id =
+    blogStore.categories.length > 0
+      ? blogStore.categories[0].id.toString()
+      : "2";
+  form.thumbnail = "";
+  form.status = "draft";
   saved.value = false;
-  if (thumbnailInputRef.value) thumbnailInputRef.value.value = '';
+  if (thumbnailInputRef.value) thumbnailInputRef.value.value = "";
 };
 
 onBeforeUnmount(releaseThumbnailPreview);
@@ -540,14 +649,22 @@ onBeforeUnmount(releaseThumbnailPreview);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border-color: rgba(139, 92, 246, 0.3) !important;
-  background: linear-gradient(90deg, rgba(139, 92, 246, 0.08) 0%, var(--color-surface) 100%) !important;
+  background: linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0.08) 0%,
+    var(--color-surface) 100%
+  ) !important;
 }
 
 .clickable-toolbar-banner:hover {
   transform: translateY(-2px);
   border-color: var(--color-purple) !important;
   box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15) !important;
-  background: linear-gradient(90deg, rgba(139, 92, 246, 0.12) 0%, var(--color-surface-hover) 100%) !important;
+  background: linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0.12) 0%,
+    var(--color-surface-hover) 100%
+  ) !important;
 }
 
 .clickable-toolbar-banner .state-message strong {
@@ -647,8 +764,13 @@ onBeforeUnmount(releaseThumbnailPreview);
 }
 
 @keyframes pulse-text {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .toolbar-notes span {

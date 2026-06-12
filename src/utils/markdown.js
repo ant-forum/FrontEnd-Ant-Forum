@@ -18,7 +18,7 @@ export function renderInlineMarkdown(text = "") {
 
   html = html.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
   );
 
   html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
@@ -89,7 +89,7 @@ export function markdownToHtml(markdown = "") {
       }
 
       output.push(
-        `<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`
+        `<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`,
       );
       continue;
     }
@@ -164,7 +164,7 @@ export function markdownToHtml(markdown = "") {
       }
 
       output.push(
-        `<blockquote>${quoteLines.map(renderInlineMarkdown).join("<br>")}</blockquote>`
+        `<blockquote>${quoteLines.map(renderInlineMarkdown).join("<br>")}</blockquote>`,
       );
       continue;
     }
@@ -178,7 +178,7 @@ export function markdownToHtml(markdown = "") {
       }
 
       output.push(
-        `<ul>${items.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</ul>`
+        `<ul>${items.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</ul>`,
       );
       continue;
     }
@@ -192,7 +192,7 @@ export function markdownToHtml(markdown = "") {
       }
 
       output.push(
-        `<ol>${items.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</ol>`
+        `<ol>${items.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</ol>`,
       );
       continue;
     }
@@ -209,7 +209,7 @@ export function markdownToHtml(markdown = "") {
     }
 
     output.push(
-      `<p>${paragraphLines.map(renderInlineMarkdown).join("<br>")}</p>`
+      `<p>${paragraphLines.map(renderInlineMarkdown).join("<br>")}</p>`,
     );
   }
 

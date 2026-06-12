@@ -14,7 +14,7 @@
             v-model.trim="searchQuery"
             type="search"
             :placeholder="`Search ${title.toLowerCase()}...`"
-          >
+          />
           <button
             v-if="searchQuery"
             type="button"
@@ -33,7 +33,12 @@
       </div>
     </div>
 
-    <div v-if="isLoading" class="taxonomy-grid" aria-live="polite" aria-busy="true">
+    <div
+      v-if="isLoading"
+      class="taxonomy-grid"
+      aria-live="polite"
+      aria-busy="true"
+    >
       <span class="visually-hidden">Loading {{ title.toLowerCase() }}...</span>
       <article
         v-for="item in 6"
@@ -43,10 +48,16 @@
       >
         <span class="taxonomy-skeleton-icon shimmer"></span>
         <div class="taxonomy-content">
-          <span class="taxonomy-skeleton-line taxonomy-skeleton-title shimmer"></span>
+          <span
+            class="taxonomy-skeleton-line taxonomy-skeleton-title shimmer"
+          ></span>
           <span class="taxonomy-skeleton-line shimmer"></span>
-          <span class="taxonomy-skeleton-line taxonomy-skeleton-description shimmer"></span>
-          <span class="taxonomy-skeleton-line taxonomy-skeleton-meta shimmer"></span>
+          <span
+            class="taxonomy-skeleton-line taxonomy-skeleton-description shimmer"
+          ></span>
+          <span
+            class="taxonomy-skeleton-line taxonomy-skeleton-meta shimmer"
+          ></span>
         </div>
         <span class="taxonomy-skeleton-menu shimmer"></span>
       </article>
@@ -71,7 +82,9 @@
             <h3>{{ item.name }}</h3>
             <p>{{ item.description }}</p>
             <div class="taxonomy-meta">
-              <span v-if="item.items !== undefined">{{ item.items }} items</span>
+              <span v-if="item.items !== undefined"
+                >{{ item.items }} items</span
+              >
               <span v-if="item.type" class="taxonomy-type">
                 <i class="bi bi-layers"></i>
                 {{ item.type }}
@@ -98,7 +111,11 @@
                 <i class="bi bi-pencil"></i>
                 <span>Edit</span>
               </button>
-              <button class="delete-btn" type="button" @click.stop="selectAction('delete', item)">
+              <button
+                class="delete-btn"
+                type="button"
+                @click.stop="selectAction('delete', item)"
+              >
                 <i class="bi bi-trash"></i>
                 <span>Delete</span>
               </button>
@@ -109,11 +126,16 @@
 
       <footer class="pagination-footer mt-4">
         <p>
-          Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong>
-          of <strong>{{ filteredItems.length }}</strong> {{ itemLabel.toLowerCase() }}s
+          Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong> of
+          <strong>{{ filteredItems.length }}</strong>
+          {{ itemLabel.toLowerCase() }}s
         </p>
 
-        <nav v-if="totalPages > 1" class="pagination-controls" :aria-label="`${itemLabel} list pagination`">
+        <nav
+          v-if="totalPages > 1"
+          class="pagination-controls"
+          :aria-label="`${itemLabel} list pagination`"
+        >
           <button
             class="pagination-btn"
             type="button"
@@ -165,8 +187,8 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import BaseButton from '../base/BaseButton.vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import BaseButton from "../base/BaseButton.vue";
 
 const props = defineProps({
   title: {
@@ -207,9 +229,9 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['create', 'view', 'edit', 'delete', 'click-item']);
+const emit = defineEmits(["create", "view", "edit", "delete", "click-item"]);
 const activeMenuId = ref(null);
-const searchQuery = ref('');
+const searchQuery = ref("");
 
 const filteredItems = computed(() => {
   const needle = searchQuery.value.toLowerCase();
@@ -225,10 +247,16 @@ const filteredItems = computed(() => {
 const currentPage = ref(1);
 const pageSize = 8;
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredItems.value.length / pageSize)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredItems.value.length / pageSize)),
+);
 const firstVisibleRow = computed(() => (currentPage.value - 1) * pageSize + 1);
-const lastVisibleRow = computed(() => Math.min(currentPage.value * pageSize, filteredItems.value.length));
-const pageNumbers = computed(() => Array.from({ length: totalPages.value }, (_, index) => index + 1));
+const lastVisibleRow = computed(() =>
+  Math.min(currentPage.value * pageSize, filteredItems.value.length),
+);
+const pageNumbers = computed(() =>
+  Array.from({ length: totalPages.value }, (_, index) => index + 1),
+);
 const paginatedItems = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
   return filteredItems.value.slice(start, start + pageSize);
@@ -253,15 +281,15 @@ const selectAction = (action, item) => {
 
 const handleCardClick = (item) => {
   if (!props.clickable) return;
-  selectAction('click-item', item);
+  selectAction("click-item", item);
 };
 
 onMounted(() => {
-  document.addEventListener('click', closeMenu);
+  document.addEventListener("click", closeMenu);
 });
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', closeMenu);
+  document.removeEventListener("click", closeMenu);
 });
 </script>
 
@@ -446,7 +474,7 @@ onBeforeUnmount(() => {
   animation: shimmer-animation 1.4s ease infinite;
 }
 
-[data-theme='dark'] .shimmer {
+[data-theme="dark"] .shimmer {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.04) 25%,

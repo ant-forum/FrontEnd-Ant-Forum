@@ -21,20 +21,23 @@
               <span class="tab-badge">{{ getTabCount(tab) }}</span>
             </button>
             <div class="sort-divider"></div>
-            <div class="custom-sort-dropdown" style="position: relative;">
-              <button 
-                class="tab-btn sort-trigger" 
+            <div class="custom-sort-dropdown" style="position: relative">
+              <button
+                class="tab-btn sort-trigger"
                 :class="{ active: isSortDropdownOpen }"
                 @click.stop="isSortDropdownOpen = !isSortDropdownOpen"
               >
                 <span>{{ selectedSortLabel }}</span>
-                <i class="bi bi-chevron-down ms-1" style="font-size: 0.75rem;"></i>
+                <i
+                  class="bi bi-chevron-down ms-1"
+                  style="font-size: 0.75rem"
+                ></i>
               </button>
-              
+
               <Transition name="fade-scale">
                 <ul v-if="isSortDropdownOpen" class="sort-menu">
-                  <li 
-                    v-for="option in sortOptions" 
+                  <li
+                    v-for="option in sortOptions"
                     :key="option.value"
                     @click="selectSort(option.value)"
                     :class="{ active: sortBy === option.value }"
@@ -51,9 +54,16 @@
         <div class="panel-tools">
           <label class="search-box">
             <i class="bi bi-search"></i>
-            <input v-model.trim="search" type="search" placeholder="Search posts">
+            <input
+              v-model.trim="search"
+              type="search"
+              placeholder="Search posts"
+            />
           </label>
-          <router-link class="btn btn-primary create-btn" to="/admin/blogs/create">
+          <router-link
+            class="btn btn-primary create-btn"
+            to="/admin/blogs/create"
+          >
             <i class="bi bi-plus-lg"></i>
             <span>Create Blog</span>
           </router-link>
@@ -64,17 +74,37 @@
       <div v-if="route.query.category_id" class="category-filter-alert mb-4">
         <span class="alert-info-text">
           <i class="bi bi-funnel-fill text-purple"></i>
-          <span>Showing articles in category: <strong>{{ getCategoryName(route.query.category_id) }}</strong></span>
+          <span
+            >Showing articles in category:
+            <strong>{{
+              getCategoryName(route.query.category_id)
+            }}</strong></span
+          >
         </span>
-        <button type="button" class="btn-clear-filter" @click="clearCategoryFilter" title="Clear category filter">
+        <button
+          type="button"
+          class="btn-clear-filter"
+          @click="clearCategoryFilter"
+          title="Clear category filter"
+        >
           <i class="bi bi-x-circle-fill"></i>
           <span>Clear Filter</span>
         </button>
       </div>
 
-      <div v-if="activeFilterChips.length" class="active-filters" aria-label="Active blog filters">
+      <div
+        v-if="activeFilterChips.length"
+        class="active-filters"
+        aria-label="Active blog filters"
+      >
         <span>Filtered by</span>
-        <button v-for="chip in activeFilterChips" :key="chip.key" type="button" class="filter-chip" @click="removePostFilter(chip.key)">
+        <button
+          v-for="chip in activeFilterChips"
+          :key="chip.key"
+          type="button"
+          class="filter-chip"
+          @click="removePostFilter(chip.key)"
+        >
           {{ chip.label }}
           <i class="bi bi-x"></i>
         </button>
@@ -83,7 +113,11 @@
       <div class="post-list">
         <!-- Skeleton Loading State -->
         <template v-if="blogStore.isLoading || isTabSwitching">
-          <article v-for="i in 3" :key="i" class="post-row skeleton-row animate-pulse">
+          <article
+            v-for="i in 3"
+            :key="i"
+            class="post-row skeleton-row animate-pulse"
+          >
             <span class="post-thumb skeleton-thumb shimmer"></span>
             <div class="flex-grow-1 d-flex flex-column gap-2 ms-2">
               <div class="skeleton-line w-50 shimmer"></div>
@@ -100,24 +134,39 @@
           <i class="bi bi-file-earmark-x"></i>
           <strong>{{ emptyStateTitle }}</strong>
           <span>{{ emptyStateMessage }}</span>
-          <button v-if="hasActiveFilters" class="btn btn-light btn-sm border empty-action" type="button" @click="clearPostFilters">
+          <button
+            v-if="hasActiveFilters"
+            class="btn btn-light btn-sm border empty-action"
+            type="button"
+            @click="clearPostFilters"
+          >
             <i class="bi bi-x-circle"></i>
             Clear Filters
           </button>
-          <router-link v-else class="btn btn-primary btn-sm empty-action" to="/admin/blogs/create">
+          <router-link
+            v-else
+            class="btn btn-primary btn-sm empty-action"
+            to="/admin/blogs/create"
+          >
             <i class="bi bi-plus-lg"></i>
             Create Blog
           </router-link>
         </div>
-        <article 
-          v-else 
+        <article
+          v-else
           v-for="post in paginatedPosts"
-          :key="post.id || post.title" 
+          :key="post.id || post.title"
           class="post-row clickable-row"
           @click="navigateToDetail(post)"
         >
           <span class="post-thumb">
-            <img v-if="post.image" :src="post.image" @error.once="handleImgError" class="thumb-img" alt="Post thumbnail">
+            <img
+              v-if="post.image"
+              :src="post.image"
+              @error.once="handleImgError"
+              class="thumb-img"
+              alt="Post thumbnail"
+            />
             <i v-else class="bi bi-file-earmark-post"></i>
           </span>
           <div>
@@ -126,26 +175,41 @@
             <div class="post-meta">
               <span><strong>Category:</strong> {{ post.category }}</span>
               <span class="mx-1">•</span>
-              <span><i class="bi bi-calendar3"></i> {{ post.date || 'Recent' }}</span>
+              <span
+                ><i class="bi bi-calendar3"></i>
+                {{ post.date || "Recent" }}</span
+              >
               <span v-if="post.author" class="mx-1">•</span>
-              <span v-if="post.author"><i class="bi bi-person"></i> {{ post.author }}</span>
+              <span v-if="post.author"
+                ><i class="bi bi-person"></i> {{ post.author }}</span
+              >
             </div>
           </div>
           <div class="post-actions-block" @click.stop>
             <span :class="['status-pill', post.status]">{{ post.status }}</span>
-            
+
             <!-- Actions Dropdown Container -->
             <div class="actions-dropdown-container">
-              <button @click.stop="toggleMenu(post.id)" class="btn-action-dots" title="Actions">
+              <button
+                @click.stop="toggleMenu(post.id)"
+                class="btn-action-dots"
+                title="Actions"
+              >
                 <i class="bi bi-three-dots-vertical"></i>
               </button>
-              
-              <div v-if="activeMenuId === post.id" class="actions-dropdown-menu">
+
+              <div
+                v-if="activeMenuId === post.id"
+                class="actions-dropdown-menu"
+              >
                 <button @click.stop="editBlog(post)" class="dropdown-item">
                   <i class="bi bi-pencil-fill text-primary"></i>
                   <span>Edit</span>
                 </button>
-                <button @click.stop="deleteBlog(post.id)" class="dropdown-item delete">
+                <button
+                  @click.stop="deleteBlog(post.id)"
+                  class="dropdown-item delete"
+                >
                   <i class="bi bi-trash-fill text-danger"></i>
                   <span>Delete</span>
                 </button>
@@ -155,13 +219,20 @@
         </article>
       </div>
 
-      <footer v-if="!blogStore.isLoading && visiblePosts.length" class="pagination-footer mt-4">
+      <footer
+        v-if="!blogStore.isLoading && visiblePosts.length"
+        class="pagination-footer mt-4"
+      >
         <p>
-          Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong>
-          of <strong>{{ visiblePosts.length }}</strong> articles
+          Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong> of
+          <strong>{{ visiblePosts.length }}</strong> articles
         </p>
 
-        <nav v-if="totalPages > 1" class="pagination-controls" aria-label="blog list pagination">
+        <nav
+          v-if="totalPages > 1"
+          class="pagination-controls"
+          aria-label="blog list pagination"
+        >
           <button
             class="pagination-btn"
             type="button"
@@ -208,14 +279,26 @@
     theme="danger"
     @closeModal="cancelDelete"
   >
-    <p class="leave-modal-text">Are you sure you want to delete this article? This action cannot be undone.</p>
-    
+    <p class="leave-modal-text">
+      Are you sure you want to delete this article? This action cannot be
+      undone.
+    </p>
+
     <template #footer>
       <button class="btn btn-light border" type="button" @click="cancelDelete">
         Cancel
       </button>
-      <button class="btn btn-danger" type="button" @click="confirmDelete" :disabled="isDeleting">
-        <span v-if="isDeleting" class="spinner-border spinner-border-sm me-1" role="status"></span>
+      <button
+        class="btn btn-danger"
+        type="button"
+        @click="confirmDelete"
+        :disabled="isDeleting"
+      >
+        <span
+          v-if="isDeleting"
+          class="spinner-border spinner-border-sm me-1"
+          role="status"
+        ></span>
         <i v-else class="bi bi-trash-fill me-1"></i>
         Delete
       </button>
@@ -224,24 +307,24 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import AdminPageShell from '../../components/admin/AdminPageShell.vue';
-import BaseModal from '../../components/base/BaseModal.vue';
-import { useBlogStore } from '../../stores/BlogStore.js';
-import { useToast } from '../../composables/useToast.js';
+import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import AdminPageShell from "../../components/admin/AdminPageShell.vue";
+import BaseModal from "../../components/base/BaseModal.vue";
+import { useBlogStore } from "../../stores/BlogStore.js";
+import { useToast } from "../../composables/useToast.js";
 
 const blogStore = useBlogStore();
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
 const activeTab = ref(
-  route.query.tab && ['all', 'published', 'draft'].includes(route.query.tab)
+  route.query.tab && ["all", "published", "draft"].includes(route.query.tab)
     ? route.query.tab
-    : 'all'
+    : "all",
 );
 const activeMenuId = ref(null);
-const search = ref('');
+const search = ref("");
 const isTabSwitching = ref(false);
 
 watch(activeTab, (newTab) => {
@@ -253,54 +336,60 @@ watch(activeTab, (newTab) => {
   router.replace({
     query: {
       ...route.query,
-      tab: newTab === 'all' ? undefined : newTab
-    }
+      tab: newTab === "all" ? undefined : newTab,
+    },
   });
 });
 
-watch(() => route.query.tab, (newTab) => {
-  const target = newTab || 'all';
-  if (activeTab.value !== target && ['all', 'published', 'draft'].includes(target)) {
-    isTabSwitching.value = true;
-    setTimeout(() => {
-      isTabSwitching.value = false;
-    }, 350);
-    activeTab.value = target;
-  }
-});
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    const target = newTab || "all";
+    if (
+      activeTab.value !== target &&
+      ["all", "published", "draft"].includes(target)
+    ) {
+      isTabSwitching.value = true;
+      setTimeout(() => {
+        isTabSwitching.value = false;
+      }, 350);
+      activeTab.value = target;
+    }
+  },
+);
 
 onMounted(async () => {
   try {
     await blogStore.fetchCategories();
   } catch (err) {
-    console.error('Failed to fetch categories:', err);
+    console.error("Failed to fetch categories:", err);
   }
   try {
     await blogStore.fetchAllBlogs();
   } catch (err) {
-    console.error('Failed to fetch all blogs:', err);
+    console.error("Failed to fetch all blogs:", err);
   }
 });
 
 const getTabCount = (tab) => {
   const items = blogStore.ownBlogs || [];
-  if (tab === 'all') return items.length;
-  return items.filter(b => b.status === tab).length;
+  if (tab === "all") return items.length;
+  return items.filter((b) => b.status === tab).length;
 };
 
-const sortBy = ref('date-desc');
+const sortBy = ref("date-desc");
 const isSortDropdownOpen = ref(false);
 
 const sortOptions = [
-  { value: 'date-desc', label: 'Recent Posts' },
-  { value: 'date-asc', label: 'Oldest Posts' },
-  { value: 'author-asc', label: 'Author (A-Z)' },
-  { value: 'author-desc', label: 'Author (Z-A)' },
+  { value: "date-desc", label: "Recent Posts" },
+  { value: "date-asc", label: "Oldest Posts" },
+  { value: "author-asc", label: "Author (A-Z)" },
+  { value: "author-desc", label: "Author (Z-A)" },
 ];
 
 const selectedSortLabel = computed(() => {
-  const option = sortOptions.find(opt => opt.value === sortBy.value);
-  return option ? option.label : 'Recent Posts';
+  const option = sortOptions.find((opt) => opt.value === sortBy.value);
+  return option ? option.label : "Recent Posts";
 });
 
 const selectSort = (value) => {
@@ -309,13 +398,43 @@ const selectSort = (value) => {
 };
 
 const metrics = computed(() => {
-  const totalViews = blogStore.ownBlogs.reduce((sum, blog) => sum + (Number(blog.views) || 0), 0);
-  
+  const totalViews = blogStore.ownBlogs.reduce(
+    (sum, blog) => sum + (Number(blog.views) || 0),
+    0,
+  );
+
   return [
-    { label: 'Admin Posts', value: blogStore.ownBlogs.length.toString(), change: 'Only admins publish', icon: 'bi-file-earmark-text', className: 'blue' },
-    { label: 'Published', value: blogStore.blogs.length.toString(), change: 'Live content', icon: 'bi-send-check', className: 'green' },
-    { label: 'Drafts', value: blogStore.drafts.length.toString(), change: 'Needs editing', icon: 'bi-pencil', className: 'purple' },
-    { label: 'Total Reads', value: totalViews >= 1000 ? (totalViews / 1000).toFixed(1) + 'k' : totalViews.toString(), change: 'Across all posts', icon: 'bi-eye', className: 'orange' },
+    {
+      label: "Admin Posts",
+      value: blogStore.ownBlogs.length.toString(),
+      change: "Only admins publish",
+      icon: "bi-file-earmark-text",
+      className: "blue",
+    },
+    {
+      label: "Published",
+      value: blogStore.blogs.length.toString(),
+      change: "Live content",
+      icon: "bi-send-check",
+      className: "green",
+    },
+    {
+      label: "Drafts",
+      value: blogStore.drafts.length.toString(),
+      change: "Needs editing",
+      icon: "bi-pencil",
+      className: "purple",
+    },
+    {
+      label: "Total Reads",
+      value:
+        totalViews >= 1000
+          ? (totalViews / 1000).toFixed(1) + "k"
+          : totalViews.toString(),
+      change: "Across all posts",
+      icon: "bi-eye",
+      className: "orange",
+    },
   ];
 });
 
@@ -326,62 +445,92 @@ const visiblePosts = computed(() => {
   // Filter by Category Query Param
   const catId = route.query.category_id;
   if (catId) {
-    items = items.filter(post => String(post.category_id) === String(catId));
+    items = items.filter((post) => String(post.category_id) === String(catId));
   }
 
   // Filter by Tab Status
-  if (activeTab.value !== 'all') {
-    items = items.filter(post => post.status === activeTab.value);
+  if (activeTab.value !== "all") {
+    items = items.filter((post) => post.status === activeTab.value);
   }
 
   // Filter by Search Query
   if (needle) {
-    items = items.filter((post) => 
-      (post.title || '').toLowerCase().includes(needle) || 
-      (post.excerpt || post.description || '').toLowerCase().includes(needle)
+    items = items.filter(
+      (post) =>
+        (post.title || "").toLowerCase().includes(needle) ||
+        (post.excerpt || post.description || "").toLowerCase().includes(needle),
     );
   }
-  
+
   // Apply Sort
   items = [...items].sort((a, b) => {
-    if (sortBy.value === 'date-desc') {
-      return new Date(b.created_at || b.createdAt || b.date || 0).getTime() - new Date(a.created_at || a.createdAt || a.date || 0).getTime();
-    } else if (sortBy.value === 'date-asc') {
-      return new Date(a.created_at || a.createdAt || a.date || 0).getTime() - new Date(b.created_at || b.createdAt || b.date || 0).getTime();
-    } else if (sortBy.value === 'author-asc') {
-      return (a.author || '').localeCompare(b.author || '');
-    } else if (sortBy.value === 'author-desc') {
-      return (b.author || '').localeCompare(a.author || '');
+    if (sortBy.value === "date-desc") {
+      return (
+        new Date(b.created_at || b.createdAt || b.date || 0).getTime() -
+        new Date(a.created_at || a.createdAt || a.date || 0).getTime()
+      );
+    } else if (sortBy.value === "date-asc") {
+      return (
+        new Date(a.created_at || a.createdAt || a.date || 0).getTime() -
+        new Date(b.created_at || b.createdAt || b.date || 0).getTime()
+      );
+    } else if (sortBy.value === "author-asc") {
+      return (a.author || "").localeCompare(b.author || "");
+    } else if (sortBy.value === "author-desc") {
+      return (b.author || "").localeCompare(a.author || "");
     }
     return 0;
   });
 
   return items;
 });
-const hasActiveFilters = computed(() => Boolean(search.value) || activeTab.value !== 'all' || Boolean(route.query.category_id));
+const hasActiveFilters = computed(
+  () =>
+    Boolean(search.value) ||
+    activeTab.value !== "all" ||
+    Boolean(route.query.category_id),
+);
 const activeFilterChips = computed(() => [
-  ...(search.value ? [{ key: 'search', label: `Search: ${search.value}` }] : []),
-  ...(activeTab.value !== 'all' ? [{ key: 'status', label: `Status: ${activeTab.value}` }] : []),
+  ...(search.value
+    ? [{ key: "search", label: `Search: ${search.value}` }]
+    : []),
+  ...(activeTab.value !== "all"
+    ? [{ key: "status", label: `Status: ${activeTab.value}` }]
+    : []),
 ]);
-const emptyStateTitle = computed(() => blogStore.ownBlogs.length ? 'No blog posts match these filters' : 'No blog posts yet');
-const emptyStateMessage = computed(() => blogStore.ownBlogs.length ? 'Clear the filters or try a different search phrase.' : 'Create the first official article for the forum community.');
+const emptyStateTitle = computed(() =>
+  blogStore.ownBlogs.length
+    ? "No blog posts match these filters"
+    : "No blog posts yet",
+);
+const emptyStateMessage = computed(() =>
+  blogStore.ownBlogs.length
+    ? "Clear the filters or try a different search phrase."
+    : "Create the first official article for the forum community.",
+);
 const clearPostFilters = () => {
-  search.value = '';
-  activeTab.value = 'all';
-  router.replace({ path: '/admin/blogs' });
+  search.value = "";
+  activeTab.value = "all";
+  router.replace({ path: "/admin/blogs" });
 };
 const removePostFilter = (key) => {
-  if (key === 'search') search.value = '';
-  if (key === 'status') activeTab.value = 'all';
+  if (key === "search") search.value = "";
+  if (key === "status") activeTab.value = "all";
 };
 
 const currentPage = ref(1);
 const pageSize = 5;
 
-const totalPages = computed(() => Math.max(1, Math.ceil(visiblePosts.value.length / pageSize)));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(visiblePosts.value.length / pageSize)),
+);
 const firstVisibleRow = computed(() => (currentPage.value - 1) * pageSize + 1);
-const lastVisibleRow = computed(() => Math.min(currentPage.value * pageSize, visiblePosts.value.length));
-const pageNumbers = computed(() => Array.from({ length: totalPages.value }, (_, index) => index + 1));
+const lastVisibleRow = computed(() =>
+  Math.min(currentPage.value * pageSize, visiblePosts.value.length),
+);
+const pageNumbers = computed(() =>
+  Array.from({ length: totalPages.value }, (_, index) => index + 1),
+);
 const paginatedPosts = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
   return visiblePosts.value.slice(start, start + pageSize);
@@ -392,20 +541,21 @@ watch(visiblePosts, () => {
 });
 
 const handleImgError = (e) => {
-  e.target.src = 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800';
+  e.target.src =
+    "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800";
 };
 
 const getCategoryName = (catId) => {
-  const cat = blogStore.categories.find(c => String(c.id) === String(catId));
-  return cat ? (cat.name || cat.title) : `Category #${catId}`;
+  const cat = blogStore.categories.find((c) => String(c.id) === String(catId));
+  return cat ? cat.name || cat.title : `Category #${catId}`;
 };
 
 const clearCategoryFilter = () => {
-  router.replace({ path: '/admin/blogs' });
+  router.replace({ path: "/admin/blogs" });
 };
 
 const navigateToDetail = (post) => {
-  if (post.status === 'draft') {
+  if (post.status === "draft") {
     router.push(`/admin/blogs/create?id=${post.id}`);
   } else {
     router.push(`/blog/${post.id}`);
@@ -422,17 +572,17 @@ const toggleMenu = (id) => {
 
 const closeAllMenus = (e) => {
   activeMenuId.value = null;
-  if (e && e.target && !e.target.closest('.custom-sort-dropdown')) {
+  if (e && e.target && !e.target.closest(".custom-sort-dropdown")) {
     isSortDropdownOpen.value = false;
   }
 };
 
 onMounted(() => {
-  document.addEventListener('click', closeAllMenus);
+  document.addEventListener("click", closeAllMenus);
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', closeAllMenus);
+  document.removeEventListener("click", closeAllMenus);
 });
 
 const editBlog = (post) => {
@@ -460,11 +610,11 @@ const confirmDelete = async () => {
   isDeleting.value = true;
   try {
     await blogStore.deleteOwnBlog(blogToDelete.value);
-    toast.success('Blog deleted successfully.');
+    toast.success("Blog deleted successfully.");
     await blogStore.fetchAllBlogs();
   } catch (err) {
-    console.error('Failed to delete blog:', err);
-    toast.error('Failed to delete blog.');
+    console.error("Failed to delete blog:", err);
+    toast.error("Failed to delete blog.");
   } finally {
     isDeleting.value = false;
     showDeleteModal.value = false;
@@ -564,7 +714,11 @@ const confirmDelete = async () => {
   font-weight: 800;
   cursor: pointer;
   text-transform: capitalize;
-  transition: color var(--transition-base), background-color var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .tab-btn:hover {
@@ -776,8 +930,14 @@ const confirmDelete = async () => {
 }
 
 @keyframes dropdown-enter {
-  from { opacity: 0; transform: translateY(-4px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .dropdown-item {
@@ -876,7 +1036,7 @@ const confirmDelete = async () => {
   border-radius: 4px;
 }
 
-[data-theme='dark'] .skeleton-line {
+[data-theme="dark"] .skeleton-line {
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -887,7 +1047,7 @@ const confirmDelete = async () => {
   background: var(--color-border-soft, rgba(0, 0, 0, 0.08));
 }
 
-[data-theme='dark'] .skeleton-thumb {
+[data-theme="dark"] .skeleton-thumb {
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -898,7 +1058,7 @@ const confirmDelete = async () => {
   background: var(--color-border-soft, rgba(0, 0, 0, 0.08));
 }
 
-[data-theme='dark'] .skeleton-badge {
+[data-theme="dark"] .skeleton-badge {
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -909,7 +1069,7 @@ const confirmDelete = async () => {
   background: var(--color-border-soft, rgba(0, 0, 0, 0.08));
 }
 
-[data-theme='dark'] .skeleton-btn {
+[data-theme="dark"] .skeleton-btn {
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -924,7 +1084,7 @@ const confirmDelete = async () => {
   animation: shimmer-animation 1.4s ease infinite;
 }
 
-[data-theme='dark'] .shimmer {
+[data-theme="dark"] .shimmer {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.04) 25%,
@@ -1053,7 +1213,8 @@ const confirmDelete = async () => {
   transition: all var(--transition-base);
 }
 
-.sort-trigger:hover, .sort-trigger.active {
+.sort-trigger:hover,
+.sort-trigger.active {
   background: var(--color-surface-hover);
   color: var(--color-text);
 }
@@ -1071,17 +1232,21 @@ const confirmDelete = async () => {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.4),
+    0 8px 10px -6px rgba(0, 0, 0, 0.4);
   z-index: 50;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-[data-theme='light'] .sort-menu {
+[data-theme="light"] .sort-menu {
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
 .sort-menu li {
@@ -1097,7 +1262,7 @@ const confirmDelete = async () => {
   transition: all 0.2s ease;
 }
 
-[data-theme='light'] .sort-menu li {
+[data-theme="light"] .sort-menu li {
   color: var(--color-text-muted);
 }
 
@@ -1111,7 +1276,7 @@ const confirmDelete = async () => {
   color: #fff;
 }
 
-[data-theme='light'] .sort-menu li:hover {
+[data-theme="light"] .sort-menu li:hover {
   background: rgba(0, 0, 0, 0.05);
   color: var(--color-text);
 }
@@ -1121,7 +1286,7 @@ const confirmDelete = async () => {
   color: #fff;
 }
 
-[data-theme='light'] .sort-menu li.active {
+[data-theme="light"] .sort-menu li.active {
   background: var(--color-primary);
   color: #fff;
 }

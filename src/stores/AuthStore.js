@@ -14,7 +14,11 @@ import {
   setRememberPreference,
 } from "@/utils/authStorage";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
-import { extractProfilePayload, normalizeProfileRecord, normalizeSkills } from "@/utils/profileFields";
+import {
+  extractProfilePayload,
+  normalizeProfileRecord,
+  normalizeSkills,
+} from "@/utils/profileFields";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
@@ -199,7 +203,9 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const res = await api.get("/api/get/profile");
       if (res.data && res.data.result !== false) {
-        const fetchedProfile = normalizeProfileRecord(extractProfilePayload(res.data));
+        const fetchedProfile = normalizeProfileRecord(
+          extractProfilePayload(res.data),
+        );
         if (fetchedProfile) {
           setUser(fetchedProfile);
         }

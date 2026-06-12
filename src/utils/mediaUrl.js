@@ -1,10 +1,13 @@
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const BACKEND_MEDIA_PREFIXES = ["/uploads/"];
 
-const apiBaseUrl = () => (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+const apiBaseUrl = () =>
+  (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 
 const isBackendMediaPath = (path) =>
-  BACKEND_MEDIA_PREFIXES.some((prefix) => path === prefix.slice(0, -1) || path.startsWith(prefix));
+  BACKEND_MEDIA_PREFIXES.some(
+    (prefix) => path === prefix.slice(0, -1) || path.startsWith(prefix),
+  );
 
 const stripPublicPrefix = (path) => {
   if (path.includes("/public/")) return path.replace("/public/", "/");
@@ -28,7 +31,8 @@ export const resolveMediaUrl = (value, fallback = null) => {
 
   try {
     const parsed = new window.URL(path);
-    const isLocalUpload = LOCAL_HOSTS.has(parsed.hostname) && isBackendMediaPath(parsed.pathname);
+    const isLocalUpload =
+      LOCAL_HOSTS.has(parsed.hostname) && isBackendMediaPath(parsed.pathname);
 
     if (!isLocalUpload) {
       return path;

@@ -39,10 +39,12 @@ import PerfCard from "./PerfCard.vue";
   position: relative;
   overflow: visible;
   border-radius: 0 24px 24px 0;
-  transition: background-color var(--transition-base), border-color var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base);
 }
 
-[data-theme='dark'] .right-panel {
+[data-theme="dark"] .right-panel {
   background: rgba(31, 41, 55, 0.3) !important;
   backdrop-filter: blur(10px);
 }

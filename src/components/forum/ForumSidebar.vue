@@ -1,12 +1,14 @@
 <script setup>
-import { computed } from 'vue';
-import { useForumStore } from '@/stores/ForumStore';
-import NetworkStatus from './NetworkStatus.vue';
+import { computed } from "vue";
+import { useForumStore } from "@/stores/ForumStore";
+import NetworkStatus from "./NetworkStatus.vue";
 
 const forumStore = useForumStore();
 
 const discussions = computed(() => {
-  return Array.isArray(forumStore.allDiscussions) ? forumStore.allDiscussions : [];
+  return Array.isArray(forumStore.allDiscussions)
+    ? forumStore.allDiscussions
+    : [];
 });
 
 const getReplyCount = (thread) => {
@@ -15,17 +17,25 @@ const getReplyCount = (thread) => {
 };
 
 const totalReplies = computed(() => {
-  return discussions.value.reduce((sum, thread) => sum + getReplyCount(thread), 0);
+  return discussions.value.reduce(
+    (sum, thread) => sum + getReplyCount(thread),
+    0,
+  );
 });
 
 const unansweredCount = computed(() => {
-  return discussions.value.filter((thread) => getReplyCount(thread) === 0).length;
+  return discussions.value.filter((thread) => getReplyCount(thread) === 0)
+    .length;
 });
 
 const stats = computed(() => [
-  { label: 'Threads', value: discussions.value.length, icon: 'bi-chat-square-text' },
-  { label: 'Replies', value: totalReplies.value, icon: 'bi-reply-all' },
-  { label: 'Open', value: unansweredCount.value, icon: 'bi-question-circle' },
+  {
+    label: "Threads",
+    value: discussions.value.length,
+    icon: "bi-chat-square-text",
+  },
+  { label: "Replies", value: totalReplies.value, icon: "bi-reply-all" },
+  { label: "Open", value: unansweredCount.value, icon: "bi-question-circle" },
 ]);
 </script>
 
@@ -41,7 +51,7 @@ const stats = computed(() => [
         </div>
       </div>
     </div>
-    
+
     <div class="sidebar-card">
       <NetworkStatus />
     </div>

@@ -6,24 +6,25 @@
       <!-- Animated background shapes that adapt to theme -->
       <div class="bg-shape shape-1"></div>
       <div class="bg-shape shape-2"></div>
-      
+
       <div class="content-wrapper">
         <div class="error-illustration">
           <h1 class="error-code">404</h1>
           <div class="glow-ring"></div>
         </div>
-        
+
         <h2 class="error-title">Oops! You've lost your way</h2>
         <p class="error-desc">
-          The page you are looking for might have been removed, had its name changed, or is temporarily unavailable. Let's get you back on track!
+          The page you are looking for might have been removed, had its name
+          changed, or is temporarily unavailable. Let's get you back on track!
         </p>
-        
+
         <div class="button-group">
           <router-link to="/" class="home-btn">
             <i class="bi bi-house-door-fill"></i>
             <span>Back to Home</span>
           </router-link>
-          
+
           <button class="back-btn-modern" @click="$router.back()">
             <i class="bi bi-arrow-left"></i>
             <span>Go Back</span>
@@ -91,7 +92,8 @@ import Footer from "./footer.vue";
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scale(1);
   }
   50% {
@@ -127,7 +129,11 @@ import Footer from "./footer.vue";
   font-weight: 900;
   line-height: 1;
   margin: 0;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-purple) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -140,14 +146,19 @@ import Footer from "./footer.vue";
   position: absolute;
   width: 140px;
   height: 140px;
-  background: radial-gradient(circle, var(--color-primary-light) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    var(--color-primary-light) 0%,
+    transparent 70%
+  );
   border-radius: 50%;
   z-index: 1;
   animation: pulse-ring 3s ease-in-out infinite;
 }
 
 @keyframes pulse-ring {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(0.95);
     opacity: 0.5;
   }
@@ -188,7 +199,11 @@ import Footer from "./footer.vue";
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   color: white;
   text-decoration: none;
   padding: 12px 28px;
@@ -248,7 +263,8 @@ import Footer from "./footer.vue";
   .content-wrapper {
     padding: 40px 20px;
   }
-  .shape-1, .shape-2 {
+  .shape-1,
+  .shape-2 {
     width: 200px;
     height: 200px;
   }
@@ -256,7 +272,8 @@ import Footer from "./footer.vue";
     flex-direction: column;
     width: 100%;
   }
-  .home-btn, .back-btn-modern {
+  .home-btn,
+  .back-btn-modern {
     width: 100%;
   }
 }

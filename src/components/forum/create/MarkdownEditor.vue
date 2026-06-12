@@ -15,7 +15,8 @@ const props = defineProps({
   },
   placeholder: {
     type: String,
-    default: "Write details of your discussion, question, or tutorial here. Markdown and keyboard shortcuts are supported...",
+    default:
+      "Write details of your discussion, question, or tutorial here. Markdown and keyboard shortcuts are supported...",
   },
   isDraftSaved: {
     type: Boolean,
@@ -37,7 +38,7 @@ const wordCount = ref(0);
 const charCount = ref(0);
 
 const updateWordAndCharCount = (text) => {
-  const plainText = text || '';
+  const plainText = text || "";
   charCount.value = plainText.length;
   const words = plainText.trim();
   wordCount.value = words ? words.split(/\s+/).length : 0;
@@ -136,13 +137,20 @@ const setMarkdown = (markdown = "", options = {}) => {
   const content = String(markdown || "");
   try {
     if (content.includes("```")) {
-      editor.value.commands.setContent(markdownWithCodeToDoc(content), { emitUpdate: false });
+      editor.value.commands.setContent(markdownWithCodeToDoc(content), {
+        emitUpdate: false,
+      });
     } else {
       editor.value.commands.setContent(content, { emitUpdate: false });
     }
   } catch (error) {
-    console.warn("[MarkdownEditor] Failed to parse markdown, falling back to plain text:", error);
-    editor.value.commands.setContent(markdownWithCodeToDoc(content), { emitUpdate: false });
+    console.warn(
+      "[MarkdownEditor] Failed to parse markdown, falling back to plain text:",
+      error,
+    );
+    editor.value.commands.setContent(markdownWithCodeToDoc(content), {
+      emitUpdate: false,
+    });
   }
 
   updateWordAndCharCount(editor.value.getText() || content);
@@ -192,12 +200,15 @@ onMounted(() => {
   setMarkdown(props.modelValue || "");
 });
 
-watch(() => props.modelValue, (value) => {
-  if (!editor.value) return;
-  if ((value || "") !== getMarkdown()) {
-    setMarkdown(value || "");
-  }
-});
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (!editor.value) return;
+    if ((value || "") !== getMarkdown()) {
+      setMarkdown(value || "");
+    }
+  },
+);
 
 onBeforeUnmount(() => {
   editor.value?.destroy();
@@ -217,16 +228,25 @@ const toggleCodeBlock = () => {
   const { empty } = editor.value.state.selection;
   editor.value.chain().focus().toggleCodeBlock().run();
 
-  if (empty && editor.value.isActive("codeBlock") && !editor.value.getText().includes("// paste code here")) {
+  if (
+    empty &&
+    editor.value.isActive("codeBlock") &&
+    !editor.value.getText().includes("// paste code here")
+  ) {
     editor.value.chain().focus().insertContent("// paste code here").run();
   }
 };
-const toggleBlockquote = () => editor.value?.chain().focus().toggleBlockquote().run();
-const toggleHeading = (level) => editor.value?.chain().focus().toggleHeading({ level }).run();
+const toggleBlockquote = () =>
+  editor.value?.chain().focus().toggleBlockquote().run();
+const toggleHeading = (level) =>
+  editor.value?.chain().focus().toggleHeading({ level }).run();
 const setParagraph = () => editor.value?.chain().focus().setParagraph().run();
-const toggleBulletList = () => editor.value?.chain().focus().toggleBulletList().run();
-const toggleOrderedList = () => editor.value?.chain().focus().toggleOrderedList().run();
-const setHorizontalRule = () => editor.value?.chain().focus().setHorizontalRule().run();
+const toggleBulletList = () =>
+  editor.value?.chain().focus().toggleBulletList().run();
+const toggleOrderedList = () =>
+  editor.value?.chain().focus().toggleOrderedList().run();
+const setHorizontalRule = () =>
+  editor.value?.chain().focus().setHorizontalRule().run();
 const undo = () => editor.value?.chain().focus().undo().run();
 const redo = () => editor.value?.chain().focus().redo().run();
 
@@ -239,8 +259,12 @@ const handleImageUpload = async (event) => {
   if (!file) return;
 
   const imageUrl = URL.createObjectURL(file);
-  editor.value?.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
-  
+  editor.value
+    ?.chain()
+    .focus()
+    .setImage({ src: imageUrl, alt: file.name })
+    .run();
+
   event.target.value = "";
   toast.success("Image reference inserted!");
 };
@@ -258,7 +282,12 @@ const setLink = () => {
     return;
   }
 
-  editor.value?.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  editor.value
+    ?.chain()
+    .focus()
+    .extendMarkRange("link")
+    .setLink({ href: url })
+    .run();
 };
 
 const showTextMenu = ref(false);
@@ -289,30 +318,42 @@ const showTextMenu = ref(false);
           </button>
 
           <div v-if="showTextMenu" class="toolbar-dropdown">
-             <button
+            <button
               type="button"
-              @mousedown.prevent="toggleHeading(1); showTextMenu = false"
+              @mousedown.prevent="
+                toggleHeading(1);
+                showTextMenu = false;
+              "
               :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
             >
               <i class="bi bi-type-h1"></i> Heading 1
             </button>
             <button
               type="button"
-              @mousedown.prevent="toggleHeading(2); showTextMenu = false"
+              @mousedown.prevent="
+                toggleHeading(2);
+                showTextMenu = false;
+              "
               :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
             >
               <i class="bi bi-type-h2"></i> Heading 2
             </button>
             <button
               type="button"
-              @mousedown.prevent="toggleHeading(3); showTextMenu = false"
+              @mousedown.prevent="
+                toggleHeading(3);
+                showTextMenu = false;
+              "
               :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
             >
               <i class="bi bi-type-h3"></i> Heading 3
             </button>
             <button
               type="button"
-              @mousedown.prevent="setParagraph(); showTextMenu = false"
+              @mousedown.prevent="
+                setParagraph();
+                showTextMenu = false;
+              "
               :class="{ 'is-active': editor.isActive('paragraph') }"
             >
               <i class="bi bi-paragraph"></i> Paragraph
@@ -324,24 +365,54 @@ const showTextMenu = ref(false);
 
         <!-- Inline formatting -->
         <div class="toolbar-group">
-          <button type="button" @mousedown.prevent="toggleBold" :class="{ 'is-active': editor.isActive('bold') }" class="toolbar-btn" title="Bold">
+          <button
+            type="button"
+            @mousedown.prevent="toggleBold"
+            :class="{ 'is-active': editor.isActive('bold') }"
+            class="toolbar-btn"
+            title="Bold"
+          >
             <i class="bi bi-type-bold"></i>
           </button>
-          <button type="button" @mousedown.prevent="toggleItalic" :class="{ 'is-active': editor.isActive('italic') }" class="toolbar-btn" title="Italic">
+          <button
+            type="button"
+            @mousedown.prevent="toggleItalic"
+            :class="{ 'is-active': editor.isActive('italic') }"
+            class="toolbar-btn"
+            title="Italic"
+          >
             <i class="bi bi-type-italic"></i>
           </button>
-          <button type="button" @mousedown.prevent="toggleStrike" :class="{ 'is-active': editor.isActive('strike') }" class="toolbar-btn" title="Strikethrough">
+          <button
+            type="button"
+            @mousedown.prevent="toggleStrike"
+            :class="{ 'is-active': editor.isActive('strike') }"
+            class="toolbar-btn"
+            title="Strikethrough"
+          >
             <i class="bi bi-type-strikethrough"></i>
           </button>
         </div>
 
         <div class="toolbar-divider"></div>
-        
+
         <div class="toolbar-group">
-          <button type="button" @mousedown.prevent="toggleCode" :class="{ 'is-active': editor.isActive('code') }" class="toolbar-btn" title="Inline code">
+          <button
+            type="button"
+            @mousedown.prevent="toggleCode"
+            :class="{ 'is-active': editor.isActive('code') }"
+            class="toolbar-btn"
+            title="Inline code"
+          >
             <i class="bi bi-code-slash"></i>
           </button>
-          <button type="button" @mousedown.prevent="toggleCodeBlock" :class="{ 'is-active': editor.isActive('codeBlock') }" class="toolbar-btn" title="Code block">
+          <button
+            type="button"
+            @mousedown.prevent="toggleCodeBlock"
+            :class="{ 'is-active': editor.isActive('codeBlock') }"
+            class="toolbar-btn"
+            title="Code block"
+          >
             <i class="bi bi-braces"></i>
           </button>
         </div>
@@ -350,13 +421,30 @@ const showTextMenu = ref(false);
 
         <!-- Link, Quote, Image -->
         <div class="toolbar-group">
-          <button type="button" @mousedown.prevent="setLink" :class="{ 'is-active': editor.isActive('link') }" class="toolbar-btn" title="Link">
+          <button
+            type="button"
+            @mousedown.prevent="setLink"
+            :class="{ 'is-active': editor.isActive('link') }"
+            class="toolbar-btn"
+            title="Link"
+          >
             <i class="bi bi-link-45deg"></i>
           </button>
-          <button type="button" @mousedown.prevent="toggleBlockquote" :class="{ 'is-active': editor.isActive('blockquote') }" class="toolbar-btn" title="Blockquote">
+          <button
+            type="button"
+            @mousedown.prevent="toggleBlockquote"
+            :class="{ 'is-active': editor.isActive('blockquote') }"
+            class="toolbar-btn"
+            title="Blockquote"
+          >
             <i class="bi bi-quote"></i>
           </button>
-          <button type="button" @mousedown.prevent="triggerImageUpload" class="toolbar-btn" title="Upload Image">
+          <button
+            type="button"
+            @mousedown.prevent="triggerImageUpload"
+            class="toolbar-btn"
+            title="Upload Image"
+          >
             <i class="bi bi-card-image"></i>
           </button>
         </div>
@@ -365,24 +453,53 @@ const showTextMenu = ref(false);
 
         <!-- Lists -->
         <div class="toolbar-group">
-          <button type="button" @mousedown.prevent="toggleOrderedList" :class="{ 'is-active': editor.isActive('orderedList') }" class="toolbar-btn" title="Numbered list">
+          <button
+            type="button"
+            @mousedown.prevent="toggleOrderedList"
+            :class="{ 'is-active': editor.isActive('orderedList') }"
+            class="toolbar-btn"
+            title="Numbered list"
+          >
             <i class="bi bi-list-ol"></i>
           </button>
-          <button type="button" @mousedown.prevent="toggleBulletList" :class="{ 'is-active': editor.isActive('bulletList') }" class="toolbar-btn" title="Bulleted list">
+          <button
+            type="button"
+            @mousedown.prevent="toggleBulletList"
+            :class="{ 'is-active': editor.isActive('bulletList') }"
+            class="toolbar-btn"
+            title="Bulleted list"
+          >
             <i class="bi bi-list-ul"></i>
           </button>
         </div>
 
         <div class="toolbar-divider"></div>
-        
+
         <div class="toolbar-group">
-           <button type="button" @mousedown.prevent="setHorizontalRule" class="toolbar-btn" title="Divider">
+          <button
+            type="button"
+            @mousedown.prevent="setHorizontalRule"
+            class="toolbar-btn"
+            title="Divider"
+          >
             <i class="bi bi-hr"></i>
           </button>
-          <button type="button" @mousedown.prevent="undo" :disabled="!editor.can().undo()" class="toolbar-btn" title="Undo">
+          <button
+            type="button"
+            @mousedown.prevent="undo"
+            :disabled="!editor.can().undo()"
+            class="toolbar-btn"
+            title="Undo"
+          >
             <i class="bi bi-arrow-counterclockwise"></i>
           </button>
-          <button type="button" @mousedown.prevent="redo" :disabled="!editor.can().redo()" class="toolbar-btn" title="Redo">
+          <button
+            type="button"
+            @mousedown.prevent="redo"
+            :disabled="!editor.can().redo()"
+            class="toolbar-btn"
+            title="Redo"
+          >
             <i class="bi bi-arrow-clockwise"></i>
           </button>
         </div>
@@ -411,7 +528,7 @@ const showTextMenu = ref(false);
         <transition name="fade">
           <span v-if="props.isDraftSaved" class="autosave-status saved">
             <i class="bi bi-cloud-check-fill"></i> Draft autosaved
-            {{ props.lastSavedTime ? '(' + props.lastSavedTime + ')' : '' }}
+            {{ props.lastSavedTime ? "(" + props.lastSavedTime + ")" : "" }}
           </span>
           <span v-else class="autosave-status saving">
             <i class="bi bi-cloud-arrow-up"></i> Idle (Auto-saving enabled)
@@ -600,11 +717,19 @@ const showTextMenu = ref(false);
   letter-spacing: -0.3px;
 }
 
-:deep(.tiptap h1) { font-size: 24px; }
-:deep(.tiptap h2) { font-size: 20px; }
-:deep(.tiptap h3) { font-size: 16px; }
+:deep(.tiptap h1) {
+  font-size: 24px;
+}
+:deep(.tiptap h2) {
+  font-size: 20px;
+}
+:deep(.tiptap h3) {
+  font-size: 16px;
+}
 
-:deep(.tiptap p) { margin-bottom: 12px; }
+:deep(.tiptap p) {
+  margin-bottom: 12px;
+}
 
 :deep(.tiptap img) {
   display: block;

@@ -2,24 +2,67 @@
   <AdminPageShell
     title="Thread Management"
     kicker="Forum Moderation"
-    subtitle="Review reported threads, lock noisy discussions, and keep forum content healthy."
+    subtitle="Manage all forum threads, keep discussion topics organized, and create new topics."
     :metrics="metrics"
   >
-    <AdminThreadQueue />
+    <AdminThreadQueue ref="threadQueueRef" />
   </AdminPageShell>
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import AdminPageShell from '../../components/admin/AdminPageShell.vue';
-import AdminThreadQueue from '../../components/admin/AdminThreadQueue.vue';
-import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
+import { computed, ref, onMounted } from "vue";
+import AdminPageShell from "../../components/admin/AdminPageShell.vue";
+import AdminThreadQueue from "../../components/admin/AdminThreadQueue.vue";
+import { useForumStore } from "../../stores/ForumStore";
+import { useTagsStore } from "../../stores/TagsStore";
 
-const adminStore = useAdminOperationsStore();
+const forumStore = useForumStore();
+const tagsStore = useTagsStore();
+const threadQueueRef = ref(null);
+
+onMounted(async () => {
+  try {
+    await Promise.allSettled([
+      forumStore.fetchDiscussions(),
+      forumStore.fetchCategories(),
+      tagsStore.fetchTags(),
+    ]);
+  } catch (err) {
+    console.error("Failed to pre-fetch thread management data:", err);
+  }
+});
+
 const metrics = computed(() => [
-  { label: 'Open Reports', value: String(adminStore.pendingReports.length), change: 'Needs admin decision', icon: 'bi-chat-dots', className: 'blue' },
-  { label: 'High Priority', value: String(adminStore.highPriorityReports.length), change: 'Review these first', icon: 'bi-flag', className: 'orange' },
-  { label: 'Locked', value: String(adminStore.lockedThreads.length), change: 'Current thread state', icon: 'bi-lock', className: 'purple' },
-  { label: 'Resolved', value: String(adminStore.resolvedReports.length), change: 'Recorded decisions', icon: 'bi-check2-circle', className: 'green' },
+  {
+    label: "Thread Forum",
+    value: String(forumStore.discussions.length),
+    change: "Total discussions",
+    icon: "bi-chat-square-text",
+    className: "blue",
+  },
+  {
+    label: "Categories",
+    value: String(forumStore.categories.length),
+    change: "Active sections",
+    icon: "bi-grid-fill",
+    className: "orange",
+  },
+  {
+    label: "Tags",
+    value: String(tagsStore.tags.length),
+    change: "Usable keywords",
+    icon: "bi-tags",
+    className: "purple",
+  },
+  {
+    label: "Create Forum",
+    value: "New Post",
+    change: "Start a discussion",
+    icon: "bi-plus-circle",
+    className: "green",
+    onClick: () => {
+      threadQueueRef.value?.openCreate();
+    },
+  },
 ]);
 </script>

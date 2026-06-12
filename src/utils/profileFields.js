@@ -44,14 +44,18 @@ export const extractProfilePayload = (payload) => {
     payload,
   ];
 
-  return candidates.find((candidate) => {
-    return candidate && typeof candidate === "object" && (
-      candidate.id !== undefined ||
-      candidate.user_id !== undefined ||
-      candidate.username !== undefined ||
-      candidate.email !== undefined
-    );
-  }) || null;
+  return (
+    candidates.find((candidate) => {
+      return (
+        candidate &&
+        typeof candidate === "object" &&
+        (candidate.id !== undefined ||
+          candidate.user_id !== undefined ||
+          candidate.username !== undefined ||
+          candidate.email !== undefined)
+      );
+    }) || null
+  );
 };
 
 export const normalizeProfileRecord = (profile) => {

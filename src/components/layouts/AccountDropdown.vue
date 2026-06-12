@@ -11,8 +11,12 @@ const props = defineProps({
 const emit = defineEmits(["close", "logout"]);
 const dropdownRef = ref(null);
 
-const avatar = computed(() => props.user?.profile_pic || "/charles_leclerc.png");
-const displayName = computed(() => props.user?.username || props.user?.name || "ANT Developer");
+const avatar = computed(
+  () => props.user?.profile_pic || "/charles_leclerc.png",
+);
+const displayName = computed(
+  () => props.user?.username || props.user?.name || "ANT Developer",
+);
 const role = computed(() => {
   const value = props.user?.role || "Member";
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
@@ -48,7 +52,7 @@ onUnmounted(() => {
 <template>
   <aside ref="dropdownRef" class="account-dropdown" aria-label="Account menu">
     <router-link to="/profile" class="account-card" @click="emit('close')">
-      <img :src="avatar" width="44" height="44" alt="User avatar">
+      <img :src="avatar" width="44" height="44" alt="User avatar" />
       <span class="account-identity">
         <strong>{{ displayName }}</strong>
         <small>{{ role }} profile</small>
@@ -58,7 +62,11 @@ onUnmounted(() => {
 
     <div class="account-menu-divider"></div>
 
-    <router-link to="/settings/privacy" class="account-menu-item" @click="emit('close')">
+    <router-link
+      to="/settings/privacy"
+      class="account-menu-item"
+      @click="emit('close')"
+    >
       <span class="account-menu-icon">
         <i class="bi bi-gear-fill"></i>
       </span>
@@ -106,7 +114,9 @@ onUnmounted(() => {
       <span>·</span>
       <router-link to="/help" @click="emit('close')">Terms</router-link>
       <span>·</span>
-      <router-link to="/help" @click="emit('close')">Community guidelines</router-link>
+      <router-link to="/help" @click="emit('close')"
+        >Community guidelines</router-link
+      >
     </footer>
   </aside>
 </template>
