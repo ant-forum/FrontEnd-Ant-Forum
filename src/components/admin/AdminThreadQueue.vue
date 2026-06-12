@@ -115,7 +115,10 @@
               </div>
             </td>
             <td>
-              <div class="identity-cell">
+              <div
+                class="identity-cell user-clickable"
+                @click="goToProfile(thread.user_id || thread.userId || thread.author?.id || thread.author?.user_id)"
+              >
                 <img
                   v-if="getThreadAuthor(thread).avatar && !failedAvatars.has(thread.id)"
                   :src="getThreadAuthor(thread).avatar"
@@ -126,7 +129,7 @@
                 <span v-else class="avatar-dot">
                   {{ initials(getThreadAuthor(thread).name) }}
                 </span>
-                <span>
+                <span class="user-name-text">
                   {{ getThreadAuthor(thread).name }}
                 </span>
               </div>
@@ -503,6 +506,12 @@ const handleDeleteClick = (thread) => {
 
 const goToThread = (id) => {
   router.push(`/forum/${id}`);
+};
+
+const goToProfile = (userId) => {
+  if (userId) {
+    router.push(`/viewprofile/${userId}`);
+  }
 };
 
 const failedAvatars = ref(new Set());
@@ -1169,6 +1178,15 @@ defineExpose({
 }
 
 .thread-title-clickable:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.user-clickable {
+  cursor: pointer;
+}
+
+.user-clickable:hover .user-name-text {
   color: var(--color-primary);
   text-decoration: underline;
 }
