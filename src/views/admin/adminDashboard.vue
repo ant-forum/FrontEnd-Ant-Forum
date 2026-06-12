@@ -220,58 +220,69 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import AdminSidebar from '../../components/admin/AdminSidebar.vue';
 import AdminTopbar from '../../components/admin/AdminTopbar.vue';
 import StatCard from '../../components/admin/StatCard.vue';
 import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
+import { useProjectStore } from '../../stores/ProjectStore';
 
 const adminStore = useAdminOperationsStore();
+const projectStore = useProjectStore();
 const selectedPeriod = ref('Week');
 const periods = ['Day', 'Week', 'Month'];
 
-const metrics = computed(() => [
-  {
-    label: 'Admin Actions',
-    value: adminStore.activityLog.length,
-    description: 'Recorded locally',
-    descriptionIcon: 'bi-activity',
-    descriptionColorClass: 'text-muted',
-    icon: 'bi bi-activity',
-    iconBgClass: 'bg-purple-light',
-    iconColorClass: 'text-purple',
-  },
-  {
-    label: 'Projects',
-    value: adminStore.projects.length,
-    description: `${adminStore.pendingProjects.length} pending review`,
-    descriptionIcon: 'bi-folder-check',
-    descriptionColorClass: 'text-warning',
-    icon: 'bi bi-folder2-open',
-    iconBgClass: 'bg-orange-light',
-    iconColorClass: 'text-orange',
-  },
-  {
-    label: 'Moderated Threads',
-    value: adminStore.threadReports.length,
-    description: `${adminStore.lockedThreads.length} currently locked`,
-    descriptionIcon: 'bi-chat-dots',
-    descriptionColorClass: 'text-success',
-    icon: 'bi bi-chat-square-text',
-    iconBgClass: 'bg-teal-light',
-    iconColorClass: 'text-teal',
-  },
-  {
-    label: 'Reports',
-    value: adminStore.pendingReports.length,
-    description: `${adminStore.highPriorityReports.length} high priority`,
-    descriptionIcon: 'bi-exclamation-triangle',
-    descriptionColorClass: 'text-danger',
-    icon: 'bi bi-flag',
-    iconBgClass: 'bg-red-light',
-    iconColorClass: 'text-red',
-  },
-]);
+onMounted(() => {
+  if (projectStore.projects.length === 0) {
+    projectStore.fetchProjects().catch(() => {});
+  }
+});
+
+const metrics = computed(() => {
+  const pendingCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
+  return [
+    {
+      label: 'Admin Actions',
+      value: adminStore.activityLog.length,
+      description: 'Recorded locally',
+      descriptionIcon: 'bi-activity',
+      descriptionColorClass: 'text-muted',
+      icon: 'bi bi-activity',
+      iconBgClass: 'bg-purple-light',
+      iconColorClass: 'text-purple',
+    },
+    {
+      label: 'Projects',
+      value: projectStore.projects.length,
+      description: `${pendingCount} pending review`,
+      descriptionIcon: 'bi-folder-check',
+      descriptionColorClass: 'text-warning',
+      icon: 'bi bi-folder2-open',
+      iconBgClass: 'bg-orange-light',
+      iconColorClass: 'text-orange',
+    },
+    {
+      label: 'Moderated Threads',
+      value: adminStore.threadReports.length,
+      description: `${adminStore.lockedThreads.length} currently locked`,
+      descriptionIcon: 'bi-chat-dots',
+      descriptionColorClass: 'text-success',
+      icon: 'bi bi-chat-square-text',
+      iconBgClass: 'bg-teal-light',
+      iconColorClass: 'text-teal',
+    },
+    {
+      label: 'Reports',
+      value: adminStore.pendingReports.length,
+      description: `${adminStore.highPriorityReports.length} high priority`,
+      descriptionIcon: 'bi-exclamation-triangle',
+      descriptionColorClass: 'text-danger',
+      icon: 'bi bi-flag',
+      iconBgClass: 'bg-red-light',
+      iconColorClass: 'text-red',
+    },
+  ];
+});
 
 const chartSets = {
   Day: [
@@ -333,11 +344,11 @@ const queueItems = computed(() => [
     iconClass: 'danger',
     to: '/admin/reports',
   })),
-  ...adminStore.pendingProjects.slice(0, 2).map((item) => ({
+  ...projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').slice(0, 2).map((item) => ({
     id: `project-${item.id}`,
-    title: item.name,
+    title: item.title || 'Untitled Project',
     type: 'Project approval',
-    owner: item.author,
+    owner: item.author?.name || 'Unknown',
     status: 'Pending',
     statusClass: 'warning',
     icon: 'bi-folder2',

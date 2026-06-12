@@ -166,15 +166,23 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/AuthStore';
 import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
+import { useProjectStore } from '../../stores/ProjectStore';
 import AdminPageShell from '../../components/admin/AdminPageShell.vue';
 
 const authStore = useAuthStore();
 const adminStore = useAdminOperationsStore();
+const projectStore = useProjectStore();
 const route = useRoute();
+
+onMounted(() => {
+  if (projectStore.projects.length === 0) {
+    projectStore.fetchProjects().catch(() => {});
+  }
+});
 
 const staffId = ref('ANT-2026-904');
 
@@ -268,32 +276,39 @@ watch(() => authStore.user, (newUser) => {
 }, { immediate: true, deep: true });
 
 // Responsibility cards with correct pluralization based on counts
-const responsibilityCards = computed(() => [
-  {
-    label: adminStore.pendingReports.length === 1 ? 'Pending report' : 'Pending reports',
-    value: adminStore.pendingReports.length,
-    helper: `${adminStore.highPriorityReports.length} high priority`,
-    icon: 'bi-flag',
-    tone: 'danger',
-    to: '/admin/reports',
-  },
-  {
-    label: adminStore.pendingProjects.length === 1 ? 'Project in review' : 'Projects in review',
-    value: adminStore.pendingProjects.length,
-    helper: `${adminStore.publishedProjects.length} published`,
-    icon: 'bi-folder-check',
-    tone: 'warning',
-    to: '/admin/projects',
-  },
-  {
-    label: adminStore.lockedThreads.length === 1 ? 'Locked thread' : 'Locked threads',
-    value: adminStore.lockedThreads.length,
-    helper: 'Moderation state',
-    icon: 'bi-lock',
-    tone: 'purple',
-    to: '/admin/threads',
-  },
-]);
+const responsibilityCards = computed(() => {
+  const pendingProjectsCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
+  const publishedCount = projectStore.projects.filter(p => {
+    const s = String(p.status || '').toLowerCase();
+    return s === 'published' || s === 'active';
+  }).length;
+  return [
+    {
+      label: adminStore.pendingReports.length === 1 ? 'Pending report' : 'Pending reports',
+      value: adminStore.pendingReports.length,
+      helper: `${adminStore.highPriorityReports.length} high priority`,
+      icon: 'bi-flag',
+      tone: 'danger',
+      to: '/admin/reports',
+    },
+    {
+      label: pendingProjectsCount === 1 ? 'Project in review' : 'Projects in review',
+      value: pendingProjectsCount,
+      helper: `${publishedCount} published`,
+      icon: 'bi-folder-check',
+      tone: 'warning',
+      to: '/admin/projects',
+    },
+    {
+      label: adminStore.lockedThreads.length === 1 ? 'Locked thread' : 'Locked threads',
+      value: adminStore.lockedThreads.length,
+      helper: 'Moderation state',
+      icon: 'bi-lock',
+      tone: 'purple',
+      to: '/admin/threads',
+    },
+  ];
+});
 
 const recentActivity = computed(() => adminStore.activityLog.slice(0, 4));
 

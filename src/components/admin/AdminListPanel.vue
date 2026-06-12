@@ -49,7 +49,12 @@
           </tr>
         </tbody>
         <tbody v-else-if="filteredRows.length">
-          <tr v-for="row in paginatedRows" :key="row.id ?? row.name">
+          <tr 
+            v-for="row in paginatedRows" 
+            :key="row.id ?? row.name"
+            :class="{ 'clickable-row': clickableRows }"
+            @click="handleRowClick(row, $event)"
+          >
             <td v-for="column in columns" :key="column.key">
               <div v-if="column.key === 'name'" class="identity-cell">
                 <img
@@ -205,6 +210,10 @@ const props = defineProps({
     type: Number,
     default: 10,
   },
+  clickableRows: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const search = ref('');
@@ -260,7 +269,15 @@ const statusClass = (status) => {
   return 'neutral';
 };
 
-const emit = defineEmits(['edit', 'delete']);
+const emit = defineEmits(['edit', 'delete', 'row-click']);
+
+const handleRowClick = (row, event) => {
+  if (!props.clickableRows) return;
+  if (event.target.closest('.actions-dropdown-container') || event.target.closest('.btn-action-dots')) {
+    return;
+  }
+  emit('row-click', row);
+};
 
 const activeMenuId = ref(null);
 
@@ -668,6 +685,15 @@ onBeforeUnmount(() => {
   .pagination-controls {
     flex-wrap: wrap;
   }
+}
+
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.clickable-row:hover {
+  background-color: var(--color-surface-hover) !important;
 }
 
 /* Shimmer Skeleton Styles */

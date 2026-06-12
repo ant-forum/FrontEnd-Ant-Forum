@@ -44,15 +44,6 @@
             </div>
           </div>
         </div>
-
-        <div class="project-stats">
-          <span><i class="bi bi-heart-fill"></i>{{ project.likes }} likes</span>
-          <span><i class="bi bi-chat-dots"></i>{{ project.comments }} comments</span>
-          <button class="btn btn-light border btn-sm" type="button" @click="openReview(project)">
-            <i class="bi bi-eye"></i>
-            <span>Review</span>
-          </button>
-        </div>
       </article>
 
       <div v-if="visibleProjects.length === 0" class="empty-projects">

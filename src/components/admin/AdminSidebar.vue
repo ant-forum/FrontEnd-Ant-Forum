@@ -35,12 +35,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
+import { useProjectStore } from '../../stores/ProjectStore';
 
 const route = useRoute();
 const adminStore = useAdminOperationsStore();
+const projectStore = useProjectStore();
+
+onMounted(() => {
+  if (projectStore.projects.length === 0) {
+    projectStore.fetchProjects().catch(() => {});
+  }
+});
 
 const navigationCategories = ref([
   {
@@ -65,7 +73,12 @@ const isRouteActive = (itemPath) => {
   return route.path.startsWith(itemPath);
 };
 
-const badgeFor = (itemPath) => adminStore.sidebarBadges[itemPath] || 0;
+const badgeFor = (itemPath) => {
+  if (itemPath === '/admin/projects') {
+    return projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
+  }
+  return adminStore.sidebarBadges[itemPath] || 0;
+};
 </script>
 
 <style scoped>
