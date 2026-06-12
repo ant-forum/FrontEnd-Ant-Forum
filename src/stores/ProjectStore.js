@@ -241,6 +241,9 @@ export const useProjectStore = defineStore("project", () => {
       if (rawData.tag_ids && rawData.tag_ids.length > 0) {
         formData.append("tag_ids", JSON.stringify(rawData.tag_ids));
       }
+      if (rawData.status !== undefined) {
+        formData.append("status", rawData.status);
+      }
 
       const res = await api.post("/api/projects", formData);
       ensureSuccess(res);
