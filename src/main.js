@@ -5,7 +5,6 @@ import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
 import { toastOptions } from "./composables/useToast";
 
-
 import "./assets/styles/theme.css";
 import "./assets/styles/main.css";
 import App from "./App.vue";
@@ -21,10 +20,10 @@ if (typeof window !== "undefined") {
   const theme = saved ? saved : prefersDark ? "dark" : "light";
   if (theme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
-    document.body.classList.add('dark-mode');
+    document.body.classList.add("dark-mode");
   } else {
     document.documentElement.setAttribute("data-theme", "light");
-    document.body.classList.remove('dark-mode');
+    document.body.classList.remove("dark-mode");
   }
 }
 
@@ -34,6 +33,5 @@ app.use(createPinia());
 app.use(router);
 
 app.use(Toast, toastOptions);
-
 
 app.mount("#app");

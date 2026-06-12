@@ -1,30 +1,30 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useForumStore } from '@/stores/ForumStore';
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useForumStore } from "@/stores/ForumStore";
 import { useToast } from "vue-toastification";
-import { resolveMediaUrl } from '@/utils/mediaUrl';
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const router = useRouter();
 const toast = useToast();
 
 function goToProfile(d) {
   if (!d) return;
-  
-  let identifier = d.user_id || d.author || 'user';
-  
-  if (typeof identifier === 'string') {
-    identifier = identifier.replace('@', '').trim();
+
+  let identifier = d.user_id || d.author || "user";
+
+  if (typeof identifier === "string") {
+    identifier = identifier.replace("@", "").trim();
   }
-  
+
   router.push(`/viewprofile/${identifier}`);
 }
 
 function getAuthorName(author) {
-  if (typeof author === 'object' && author !== null) {
-    return author.username || author.name || 'User';
+  if (typeof author === "object" && author !== null) {
+    return author.username || author.name || "User";
   }
-  return author || 'User';
+  return author || "User";
 }
 
 function getAuthorAvatar(d) {
@@ -33,85 +33,137 @@ function getAuthorAvatar(d) {
   let rawUrl = null;
   if (d.author_avatar || d.avatar) {
     rawUrl = d.author_avatar || d.avatar;
-  } else if (typeof author === 'object' && author !== null) {
+  } else if (typeof author === "object" && author !== null) {
     rawUrl = author.profile_pic || author.avatar || author.avatarUrl || null;
   }
   return resolveMediaUrl(rawUrl);
 }
 
 function getAuthorInitials(author) {
-  return getAuthorName(author)
-    .replace('@', '')
-    .trim()
-    .slice(0, 2)
-    .toUpperCase() || 'U';
+  return (
+    getAuthorName(author).replace("@", "").trim().slice(0, 2).toUpperCase() ||
+    "U"
+  );
 }
 
 function getReplyCount(d) {
   return Array.isArray(d.replies)
     ? d.replies.length
-    : (typeof d.replies === 'number' ? d.replies : Number(d.comment_count || 0));
+    : typeof d.replies === "number"
+      ? d.replies
+      : Number(d.comment_count || 0);
 }
 
 function formatCreatedAt(d) {
   const raw = d.createdAt || d.created_at || d.timestamp;
-  if (!raw) return 'Just now';
+  if (!raw) return "Just now";
 
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return raw;
 
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
 defineProps({
-  discussions: { type: Array, required: true }
+  discussions: { type: Array, required: true },
 });
 
 const forumStore = useForumStore();
 
 const tagColorMap = {
-  blue:   { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
-  orange: { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' }, // mapping orange to pink for now or adding more variables
-  green:  { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
-  purple: { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
-  pink:   { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
-  teal:   { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
-  red:    { bg: 'var(--color-tag-red-bg)', color: 'var(--color-tag-red-text)' },
-  gray:   { bg: 'var(--color-surface-hover)', color: 'var(--color-text-muted)' },
+  blue: { bg: "var(--color-tag-blue-bg)", color: "var(--color-tag-blue-text)" },
+  orange: {
+    bg: "var(--color-tag-pink-bg)",
+    color: "var(--color-tag-pink-text)",
+  }, // mapping orange to pink for now or adding more variables
+  green: {
+    bg: "var(--color-tag-cyan-bg)",
+    color: "var(--color-tag-cyan-text)",
+  },
+  purple: {
+    bg: "var(--color-tag-purple-bg)",
+    color: "var(--color-tag-purple-text)",
+  },
+  pink: { bg: "var(--color-tag-pink-bg)", color: "var(--color-tag-pink-text)" },
+  teal: { bg: "var(--color-tag-cyan-bg)", color: "var(--color-tag-cyan-text)" },
+  red: { bg: "var(--color-tag-red-bg)", color: "var(--color-tag-red-text)" },
+  gray: { bg: "var(--color-surface-hover)", color: "var(--color-text-muted)" },
 };
 
 // Add standard categories as fallback colors
 const tagStyles = {
-  'React': { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
-  'Performance': { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
-  'System Design': { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
-  'Architecture': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
-  'CSS': { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
-  'Tailwind': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
-  'Docker': { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
-  'Node.js': { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
-  'DevOps': { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
-  'Vue 3': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
-  'Composition API': { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
-  'GraphQL': { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
-  'API': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
-  'Security': { bg: 'var(--color-tag-red-bg)', color: 'var(--color-tag-red-text)' },
-  'npm': { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
-  'Microservices': { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
-  'Monolith': { bg: 'var(--color-surface-hover)', color: 'var(--color-text-muted)' }
+  React: {
+    bg: "var(--color-tag-blue-bg)",
+    color: "var(--color-tag-blue-text)",
+  },
+  Performance: {
+    bg: "var(--color-tag-purple-bg)",
+    color: "var(--color-tag-purple-text)",
+  },
+  "System Design": {
+    bg: "var(--color-tag-pink-bg)",
+    color: "var(--color-tag-pink-text)",
+  },
+  Architecture: {
+    bg: "var(--color-tag-cyan-bg)",
+    color: "var(--color-tag-cyan-text)",
+  },
+  CSS: { bg: "var(--color-tag-pink-bg)", color: "var(--color-tag-pink-text)" },
+  Tailwind: {
+    bg: "var(--color-tag-cyan-bg)",
+    color: "var(--color-tag-cyan-text)",
+  },
+  Docker: {
+    bg: "var(--color-tag-blue-bg)",
+    color: "var(--color-tag-blue-text)",
+  },
+  "Node.js": {
+    bg: "var(--color-tag-purple-bg)",
+    color: "var(--color-tag-purple-text)",
+  },
+  DevOps: {
+    bg: "var(--color-tag-purple-bg)",
+    color: "var(--color-tag-purple-text)",
+  },
+  "Vue 3": {
+    bg: "var(--color-tag-cyan-bg)",
+    color: "var(--color-tag-cyan-text)",
+  },
+  "Composition API": {
+    bg: "var(--color-tag-blue-bg)",
+    color: "var(--color-tag-blue-text)",
+  },
+  GraphQL: {
+    bg: "var(--color-tag-pink-bg)",
+    color: "var(--color-tag-pink-text)",
+  },
+  API: { bg: "var(--color-tag-cyan-bg)", color: "var(--color-tag-cyan-text)" },
+  Security: {
+    bg: "var(--color-tag-red-bg)",
+    color: "var(--color-tag-red-text)",
+  },
+  npm: { bg: "var(--color-tag-pink-bg)", color: "var(--color-tag-pink-text)" },
+  Microservices: {
+    bg: "var(--color-tag-cyan-bg)",
+    color: "var(--color-tag-cyan-text)",
+  },
+  Monolith: {
+    bg: "var(--color-surface-hover)",
+    color: "var(--color-text-muted)",
+  },
 };
 
 function getTagStyle(label, defaultColor) {
   if (tagStyles[label]) {
     return { background: tagStyles[label].bg, color: tagStyles[label].color };
   }
-  const colorKey = defaultColor || 'gray';
+  const colorKey = defaultColor || "gray";
   const t = tagColorMap[colorKey] || tagColorMap.gray;
   return { background: t.bg, color: t.color };
 }
@@ -127,20 +179,20 @@ async function shareThread(id) {
       if (copiedId.value === id) copiedId.value = null;
     }, 2000);
   } catch (err) {
-    console.error('Failed to copy: ', err);
+    console.error("Failed to copy: ", err);
   }
 }
 
 function toggleSave(d) {
   const isNowSaved = !d.saved; // Since store will toggle it instantly
-  
+
   if (isNowSaved) {
     toast.success("Discussion saved successfully!");
   } else {
     toast.success("Discussion removed from saved.");
   }
 
-  forumStore.toggleSaveForum(d.id).catch(err => {
+  forumStore.toggleSaveForum(d.id).catch((err) => {
     console.error("Failed to toggle save:", err);
     toast.error("Failed to save discussion.");
   });
@@ -148,35 +200,44 @@ function toggleSave(d) {
 
 function handleVote(id, direction) {
   forumStore.toggleVoteDiscussion(id, direction);
-  toast.success(direction === 'up' ? "Upvoted!" : "Downvoted!");
+  toast.success(direction === "up" ? "Upvoted!" : "Downvoted!");
 }
 
 const categoryGradients = [
-  'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-  'linear-gradient(135deg, #10b981, #047857)',
-  'linear-gradient(135deg, #a855f7, #6d28d9)',
-  'linear-gradient(135deg, #f59e0b, #b45309)',
-  'linear-gradient(135deg, #0d9488, #0f766e)',
-  'linear-gradient(135deg, #ef4444, #b91c1c)',
+  "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+  "linear-gradient(135deg, #10b981, #047857)",
+  "linear-gradient(135deg, #a855f7, #6d28d9)",
+  "linear-gradient(135deg, #f59e0b, #b45309)",
+  "linear-gradient(135deg, #0d9488, #0f766e)",
+  "linear-gradient(135deg, #ef4444, #b91c1c)",
 ];
 
-function hashString(value = '') {
-  return String(value).split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
+function hashString(value = "") {
+  return String(value)
+    .split("")
+    .reduce((hash, char) => hash + char.charCodeAt(0), 0);
 }
 
-function getCategoryIcon(label = '') {
+function getCategoryIcon(label = "") {
   const lower = label.toLowerCase();
-  if (lower.includes('question') || lower.includes('answer')) return 'bi-question-circle-fill';
-  if (lower.includes('tutorial') || lower.includes('guide')) return 'bi-book-half';
-  if (lower.includes('showcase') || lower.includes('project')) return 'bi-rocket-takeoff-fill';
-  if (lower.includes('announce') || lower.includes('news')) return 'bi-megaphone-fill';
-  if (lower.includes('resource') || lower.includes('link')) return 'bi-link-45deg';
-  if (lower.includes('idea') || lower.includes('feature')) return 'bi-lightbulb-fill';
-  return 'bi-chat-left-text-fill';
+  if (lower.includes("question") || lower.includes("answer"))
+    return "bi-question-circle-fill";
+  if (lower.includes("tutorial") || lower.includes("guide"))
+    return "bi-book-half";
+  if (lower.includes("showcase") || lower.includes("project"))
+    return "bi-rocket-takeoff-fill";
+  if (lower.includes("announce") || lower.includes("news"))
+    return "bi-megaphone-fill";
+  if (lower.includes("resource") || lower.includes("link"))
+    return "bi-link-45deg";
+  if (lower.includes("idea") || lower.includes("feature"))
+    return "bi-lightbulb-fill";
+  return "bi-chat-left-text-fill";
 }
 
 function getCategoryMeta(d) {
-  const label = d.categoryLabel || d.categoryMeta?.label || d.category || 'Discussion';
+  const label =
+    d.categoryLabel || d.categoryMeta?.label || d.category || "Discussion";
   return {
     label,
     icon: d.categoryMeta?.icon || getCategoryIcon(label),
@@ -185,24 +246,42 @@ function getCategoryMeta(d) {
 }
 
 function selectTag(tagName) {
-  const cleanTag = tagName.replace('#', '').trim();
-  router.push({ path: '/forum', query: { tag: cleanTag } });
+  const cleanTag = tagName.replace("#", "").trim();
+  router.push({ path: "/forum", query: { tag: cleanTag } });
 }
 </script>
 
 <template>
   <div class="thread-list">
-    <div v-for="d in discussions" :key="d.id" class="thread-card" @click="$router.push(`/forum/${d.id}`)">
-      
+    <div
+      v-for="d in discussions"
+      :key="d.id"
+      class="thread-card"
+      @click="$router.push(`/forum/${d.id}`)"
+    >
       <!-- Vote Column (Exactly like screenshot) -->
       <div class="vote-col" @click.stop>
-        <button class="vote-btn up" :class="{ active: d.voted === 'up' }" @click.stop="handleVote(d.id, 'up')">
+        <button
+          class="vote-btn up"
+          :class="{ active: d.voted === 'up' }"
+          @click.stop="handleVote(d.id, 'up')"
+        >
           <i class="bi bi-chevron-up"></i>
         </button>
-        <span class="vote-num" :class="{ 'voted-up': d.voted === 'up', 'voted-down': d.voted === 'down' }">
+        <span
+          class="vote-num"
+          :class="{
+            'voted-up': d.voted === 'up',
+            'voted-down': d.voted === 'down',
+          }"
+        >
           {{ d.votes }}
         </span>
-        <button class="vote-btn down" :class="{ active: d.voted === 'down' }" @click.stop="handleVote(d.id, 'down')">
+        <button
+          class="vote-btn down"
+          :class="{ active: d.voted === 'down' }"
+          @click.stop="handleVote(d.id, 'down')"
+        >
           <i class="bi bi-chevron-down"></i>
         </button>
       </div>
@@ -210,20 +289,28 @@ function selectTag(tagName) {
       <!-- Content Column -->
       <div class="thread-content">
         <div class="thread-header">
-          <button class="author-chip" type="button" @click.stop="goToProfile(d)">
+          <button
+            class="author-chip"
+            type="button"
+            @click.stop="goToProfile(d)"
+          >
             <span class="author-avatar">
-              <img v-if="getAuthorAvatar(d)" :src="getAuthorAvatar(d)" alt="">
+              <img v-if="getAuthorAvatar(d)" :src="getAuthorAvatar(d)" alt="" />
               <span v-else>{{ getAuthorInitials(d.author) }}</span>
             </span>
             <span class="author-copy">
-              <strong>@{{ getAuthorName(d.author).replace('@', '') }}</strong>
+              <strong>@{{ getAuthorName(d.author).replace("@", "") }}</strong>
               <small>Created {{ formatCreatedAt(d) }}</small>
             </span>
           </button>
 
           <div class="thread-status">
             <!-- Category Badge -->
-            <span v-if="d.category || d.categoryLabel || d.categoryMeta" class="category-badge" :style="{ background: getCategoryMeta(d).gradient }">
+            <span
+              v-if="d.category || d.categoryLabel || d.categoryMeta"
+              class="category-badge"
+              :style="{ background: getCategoryMeta(d).gradient }"
+            >
               <i :class="['bi', getCategoryMeta(d).icon]"></i>
               {{ getCategoryMeta(d).label }}
             </span>
@@ -240,28 +327,40 @@ function selectTag(tagName) {
         <div v-if="d.hasCode && d.code" class="code-block" @click.stop>
           <div class="code-header">
             <span class="code-lang">Go snippet example</span>
-            <div class="code-dots">
-              <span></span><span></span><span></span>
-            </div>
+            <div class="code-dots"><span></span><span></span><span></span></div>
           </div>
           <pre><code>{{ d.code }}</code></pre>
         </div>
 
         <!-- Footer Row -->
         <div class="thread-footer">
-          <button class="foot-btn replies" @click.stop="$router.push(`/forum/${d.id}`)">
+          <button
+            class="foot-btn replies"
+            @click.stop="$router.push(`/forum/${d.id}`)"
+          >
             <i class="bi bi-chat-square-text"></i>
-            <span>{{ getReplyCount(d) }} {{ getReplyCount(d) === 1 ? 'Reply' : 'Replies' }}</span>
+            <span
+              >{{ getReplyCount(d) }}
+              {{ getReplyCount(d) === 1 ? "Reply" : "Replies" }}</span
+            >
           </button>
 
-          <button class="foot-btn bookmark" :class="{ 'is-saved': d.saved }" @click.stop="toggleSave(d)">
+          <button
+            class="foot-btn bookmark"
+            :class="{ 'is-saved': d.saved }"
+            @click.stop="toggleSave(d)"
+          >
             <i :class="[d.saved ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
-            <span>{{ d.saved ? 'Saved' : 'Save' }}</span>
+            <span>{{ d.saved ? "Saved" : "Save" }}</span>
           </button>
 
-          <button class="foot-btn share" :class="{ 'is-copied': copiedId === d.id }" @click.stop="shareThread(d.id)">
+          <button
+            class="foot-btn share"
+            :class="{ 'is-copied': copiedId === d.id }"
+            @click.stop="shareThread(d.id)"
+          >
             <i :class="[copiedId === d.id ? 'bi-check' : 'bi-share']"></i>
-            <span>{{ copiedId === d.id ? 'Copied!' : 'Share' }}</span>
+            <span>{{ copiedId === d.id ? "Copied!" : "Share" }}</span>
           </button>
         </div>
       </div>
@@ -288,7 +387,11 @@ function selectTag(tagName) {
 }
 
 .thread-card:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 52%, var(--color-border));
+  border-color: color-mix(
+    in srgb,
+    var(--color-primary) 52%,
+    var(--color-border)
+  );
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
@@ -390,7 +493,11 @@ function selectTag(tagName) {
   flex: 0 0 auto;
   overflow: hidden;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--color-purple), var(--color-primary));
+  background: linear-gradient(
+    135deg,
+    var(--color-purple),
+    var(--color-primary)
+  );
   border: 2px solid var(--color-border);
   border-radius: 50%;
   font-size: 0.78rem;
@@ -444,7 +551,7 @@ function selectTag(tagName) {
   font-weight: 700;
   border-radius: 100px;
   color: white;
-  box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .reply-pill {
@@ -555,7 +662,7 @@ function selectTag(tagName) {
 }
 
 .code-block code {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 12px;
   line-height: 1.6;
   color: var(--color-text);
@@ -594,7 +701,11 @@ function selectTag(tagName) {
 
 .foot-btn:hover {
   color: var(--color-text);
-  border-color: color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
+  border-color: color-mix(
+    in srgb,
+    var(--color-primary) 38%,
+    var(--color-border)
+  );
 }
 
 .foot-btn.bookmark.is-saved {

@@ -5,7 +5,7 @@
     subtitle="Add a student or mentor, assign their role, and create their account."
     :breadcrumbs="[
       { label: 'Users', to: '/admin/users' },
-      { label: 'Create User' }
+      { label: 'Create User' },
     ]"
   >
     <div class="mb-3">
@@ -16,7 +16,11 @@
     </div>
 
     <section class="create-user-grid">
-      <form class="admin-panel clean-form" @submit.prevent="handleCreateUser" novalidate>
+      <form
+        class="admin-panel clean-form"
+        @submit.prevent="handleCreateUser"
+        novalidate
+      >
         <div class="form-heading">
           <span class="panel-icon">
             <i class="bi bi-person-plus"></i>
@@ -38,8 +42,10 @@
               placeholder="Enter username"
               autocomplete="username"
               @input="handleInput('username')"
-            >
-            <div v-if="errors.username" class="invalid-feedback d-block">{{ errors.username }}</div>
+            />
+            <div v-if="errors.username" class="invalid-feedback d-block">
+              {{ errors.username }}
+            </div>
           </div>
 
           <div class="field-block">
@@ -52,8 +58,10 @@
               placeholder="name@example.com"
               autocomplete="email"
               @input="handleInput('email')"
-            >
-            <div v-if="errors.email" class="invalid-feedback d-block">{{ errors.email }}</div>
+            />
+            <div v-if="errors.email" class="invalid-feedback d-block">
+              {{ errors.email }}
+            </div>
           </div>
         </div>
 
@@ -69,17 +77,22 @@
                 placeholder="Enter password (min 8 chars)"
                 autocomplete="new-password"
                 @input="handleInput('password')"
-              >
-              <button 
-                type="button" 
-                class="eye-toggle" 
+              />
+              <button
+                type="button"
+                class="eye-toggle"
                 @click="showPassword = !showPassword"
                 tabindex="-1"
               >
-                <i class="bi" :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                <i
+                  class="bi"
+                  :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"
+                ></i>
               </button>
             </div>
-            <div v-if="errors.password" class="invalid-feedback d-block">{{ errors.password }}</div>
+            <div v-if="errors.password" class="invalid-feedback d-block">
+              {{ errors.password }}
+            </div>
           </div>
 
           <div class="field-block">
@@ -102,10 +115,19 @@
         </div>
 
         <div class="form-actions">
-          <button class="btn btn-primary" type="submit" :disabled="usersStore.isLoading">
-            <span v-if="usersStore.isLoading" class="spinner-border spinner-border-sm me-2"></span>
+          <button
+            class="btn btn-primary"
+            type="submit"
+            :disabled="usersStore.isLoading"
+          >
+            <span
+              v-if="usersStore.isLoading"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
             <i v-else class="bi bi-check2"></i>
-            <span>{{ usersStore.isLoading ? 'Creating...' : 'Create User' }}</span>
+            <span>{{
+              usersStore.isLoading ? "Creating..." : "Create User"
+            }}</span>
           </button>
         </div>
       </form>
@@ -113,10 +135,14 @@
       <aside class="side-stack">
         <div class="admin-panel preview-panel">
           <div class="preview-avatar">{{ initials }}</div>
-          <h2>{{ form.username || 'New User' }}</h2>
-          <p>{{ form.email || 'No email added' }}</p>
+          <h2>{{ form.username || "New User" }}</h2>
+          <p>{{ form.email || "No email added" }}</p>
           <div class="preview-meta">
-            <span class="text-capitalize">{{ (form.role === 'user' || form.role === 'student') ? 'Student' : form.role }}</span>
+            <span class="text-capitalize">{{
+              form.role === "user" || form.role === "student"
+                ? "Student"
+                : form.role
+            }}</span>
             <span class="text-capitalize">{{ form.gender }}</span>
           </div>
         </div>
@@ -125,9 +151,17 @@
           <h2>Before Saving</h2>
           <ul>
             <li><i class="bi bi-check-circle"></i>Use a real email address</li>
-            <li><i class="bi bi-check-circle"></i>Provide a password of at least 8 characters</li>
-            <li><i class="bi bi-check-circle"></i>Confirm the selected role is appropriate</li>
-            <li><i class="bi bi-check-circle"></i>Select correct gender identity</li>
+            <li>
+              <i class="bi bi-check-circle"></i>Provide a password of at least 8
+              characters
+            </li>
+            <li>
+              <i class="bi bi-check-circle"></i>Confirm the selected role is
+              appropriate
+            </li>
+            <li>
+              <i class="bi bi-check-circle"></i>Select correct gender identity
+            </li>
           </ul>
         </div>
       </aside>
@@ -136,12 +170,12 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import AdminPageShell from '../../components/admin/AdminPageShell.vue';
-import { useUsersStore } from '../../stores/UsersStore';
-import { useToast } from '../../composables/useToast';
-import { useRequiredValidator } from '../../composables/useRequiredValidator';
+import { computed, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import AdminPageShell from "../../components/admin/AdminPageShell.vue";
+import { useUsersStore } from "../../stores/UsersStore";
+import { useToast } from "../../composables/useToast";
+import { useRequiredValidator } from "../../composables/useRequiredValidator";
 
 const showPassword = ref(false);
 const isSubmitted = ref(false);
@@ -153,37 +187,37 @@ const {
   clearError,
   validateUsername,
   validateEmail,
-  validatePassword
+  validatePassword,
 } = useRequiredValidator();
 
 const handleInput = (field) => {
   if (isSubmitted.value) {
-    if (field === 'username') validateUsername(form.username);
-    if (field === 'email') validateEmail(form.email);
-    if (field === 'password') validatePassword(form.password);
+    if (field === "username") validateUsername(form.username);
+    if (field === "email") validateEmail(form.email);
+    if (field === "password") validatePassword(form.password);
   } else {
     clearError(field);
   }
 };
 
 const form = reactive({
-  username: '',
-  email: '',
-  password: '',
-  role: 'student',
-  gender: 'male',
+  username: "",
+  email: "",
+  password: "",
+  role: "student",
+  gender: "male",
 });
 
 const initials = computed(() => {
   const username = form.username.trim();
-  if (!username) return 'NU';
+  if (!username) return "NU";
 
   return username
-    .split(' ')
+    .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0])
-    .join('')
+    .join("")
     .toUpperCase();
 });
 
@@ -195,7 +229,7 @@ const handleCreateUser = async () => {
   const isPasswordValid = validatePassword(form.password);
 
   if (!isUsernameValid || !isEmailValid || !isPasswordValid) {
-    toast.error('Please fix the form errors before submitting.');
+    toast.error("Please fix the form errors before submitting.");
     return;
   }
 
@@ -208,13 +242,14 @@ const handleCreateUser = async () => {
       gender: form.gender,
     });
 
-    toast.success('User created successfully!');
-    
+    toast.success("User created successfully!");
+
     // Redirect to User Management page
-    router.push('/admin/users');
+    router.push("/admin/users");
   } catch (error) {
-    console.error('Failed to create user:', error);
-    const errorMsg = error.message || error.msg || 'An error occurred while creating user.';
+    console.error("Failed to create user:", error);
+    const errorMsg =
+      error.message || error.msg || "An error occurred while creating user.";
     toast.error(errorMsg);
   }
 };

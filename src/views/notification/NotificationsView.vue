@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import Navbar from "../../components/layouts/header.vue";
 import Footer from "../../components/layouts/footer.vue";
 import { useNotificationStore } from "../../stores/NotificationStore";
@@ -9,14 +9,18 @@ const router = useRouter();
 const notificationStore = useNotificationStore();
 
 // Active filter state: 'all' | 'unread' | 'read' | 'reply' | 'like' | 'mention' | 'system'
-const activeFilter = ref('all');
-const searchQuery = ref('');
+const activeFilter = ref("all");
+const searchQuery = ref("");
 
 const filterTypes = [
-  { value: 'reply', label: 'Replies', icon: 'bi bi-chat-fill text-primary' },
-  { value: 'like', label: 'Likes', icon: 'bi bi-heart-fill text-danger' },
-  { value: 'mention', label: 'Mentions', icon: 'bi bi-at text-warning' },
-  { value: 'system', label: 'System Updates', icon: 'bi bi-shield-fill-check text-success' }
+  { value: "reply", label: "Replies", icon: "bi bi-chat-fill text-primary" },
+  { value: "like", label: "Likes", icon: "bi bi-heart-fill text-danger" },
+  { value: "mention", label: "Mentions", icon: "bi bi-at text-warning" },
+  {
+    value: "system",
+    label: "System Updates",
+    icon: "bi bi-shield-fill-check text-success",
+  },
 ];
 
 onMounted(async () => {
@@ -28,21 +32,26 @@ const filteredNotifications = computed(() => {
   let list = notificationStore.allNotifications;
 
   // Apply Status / Type filter
-  if (activeFilter.value === 'unread') {
-    list = list.filter(n => !n.read);
-  } else if (activeFilter.value === 'read') {
-    list = list.filter(n => n.read);
-  } else if (['reply', 'like', 'mention', 'system'].includes(activeFilter.value)) {
-    list = list.filter(n => n.type === activeFilter.value);
+  if (activeFilter.value === "unread") {
+    list = list.filter((n) => !n.read);
+  } else if (activeFilter.value === "read") {
+    list = list.filter((n) => n.read);
+  } else if (
+    ["reply", "like", "mention", "system"].includes(activeFilter.value)
+  ) {
+    list = list.filter((n) => n.type === activeFilter.value);
   }
 
   // Apply Search query (matches title or message content)
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase().trim();
-    list = list.filter(n => 
-      (n.title && n.title.toLowerCase().includes(query)) ||
-      (n.message && n.message.toLowerCase().includes(query)) ||
-      (n.sender && n.sender.name && n.sender.name.toLowerCase().includes(query))
+    list = list.filter(
+      (n) =>
+        (n.title && n.title.toLowerCase().includes(query)) ||
+        (n.message && n.message.toLowerCase().includes(query)) ||
+        (n.sender &&
+          n.sender.name &&
+          n.sender.name.toLowerCase().includes(query)),
     );
   }
 
@@ -51,10 +60,12 @@ const filteredNotifications = computed(() => {
 
 // Filter category counter helpers
 const getCount = (filterType) => {
-  if (filterType === 'all') return notificationStore.notifications.length;
-  if (filterType === 'unread') return notificationStore.unreadCount;
-  if (filterType === 'read') return notificationStore.notifications.filter(n => n.read).length;
-  return notificationStore.notifications.filter(n => n.type === filterType).length;
+  if (filterType === "all") return notificationStore.notifications.length;
+  if (filterType === "unread") return notificationStore.unreadCount;
+  if (filterType === "read")
+    return notificationStore.notifications.filter((n) => n.read).length;
+  return notificationStore.notifications.filter((n) => n.type === filterType)
+    .length;
 };
 
 // Handlers
@@ -69,7 +80,7 @@ const handleToggleRead = async (e, item) => {
   e.stopPropagation(); // Avoid triggering full routing navigation
   if (item.read) {
     // Custom mock functionality: allow toggling back to unread inside the detailed view page
-    const found = notificationStore.notifications.find(n => n.id === item.id);
+    const found = notificationStore.notifications.find((n) => n.id === item.id);
     if (found) found.read = false;
   } else {
     await notificationStore.markAsRead(item.id);
@@ -86,7 +97,11 @@ const handleMarkAllRead = async () => {
 };
 
 const handleClearAll = () => {
-  if (confirm("Are you sure you want to delete all notifications? This cannot be undone.")) {
+  if (
+    confirm(
+      "Are you sure you want to delete all notifications? This cannot be undone.",
+    )
+  ) {
     notificationStore.clearNotifications();
   }
 };
@@ -94,12 +109,12 @@ const handleClearAll = () => {
 const formatFullTime = (dateStr) => {
   if (!dateStr) return "";
   const date = new Date(dateStr);
-  return date.toLocaleString(undefined, { 
-    weekday: 'short', 
-    month: 'short', 
-    day: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit' 
+  return date.toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -121,24 +136,28 @@ const getNotificationIcon = (type) => {
     <!-- Page Header Title -->
     <div class="row align-items-center mb-4 g-3">
       <div class="col-sm">
-        <h2 class="page-title fw-black m-0 text-adaptive d-flex align-items-center gap-3">
+        <h2
+          class="page-title fw-black m-0 text-adaptive d-flex align-items-center gap-3"
+        >
           <i class="bi bi-bell-fill text-gradient"></i>
           <span>Notification Center</span>
         </h2>
-        <p class="text-muted small m-0 mt-1">Manage, filter, and track all your school activity alerts.</p>
+        <p class="text-muted small m-0 mt-1">
+          Manage, filter, and track all your school activity alerts.
+        </p>
       </div>
       <div class="col-sm-auto d-flex gap-2">
-        <button 
-          v-if="notificationStore.unreadCount > 0" 
-          @click="handleMarkAllRead" 
+        <button
+          v-if="notificationStore.unreadCount > 0"
+          @click="handleMarkAllRead"
           class="btn btn-action-modern btn-mark-read d-flex align-items-center gap-2"
         >
           <i class="bi bi-check2-all"></i>
           <span>Mark all as read</span>
         </button>
-        <button 
-          v-if="notificationStore.notifications.length > 0" 
-          @click="handleClearAll" 
+        <button
+          v-if="notificationStore.notifications.length > 0"
+          @click="handleClearAll"
           class="btn btn-action-modern btn-clear-all d-flex align-items-center gap-2"
         >
           <i class="bi bi-trash3"></i>
@@ -153,30 +172,41 @@ const getNotificationIcon = (type) => {
         <div class="sidebar-card shadow-sm p-3">
           <!-- Search Box -->
           <div class="search-box-wrap mb-4 position-relative">
-            <i class="bi bi-search search-icon position-absolute text-muted"></i>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              class="form-control ps-5" 
+            <i
+              class="bi bi-search search-icon position-absolute text-muted"
+            ></i>
+            <input
+              v-model="searchQuery"
+              type="text"
+              class="form-control ps-5"
               placeholder="Search notifications..."
             />
           </div>
 
           <!-- Navigation Filters -->
-          <h6 class="sidebar-section-title text-muted text-uppercase fw-bold mb-3 px-2">Filters</h6>
+          <h6
+            class="sidebar-section-title text-muted text-uppercase fw-bold mb-3 px-2"
+          >
+            Filters
+          </h6>
           <nav class="sidebar-nav d-flex flex-column gap-1">
-            <button 
-              v-for="filter in ['all', 'unread', 'read']" 
+            <button
+              v-for="filter in ['all', 'unread', 'read']"
               :key="filter"
-              @click="activeFilter = filter" 
+              @click="activeFilter = filter"
               class="filter-nav-btn text-start d-flex justify-content-between align-items-center"
-              :class="{ 'active': activeFilter === filter }"
+              :class="{ active: activeFilter === filter }"
             >
               <span class="d-flex align-items-center gap-3 flex-shrink-0">
-                <i :class="[
-                  filter === 'all' ? 'bi bi-grid-fill' : 
-                  filter === 'unread' ? 'bi bi-envelope-fill' : 'bi bi-envelope-open-fill'
-                ]"></i>
+                <i
+                  :class="[
+                    filter === 'all'
+                      ? 'bi bi-grid-fill'
+                      : filter === 'unread'
+                        ? 'bi bi-envelope-fill'
+                        : 'bi bi-envelope-open-fill',
+                  ]"
+                ></i>
                 <span class="text-capitalize">{{ filter }}</span>
               </span>
               <span class="sidebar-badge flex-shrink-0 ms-2">
@@ -185,16 +215,20 @@ const getNotificationIcon = (type) => {
             </button>
           </nav>
 
-          <hr class="my-4 border-slate">
+          <hr class="my-4 border-slate" />
 
-          <h6 class="sidebar-section-title text-muted text-uppercase fw-bold mb-3 px-2">Types</h6>
+          <h6
+            class="sidebar-section-title text-muted text-uppercase fw-bold mb-3 px-2"
+          >
+            Types
+          </h6>
           <nav class="sidebar-nav d-flex flex-column gap-1">
-            <button 
-              v-for="type in filterTypes" 
+            <button
+              v-for="type in filterTypes"
               :key="type.value"
-              @click="activeFilter = type.value" 
+              @click="activeFilter = type.value"
               class="filter-nav-btn text-start d-flex justify-content-between align-items-center"
-              :class="{ 'active': activeFilter === type.value }"
+              :class="{ active: activeFilter === type.value }"
             >
               <span class="d-flex align-items-center gap-3 flex-shrink-0">
                 <i :class="type.icon"></i>
@@ -211,10 +245,16 @@ const getNotificationIcon = (type) => {
       <!-- Right Main Feed Column -->
       <main class="col-lg-9">
         <div class="feed-container d-flex flex-column gap-3">
-          
           <!-- Loading skeleton state -->
-          <div v-if="notificationStore.loading" class="skeletons-wrapper d-flex flex-column gap-3">
-            <div v-for="i in 4" :key="i" class="skeleton-card p-4 rounded-4 shadow-sm d-flex gap-4">
+          <div
+            v-if="notificationStore.loading"
+            class="skeletons-wrapper d-flex flex-column gap-3"
+          >
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="skeleton-card p-4 rounded-4 shadow-sm d-flex gap-4"
+            >
               <div class="skeleton-avatar rounded-circle"></div>
               <div class="skeleton-body flex-grow-1 d-flex flex-column gap-3">
                 <div class="skeleton-line-long"></div>
@@ -224,65 +264,102 @@ const getNotificationIcon = (type) => {
           </div>
 
           <!-- Empty State -->
-          <div v-else-if="filteredNotifications.length === 0" class="empty-state-card text-center p-5 rounded-4 border shadow-sm d-flex flex-column align-items-center justify-content-center">
-            <div class="empty-icon-wrap mb-4 d-flex align-items-center justify-content-center rounded-circle">
+          <div
+            v-else-if="filteredNotifications.length === 0"
+            class="empty-state-card text-center p-5 rounded-4 border shadow-sm d-flex flex-column align-items-center justify-content-center"
+          >
+            <div
+              class="empty-icon-wrap mb-4 d-flex align-items-center justify-content-center rounded-circle"
+            >
               <i class="bi bi-bell-slash"></i>
             </div>
             <h4 class="fw-black mb-2 text-adaptive">No Notifications Found</h4>
-            <p class="text-muted small mb-4 max-width-p">We couldn't find any notifications matching the selected filter or search query.</p>
-            <button @click="activeFilter = 'all'; searchQuery = ''" class="btn btn-primary-gradient px-4 py-2 fw-bold shadow-sm rounded-pill">
+            <p class="text-muted small mb-4 max-width-p">
+              We couldn't find any notifications matching the selected filter or
+              search query.
+            </p>
+            <button
+              @click="
+                activeFilter = 'all';
+                searchQuery = '';
+              "
+              class="btn btn-primary-gradient px-4 py-2 fw-bold shadow-sm rounded-pill"
+            >
               Clear All Filters
             </button>
           </div>
 
           <!-- Notifications List Feed -->
           <div v-else class="notifications-feed-list d-flex flex-column gap-3">
-            <div 
-              v-for="item in filteredNotifications" 
-              :key="item.id" 
-              @click="handleNotificationClick(item)" 
+            <div
+              v-for="item in filteredNotifications"
+              :key="item.id"
+              @click="handleNotificationClick(item)"
               class="notification-card-item p-4 rounded-4 shadow-sm d-flex gap-4 align-items-start transition-all cursor-pointer border border-theme"
-              :class="{ 'unread': !item.read }"
+              :class="{ unread: !item.read }"
             >
               <!-- Avatar Column -->
               <div class="avatar-wrap position-relative flex-shrink-0">
-                <img 
-                  v-if="item.sender?.avatar" 
-                  :src="item.sender.avatar" 
-                  class="sender-avatar rounded-circle object-fit-cover shadow-sm" 
+                <img
+                  v-if="item.sender?.avatar"
+                  :src="item.sender.avatar"
+                  class="sender-avatar rounded-circle object-fit-cover shadow-sm"
                   alt="User Avatar"
                   width="48"
                   height="48"
-                >
-                <div 
-                  v-else 
+                />
+                <div
+                  v-else
                   class="fallback-icon-wrap rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-                  style="width: 48px; height: 48px;"
+                  style="width: 48px; height: 48px"
                 >
                   <i class="bi bi-bell-fill text-muted"></i>
                 </div>
                 <!-- Badge Badge Icon -->
-                <div class="badge-icon-badge rounded-circle shadow-sm position-absolute d-flex align-items-center justify-content-center">
+                <div
+                  class="badge-icon-badge rounded-circle shadow-sm position-absolute d-flex align-items-center justify-content-center"
+                >
                   <i :class="getNotificationIcon(item.type)"></i>
                 </div>
               </div>
 
               <!-- Message Body Column -->
               <div class="body-wrap flex-grow-1 min-width-0">
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-2 mb-2">
-                  <h6 class="m-0 fw-black text-adaptive title-text text-truncate pe-sm-4">{{ item.title }}</h6>
-                  <span class="time-text text-muted small text-nowrap">{{ formatFullTime(item.created_at || item.timestamp) }}</span>
+                <div
+                  class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-2 mb-2"
+                >
+                  <h6
+                    class="m-0 fw-black text-adaptive title-text text-truncate pe-sm-4"
+                  >
+                    {{ item.title }}
+                  </h6>
+                  <span class="time-text text-muted small text-nowrap">{{
+                    formatFullTime(item.created_at || item.timestamp)
+                  }}</span>
                 </div>
-                <p class="message-text text-muted m-0 pe-md-4 mb-3">{{ item.message }}</p>
+                <p class="message-text text-muted m-0 pe-md-4 mb-3">
+                  {{ item.message }}
+                </p>
                 <div class="action-bar d-flex gap-2">
-                  <span v-if="!item.read" class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1-5 rounded-pill small fw-bold d-inline-flex align-items-center gap-2">
+                  <span
+                    v-if="!item.read"
+                    class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1-5 rounded-pill small fw-bold d-inline-flex align-items-center gap-2"
+                  >
                     <span class="pulse-dot"></span>
                     <span>New Alert</span>
                   </span>
-                  <span v-else class="badge bg-secondary-subtle text-muted border border-secondary-subtle px-3 py-1-5 rounded-pill small fw-bold">
+                  <span
+                    v-else
+                    class="badge bg-secondary-subtle text-muted border border-secondary-subtle px-3 py-1-5 rounded-pill small fw-bold"
+                  >
                     Read
                   </span>
-                  <span :class="['badge text-uppercase type-badge px-3 py-1-5 rounded-pill small fw-bold', `badge-type-${item.type}`]">
+                  <span
+                    :class="[
+                      'badge text-uppercase type-badge px-3 py-1-5 rounded-pill small fw-bold',
+                      `badge-type-${item.type}`,
+                    ]"
+                  >
                     {{ item.type }}
                   </span>
                 </div>
@@ -291,17 +368,23 @@ const getNotificationIcon = (type) => {
               <!-- Action Buttons Column -->
               <div class="actions-wrap flex-shrink-0 d-flex gap-2" @click.stop>
                 <!-- Toggle Read -->
-                <button 
-                  @click="handleToggleRead($event, item)" 
-                  class="btn-circle-action btn border" 
+                <button
+                  @click="handleToggleRead($event, item)"
+                  class="btn-circle-action btn border"
                   :title="item.read ? 'Mark as Unread' : 'Mark as Read'"
                 >
-                  <i :class="[item.read ? 'bi bi-envelope-fill text-muted' : 'bi bi-envelope-open-fill text-primary']"></i>
+                  <i
+                    :class="[
+                      item.read
+                        ? 'bi bi-envelope-fill text-muted'
+                        : 'bi bi-envelope-open-fill text-primary',
+                    ]"
+                  ></i>
                 </button>
                 <!-- Delete -->
-                <button 
-                  @click="handleDeleteClick($event, item.id)" 
-                  class="btn-circle-action btn border btn-delete" 
+                <button
+                  @click="handleDeleteClick($event, item.id)"
+                  class="btn-circle-action btn border btn-delete"
                   title="Delete Notification"
                 >
                   <i class="bi bi-trash3-fill text-danger"></i>
@@ -309,7 +392,6 @@ const getNotificationIcon = (type) => {
               </div>
             </div>
           </div>
-
         </div>
       </main>
     </div>
@@ -329,7 +411,11 @@ const getNotificationIcon = (type) => {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-purple) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -462,7 +548,11 @@ const getNotificationIcon = (type) => {
 }
 
 .btn-primary-gradient {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-purple) 100%
+  );
   color: white;
   border: none;
   transition: all var(--transition-base);
@@ -538,9 +628,18 @@ const getNotificationIcon = (type) => {
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 5px rgba(99, 102, 241, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
 }
 
 /* Feed item circle button actions */
@@ -597,7 +696,12 @@ const getNotificationIcon = (type) => {
 .skeleton-avatar {
   width: 48px;
   height: 48px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -606,7 +710,12 @@ const getNotificationIcon = (type) => {
   width: 70%;
   height: 14px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -615,14 +724,23 @@ const getNotificationIcon = (type) => {
   width: 40%;
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
 
 @keyframes pulse-glow {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .actions-wrap {

@@ -25,7 +25,8 @@ const isSubmitting = ref(false);
 const showReadiness = ref(true);
 const descriptionEditorRef = ref(null);
 const CODE_SNIPPET_HEADING = "### Code Snippet";
-const attachedCodeSnippetRegex = /\n{0,2}### Code Snippet\s*\n```[^\n`]*\n([\s\S]*?)\n```\s*$/i;
+const attachedCodeSnippetRegex =
+  /\n{0,2}### Code Snippet\s*\n```[^\n`]*\n([\s\S]*?)\n```\s*$/i;
 
 // Form State
 const form = ref({
@@ -86,19 +87,31 @@ const getTagColor = (tag) => {
 };
 
 const tagColorMap = {
-  blue:   { bg: 'var(--color-tag-blue-bg)', color: 'var(--color-tag-blue-text)' },
-  orange: { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
-  green:  { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
-  purple: { bg: 'var(--color-tag-purple-bg)', color: 'var(--color-tag-purple-text)' },
-  pink:   { bg: 'var(--color-tag-pink-bg)', color: 'var(--color-tag-pink-text)' },
-  teal:   { bg: 'var(--color-tag-cyan-bg)', color: 'var(--color-tag-cyan-text)' },
-  red:    { bg: 'var(--color-tag-red-bg)', color: 'var(--color-tag-red-text)' },
-  gray:   { bg: 'var(--color-surface-hover)', color: 'var(--color-text-muted)' },
-  yellow: { bg: 'var(--color-warning-light)', color: 'var(--color-warning)' },
+  blue: { bg: "var(--color-tag-blue-bg)", color: "var(--color-tag-blue-text)" },
+  orange: {
+    bg: "var(--color-tag-pink-bg)",
+    color: "var(--color-tag-pink-text)",
+  },
+  green: {
+    bg: "var(--color-tag-cyan-bg)",
+    color: "var(--color-tag-cyan-text)",
+  },
+  purple: {
+    bg: "var(--color-tag-purple-bg)",
+    color: "var(--color-tag-purple-text)",
+  },
+  pink: { bg: "var(--color-tag-pink-bg)", color: "var(--color-tag-pink-text)" },
+  teal: { bg: "var(--color-tag-cyan-bg)", color: "var(--color-tag-cyan-text)" },
+  red: { bg: "var(--color-tag-red-bg)", color: "var(--color-tag-red-text)" },
+  gray: { bg: "var(--color-surface-hover)", color: "var(--color-text-muted)" },
+  yellow: { bg: "var(--color-warning-light)", color: "var(--color-warning)" },
 };
 
 const getTagChipStyle = (color) => {
-  const t = (color && Object.prototype.hasOwnProperty.call(tagColorMap, color)) ? tagColorMap[color] : tagColorMap.gray;
+  const t =
+    color && Object.prototype.hasOwnProperty.call(tagColorMap, color)
+      ? tagColorMap[color]
+      : tagColorMap.gray;
   return { background: t.bg, color: t.color };
 };
 
@@ -120,7 +133,8 @@ const extractAttachedCodeSnippet = (body = "") => {
 };
 
 const getDiscussionDescription = (disc = {}) => {
-  return disc.description ||
+  return (
+    disc.description ||
     disc.Description ||
     disc.body ||
     disc.Body ||
@@ -129,7 +143,8 @@ const getDiscussionDescription = (disc = {}) => {
     disc.details ||
     disc.detail ||
     disc.excerpt ||
-    "";
+    ""
+  );
 };
 
 const buildDescriptionPayload = () => {
@@ -146,9 +161,12 @@ const buildDescriptionPayload = () => {
 
 const addTag = (tagInputObj) => {
   if (!tagInputObj) return;
-  const label = typeof tagInputObj === 'string' ? tagInputObj : (tagInputObj.name || tagInputObj.label || tagInputObj.tag_name);
-  const tagId = typeof tagInputObj === 'string' ? null : tagInputObj.id;
-  const clean = label ? label.trim() : '';
+  const label =
+    typeof tagInputObj === "string"
+      ? tagInputObj
+      : tagInputObj.name || tagInputObj.label || tagInputObj.tag_name;
+  const tagId = typeof tagInputObj === "string" ? null : tagInputObj.id;
+  const clean = label ? label.trim() : "";
   if (!clean) return;
 
   if (
@@ -225,11 +243,15 @@ const categories = [
 ];
 
 const templates = {
-  question: "### Context\nDescribe the background of your issue (e.g., what framework you are using, what you were trying to achieve).\n\n### What I'm Trying to Do\nExplain what you want to happen.\n\n### Error or Unexpected Behavior\n```\nPaste error messages, logs, or describe the unexpected behavior here...\n```\n\n### Code or Steps Taken\nProvide the relevant code snippet or describe the steps to reproduce the issue.",
-  discussion: "### Topic Overview\nIntroduce the subject you want to discuss with the community.\n\n### My Perspective\nShare your thoughts, experiences, or viewpoint on this topic.\n\n### Points for Discussion\n- What do you think about X?\n- How has your team solved Y?\n- What are the trade-offs of Z?",
-  showcase: "### Project Description\nWhat did you build? What problem does it solve, and who is it for?\n\n### Tech Stack\nBriefly list the technologies you used:\n- **Frontend**: e.g., Vue 3, Pinia, TailwindCSS\n- **Backend**: e.g., Node.js, Express\n- **Database**: e.g., PostgreSQL\n\n### Key Features\n- High-level overview of the main features.\n- What was the most challenging part of this build?\n\n### Links & Demos\n[Optional] Link to your live site, GitHub repository, or add screenshots.",
-  tutorial: "### What You'll Learn\nA quick summary of the skills or concepts covered in this guide.\n\n### Prerequisites\nWhat background knowledge or tools are needed before starting?\n\n### Step-by-Step Guide\n\n#### Step 1: Initial Setup\nExplain what needs to be configured or run.\n\n#### Step 2: Implementation\nDetail the core logic with code snippets.\n\n### Summary & Next Steps\nWrap up the tutorial and suggest related concepts to explore.",
-  idea: "### The Core Idea\nExplain your feature request, design concept, or open proposal in a few sentences.\n\n### Problem Solved\nWhat problem does this idea address, and who benefits from it?\n\n### Technical Details & Scope\n[Optional] How could this be implemented? What are the potential challenges or dependencies?\n\n### Request for Feedback\nWhat specific questions do you want to ask the community for review?"
+  question:
+    "### Context\nDescribe the background of your issue (e.g., what framework you are using, what you were trying to achieve).\n\n### What I'm Trying to Do\nExplain what you want to happen.\n\n### Error or Unexpected Behavior\n```\nPaste error messages, logs, or describe the unexpected behavior here...\n```\n\n### Code or Steps Taken\nProvide the relevant code snippet or describe the steps to reproduce the issue.",
+  discussion:
+    "### Topic Overview\nIntroduce the subject you want to discuss with the community.\n\n### My Perspective\nShare your thoughts, experiences, or viewpoint on this topic.\n\n### Points for Discussion\n- What do you think about X?\n- How has your team solved Y?\n- What are the trade-offs of Z?",
+  showcase:
+    "### Project Description\nWhat did you build? What problem does it solve, and who is it for?\n\n### Tech Stack\nBriefly list the technologies you used:\n- **Frontend**: e.g., Vue 3, Pinia, TailwindCSS\n- **Backend**: e.g., Node.js, Express\n- **Database**: e.g., PostgreSQL\n\n### Key Features\n- High-level overview of the main features.\n- What was the most challenging part of this build?\n\n### Links & Demos\n[Optional] Link to your live site, GitHub repository, or add screenshots.",
+  tutorial:
+    "### What You'll Learn\nA quick summary of the skills or concepts covered in this guide.\n\n### Prerequisites\nWhat background knowledge or tools are needed before starting?\n\n### Step-by-Step Guide\n\n#### Step 1: Initial Setup\nExplain what needs to be configured or run.\n\n#### Step 2: Implementation\nDetail the core logic with code snippets.\n\n### Summary & Next Steps\nWrap up the tutorial and suggest related concepts to explore.",
+  idea: "### The Core Idea\nExplain your feature request, design concept, or open proposal in a few sentences.\n\n### Problem Solved\nWhat problem does this idea address, and who benefits from it?\n\n### Technical Details & Scope\n[Optional] How could this be implemented? What are the potential challenges or dependencies?\n\n### Request for Feedback\nWhat specific questions do you want to ask the community for review?",
 };
 
 const getTemplate = (catId) => {
@@ -240,38 +262,93 @@ const getTemplate = (catId) => {
 };
 
 const staticCategoryMeta = {
-  question: { icon: "bi-question-circle", color: "blue", desc: "Get help with a technical problem" },
-  discussion: { icon: "bi-chat-dots", color: "purple", desc: "Share ideas, ask open questions, or debate" },
-  tutorial: { icon: "bi-book", color: "orange", desc: "Share a guide, walkthrough, or article" },
-  idea: { icon: "bi-lightbulb", color: "pink", desc: "Propose a new feature or design" },
-  showcase: { icon: "bi-rocket-takeoff", color: "purple", desc: "Show off your cool projects" }
+  question: {
+    icon: "bi-question-circle",
+    color: "blue",
+    desc: "Get help with a technical problem",
+  },
+  discussion: {
+    icon: "bi-chat-dots",
+    color: "purple",
+    desc: "Share ideas, ask open questions, or debate",
+  },
+  tutorial: {
+    icon: "bi-book",
+    color: "orange",
+    desc: "Share a guide, walkthrough, or article",
+  },
+  idea: {
+    icon: "bi-lightbulb",
+    color: "pink",
+    desc: "Propose a new feature or design",
+  },
+  showcase: {
+    icon: "bi-rocket-takeoff",
+    color: "purple",
+    desc: "Show off your cool projects",
+  },
 };
 
 const getCategoryMeta = (type) => {
   const t = (type || "discussion").toLowerCase();
-  
-  if (t.includes('question') || t.includes('q&a') || t.includes('help')) {
-    return { idType: 'question', icon: "bi-question-circle", color: "blue", desc: "Get help with a technical problem" };
-  } else if (t.includes('showcase') || t.includes('project')) {
-    return { idType: 'showcase', icon: "bi-rocket-takeoff", color: "purple", desc: "Show off your cool projects" };
-  } else if (t.includes('tutorial') || t.includes('guide')) {
-    return { idType: 'tutorial', icon: "bi-book", color: "orange", desc: "Share a guide, walkthrough, or article" };
-  } else if (t.includes('announcement') || t.includes('news')) {
-    return { idType: 'announcement', icon: "bi-megaphone", color: "red", desc: "Important announcements and news" };
-  } else if (t.includes('resource') || t.includes('link')) {
-    return { idType: 'resource', icon: "bi-link-45deg", color: "green", desc: "Useful resources and links" };
-  } else if (t.includes('idea') || t.includes('feature')) {
-    return { idType: 'idea', icon: "bi-lightbulb", color: "pink", desc: "Propose a new feature or design" };
+
+  if (t.includes("question") || t.includes("q&a") || t.includes("help")) {
+    return {
+      idType: "question",
+      icon: "bi-question-circle",
+      color: "blue",
+      desc: "Get help with a technical problem",
+    };
+  } else if (t.includes("showcase") || t.includes("project")) {
+    return {
+      idType: "showcase",
+      icon: "bi-rocket-takeoff",
+      color: "purple",
+      desc: "Show off your cool projects",
+    };
+  } else if (t.includes("tutorial") || t.includes("guide")) {
+    return {
+      idType: "tutorial",
+      icon: "bi-book",
+      color: "orange",
+      desc: "Share a guide, walkthrough, or article",
+    };
+  } else if (t.includes("announcement") || t.includes("news")) {
+    return {
+      idType: "announcement",
+      icon: "bi-megaphone",
+      color: "red",
+      desc: "Important announcements and news",
+    };
+  } else if (t.includes("resource") || t.includes("link")) {
+    return {
+      idType: "resource",
+      icon: "bi-link-45deg",
+      color: "green",
+      desc: "Useful resources and links",
+    };
+  } else if (t.includes("idea") || t.includes("feature")) {
+    return {
+      idType: "idea",
+      icon: "bi-lightbulb",
+      color: "pink",
+      desc: "Propose a new feature or design",
+    };
   }
-  
-  return { idType: 'discussion', icon: "bi-chat-dots", color: "purple", desc: "General forum discussions" };
+
+  return {
+    idType: "discussion",
+    icon: "bi-chat-dots",
+    color: "purple",
+    desc: "General forum discussions",
+  };
 };
 
 const displayedCategories = computed(() => {
   if (backendCategories.value.length === 0) {
     return categories;
   }
-  return backendCategories.value.map(cat => {
+  return backendCategories.value.map((cat) => {
     const type = (cat.type || cat.name || "discussion").toLowerCase();
     const meta = getCategoryMeta(type);
     return {
@@ -280,7 +357,7 @@ const displayedCategories = computed(() => {
       label: cat.name || cat.type || "Topic",
       icon: meta.icon,
       color: meta.color,
-      desc: cat.description || meta.desc
+      desc: cat.description || meta.desc,
     };
   });
 });
@@ -428,14 +505,17 @@ onMounted(async () => {
       }
     }
   } catch (err) {
-    console.warn('Could not fetch backend categories, will use fallback ID:', err);
+    console.warn(
+      "Could not fetch backend categories, will use fallback ID:",
+      err,
+    );
   }
 
   // Fetch real tags from backend for suggestion pills
   try {
     await tagsStore.fetchTags();
   } catch (err) {
-    console.warn('Could not fetch backend tags:', err);
+    console.warn("Could not fetch backend tags:", err);
   }
 
   if (isEditMode.value) {
@@ -450,7 +530,9 @@ onMounted(async () => {
         form.value.title = disc.title || "";
         form.value.excerpt = attachedSnippet.body;
         form.value.code = disc.code || attachedSnippet.code || "";
-        form.value.hasCode = Boolean(disc.hasCode || disc.code || attachedSnippet.code);
+        form.value.hasCode = Boolean(
+          disc.hasCode || disc.code || attachedSnippet.code,
+        );
 
         // Match category ID directly
         if (disc.category_id) {
@@ -470,23 +552,35 @@ onMounted(async () => {
 
         // Tags
         if (disc.tags && Array.isArray(disc.tags)) {
-          tagsList.value = disc.tags.map(t => typeof t === "string" ? { label: t, color: getTagColor(t), id: null } : { label: t.label || t.name, color: t.color || getTagColor(t.label || t.name), id: t.id || null });
-        } else if (disc.tags && typeof disc.tags === 'string') {
-          tagsList.value = disc.tags.split(',').map(t => t.trim()).filter(Boolean).map(t => ({
-            label: t,
-            color: getTagColor(t),
-            id: disc.tag_id || null
-          }));
+          tagsList.value = disc.tags.map((t) =>
+            typeof t === "string"
+              ? { label: t, color: getTagColor(t), id: null }
+              : {
+                  label: t.label || t.name,
+                  color: t.color || getTagColor(t.label || t.name),
+                  id: t.id || null,
+                },
+          );
+        } else if (disc.tags && typeof disc.tags === "string") {
+          tagsList.value = disc.tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+            .map((t) => ({
+              label: t,
+              color: getTagColor(t),
+              id: disc.tag_id || null,
+            }));
         } else if (disc.tag_name || disc.tag || disc.tag_names) {
           const tagName = disc.tag_name || disc.tag || disc.tag_names;
           tagsList.value = String(tagName)
-            .split(',')
-            .map(t => t.trim())
+            .split(",")
+            .map((t) => t.trim())
             .filter(Boolean)
-            .map(t => ({
+            .map((t) => ({
               label: t,
               color: getTagColor(t),
-              id: disc.tag_id || null
+              id: disc.tag_id || null,
             }));
         }
       }
@@ -528,9 +622,10 @@ const handleSubmit = async () => {
   try {
     let resolvedCategoryId = Number(form.value.category) || 1;
     const descriptionPayload = buildDescriptionPayload();
-    const codePayload = form.value.hasCode && form.value.code.trim()
-      ? form.value.code.trim()
-      : null;
+    const codePayload =
+      form.value.hasCode && form.value.code.trim()
+        ? form.value.code.trim()
+        : null;
 
     if (isEditMode.value) {
       await forumStore.updateDiscussion(route.params.id, {
@@ -562,8 +657,14 @@ const handleSubmit = async () => {
       router.push("/forum");
     }
   } catch (error) {
-    console.error("[CreateDiscussion] Submit error:", error.response?.data || error.message);
-    toast.error(error.response?.data?.message || "Failed to save discussion. Please try again.");
+    console.error(
+      "[CreateDiscussion] Submit error:",
+      error.response?.data || error.message,
+    );
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to save discussion. Please try again.",
+    );
   } finally {
     isSubmitting.value = false;
   }
@@ -578,318 +679,476 @@ const handleSubmit = async () => {
       <LeftSidebar active-tab="questions" />
 
       <div class="create-wrapper">
-      <!-- Back Link & Title Area -->
-      <div class="page-header">
-        <button class="back-btn" @click="router.push('/forum')">
-          <i class="bi bi-arrow-left"></i>
-          Back to Forum
-        </button>
-        <div class="header-content-wrapper">
-          <div class="header-main">
-            <h1>{{ isEditMode ? 'Edit Discussion' : 'Create a New Discussion' }}</h1>
-            <p>
-              {{ isEditMode ? 'Update your discussion details below.' : 'Share your ideas, ask questions, or write a tutorial to help the Ant Forum community grow.' }}
-            </p>
-          </div>
-          <div class="header-badge">
-            <span class="badge-icon"><i class="bi bi-pencil-square"></i></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Autosave Draft Recovery Banner -->
-      <transition name="slide-fade">
-        <div v-if="hasDraft" class="draft-banner">
-          <div class="draft-banner-content">
-            <div class="draft-icon">
-              <i class="bi bi-arrow-counterclockwise"></i>
-            </div>
-            <div class="draft-text">
-              <strong>Unsaved Draft Found</strong>
+        <!-- Back Link & Title Area -->
+        <div class="page-header">
+          <button class="back-btn" @click="router.push('/forum')">
+            <i class="bi bi-arrow-left"></i>
+            Back to Forum
+          </button>
+          <div class="header-content-wrapper">
+            <div class="header-main">
+              <h1>
+                {{ isEditMode ? "Edit Discussion" : "Create a New Discussion" }}
+              </h1>
               <p>
-                We saved your progress from {{ draftTimestamp }}. Would you like
-                to restore it?
+                {{
+                  isEditMode
+                    ? "Update your discussion details below."
+                    : "Share your ideas, ask questions, or write a tutorial to help the Ant Forum community grow."
+                }}
               </p>
             </div>
-          </div>
-          <div class="draft-banner-actions">
-            <button type="button" class="btn-restore" @click="applyDraft">
-              Restore Draft
-            </button>
-            <button type="button" class="btn-discard" @click="discardDraft">
-              Discard
-            </button>
+            <div class="header-badge">
+              <span class="badge-icon"
+                ><i class="bi bi-pencil-square"></i
+              ></span>
+            </div>
           </div>
         </div>
-      </transition>
 
-      <!-- Main Columns Grid Layout -->
-      <div class="create-layout-grid">
-        <div class="form-column">
-          <div class="form-card">
-            <form v-if="!isFetchingData" class="create-form" @submit.prevent="handleSubmit">
-
-            <!-- 1. CATEGORY GRID SELECTOR -->
-            <div class="form-group">
-              <label class="section-title">
-                <span class="num-badge">1</span>
-                Select a Category <span class="required">*</span>
-              </label>
-              <p class="section-desc">
-                Choose the context of your post. Selecting a category loads a
-                helper outline in the editor.
-              </p>
-
-              <div class="category-grid">
-                <div
-                  v-for="cat in displayedCategories"
-                  :key="cat.id"
-                  class="category-card"
-                  :class="{
-                    active: form.category === cat.id,
-                    [cat.type]: true,
-                  }"
-                  @click="selectCategory(cat)"
-                >
-                  <div class="category-icon-wrapper">
-                    <i :class="cat.icon"></i>
-                  </div>
-                  <div class="category-meta">
-                    <strong>{{ cat.label }}</strong>
-                    <span>{{ cat.desc }}</span>
-                  </div>
-                </div>
+        <!-- Autosave Draft Recovery Banner -->
+        <transition name="slide-fade">
+          <div v-if="hasDraft" class="draft-banner">
+            <div class="draft-banner-content">
+              <div class="draft-icon">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </div>
+              <div class="draft-text">
+                <strong>Unsaved Draft Found</strong>
+                <p>
+                  We saved your progress from {{ draftTimestamp }}. Would you
+                  like to restore it?
+                </p>
               </div>
             </div>
-
-            <!-- 2. TITLE INPUT -->
-            <div class="form-group">
-              <label class="section-title">
-                <span class="num-badge">2</span>
-                Title <span class="required">*</span>
-              </label>
-              <p class="section-desc">
-                Be specific and concise. Imagine you are explaining your post
-                in a single sentence.
-              </p>
-
-              <div class="input-glow-container">
-                <input
-                  v-model="form.title"
-                  type="text"
-                  required
-                  class="form-input"
-                  :placeholder="
-                    form.category === 'question'
-                      ? 'e.g. How to manage component state cleanly in Vue 3?'
-                      : 'e.g. A Deep Dive into Reactive Primitives in modern web development'
-                  "
-                />
-                <span class="char-indicator" :class="{ valid: isTitleValid }">
-                  {{ form.title.trim().length }}/12+ chars
-                </span>
-              </div>
+            <div class="draft-banner-actions">
+              <button type="button" class="btn-restore" @click="applyDraft">
+                Restore Draft
+              </button>
+              <button type="button" class="btn-discard" @click="discardDraft">
+                Discard
+              </button>
             </div>
+          </div>
+        </transition>
 
-            <!-- 3. INTERACTIVE TAG INPUT -->
-            <div class="form-group">
-              <label class="section-title">
-                <span class="num-badge">3</span>
-                Tags <span class="required">*</span>
-              </label>
-              <p class="section-desc">
-                Select a descriptive tag. Click on the suggestions below to add it.
-              </p>
-
-              <div
-                class="tags-input-container"
-                :class="{ focused: isEditorFocused }"
+        <!-- Main Columns Grid Layout -->
+        <div class="create-layout-grid">
+          <div class="form-column">
+            <div class="form-card">
+              <form
+                v-if="!isFetchingData"
+                class="create-form"
+                @submit.prevent="handleSubmit"
               >
-                <div class="tags-list">
-                  <span
-                    v-for="(tag, idx) in tagsList"
-                    :key="idx"
-                    class="tag-pill"
-                    :style="getTagChipStyle(tag.color)"
-                  >
-                    {{ tag.label }}
-                    <button
-                      type="button"
-                      class="btn-remove-tag"
-                      @click="removeTag(idx)"
-                    >
-                      <i class="bi bi-x"></i>
-                    </button>
-                  </span>
-                  <span v-if="tagsList.length === 0" class="empty-tags-placeholder">
-                    Select tags from the suggestions below...
-                  </span>
-                </div>
-              </div>
-
-              <!-- SUGGESTED TAGS PILLS -->
-              <div class="tag-suggestions">
-                <span class="suggestion-title">Suggestions:</span>
-                <button
-                  v-for="(sTag, idx) in suggestedTags"
-                  :key="sTag.id || idx"
-                  type="button"
-                  class="suggestion-pill"
-                  @click="addTag(sTag)"
-                >
-                  + {{ sTag.name || sTag.label || sTag.tag_name || sTag }}
-                </button>
-              </div>
-            </div>
-
-            <!-- 4. EDITOR WORKSPACE -->
-            <div class="form-group">
-              <label class="section-title">
-                <span class="num-badge">4</span>
-                Description / Body <span class="required">*</span>
-              </label>
-              <p class="section-desc">
-                Include all context, code snippets, and explanations. Markdown
-                is fully supported.
-              </p>
-
-              <MarkdownEditor
-                ref="descriptionEditorRef"
-                v-model="form.excerpt"
-                :is-draft-saved="isDraftSaved"
-                :last-saved-time="lastSavedTime"
-              />
-            </div>
-
-            <!-- 5. CODE ATTACHMENT ACCORDION -->
-            <div class="form-group code-toggle-group">
-              <label class="toggle-label">
-                <input type="checkbox" v-model="form.hasCode" />
-                <span class="custom-checkbox"></span>
-                <span class="toggle-text">
-                  <strong>Attach a separate full code snippet</strong>
-                  <p class="toggle-sub">
-                    Useful for complex debug files, build scripts, or large
-                    config sheets
+                <!-- 1. CATEGORY GRID SELECTOR -->
+                <div class="form-group">
+                  <label class="section-title">
+                    <span class="num-badge">1</span>
+                    Select a Category <span class="required">*</span>
+                  </label>
+                  <p class="section-desc">
+                    Choose the context of your post. Selecting a category loads
+                    a helper outline in the editor.
                   </p>
-                </span>
-              </label>
-            </div>
 
-            <transition name="slide-fade">
-              <div v-if="form.hasCode" class="form-group code-editor-card">
-                <div class="code-editor-header">
-                  <i class="bi bi-braces"></i>
-                  <span>Code Snippet Editor</span>
+                  <div class="category-grid">
+                    <div
+                      v-for="cat in displayedCategories"
+                      :key="cat.id"
+                      class="category-card"
+                      :class="{
+                        active: form.category === cat.id,
+                        [cat.type]: true,
+                      }"
+                      @click="selectCategory(cat)"
+                    >
+                      <div class="category-icon-wrapper">
+                        <i :class="cat.icon"></i>
+                      </div>
+                      <div class="category-meta">
+                        <strong>{{ cat.label }}</strong>
+                        <span>{{ cat.desc }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <textarea
-                  v-model="form.code"
-                  rows="8"
-                  class="form-textarea code-font"
-                  placeholder="// Paste your full code snippet here (e.g. JavaScript, Python, Go)..."
-                ></textarea>
-              </div>
-            </transition>
 
+                <!-- 2. TITLE INPUT -->
+                <div class="form-group">
+                  <label class="section-title">
+                    <span class="num-badge">2</span>
+                    Title <span class="required">*</span>
+                  </label>
+                  <p class="section-desc">
+                    Be specific and concise. Imagine you are explaining your
+                    post in a single sentence.
+                  </p>
 
+                  <div class="input-glow-container">
+                    <input
+                      v-model="form.title"
+                      type="text"
+                      required
+                      class="form-input"
+                      :placeholder="
+                        form.category === 'question'
+                          ? 'e.g. How to manage component state cleanly in Vue 3?'
+                          : 'e.g. A Deep Dive into Reactive Primitives in modern web development'
+                      "
+                    />
+                    <span
+                      class="char-indicator"
+                      :class="{ valid: isTitleValid }"
+                    >
+                      {{ form.title.trim().length }}/12+ chars
+                    </span>
+                  </div>
+                </div>
 
-            <!-- FORM FOOTER ACTIONS -->
-            <div class="form-actions">
-              <button
-                type="button"
-                class="btn-cancel"
-                @click="router.push('/forum')"
-              >
-                Cancel
-              </button>
+                <!-- 3. INTERACTIVE TAG INPUT -->
+                <div class="form-group">
+                  <label class="section-title">
+                    <span class="num-badge">3</span>
+                    Tags <span class="required">*</span>
+                  </label>
+                  <p class="section-desc">
+                    Select a descriptive tag. Click on the suggestions below to
+                    add it.
+                  </p>
 
-              <button
-                type="submit"
-                class="btn-submit"
-                :disabled="isSubmitting || !isFormReady"
-              >
-                <span v-if="isSubmitting" class="btn-spinner"></span>
-                <i v-else class="bi bi-send-fill"></i>
-                {{ isSubmitting ? (isEditMode ? "Saving..." : "Posting...") : (isEditMode ? "Save Changes" : "Publish Discussion") }}
-              </button>
-            </div>
-          </form>
+                  <div
+                    class="tags-input-container"
+                    :class="{ focused: isEditorFocused }"
+                  >
+                    <div class="tags-list">
+                      <span
+                        v-for="(tag, idx) in tagsList"
+                        :key="idx"
+                        class="tag-pill"
+                        :style="getTagChipStyle(tag.color)"
+                      >
+                        {{ tag.label }}
+                        <button
+                          type="button"
+                          class="btn-remove-tag"
+                          @click="removeTag(idx)"
+                        >
+                          <i class="bi bi-x"></i>
+                        </button>
+                      </span>
+                      <span
+                        v-if="tagsList.length === 0"
+                        class="empty-tags-placeholder"
+                      >
+                        Select tags from the suggestions below...
+                      </span>
+                    </div>
+                  </div>
 
-            <div v-else class="form-skeleton">
-              <div class="skeleton-section">
-                <div class="skeleton-title"></div>
-                <div class="skeleton-desc"></div>
-                <div class="skeleton-grid">
-                  <div class="skeleton-box"></div>
-                  <div class="skeleton-box"></div>
-                  <div class="skeleton-box"></div>
+                  <!-- SUGGESTED TAGS PILLS -->
+                  <div class="tag-suggestions">
+                    <span class="suggestion-title">Suggestions:</span>
+                    <button
+                      v-for="(sTag, idx) in suggestedTags"
+                      :key="sTag.id || idx"
+                      type="button"
+                      class="suggestion-pill"
+                      @click="addTag(sTag)"
+                    >
+                      + {{ sTag.name || sTag.label || sTag.tag_name || sTag }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 4. EDITOR WORKSPACE -->
+                <div class="form-group">
+                  <label class="section-title">
+                    <span class="num-badge">4</span>
+                    Description / Body <span class="required">*</span>
+                  </label>
+                  <p class="section-desc">
+                    Include all context, code snippets, and explanations.
+                    Markdown is fully supported.
+                  </p>
+
+                  <MarkdownEditor
+                    ref="descriptionEditorRef"
+                    v-model="form.excerpt"
+                    :is-draft-saved="isDraftSaved"
+                    :last-saved-time="lastSavedTime"
+                  />
+                </div>
+
+                <!-- 5. CODE ATTACHMENT ACCORDION -->
+                <div class="form-group code-toggle-group">
+                  <label class="toggle-label">
+                    <input type="checkbox" v-model="form.hasCode" />
+                    <span class="custom-checkbox"></span>
+                    <span class="toggle-text">
+                      <strong>Attach a separate full code snippet</strong>
+                      <p class="toggle-sub">
+                        Useful for complex debug files, build scripts, or large
+                        config sheets
+                      </p>
+                    </span>
+                  </label>
+                </div>
+
+                <transition name="slide-fade">
+                  <div v-if="form.hasCode" class="form-group code-editor-card">
+                    <div class="code-editor-header">
+                      <i class="bi bi-braces"></i>
+                      <span>Code Snippet Editor</span>
+                    </div>
+                    <textarea
+                      v-model="form.code"
+                      rows="8"
+                      class="form-textarea code-font"
+                      placeholder="// Paste your full code snippet here (e.g. JavaScript, Python, Go)..."
+                    ></textarea>
+                  </div>
+                </transition>
+
+                <!-- FORM FOOTER ACTIONS -->
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="btn-cancel"
+                    @click="router.push('/forum')"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    class="btn-submit"
+                    :disabled="isSubmitting || !isFormReady"
+                  >
+                    <span v-if="isSubmitting" class="btn-spinner"></span>
+                    <i v-else class="bi bi-send-fill"></i>
+                    {{
+                      isSubmitting
+                        ? isEditMode
+                          ? "Saving..."
+                          : "Posting..."
+                        : isEditMode
+                          ? "Save Changes"
+                          : "Publish Discussion"
+                    }}
+                  </button>
+                </div>
+              </form>
+
+              <div v-else class="form-skeleton">
+                <div class="skeleton-section">
+                  <div class="skeleton-title"></div>
+                  <div class="skeleton-desc"></div>
+                  <div class="skeleton-grid">
+                    <div class="skeleton-box"></div>
+                    <div class="skeleton-box"></div>
+                    <div class="skeleton-box"></div>
+                  </div>
+                </div>
+
+                <div class="skeleton-section">
+                  <div class="skeleton-title"></div>
+                  <div class="skeleton-input"></div>
+                </div>
+
+                <div class="skeleton-section">
+                  <div class="skeleton-title"></div>
+                  <div class="skeleton-textarea"></div>
                 </div>
               </div>
-              
-              <div class="skeleton-section">
-                <div class="skeleton-title"></div>
-                <div class="skeleton-input"></div>
-              </div>
-
-              <div class="skeleton-section">
-                <div class="skeleton-title"></div>
-                <div class="skeleton-textarea"></div>
-              </div>
             </div>
-        </div>
-      </div>
-
-      <!-- Right Sidebar for Helpers -->
-      <div class="sidebar-column">
-        <!-- Sleek Readiness Widget -->
-        <div class="readiness-widget" :class="{ completed: isFormReady }">
-          <div class="widget-header clickable" @click="showReadiness = !showReadiness" style="cursor: pointer; display: flex; align-items: center; width: 100%;">
-            <i class="bi bi-stars text-gradient-purple"></i>
-            <strong>Post Readiness</strong>
-            <i class="bi ms-auto chevron-toggle" :class="showReadiness ? 'bi-chevron-up' : 'bi-chevron-down'" style="font-size: 11px; color: var(--color-text-muted);"></i>
           </div>
-          <transition name="slide-fade">
-            <div v-if="showReadiness" class="readiness-content-body" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-              <div class="readiness-progress-wrapper" style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                <div class="readiness-progress-bar-bg" style="flex: 1; height: 6px; background: var(--color-surface-hover); border-radius: 3px;">
-                  <div class="readiness-progress-bar-fill" :style="{ width: checklistProgress + '%' }" style="height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-success)); border-radius: 3px; transition: width 0.3s ease;"></div>
-                </div>
-                <span class="readiness-percentage" style="font-size: 12px; font-weight: 700; color: var(--color-text-muted);">{{ checklistProgress }}%</span>
-              </div>
 
-              <div class="readiness-checklist-vertical" style="display: flex; flex-direction: column; gap: 10px;">
-                <div class="readiness-check-item" :class="{ active: isTitleValid }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
-                  <i class="bi" :class="isTitleValid ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
-                  <span>Title (12+ chars)</span>
-                </div>
-                <div class="readiness-check-item" :class="{ active: isBodyValid }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
-                  <i class="bi" :class="isBodyValid ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
-                  <span>Description (25+ chars)</span>
-                </div>
-                <div class="readiness-check-item" :class="{ active: isCategoryValid }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
-                  <i class="bi" :class="isCategoryValid ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
-                  <span>Select Category</span>
-                </div>
-                <div class="readiness-check-item" :class="{ active: hasTags }" style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted);">
-                  <i class="bi" :class="hasTags ? 'bi-check-circle-fill text-success' : 'bi-circle'" style="font-size: 14px;"></i>
-                  <span>Add at least 1 Tag</span>
-                </div>
+          <!-- Right Sidebar for Helpers -->
+          <div class="sidebar-column">
+            <!-- Sleek Readiness Widget -->
+            <div class="readiness-widget" :class="{ completed: isFormReady }">
+              <div
+                class="widget-header clickable"
+                @click="showReadiness = !showReadiness"
+                style="
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  width: 100%;
+                "
+              >
+                <i class="bi bi-stars text-gradient-purple"></i>
+                <strong>Post Readiness</strong>
+                <i
+                  class="bi ms-auto chevron-toggle"
+                  :class="showReadiness ? 'bi-chevron-up' : 'bi-chevron-down'"
+                  style="font-size: 11px; color: var(--color-text-muted)"
+                ></i>
               </div>
+              <transition name="slide-fade">
+                <div
+                  v-if="showReadiness"
+                  class="readiness-content-body"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    width: 100%;
+                  "
+                >
+                  <div
+                    class="readiness-progress-wrapper"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      margin-top: 4px;
+                    "
+                  >
+                    <div
+                      class="readiness-progress-bar-bg"
+                      style="
+                        flex: 1;
+                        height: 6px;
+                        background: var(--color-surface-hover);
+                        border-radius: 3px;
+                      "
+                    >
+                      <div
+                        class="readiness-progress-bar-fill"
+                        :style="{ width: checklistProgress + '%' }"
+                        style="
+                          height: 100%;
+                          background: linear-gradient(
+                            90deg,
+                            var(--color-primary),
+                            var(--color-success)
+                          );
+                          border-radius: 3px;
+                          transition: width 0.3s ease;
+                        "
+                      ></div>
+                    </div>
+                    <span
+                      class="readiness-percentage"
+                      style="
+                        font-size: 12px;
+                        font-weight: 700;
+                        color: var(--color-text-muted);
+                      "
+                      >{{ checklistProgress }}%</span
+                    >
+                  </div>
+
+                  <div
+                    class="readiness-checklist-vertical"
+                    style="display: flex; flex-direction: column; gap: 10px"
+                  >
+                    <div
+                      class="readiness-check-item"
+                      :class="{ active: isTitleValid }"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 12.5px;
+                        color: var(--color-text-muted);
+                      "
+                    >
+                      <i
+                        class="bi"
+                        :class="
+                          isTitleValid
+                            ? 'bi-check-circle-fill text-success'
+                            : 'bi-circle'
+                        "
+                        style="font-size: 14px"
+                      ></i>
+                      <span>Title (12+ chars)</span>
+                    </div>
+                    <div
+                      class="readiness-check-item"
+                      :class="{ active: isBodyValid }"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 12.5px;
+                        color: var(--color-text-muted);
+                      "
+                    >
+                      <i
+                        class="bi"
+                        :class="
+                          isBodyValid
+                            ? 'bi-check-circle-fill text-success'
+                            : 'bi-circle'
+                        "
+                        style="font-size: 14px"
+                      ></i>
+                      <span>Description (25+ chars)</span>
+                    </div>
+                    <div
+                      class="readiness-check-item"
+                      :class="{ active: isCategoryValid }"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 12.5px;
+                        color: var(--color-text-muted);
+                      "
+                    >
+                      <i
+                        class="bi"
+                        :class="
+                          isCategoryValid
+                            ? 'bi-check-circle-fill text-success'
+                            : 'bi-circle'
+                        "
+                        style="font-size: 14px"
+                      ></i>
+                      <span>Select Category</span>
+                    </div>
+                    <div
+                      class="readiness-check-item"
+                      :class="{ active: hasTags }"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 12.5px;
+                        color: var(--color-text-muted);
+                      "
+                    >
+                      <i
+                        class="bi"
+                        :class="
+                          hasTags
+                            ? 'bi-check-circle-fill text-success'
+                            : 'bi-circle'
+                        "
+                        style="font-size: 14px"
+                      ></i>
+                      <span>Add at least 1 Tag</span>
+                    </div>
+                  </div>
+                </div>
+              </transition>
             </div>
-          </transition>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  </div>
-</div>
 </template>
 
 <style scoped>
 .create-page {
   min-height: 100vh;
   background-color: var(--color-bg);
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(128, 128, 128, 0.08) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(128, 128, 128, 0.08) 1px, transparent 1px);
   background-size: 48px 48px;
@@ -1153,7 +1412,9 @@ const handleSubmit = async () => {
 .form-input:focus {
   background: var(--color-surface);
   border-color: var(--color-purple, var(--color-primary));
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), 0 0 16px rgba(139, 92, 246, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(139, 92, 246, 0.15),
+    0 0 16px rgba(139, 92, 246, 0.1);
   outline: none;
 }
 
@@ -1332,7 +1593,9 @@ const handleSubmit = async () => {
 .tags-input-container.focused {
   background: var(--color-surface);
   border-color: var(--color-purple, var(--color-primary));
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), 0 0 16px rgba(139, 92, 246, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(139, 92, 246, 0.15),
+    0 0 16px rgba(139, 92, 246, 0.1);
 }
 
 .tags-list {
@@ -1739,7 +2002,11 @@ const handleSubmit = async () => {
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   border: none;
   color: white;
   box-shadow: 0 4px 18px rgba(109, 40, 217, 0.2);
@@ -1856,7 +2123,8 @@ const handleSubmit = async () => {
   top: 100px;
 }
 
-.readiness-widget, .tips-widget {
+.readiness-widget,
+.tips-widget {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 16px;
@@ -1902,7 +2170,11 @@ const handleSubmit = async () => {
 
 .readiness-progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-purple, #8b5cf6), var(--color-primary));
+  background: linear-gradient(
+    90deg,
+    var(--color-purple, #8b5cf6),
+    var(--color-primary)
+  );
   border-radius: 3px;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -2009,7 +2281,11 @@ const handleSubmit = async () => {
   gap: 12px;
 }
 
-.skeleton-title, .skeleton-desc, .skeleton-box, .skeleton-input, .skeleton-textarea {
+.skeleton-title,
+.skeleton-desc,
+.skeleton-box,
+.skeleton-input,
+.skeleton-textarea {
   background: var(--color-surface-hover);
   border-radius: 8px;
   animation: pulse-skeleton 1.5s infinite ease-in-out;
@@ -2047,9 +2323,14 @@ const handleSubmit = async () => {
 }
 
 @keyframes pulse-skeleton {
-  0% { opacity: 0.6; }
-  50% { opacity: 0.3; }
-  100% { opacity: 0.6; }
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.6;
+  }
 }
-
 </style>

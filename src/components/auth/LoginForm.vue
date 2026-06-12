@@ -39,7 +39,9 @@
           autocomplete="email"
           @focus="clearError('email')"
         />
-        <div v-if="errors.email && errors.email !== 'true'" class="error-msg">{{ errors.email }}</div>
+        <div v-if="errors.email && errors.email !== 'true'" class="error-msg">
+          {{ errors.email }}
+        </div>
       </div>
 
       <!-- Password -->
@@ -102,7 +104,10 @@
             </svg>
           </button>
         </div>
-        <div v-if="errors.password && errors.password !== 'true'" class="error-msg">
+        <div
+          v-if="errors.password && errors.password !== 'true'"
+          class="error-msg"
+        >
           {{ errors.password }}
         </div>
       </div>
@@ -152,7 +157,8 @@
         <span>ANT Security Portal</span>
       </div>
       <p class="badge-text">
-        Authenticated sessions are protected by enterprise-grade token encryption and automatic session cycling.
+        Authenticated sessions are protected by enterprise-grade token
+        encryption and automatic session cycling.
       </p>
       <div class="system-status-indicator">
         <span class="status-dot"></span>
@@ -184,7 +190,11 @@ const toast = useToast();
 const form = reactive({ email: "", password: "", remember: false });
 const formError = ref("");
 
-const { errors, clearError: baseClearError, validateField } = useRequiredValidator();
+const {
+  errors,
+  clearError: baseClearError,
+  validateField,
+} = useRequiredValidator();
 
 const clearError = (field) => {
   baseClearError(field);
@@ -214,7 +224,8 @@ const validateForm = () => {
 };
 
 const getPostLoginRoute = () => {
-  const redirectPath = typeof route.query.redirect === "string" ? route.query.redirect : "";
+  const redirectPath =
+    typeof route.query.redirect === "string" ? route.query.redirect : "";
   if (
     redirectPath.startsWith("/") &&
     !redirectPath.startsWith("//") &&
@@ -224,7 +235,9 @@ const getPostLoginRoute = () => {
   }
 
   const userRole = String(authStore.user?.role || "").toLowerCase();
-  return userRole === "admin" ? { name: "AdminDashboard" } : { name: "HomePage" };
+  return userRole === "admin"
+    ? { name: "AdminDashboard" }
+    : { name: "HomePage" };
 };
 
 async function handleSignIn() {
@@ -235,7 +248,7 @@ async function handleSignIn() {
     await authStore.login({
       email: form.email,
       password: form.password,
-      remember: form.remember
+      remember: form.remember,
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
     toast.success("Welcome back! Login successful");
@@ -259,8 +272,8 @@ async function handleSignIn() {
     } else if (
       error &&
       (error.message === "Email not found" ||
-       error.message === "Invalid password" ||
-       error.result === false)
+        error.message === "Invalid password" ||
+        error.result === false)
     ) {
       // Security hardening: use a generic error banner at the top, and turn both field borders red
       formError.value = "Invalid email or password.";

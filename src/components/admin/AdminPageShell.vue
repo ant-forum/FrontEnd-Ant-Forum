@@ -25,9 +25,9 @@
 </template>
 
 <script setup>
-import AdminMetricGrid from './AdminMetricGrid.vue';
-import AdminSidebar from './AdminSidebar.vue';
-import AdminTopbar from './AdminTopbar.vue';
+import AdminMetricGrid from "./AdminMetricGrid.vue";
+import AdminSidebar from "./AdminSidebar.vue";
+import AdminTopbar from "./AdminTopbar.vue";
 
 defineProps({
   title: {

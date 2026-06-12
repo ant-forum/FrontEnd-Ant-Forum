@@ -13,32 +13,37 @@
 
     <!-- Navigation Grouped -->
     <nav class="sidebar-nav flex-grow-1 px-3">
-      <div v-for="category in navigationCategories" :key="category.title" class="nav-group mb-4">
+      <div
+        v-for="category in navigationCategories"
+        :key="category.title"
+        class="nav-group mb-4"
+      >
         <div class="sidebar-heading">{{ category.title }}</div>
         <ul class="list-unstyled mb-0">
           <li v-for="item in category.items" :key="item.label" class="mb-1">
-            <router-link 
-              :to="item.path" 
+            <router-link
+              :to="item.path"
               class="nav-link d-flex align-items-center px-3 py-2-5 rounded-3"
               :class="{ 'premium-active': isRouteActive(item.path) }"
             >
               <i :class="[item.icon, 'me-3']"></i>
               <span class="nav-text">{{ item.label }}</span>
-              <span v-if="badgeFor(item.path)" class="nav-count ms-auto">{{ badgeFor(item.path) }}</span>
+              <span v-if="badgeFor(item.path)" class="nav-count ms-auto">{{
+                badgeFor(item.path)
+              }}</span>
             </router-link>
           </li>
         </ul>
       </div>
     </nav>
-
   </aside>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
-import { useProjectStore } from '../../stores/ProjectStore';
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
+import { useProjectStore } from "../../stores/ProjectStore";
 
 const route = useRoute();
 const adminStore = useAdminOperationsStore();
@@ -52,30 +57,36 @@ onMounted(() => {
 
 const navigationCategories = ref([
   {
-    title: 'Manage',
+    title: "Manage",
     items: [
-      { label: 'Overview', icon: 'bi bi-grid-1x2', path: '/admin' },
-      { label: 'Users', icon: 'bi bi-people', path: '/admin/users' },
-      { label: 'Projects', icon: 'bi bi-folder2', path: '/admin/projects' },
-      { label: 'Blogs', icon: 'bi bi-file-earmark-post', path: '/admin/blogs' },
-      { label: 'Categories', icon: 'bi bi-grid-fill', path: '/admin/categories' },
-      { label: 'Tags', icon: 'bi bi-tags', path: '/admin/tags' },
-      { label: 'Threads', icon: 'bi bi-chat-dots', path: '/admin/threads' },
-      { label: 'Reports', icon: 'bi bi-flag', path: '/admin/reports' },
-    ]
+      { label: "Overview", icon: "bi bi-grid-1x2", path: "/admin" },
+      { label: "Users", icon: "bi bi-people", path: "/admin/users" },
+      { label: "Projects", icon: "bi bi-folder2", path: "/admin/projects" },
+      { label: "Blogs", icon: "bi bi-file-earmark-post", path: "/admin/blogs" },
+      {
+        label: "Categories",
+        icon: "bi bi-grid-fill",
+        path: "/admin/categories",
+      },
+      { label: "Tags", icon: "bi bi-tags", path: "/admin/tags" },
+      { label: "Threads", icon: "bi bi-chat-dots", path: "/admin/threads" },
+      { label: "Reports", icon: "bi bi-flag", path: "/admin/reports" },
+    ],
   },
 ]);
 
 const isRouteActive = (itemPath) => {
-  if (itemPath === '/admin') {
-    return route.path === '/admin';
+  if (itemPath === "/admin") {
+    return route.path === "/admin";
   }
   return route.path.startsWith(itemPath);
 };
 
 const badgeFor = (itemPath) => {
-  if (itemPath === '/admin/projects') {
-    return projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
+  if (itemPath === "/admin/projects") {
+    return projectStore.projects.filter(
+      (p) => String(p.status || "").toLowerCase() === "in review",
+    ).length;
   }
   return adminStore.sidebarBadges[itemPath] || 0;
 };
@@ -103,7 +114,11 @@ const badgeFor = (itemPath) => {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-purple) 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -224,6 +239,5 @@ const badgeFor = (itemPath) => {
   .nav-link i {
     margin-right: 0.45rem !important;
   }
-
 }
 </style>

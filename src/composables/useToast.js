@@ -15,10 +15,14 @@ export const toastOptions = {
 export function useToast() {
   const toast = useToastification();
 
-  const success = (message, options = {}) => toast.success(message, { ...toastOptions, ...options, timeout: 2000 });
-  const error = (message, options = {}) => toast.error(message, { ...toastOptions, ...options, timeout: 2000 });
-  const info = (message, options = {}) => toast.info(message, { ...toastOptions, ...options, timeout: 2000 });
-  const warning = (message, options = {}) => toast.warning(message, { ...toastOptions, ...options, timeout: 2000 });
+  const success = (message, options = {}) =>
+    toast.success(message, { ...toastOptions, ...options, timeout: 2000 });
+  const error = (message, options = {}) =>
+    toast.error(message, { ...toastOptions, ...options, timeout: 2000 });
+  const info = (message, options = {}) =>
+    toast.info(message, { ...toastOptions, ...options, timeout: 2000 });
+  const warning = (message, options = {}) =>
+    toast.warning(message, { ...toastOptions, ...options, timeout: 2000 });
 
   return {
     success,

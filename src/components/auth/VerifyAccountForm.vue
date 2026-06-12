@@ -65,14 +65,18 @@
       <div class="back-link text-center mt-4">
         Didn't receive the code?
         <a href="#" @click.prevent="resendCode">Resend code</a>
-        or <router-link to="/login" @click="clearTokens">go back to login page</router-link>
+        or
+        <router-link to="/login" @click="clearTokens"
+          >go back to login page</router-link
+        >
       </div>
     </template>
 
     <template v-else>
       <h1>Choose new password</h1>
       <p class="subtitle">
-        Please enter your secure new password below to regain full access to your account.
+        Please enter your secure new password below to regain full access to
+        your account.
       </p>
 
       <form class="form-stack" @submit.prevent="handleResetPassword" novalidate>
@@ -84,18 +88,48 @@
               v-model="resetForm.newPassword"
               :type="showNewPassword ? 'text' : 'password'"
               class="form-control-custom password-input"
-              :class="{ error: resetErrors.newPassword, success: isNewPasswordValid && !resetErrors.newPassword }"
+              :class="{
+                error: resetErrors.newPassword,
+                success: isNewPasswordValid && !resetErrors.newPassword,
+              }"
               placeholder="Min 8 characters (A-Z, a-z, 0-9, @)"
               autocomplete="new-password"
               @focus="clearResetError('newPassword')"
               @input="clearResetError('newPassword')"
             />
-            <button type="button" class="eye-toggle-btn" @click="showNewPassword = !showNewPassword" tabindex="-1">
-              <svg v-if="showNewPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+            <button
+              type="button"
+              class="eye-toggle-btn"
+              @click="showNewPassword = !showNewPassword"
+              tabindex="-1"
+            >
+              <svg
+                v-if="showNewPassword"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="eye-icon"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                ></path>
                 <line x1="1" y1="1" x2="23" y2="23"></line>
               </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="eye-icon"
+              >
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
@@ -103,70 +137,223 @@
           </div>
           <!-- Password Strength Bar -->
           <div v-if="resetForm.newPassword" class="strength-bar-container mt-2">
-            <div class="strength-bar" :style="{ width: passwordStrength + '%', backgroundColor: strengthColor }"></div>
+            <div
+              class="strength-bar"
+              :style="{
+                width: passwordStrength + '%',
+                backgroundColor: strengthColor,
+              }"
+            ></div>
             <div class="strength-text" :style="{ color: strengthColor }">
               Password Strength: {{ strengthLabel }} ({{ passwordStrength }}%)
             </div>
           </div>
           <!-- Password Requirements Checklist -->
           <div v-if="resetForm.newPassword" class="requirements-checklist mt-2">
-            <div class="requirement-item" :class="{ met: passwordRequirements.length }">
+            <div
+              class="requirement-item"
+              :class="{ met: passwordRequirements.length }"
+            >
               <span class="icon">
-                <svg v-if="passwordRequirements.length" xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                <svg
+                  v-if="passwordRequirements.length"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </span>
               <span>At least 8 characters</span>
             </div>
-            <div class="requirement-item" :class="{ met: passwordRequirements.uppercase }">
+            <div
+              class="requirement-item"
+              :class="{ met: passwordRequirements.uppercase }"
+            >
               <span class="icon">
-                <svg v-if="passwordRequirements.uppercase" xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                <svg
+                  v-if="passwordRequirements.uppercase"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </span>
               <span>At least one uppercase letter (A-Z)</span>
             </div>
-            <div class="requirement-item" :class="{ met: passwordRequirements.lowercase }">
+            <div
+              class="requirement-item"
+              :class="{ met: passwordRequirements.lowercase }"
+            >
               <span class="icon">
-                <svg v-if="passwordRequirements.lowercase" xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                <svg
+                  v-if="passwordRequirements.lowercase"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </span>
               <span>At least one lowercase letter (a-z)</span>
             </div>
-            <div class="requirement-item" :class="{ met: passwordRequirements.number }">
+            <div
+              class="requirement-item"
+              :class="{ met: passwordRequirements.number }"
+            >
               <span class="icon">
-                <svg v-if="passwordRequirements.number" xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                <svg
+                  v-if="passwordRequirements.number"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </span>
               <span>At least one number (0-9)</span>
             </div>
-            <div class="requirement-item" :class="{ met: passwordRequirements.special }">
+            <div
+              class="requirement-item"
+              :class="{ met: passwordRequirements.special }"
+            >
               <span class="icon">
-                <svg v-if="passwordRequirements.special" xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                <svg
+                  v-if="passwordRequirements.special"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </span>
               <span>At least one special character (@$!%*?&amp;_...)</span>
             </div>
           </div>
-          <div v-if="resetErrors.newPassword" class="error-msg">{{ resetErrors.newPassword }}</div>
+          <div v-if="resetErrors.newPassword" class="error-msg">
+            {{ resetErrors.newPassword }}
+          </div>
         </div>
 
         <!-- Confirm Password -->
@@ -177,25 +364,59 @@
               v-model="resetForm.confirmPassword"
               :type="showConfirmPassword ? 'text' : 'password'"
               class="form-control-custom password-input"
-              :class="{ error: resetErrors.confirmPassword, success: isConfirmPasswordValid && !resetErrors.confirmPassword }"
+              :class="{
+                error: resetErrors.confirmPassword,
+                success: isConfirmPasswordValid && !resetErrors.confirmPassword,
+              }"
               placeholder="Repeat your password"
               autocomplete="new-password"
               @focus="clearResetError('confirmPassword')"
               @input="clearResetError('confirmPassword')"
             />
-            <button type="button" class="eye-toggle-btn" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
-              <svg v-if="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+            <button
+              type="button"
+              class="eye-toggle-btn"
+              @click="showConfirmPassword = !showConfirmPassword"
+              tabindex="-1"
+            >
+              <svg
+                v-if="showConfirmPassword"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="eye-icon"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                ></path>
                 <line x1="1" y1="1" x2="23" y2="23"></line>
               </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="eye-icon"
+              >
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
             </button>
           </div>
-          <div v-if="resetErrors.confirmPassword" class="error-msg">{{ resetErrors.confirmPassword }}</div>
-          <div v-if="resetSuccessMsg" class="success-msg">{{ resetSuccessMsg }}</div>
+          <div v-if="resetErrors.confirmPassword" class="error-msg">
+            {{ resetErrors.confirmPassword }}
+          </div>
+          <div v-if="resetSuccessMsg" class="success-msg">
+            {{ resetSuccessMsg }}
+          </div>
         </div>
 
         <!-- Submit -->
@@ -228,7 +449,9 @@
       <!-- Back to Login -->
       <div class="back-link text-center mt-4">
         Remember your password?
-        <router-link to="/login" @click="clearTokens">Back to Login</router-link>
+        <router-link to="/login" @click="clearTokens"
+          >Back to Login</router-link
+        >
       </div>
     </template>
   </div>
@@ -261,12 +484,12 @@ const { errors: validatorErrors, validatePassword } = useRequiredValidator();
 
 const resetForm = reactive({
   newPassword: "",
-  confirmPassword: ""
+  confirmPassword: "",
 });
 
 const resetErrors = reactive({
   newPassword: "",
-  confirmPassword: ""
+  confirmPassword: "",
 });
 
 const resetSuccessMsg = ref("");
@@ -300,12 +523,16 @@ const strengthLabel = computed(() => {
 const isNewPasswordValid = computed(() => {
   const value = resetForm.newPassword;
   if (!value || value.length < 8) return false;
-  const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#.+=(){}[\]^~])[A-Za-z\d@$!%*?&_\-#.+=(){}[\]^~]{8,}$/;
+  const STRONG_PASSWORD_REGEX =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#.+=(){}[\]^~])[A-Za-z\d@$!%*?&_\-#.+=(){}[\]^~]{8,}$/;
   return STRONG_PASSWORD_REGEX.test(value);
 });
 
 const isConfirmPasswordValid = computed(() => {
-  return isNewPasswordValid.value && resetForm.confirmPassword === resetForm.newPassword;
+  return (
+    isNewPasswordValid.value &&
+    resetForm.confirmPassword === resetForm.newPassword
+  );
 });
 
 const passwordRequirements = computed(() => {
@@ -315,7 +542,7 @@ const passwordRequirements = computed(() => {
     uppercase: /[A-Z]/.test(value),
     lowercase: /[a-z]/.test(value),
     number: /[0-9]/.test(value),
-    special: /[@$!%*?&_\-#.+=(){}[\]^~]/.test(value)
+    special: /[@$!%*?&_\-#.+=(){}[\]^~]/.test(value),
   };
 });
 
@@ -367,14 +594,14 @@ async function handleVerify() {
   otpSuccessMsg.value = "";
   try {
     const res = await authStore.verifyAccount(code);
-    
+
     if (res && res.verifiedToken) {
       verifiedToken.value = res.verifiedToken;
       sessionStorage.setItem("ANT_VerifiedToken", res.verifiedToken);
     }
-    
+
     otpSuccessMsg.value = "OTP verified successfully!";
-    
+
     setTimeout(() => {
       isOtpVerified.value = true;
       loading.value = false;
@@ -394,7 +621,7 @@ const clearResetError = (field) => {
 
 async function handleResetPassword() {
   let valid = true;
-  
+
   if (!validatePassword(resetForm.newPassword)) {
     resetErrors.newPassword = validatorErrors.password;
     valid = false;
@@ -421,11 +648,12 @@ async function handleResetPassword() {
     await authStore.resetPassword(
       resetForm.newPassword,
       resetForm.confirmPassword,
-      verifiedToken.value
+      verifiedToken.value,
     );
 
-    resetSuccessMsg.value = "Password reset successfully! Redirecting to login...";
-    
+    resetSuccessMsg.value =
+      "Password reset successfully! Redirecting to login...";
+
     sessionStorage.removeItem("ANT_ResetToken");
     sessionStorage.removeItem("ANT_VerifiedToken");
 
@@ -435,16 +663,25 @@ async function handleResetPassword() {
   } catch (error) {
     console.error("Password reset failed:", error);
     const errMsg = (
-      error.message || 
-      error.error || 
-      error.response?.data?.message || 
-      error.response?.data?.error || 
+      error.message ||
+      error.error ||
+      error.response?.data?.message ||
+      error.response?.data?.error ||
       ""
-    ).toString().toLowerCase();
+    )
+      .toString()
+      .toLowerCase();
 
     // Security hardening: Mask technical token errors with clean, safe user messages
-    if (errMsg.includes("token") || errMsg.includes("expired") || errMsg.includes("invalid") || error.status === 400 || error.response?.status === 400) {
-      resetErrors.newPassword = "Your password reset session has expired or is invalid. Please request a new recovery link.";
+    if (
+      errMsg.includes("token") ||
+      errMsg.includes("expired") ||
+      errMsg.includes("invalid") ||
+      error.status === 400 ||
+      error.response?.status === 400
+    ) {
+      resetErrors.newPassword =
+        "Your password reset session has expired or is invalid. Please request a new recovery link.";
     } else {
       resetErrors.newPassword = "Failed to reset password. Please try again.";
     }
@@ -456,7 +693,8 @@ async function handleResetPassword() {
 async function resendCode() {
   const email = sessionStorage.getItem("ANT_ResetEmail");
   if (!email) {
-    otpErrorMsg.value = "Unable to resend: recovery session email not found. Please request a new recovery link.";
+    otpErrorMsg.value =
+      "Unable to resend: recovery session email not found. Please request a new recovery link.";
     otpSuccessMsg.value = "";
     return;
   }
@@ -467,12 +705,12 @@ async function resendCode() {
 
   try {
     const res = await authStore.forgotPassword(email);
-    
+
     // Update the resetToken in case a new one was generated by the resend request
     if (res && res.resetToken) {
       sessionStorage.setItem("ANT_ResetToken", res.resetToken);
     }
-    
+
     otpSuccessMsg.value = "Verification code resent successfully!";
   } catch (error) {
     console.error("Resend failed:", error);
@@ -621,7 +859,9 @@ h1 {
 }
 .btn-signin:focus-visible {
   outline: none;
-  box-shadow: 0 4px 14px var(--color-primary-light), var(--focus-ring);
+  box-shadow:
+    0 4px 14px var(--color-primary-light),
+    var(--focus-ring);
 }
 .btn-signin:active {
   transform: translateY(0);
@@ -739,7 +979,9 @@ h1 {
 .strength-bar {
   height: 6px;
   border-radius: 3px;
-  transition: width var(--transition-base, 0.3s), background-color var(--transition-base, 0.3s);
+  transition:
+    width var(--transition-base, 0.3s),
+    background-color var(--transition-base, 0.3s);
 }
 
 .strength-text {

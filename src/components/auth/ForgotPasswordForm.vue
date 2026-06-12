@@ -14,7 +14,10 @@
           v-model="form.email"
           type="email"
           class="form-control-custom"
-          :class="{ error: errors.email, success: isEmailValid && !errors.email }"
+          :class="{
+            error: errors.email,
+            success: isEmailValid && !errors.email,
+          }"
           placeholder="name@company.com"
           autocomplete="email"
           @focus="onEmailInput"
@@ -108,51 +111,56 @@ async function handleReset() {
   successMsg.value = "";
   try {
     const res = await authStore.forgotPassword(form.email);
-    
+
     // Save the resetToken for the subsequent OTP verify step
     if (res && res.resetToken) {
       sessionStorage.setItem("ANT_ResetToken", res.resetToken);
     }
-    
+
     // Save recovery email for resending OTP code securely
     sessionStorage.setItem("ANT_ResetEmail", form.email);
-    
+
     errors.email = "";
-    successMsg.value = "OTP sent to your email successfully! Please check your inbox mail.";
-    
+    successMsg.value =
+      "OTP sent to your email successfully! Please check your inbox mail.";
+
     setTimeout(() => {
       router.push("/verify");
     }, 1800);
   } catch (error) {
     console.error("Password reset failed:", error);
     const errMsg = (
-      error.message || 
-      error.error || 
-      error.response?.data?.message || 
-      error.response?.data?.error || 
+      error.message ||
+      error.error ||
+      error.response?.data?.message ||
+      error.response?.data?.error ||
       ""
-    ).toString().toLowerCase();
-    
+    )
+      .toString()
+      .toLowerCase();
+
     // Security hardening: mask "User not found" errors to prevent email enumeration
-    const isUserNotFound = 
-      errMsg.includes("user not found") || 
-      errMsg.includes("not found") || 
-      errMsg.includes("not registered") || 
-      errMsg.includes("no user") || 
-      error.status === 404 || 
+    const isUserNotFound =
+      errMsg.includes("user not found") ||
+      errMsg.includes("not found") ||
+      errMsg.includes("not registered") ||
+      errMsg.includes("no user") ||
+      error.status === 404 ||
       error.response?.status === 404;
 
     if (isUserNotFound) {
       // Save recovery email for resending OTP code securely
       sessionStorage.setItem("ANT_ResetEmail", form.email);
       errors.email = "";
-      successMsg.value = "OTP sent to your email successfully! Please check your inbox mail.";
-      
+      successMsg.value =
+        "OTP sent to your email successfully! Please check your inbox mail.";
+
       setTimeout(() => {
         router.push("/verify");
       }, 1800);
     } else {
-      errors.email = error.message || error.error || "An error occurred. Please try again.";
+      errors.email =
+        error.message || error.error || "An error occurred. Please try again.";
       successMsg.value = "";
     }
   } finally {
@@ -277,7 +285,9 @@ h1 {
 }
 .btn-signin:focus-visible {
   outline: none;
-  box-shadow: 0 4px 14px var(--color-primary-light), var(--focus-ring);
+  box-shadow:
+    0 4px 14px var(--color-primary-light),
+    var(--focus-ring);
 }
 .btn-signin:active {
   transform: translateY(0);

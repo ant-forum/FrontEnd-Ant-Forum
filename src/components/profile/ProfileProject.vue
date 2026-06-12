@@ -2,7 +2,7 @@
 import { defineProps } from "vue";
 
 const props = defineProps({
-  projects: { type: Array, required: true }
+  projects: { type: Array, required: true },
 });
 </script>
 
@@ -10,26 +10,48 @@ const props = defineProps({
   <div>
     <div class="dashboard-card-modern p-4 mb-4">
       <h4 class="fw-bold mb-2 header-title themed-text">My Projects</h4>
-      <p class="text-muted mb-0 subtitle-text">Showcase of web application architectures, system designs, and microservices.</p>
+      <p class="text-muted mb-0 subtitle-text">
+        Showcase of web application architectures, system designs, and
+        microservices.
+      </p>
     </div>
-    
+
     <div class="row g-4">
-      <div v-for="project in projects" :key="project.title" class="col-md-6 col-lg-4">
-        <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
+      <div
+        v-for="project in projects"
+        :key="project.title"
+        class="col-md-6 col-lg-4"
+      >
+        <div
+          class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between"
+        >
           <div>
             <div class="d-flex justify-content-between align-items-start mb-2">
-              <router-link :to="'/showcase/' + project.id" class="text-decoration-none">
-                <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+              <router-link
+                :to="'/showcase/' + project.id"
+                class="text-decoration-none"
+              >
+                <h6 class="fw-bold mb-0 themed-text project-title-v2">
+                  {{ project.title }}
+                </h6>
               </router-link>
-              <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
+              <span class="d-flex align-items-center gap-1 text-muted small"
+                ><i class="bi bi-star-fill text-warning"></i>
+                {{ project.stars }}</span
+              >
             </div>
             <p class="text-muted small mb-4 line-clamp-3">
               {{ project.desc }}
             </p>
           </div>
-          
+
           <div class="d-flex flex-wrap gap-2">
-            <span v-for="tag in project.tags" :key="tag" class="tag-badge-v2" :class="tag.toLowerCase()">
+            <span
+              v-for="tag in project.tags"
+              :key="tag"
+              class="tag-badge-v2"
+              :class="tag.toLowerCase()"
+            >
               {{ tag }}
             </span>
           </div>
@@ -39,7 +61,10 @@ const props = defineProps({
         <div class="empty-projects-card">
           <i class="bi bi-code-square"></i>
           <h5>Your showcase is ready for its first project</h5>
-          <p>Share what you have built and make it discoverable to the ANT Forum community.</p>
+          <p>
+            Share what you have built and make it discoverable to the ANT Forum
+            community.
+          </p>
           <router-link to="/showcase/create">Submit project</router-link>
         </div>
       </div>
@@ -105,16 +130,46 @@ const props = defineProps({
   letter-spacing: 0.5px;
 }
 
-.tag-badge-v2.react { background: var(--color-tag-blue-bg); color: var(--color-tag-blue-text); }
-.tag-badge-v2.webgpu { background: var(--color-tag-pink-bg); color: var(--color-tag-pink-text); }
-.tag-badge-v2.typescript { background: var(--color-tag-indigo-bg); color: var(--color-tag-indigo-text); }
-.tag-badge-v2.go { background: var(--color-tag-cyan-bg); color: var(--color-tag-cyan-text); }
-.tag-badge-v2.redis { background: var(--color-tag-red-bg); color: var(--color-tag-red-text); }
-.tag-badge-v2.grpc { background: var(--color-tag-purple-bg); color: var(--color-tag-purple-text); }
-.tag-badge-v2.node\.js { background: var(--color-tag-green-bg); color: var(--color-tag-green-text); }
-.tag-badge-v2.graphql { background: var(--color-tag-red-bg); color: var(--color-tag-red-text); }
-.tag-badge-v2.tailwind { background: var(--color-tag-blue-bg); color: var(--color-tag-blue-text); }
-.tag-badge-v2.storybook { background: var(--color-tag-amber-bg); color: var(--color-tag-amber-text); }
+.tag-badge-v2.react {
+  background: var(--color-tag-blue-bg);
+  color: var(--color-tag-blue-text);
+}
+.tag-badge-v2.webgpu {
+  background: var(--color-tag-pink-bg);
+  color: var(--color-tag-pink-text);
+}
+.tag-badge-v2.typescript {
+  background: var(--color-tag-indigo-bg);
+  color: var(--color-tag-indigo-text);
+}
+.tag-badge-v2.go {
+  background: var(--color-tag-cyan-bg);
+  color: var(--color-tag-cyan-text);
+}
+.tag-badge-v2.redis {
+  background: var(--color-tag-red-bg);
+  color: var(--color-tag-red-text);
+}
+.tag-badge-v2.grpc {
+  background: var(--color-tag-purple-bg);
+  color: var(--color-tag-purple-text);
+}
+.tag-badge-v2.node\.js {
+  background: var(--color-tag-green-bg);
+  color: var(--color-tag-green-text);
+}
+.tag-badge-v2.graphql {
+  background: var(--color-tag-red-bg);
+  color: var(--color-tag-red-text);
+}
+.tag-badge-v2.tailwind {
+  background: var(--color-tag-blue-bg);
+  color: var(--color-tag-blue-text);
+}
+.tag-badge-v2.storybook {
+  background: var(--color-tag-amber-bg);
+  color: var(--color-tag-amber-text);
+}
 
 .line-clamp-3 {
   display: -webkit-box;

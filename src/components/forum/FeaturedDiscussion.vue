@@ -1,7 +1,7 @@
 <script setup>
-import { computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useForumStore } from '@/stores/ForumStore';
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import { useForumStore } from "@/stores/ForumStore";
 
 const router = useRouter();
 const forumStore = useForumStore();
@@ -17,14 +17,20 @@ const threadScore = (thread) => {
   const replies = Array.isArray(thread?.replies)
     ? thread.replies.length
     : Number(thread?.replies ?? thread?.comment_count ?? 0);
-  const createdTime = new Date(thread?.createdAt || thread?.created_at || 0).getTime();
-  const recentBoost = Number.isFinite(createdTime) ? createdTime / 100000000000 : 0;
-  return (votes * 3) + (replies * 5) + recentBoost;
+  const createdTime = new Date(
+    thread?.createdAt || thread?.created_at || 0,
+  ).getTime();
+  const recentBoost = Number.isFinite(createdTime)
+    ? createdTime / 100000000000
+    : 0;
+  return votes * 3 + replies * 5 + recentBoost;
 };
 
 const spotlightThread = computed(() => {
   if (!discussions.value.length) return null;
-  return [...discussions.value].sort((a, b) => threadScore(b) - threadScore(a))[0];
+  return [...discussions.value].sort(
+    (a, b) => threadScore(b) - threadScore(a),
+  )[0];
 });
 
 const getReplyCount = (thread) => {
@@ -34,25 +40,33 @@ const getReplyCount = (thread) => {
 
 const getAuthorName = (thread) => {
   const author = thread?.author;
-  if (typeof author === 'object' && author) {
-    return author.username || author.name || 'Forum member';
+  if (typeof author === "object" && author) {
+    return author.username || author.name || "Forum member";
   }
-  return author || thread?.username || 'Forum member';
+  return author || thread?.username || "Forum member";
 };
 
 const getThreadCategory = (thread) => {
-  const raw = thread?.categoryLabel || thread?.categoryMeta?.label || thread?.category || 'Discussion';
+  const raw =
+    thread?.categoryLabel ||
+    thread?.categoryMeta?.label ||
+    thread?.category ||
+    "Discussion";
   return String(raw)
-    .replace(/[-_]/g, ' ')
+    .replace(/[-_]/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 };
 
 const totalReplies = computed(() => {
-  return discussions.value.reduce((sum, thread) => sum + getReplyCount(thread), 0);
+  return discussions.value.reduce(
+    (sum, thread) => sum + getReplyCount(thread),
+    0,
+  );
 });
 
 const unansweredCount = computed(() => {
-  return discussions.value.filter((thread) => getReplyCount(thread) === 0).length;
+  return discussions.value.filter((thread) => getReplyCount(thread) === 0)
+    .length;
 });
 
 const activeTagNames = computed(() => {
@@ -60,9 +74,9 @@ const activeTagNames = computed(() => {
   discussions.value.forEach((thread) => {
     const tags = Array.isArray(thread.tags) ? thread.tags : [];
     tags.forEach((tag) => {
-      const label = typeof tag === 'object' ? tag.label || tag.name : tag;
+      const label = typeof tag === "object" ? tag.label || tag.name : tag;
       if (!label) return;
-      const cleanLabel = String(label).replace(/^#/, '').trim();
+      const cleanLabel = String(label).replace(/^#/, "").trim();
       counts.set(cleanLabel, (counts.get(cleanLabel) || 0) + 1);
     });
   });
@@ -74,9 +88,13 @@ const activeTagNames = computed(() => {
 });
 
 const stats = computed(() => [
-  { label: 'Threads', value: discussions.value.length, icon: 'bi-chat-square-text' },
-  { label: 'Replies', value: totalReplies.value, icon: 'bi-reply-all' },
-  { label: 'Open', value: unansweredCount.value, icon: 'bi-question-circle' },
+  {
+    label: "Threads",
+    value: discussions.value.length,
+    icon: "bi-chat-square-text",
+  },
+  { label: "Replies", value: totalReplies.value, icon: "bi-reply-all" },
+  { label: "Open", value: unansweredCount.value, icon: "bi-question-circle" },
 ]);
 
 const openSpotlight = () => {
@@ -84,15 +102,15 @@ const openSpotlight = () => {
     router.push(`/forum/${spotlightThread.value.id}`);
     return;
   }
-  router.push('/forum/create');
+  router.push("/forum/create");
 };
 
 const openCreate = () => {
-  router.push('/forum/create');
+  router.push("/forum/create");
 };
 
 const openTag = (tag) => {
-  router.push({ path: '/forum', query: { tag: tag } });
+  router.push({ path: "/forum", query: { tag: tag } });
 };
 </script>
 
@@ -104,15 +122,21 @@ const openTag = (tag) => {
           <i class="bi bi-lightning-charge-fill"></i>
           Community Pulse
         </span>
-        <span class="category-pill">{{ spotlightThread ? getThreadCategory(spotlightThread) : 'Discussion' }}</span>
+        <span class="category-pill">{{
+          spotlightThread ? getThreadCategory(spotlightThread) : "Discussion"
+        }}</span>
       </div>
 
       <h1 class="featured-title">
-        {{ spotlightThread?.title || 'Start the next useful discussion' }}
+        {{ spotlightThread?.title || "Start the next useful discussion" }}
       </h1>
 
       <p class="featured-description">
-        {{ spotlightThread?.excerpt || spotlightThread?.description || 'Ask a focused question, share what you tried, and help the community build better answers together.' }}
+        {{
+          spotlightThread?.excerpt ||
+          spotlightThread?.description ||
+          "Ask a focused question, share what you tried, and help the community build better answers together."
+        }}
       </p>
 
       <div class="thread-meta">
@@ -133,7 +157,7 @@ const openTag = (tag) => {
       <div class="featured-actions">
         <button class="primary-action" type="button" @click="openSpotlight">
           <i class="bi bi-arrow-right-circle-fill"></i>
-          {{ spotlightThread ? 'Open Thread' : 'Ask Question' }}
+          {{ spotlightThread ? "Open Thread" : "Ask Question" }}
         </button>
         <button class="secondary-action" type="button" @click="openCreate">
           <i class="bi bi-plus-lg"></i>
@@ -163,7 +187,9 @@ const openTag = (tag) => {
           >
             #{{ tag }}
           </button>
-          <span v-if="activeTagNames.length === 0" class="tag-empty">No tags yet</span>
+          <span v-if="activeTagNames.length === 0" class="tag-empty"
+            >No tags yet</span
+          >
         </div>
       </div>
     </aside>
@@ -196,7 +222,11 @@ const openTag = (tag) => {
   gap: 14px;
   padding: 28px;
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--color-surface-hover) 65%, transparent), transparent 70%),
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-surface-hover) 65%, transparent),
+      transparent 70%
+    ),
     var(--color-bg);
 }
 
@@ -286,7 +316,10 @@ const openTag = (tag) => {
   font-size: 0.88rem;
   font-weight: 850;
   cursor: pointer;
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
 }
 
 .primary-action {
@@ -376,7 +409,11 @@ const openTag = (tag) => {
 
 .tag-chip:hover {
   color: var(--color-purple);
-  border-color: color-mix(in srgb, var(--color-purple) 48%, var(--color-border));
+  border-color: color-mix(
+    in srgb,
+    var(--color-purple) 48%,
+    var(--color-border)
+  );
 }
 
 @media (max-width: 1050px) {

@@ -2,7 +2,12 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/api";
 import { useAuthStore } from "./AuthStore";
-import { extractProfilePayload, normalizeProfileRecord, normalizeSkills, skillsToText } from "@/utils/profileFields";
+import {
+  extractProfilePayload,
+  normalizeProfileRecord,
+  normalizeSkills,
+  skillsToText,
+} from "@/utils/profileFields";
 
 const ensureSuccess = (response, fallbackMessage) => {
   if (response.data && response.data.result === false) {
@@ -30,23 +35,28 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
         throw new Error(res.data.message || "Failed to fetch profile");
       }
       profile.value = normalizeProfileRecord(extractProfilePayload(res.data));
-      
+
       // Fetch social links at the same time
       try {
         const socialRes = await api.get("/api/sociallink/get-all/social-link");
         const links = socialRes.data?.data || socialRes.data || [];
-        socialLinks.value = links.filter(l => Number(l.user_id) === Number(profile.value?.id) || !l.user_id) || [];
+        socialLinks.value =
+          links.filter(
+            (l) =>
+              Number(l.user_id) === Number(profile.value?.id) || !l.user_id,
+          ) || [];
       } catch (e) {
         console.warn("Failed to fetch social links", e);
       }
-      
+
       // Keep authStore in sync
       if (profile.value) {
         authStore.setUser(profile.value);
       }
       return profile.value;
     } catch (err) {
-      error.value = err.response?.data?.message || err.message || "An error occurred";
+      error.value =
+        err.response?.data?.message || err.message || "An error occurred";
       throw err;
     } finally {
       isLoading.value = false;
@@ -101,11 +111,14 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
         profile.value = savedProfile;
         authStore.setUser(savedProfile);
       }
-      
+
       try {
         await fetchProfile();
       } catch (refreshError) {
-        console.warn("Profile updated, but refreshing profile failed:", refreshError);
+        console.warn(
+          "Profile updated, but refreshing profile failed:",
+          refreshError,
+        );
       }
 
       if (profile.value) {
@@ -113,7 +126,8 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
       }
       return profile.value;
     } catch (err) {
-      error.value = err.response?.data?.message || err.message || "An error occurred";
+      error.value =
+        err.response?.data?.message || err.message || "An error occurred";
       throw err;
     } finally {
       isLoading.value = false;
@@ -127,20 +141,21 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      
+
       const formData = new FormData();
       formData.append("profile_pic", file);
-      
+
       const res = await api.post("/api/profile/avatar", formData);
       if (res.data && res.data.result === false) {
         throw new Error(res.data.message || "Failed to upload avatar");
       }
-      
+
       // Fetch latest profile from server to guarantee sync and normalization
       await fetchProfile();
       return profile.value;
     } catch (err) {
-      error.value = err.response?.data?.message || err.message || "An error occurred";
+      error.value =
+        err.response?.data?.message || err.message || "An error occurred";
       throw err;
     } finally {
       isLoading.value = false;
@@ -153,16 +168,25 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
   const addSocialLink = async (platform, url) => {
     try {
       isLoading.value = true;
-      const res = await api.post('/api/sociallink/createSocialLink', { platform, url, user_id: profile.value?.id });
-      if (res.data && res.data.result === false) throw new Error(res.data.message);
-      
+      const res = await api.post("/api/sociallink/createSocialLink", {
+        platform,
+        url,
+        user_id: profile.value?.id,
+      });
+      if (res.data && res.data.result === false)
+        throw new Error(res.data.message);
+
       // Refetch
       const socialRes = await api.get("/api/sociallink/get-all/social-link");
       const links = socialRes.data?.data || socialRes.data || [];
-      socialLinks.value = links.filter(l => Number(l.user_id) === Number(profile.value?.id) || !l.user_id) || [];
+      socialLinks.value =
+        links.filter(
+          (l) => Number(l.user_id) === Number(profile.value?.id) || !l.user_id,
+        ) || [];
       return res.data;
     } catch (err) {
-      error.value = err.response?.data?.message || err.message || "Failed to add link";
+      error.value =
+        err.response?.data?.message || err.message || "Failed to add link";
       throw err;
     } finally {
       isLoading.value = false;
@@ -176,13 +200,17 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
     try {
       isLoading.value = true;
       await api.delete(`/api/sociallink/delete/social-link/${id}`);
-      
+
       // Refetch
       const socialRes = await api.get("/api/sociallink/get-all/social-link");
       const links = socialRes.data?.data || socialRes.data || [];
-      socialLinks.value = links.filter(l => Number(l.user_id) === Number(profile.value?.id) || !l.user_id) || [];
+      socialLinks.value =
+        links.filter(
+          (l) => Number(l.user_id) === Number(profile.value?.id) || !l.user_id,
+        ) || [];
     } catch (err) {
-      error.value = err.response?.data?.message || err.message || "Failed to delete link";
+      error.value =
+        err.response?.data?.message || err.message || "Failed to delete link";
       throw err;
     } finally {
       isLoading.value = false;
@@ -198,6 +226,6 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
     updateProfile,
     uploadAvatar,
     addSocialLink,
-    deleteSocialLink
+    deleteSocialLink,
   };
 });

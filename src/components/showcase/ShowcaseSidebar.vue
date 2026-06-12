@@ -1,6 +1,6 @@
 <script setup>
-import TrendingTags from '../forum/TrendingTags.vue';
-import TopContributors from '../forum/TopContributors.vue';
+import TrendingTags from "../forum/TrendingTags.vue";
+import TopContributors from "../forum/TopContributors.vue";
 </script>
 
 <template>

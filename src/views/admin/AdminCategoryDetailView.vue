@@ -2,12 +2,19 @@
   <AdminPageShell
     :title="category ? category.name : 'Category Detail'"
     kicker="Category Overview"
-    :subtitle="category ? `Taxonomy detail view for Category: ${category.name}` : 'Category details page'"
+    :subtitle="
+      category
+        ? `Taxonomy detail view for Category: ${category.name}`
+        : 'Category details page'
+    "
     :metrics="metrics"
     :breadcrumbs="breadcrumbs"
   >
     <template #before-title>
-      <router-link class="btn btn-light border back-link" to="/admin/categories">
+      <router-link
+        class="btn btn-light border back-link"
+        to="/admin/categories"
+      >
         <i class="bi bi-arrow-left"></i>
         <span>Back to Categories</span>
       </router-link>
@@ -16,48 +23,108 @@
     <!-- Premium Shimmer Skeleton Loader -->
     <div v-if="isPageLoading" class="skeleton-page-container w-100">
       <!-- Category Hero Skeleton -->
-      <div class="skeleton-hero mb-4 rounded-4 p-4 p-sm-5 border position-relative overflow-hidden">
-        <div class="position-relative d-flex align-items-center gap-4 flex-column flex-sm-row z-1">
+      <div
+        class="skeleton-hero mb-4 rounded-4 p-4 p-sm-5 border position-relative overflow-hidden"
+      >
+        <div
+          class="position-relative d-flex align-items-center gap-4 flex-column flex-sm-row z-1"
+        >
           <div class="skeleton-icon rounded-4 flex-shrink-0"></div>
           <div class="flex-grow-1 w-100 text-start">
             <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
-              <div class="skeleton-title rounded" style="width: 240px; height: 32px;"></div>
-              <div class="skeleton-badge rounded-pill" style="width: 80px; height: 24px;"></div>
+              <div
+                class="skeleton-title rounded"
+                style="width: 240px; height: 32px"
+              ></div>
+              <div
+                class="skeleton-badge rounded-pill"
+                style="width: 80px; height: 24px"
+              ></div>
             </div>
-            <div class="skeleton-text rounded mb-2.5" style="width: 85%; height: 16px;"></div>
-            <div class="skeleton-text rounded" style="width: 50%; height: 16px;"></div>
+            <div
+              class="skeleton-text rounded mb-2.5"
+              style="width: 85%; height: 16px"
+            ></div>
+            <div
+              class="skeleton-text rounded"
+              style="width: 50%; height: 16px"
+            ></div>
           </div>
         </div>
       </div>
 
       <!-- Controls Skeleton -->
       <div class="skeleton-panel border rounded-4 p-4 mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-4">
+        <div
+          class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-4"
+        >
           <div>
-            <div class="skeleton-title rounded mb-2" style="width: 180px; height: 24px;"></div>
-            <div class="skeleton-text rounded" style="width: 280px; height: 14px;"></div>
+            <div
+              class="skeleton-title rounded mb-2"
+              style="width: 180px; height: 24px"
+            ></div>
+            <div
+              class="skeleton-text rounded"
+              style="width: 280px; height: 14px"
+            ></div>
           </div>
-          <div class="skeleton-search rounded-pill" style="width: 290px; height: 40px;"></div>
+          <div
+            class="skeleton-search rounded-pill"
+            style="width: 290px; height: 40px"
+          ></div>
         </div>
-        <div class="skeleton-tabs rounded-3 mb-4" style="width: 250px; height: 38px;"></div>
+        <div
+          class="skeleton-tabs rounded-3 mb-4"
+          style="width: 250px; height: 38px"
+        ></div>
 
         <!-- Post Cards Skeleton Grid -->
         <div class="post-cards-grid">
-          <div v-for="n in 3" :key="n" class="skeleton-card border rounded-4 overflow-hidden">
-            <div class="skeleton-card-image" style="height: 170px;"></div>
-            <div class="p-4 d-flex flex-column" style="height: 270px;">
-              <div class="skeleton-title rounded mb-3" style="width: 80%; height: 20px;"></div>
-              <div class="skeleton-text rounded mb-2" style="width: 95%; height: 14px;"></div>
-              <div class="skeleton-text rounded mb-2" style="width: 90%; height: 14px;"></div>
-              <div class="skeleton-text rounded mb-4" style="width: 60%; height: 14px;"></div>
-              
-              <div class="skeleton-meta-footer mt-auto pt-3 d-flex align-items-center gap-3">
-                <div class="skeleton-avatar rounded-circle" style="width: 32px; height: 32px;"></div>
+          <div
+            v-for="n in 3"
+            :key="n"
+            class="skeleton-card border rounded-4 overflow-hidden"
+          >
+            <div class="skeleton-card-image" style="height: 170px"></div>
+            <div class="p-4 d-flex flex-column" style="height: 270px">
+              <div
+                class="skeleton-title rounded mb-3"
+                style="width: 80%; height: 20px"
+              ></div>
+              <div
+                class="skeleton-text rounded mb-2"
+                style="width: 95%; height: 14px"
+              ></div>
+              <div
+                class="skeleton-text rounded mb-2"
+                style="width: 90%; height: 14px"
+              ></div>
+              <div
+                class="skeleton-text rounded mb-4"
+                style="width: 60%; height: 14px"
+              ></div>
+
+              <div
+                class="skeleton-meta-footer mt-auto pt-3 d-flex align-items-center gap-3"
+              >
+                <div
+                  class="skeleton-avatar rounded-circle"
+                  style="width: 32px; height: 32px"
+                ></div>
                 <div class="flex-grow-1">
-                  <div class="skeleton-text rounded mb-1.5" style="width: 100px; height: 12px;"></div>
-                  <div class="skeleton-text rounded" style="width: 60px; height: 10px;"></div>
+                  <div
+                    class="skeleton-text rounded mb-1.5"
+                    style="width: 100px; height: 12px"
+                  ></div>
+                  <div
+                    class="skeleton-text rounded"
+                    style="width: 60px; height: 10px"
+                  ></div>
                 </div>
-                <div class="skeleton-btn rounded-pill" style="width: 70px; height: 30px;"></div>
+                <div
+                  class="skeleton-btn rounded-pill"
+                  style="width: 70px; height: 30px"
+                ></div>
               </div>
             </div>
           </div>
@@ -67,24 +134,37 @@
 
     <template v-else-if="category">
       <!-- Premium Category Hero Section -->
-      <section 
-        :class="['category-hero-banner mb-4 border rounded-4 overflow-hidden position-relative p-4 p-sm-5', category.colorClass || 'purple']"
+      <section
+        :class="[
+          'category-hero-banner mb-4 border rounded-4 overflow-hidden position-relative p-4 p-sm-5',
+          category.colorClass || 'purple',
+        ]"
       >
-        <div class="position-relative d-flex align-items-center justify-content-between gap-4 flex-wrap flex-md-nowrap z-1 w-100">
-          <div class="d-flex align-items-center gap-4 flex-column flex-sm-row text-center text-sm-start w-100">
-            <div class="category-icon-wrapper rounded-4 d-flex align-items-center justify-content-center shadow-lg flex-shrink-0 animate-float">
+        <div
+          class="position-relative d-flex align-items-center justify-content-between gap-4 flex-wrap flex-md-nowrap z-1 w-100"
+        >
+          <div
+            class="d-flex align-items-center gap-4 flex-column flex-sm-row text-center text-sm-start w-100"
+          >
+            <div
+              class="category-icon-wrapper rounded-4 d-flex align-items-center justify-content-center shadow-lg flex-shrink-0 animate-float"
+            >
               <i class="bi bi-grid-fill fs-2"></i>
             </div>
-            
+
             <div class="flex-grow-1 min-width-0 text-start">
               <div class="hero-title-container mb-2">
                 <h2 class="hero-title">{{ category.name }}</h2>
                 <span class="badge category-badge">
-                  <i class="bi bi-layers me-1.5"></i>{{ category.type || 'General' }}
+                  <i class="bi bi-layers me-1.5"></i
+                  >{{ category.type || "General" }}
                 </span>
               </div>
               <p class="category-desc-hero m-0">
-                {{ category.description || 'No official description provided for this category taxonomy. Edit this category to add an official description.' }}
+                {{
+                  category.description ||
+                  "No official description provided for this category taxonomy. Edit this category to add an official description."
+                }}
               </p>
             </div>
           </div>
@@ -92,31 +172,44 @@
       </section>
 
       <!-- Posts List Panel -->
-      <section class="admin-panel posts-panel shadow-sm border rounded-4 p-4 bg-surface mb-4">
-        <div class="panel-heading d-flex justify-content-between align-items-center mb-4 flex-wrap gap-4">
+      <section
+        class="admin-panel posts-panel shadow-sm border rounded-4 p-4 bg-surface mb-4"
+      >
+        <div
+          class="panel-heading d-flex justify-content-between align-items-center mb-4 flex-wrap gap-4"
+        >
           <div>
-            <h3 class="m-0 fw-bold text-adaptive heading-panel">Articles in Category</h3>
-            <p class="text-muted small m-0 mt-1">Review all active publications assigned to the "{{ category.name }}" classification.</p>
+            <h3 class="m-0 fw-bold text-adaptive heading-panel">
+              Articles in Category
+            </h3>
+            <p class="text-muted small m-0 mt-1">
+              Review all active publications assigned to the "{{
+                category.name
+              }}" classification.
+            </p>
           </div>
-          
+
           <div class="search-wrapper">
             <i class="bi bi-search search-icon"></i>
-            <input 
-              v-model.trim="search" 
-              type="search" 
-              placeholder="Search articles..." 
+            <input
+              v-model.trim="search"
+              type="search"
+              placeholder="Search articles..."
               class="search-box"
-            >
+            />
           </div>
         </div>
 
         <!-- Glass control filter tabs -->
         <div class="tabs-container">
-          <button 
-            v-for="tab in ['all', 'published', 'draft']" 
+          <button
+            v-for="tab in ['all', 'published', 'draft']"
             :key="tab"
             @click="activeTab = tab"
-            :class="['tab-btn transition-all text-capitalize', { active: activeTab === tab }]"
+            :class="[
+              'tab-btn transition-all text-capitalize',
+              { active: activeTab === tab },
+            ]"
           >
             <span class="tab-label">{{ tab }}</span>
             <span class="tab-badge">{{ getTabCount(tab) }}</span>
@@ -124,30 +217,60 @@
         </div>
 
         <!-- Publications Grid -->
-        <div v-if="visiblePosts.length === 0" class="text-center py-5 border rounded-4 border-dashed bg-input">
+        <div
+          v-if="visiblePosts.length === 0"
+          class="text-center py-5 border rounded-4 border-dashed bg-input"
+        >
           <i class="bi bi-journal-x display-6 mb-2 d-block text-muted"></i>
-          <span class="text-muted small">No articles found in this category.</span>
+          <span class="text-muted small"
+            >No articles found in this category.</span
+          >
         </div>
         <div v-else class="post-cards-grid">
           <div v-for="post in visiblePosts" :key="post.id" class="post-card">
             <div class="card-image-wrap">
-              <img :src="post.image" @error.once="handleImgError" class="card-img-top zoom-hover" alt="Article Cover">
+              <img
+                :src="post.image"
+                @error.once="handleImgError"
+                class="card-img-top zoom-hover"
+                alt="Article Cover"
+              />
               <span :class="['status-badge', post.status]">
                 {{ post.status }}
               </span>
             </div>
-            
+
             <div class="card-body">
               <h4 class="title-text">{{ post.title }}</h4>
-              <p class="description-text">{{ post.excerpt || post.description }}</p>
-              
+              <p class="description-text">
+                {{ post.excerpt || post.description }}
+              </p>
+
               <div class="card-footer-meta">
-                <img :src="post.author_avatar || 'https://i.pravatar.cc/150?u=author'" class="rounded-circle object-fit-cover author-avatar" width="30" height="30">
+                <img
+                  :src="
+                    post.author_avatar || 'https://i.pravatar.cc/150?u=author'
+                  "
+                  class="rounded-circle object-fit-cover author-avatar"
+                  width="30"
+                  height="30"
+                />
                 <div class="flex-grow-1 min-width-0 text-start">
-                  <strong class="text-adaptive d-block text-truncate" style="font-size: 0.78rem; font-weight: 800;">{{ post.author }}</strong>
-                  <span class="text-muted d-block" style="font-size: 0.7rem;"><i class="bi bi-calendar3 me-1"></i>{{ post.date }}</span>
+                  <strong
+                    class="text-adaptive d-block text-truncate"
+                    style="font-size: 0.78rem; font-weight: 800"
+                    >{{ post.author }}</strong
+                  >
+                  <span class="text-muted d-block" style="font-size: 0.7rem"
+                    ><i class="bi bi-calendar3 me-1"></i>{{ post.date }}</span
+                  >
                 </div>
-                <router-link :to="'/blog/' + post.id" target="_blank" class="btn btn-view-article btn-sm rounded-pill px-3 py-1.5 flex-shrink-0" style="font-size: 0.76rem; font-weight: 800;">
+                <router-link
+                  :to="'/blog/' + post.id"
+                  target="_blank"
+                  class="btn btn-view-article btn-sm rounded-pill px-3 py-1.5 flex-shrink-0"
+                  style="font-size: 0.76rem; font-weight: 800"
+                >
                   View <i class="bi bi-arrow-right-short ms-0.5"></i>
                 </router-link>
               </div>
@@ -157,11 +280,21 @@
       </section>
     </template>
 
-    <div v-else class="text-center py-5 border rounded-4 border-dashed bg-surface shadow-sm">
-      <i class="bi bi-exclamation-triangle display-4 text-warning mb-2 d-block"></i>
+    <div
+      v-else
+      class="text-center py-5 border rounded-4 border-dashed bg-surface shadow-sm"
+    >
+      <i
+        class="bi bi-exclamation-triangle display-4 text-warning mb-2 d-block"
+      ></i>
       <h4 class="fw-bold mb-1 text-adaptive">Category Not Found</h4>
-      <p class="text-muted small mb-3">The requested category record does not exist or has been deleted.</p>
-      <router-link to="/admin/categories" class="btn btn-primary btn-sm rounded-pill px-4">
+      <p class="text-muted small mb-3">
+        The requested category record does not exist or has been deleted.
+      </p>
+      <router-link
+        to="/admin/categories"
+        class="btn btn-primary btn-sm rounded-pill px-4"
+      >
         Back to Categories
       </router-link>
     </div>
@@ -176,18 +309,52 @@
     >
       <form class="taxonomy-form" @submit.prevent="saveCategory">
         <label class="d-flex flex-column gap-2 mb-3">
-          <span class="form-label-text fw-bold text-adaptive" style="font-size: 0.85rem;">Category Name</span>
-          <input v-model.trim="mForm.data.name" class="form-control" type="text" maxlength="50" placeholder="Example: Frontend" required>
+          <span
+            class="form-label-text fw-bold text-adaptive"
+            style="font-size: 0.85rem"
+            >Category Name</span
+          >
+          <input
+            v-model.trim="mForm.data.name"
+            class="form-control"
+            type="text"
+            maxlength="50"
+            placeholder="Example: Frontend"
+            required
+          />
         </label>
         <label class="d-flex flex-column gap-2 mb-3">
-          <span class="form-label-text fw-bold text-adaptive" style="font-size: 0.85rem;">Description</span>
-          <textarea v-model.trim="mForm.data.description" class="form-control" rows="3" placeholder="Explain what belongs in this category" required></textarea>
+          <span
+            class="form-label-text fw-bold text-adaptive"
+            style="font-size: 0.85rem"
+            >Description</span
+          >
+          <textarea
+            v-model.trim="mForm.data.description"
+            class="form-control"
+            rows="3"
+            placeholder="Explain what belongs in this category"
+            required
+          ></textarea>
         </label>
 
         <div class="modal-actions d-flex justify-content-end gap-2 mt-4">
-          <button class="btn btn-light border" type="button" @click="closeFormModal">Cancel</button>
-          <button class="btn btn-primary" type="submit" :disabled="mForm.isLoading">
-            <span v-if="mForm.isLoading" class="spinner-border spinner-border-sm me-1"></span>
+          <button
+            class="btn btn-light border"
+            type="button"
+            @click="closeFormModal"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            type="submit"
+            :disabled="mForm.isLoading"
+          >
+            <span
+              v-if="mForm.isLoading"
+              class="spinner-border spinner-border-sm me-1"
+            ></span>
             Save Changes
           </button>
         </div>
@@ -197,13 +364,13 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import AdminPageShell from '../../components/admin/AdminPageShell.vue';
-import BaseModal from '../../components/base/BaseModal.vue';
-import { useToast } from '../../composables/useToast';
-import { useCategoriesStore } from '../../stores/CategoriesStore';
-import { useBlogStore } from '../../stores/BlogStore';
+import { computed, ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import AdminPageShell from "../../components/admin/AdminPageShell.vue";
+import BaseModal from "../../components/base/BaseModal.vue";
+import { useToast } from "../../composables/useToast";
+import { useCategoriesStore } from "../../stores/CategoriesStore";
+import { useBlogStore } from "../../stores/BlogStore";
 
 const route = useRoute();
 const categoryStore = useCategoriesStore();
@@ -212,8 +379,8 @@ const blogStore = useBlogStore();
 const category = ref(null);
 const blogs = ref([]);
 const isPageLoading = ref(true);
-const search = ref('');
-const activeTab = ref('all');
+const search = ref("");
+const activeTab = ref("all");
 
 onMounted(async () => {
   try {
@@ -222,7 +389,7 @@ onMounted(async () => {
     // Fetch dynamic Category and all Blogs to match
     category.value = await categoryStore.fetchCategoryById(id);
     blogs.value = await blogStore.fetchBlogsByCategory(id);
-    
+
     // Fallback load category list if not populated
     if (categoryStore.categories.length === 0) {
       await categoryStore.fetchCategories();
@@ -231,7 +398,7 @@ onMounted(async () => {
       await blogStore.fetchCategories();
     }
   } catch (error) {
-    console.error('Failed to load category detail or posts:', error);
+    console.error("Failed to load category detail or posts:", error);
   } finally {
     isPageLoading.value = false;
   }
@@ -239,24 +406,50 @@ onMounted(async () => {
 
 const getTabCount = (tab) => {
   const items = blogs.value || [];
-  if (tab === 'all') return items.length;
-  return items.filter(b => b.status === tab).length;
+  if (tab === "all") return items.length;
+  return items.filter((b) => b.status === tab).length;
 };
 
 const breadcrumbs = computed(() => [
-  { label: 'Category Management', to: '/admin/categories' },
-  { label: category.value ? category.value.name : 'Category Details' }
+  { label: "Category Management", to: "/admin/categories" },
+  { label: category.value ? category.value.name : "Category Details" },
 ]);
 
 const metrics = computed(() => {
   if (!category.value) return [];
-  const publishedCount = blogs.value.filter(b => b.status === 'published').length;
-  const draftCount = blogs.value.filter(b => b.status === 'draft').length;
+  const publishedCount = blogs.value.filter(
+    (b) => b.status === "published",
+  ).length;
+  const draftCount = blogs.value.filter((b) => b.status === "draft").length;
   return [
-    { label: 'Total Posts', value: blogs.value.length.toString(), change: 'Assigned to category', icon: 'bi-file-earmark-text', className: 'blue' },
-    { label: 'Published', value: publishedCount.toString(), change: 'Live on website', icon: 'bi-send-check', className: 'green' },
-    { label: 'Drafts', value: draftCount.toString(), change: 'In progress', icon: 'bi-pencil', className: 'purple' },
-    { label: 'Category Group', value: category.value.type || 'None', change: 'Type classification', icon: 'bi-layers', className: 'orange' },
+    {
+      label: "Total Posts",
+      value: blogs.value.length.toString(),
+      change: "Assigned to category",
+      icon: "bi-file-earmark-text",
+      className: "blue",
+    },
+    {
+      label: "Published",
+      value: publishedCount.toString(),
+      change: "Live on website",
+      icon: "bi-send-check",
+      className: "green",
+    },
+    {
+      label: "Drafts",
+      value: draftCount.toString(),
+      change: "In progress",
+      icon: "bi-pencil",
+      className: "purple",
+    },
+    {
+      label: "Category Group",
+      value: category.value.type || "None",
+      change: "Type classification",
+      icon: "bi-layers",
+      className: "orange",
+    },
   ];
 });
 
@@ -264,19 +457,21 @@ const visiblePosts = computed(() => {
   const needle = search.value.toLowerCase().trim();
   let list = blogs.value || [];
 
-  if (activeTab.value !== 'all') {
-    list = list.filter(p => p.status === activeTab.value);
+  if (activeTab.value !== "all") {
+    list = list.filter((p) => p.status === activeTab.value);
   }
 
   if (!needle) return list;
-  return list.filter(p => 
-    (p.title || '').toLowerCase().includes(needle) ||
-    (p.excerpt || p.description || '').toLowerCase().includes(needle)
+  return list.filter(
+    (p) =>
+      (p.title || "").toLowerCase().includes(needle) ||
+      (p.excerpt || p.description || "").toLowerCase().includes(needle),
   );
 });
 
 const handleImgError = (e) => {
-  e.target.src = 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800';
+  e.target.src =
+    "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800";
 };
 
 const toast = useToast();
@@ -285,18 +480,18 @@ const mForm = ref({
   isVisible: false,
   isLoading: false,
   data: {
-    name: '',
-    description: '',
-    type: '',
+    name: "",
+    description: "",
+    type: "",
   },
 });
 
 const openEditModal = () => {
   if (!category.value) return;
   mForm.value.data = {
-    name: category.value.name || '',
-    description: category.value.description || '',
-    type: category.value.type || '',
+    name: category.value.name || "",
+    description: category.value.description || "",
+    type: category.value.type || "",
   };
   mForm.value.isVisible = true;
 };
@@ -309,15 +504,15 @@ const saveCategory = async () => {
   try {
     mForm.value.isLoading = true;
     await categoryStore.updateCategory(category.value.id, mForm.value.data);
-    
+
     // Refresh category details on the page
     category.value = await categoryStore.fetchCategoryById(category.value.id);
-    
-    toast.success('Category updated successfully!');
+
+    toast.success("Category updated successfully!");
     closeFormModal();
   } catch (error) {
-    console.error('Failed to save category:', error);
-    toast.error('Failed to update category.');
+    console.error("Failed to save category:", error);
+    toast.error("Failed to update category.");
   } finally {
     mForm.value.isLoading = false;
   }
@@ -415,25 +610,41 @@ const saveCategory = async () => {
 }
 
 .category-hero-banner.purple {
-  --hero-gradient: linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, var(--color-surface) 100%);
+  --hero-gradient: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.18) 0%,
+    var(--color-surface) 100%
+  );
   --hero-border-color: rgba(139, 92, 246, 0.3);
   --hero-accent: #a78bfa;
 }
 
 .category-hero-banner.blue {
-  --hero-gradient: linear-gradient(135deg, rgba(14, 165, 233, 0.18) 0%, var(--color-surface) 100%);
+  --hero-gradient: linear-gradient(
+    135deg,
+    rgba(14, 165, 233, 0.18) 0%,
+    var(--color-surface) 100%
+  );
   --hero-border-color: rgba(14, 165, 233, 0.3);
   --hero-accent: #38bdf8;
 }
 
 .category-hero-banner.green {
-  --hero-gradient: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, var(--color-surface) 100%);
+  --hero-gradient: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.18) 0%,
+    var(--color-surface) 100%
+  );
   --hero-border-color: rgba(16, 185, 129, 0.3);
   --hero-accent: #34d399;
 }
 
 .category-hero-banner.orange {
-  --hero-gradient: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, var(--color-surface) 100%);
+  --hero-gradient: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.18) 0%,
+    var(--color-surface) 100%
+  );
   --hero-border-color: rgba(245, 158, 11, 0.3);
   --hero-accent: #fbbf24;
 }
@@ -492,8 +703,13 @@ const saveCategory = async () => {
 
 /* Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .animate-float {
@@ -540,7 +756,9 @@ const saveCategory = async () => {
 
 .search-box:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), var(--shadow-sm);
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.15),
+    var(--shadow-sm);
   background: var(--color-surface);
 }
 
@@ -637,7 +855,9 @@ const saveCategory = async () => {
 .post-card:hover {
   transform: translateY(-5px);
   border-color: rgba(99, 102, 241, 0.3) !important;
-  box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.05) !important;
+  box-shadow:
+    var(--shadow-lg),
+    0 0 20px rgba(99, 102, 241, 0.05) !important;
 }
 
 .card-image-wrap {
@@ -650,7 +870,7 @@ const saveCategory = async () => {
 }
 
 .card-image-wrap::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -830,5 +1050,4 @@ const saveCategory = async () => {
   font-size: 0.84rem;
   font-weight: 800;
 }
-
 </style>

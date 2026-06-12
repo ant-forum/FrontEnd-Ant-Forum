@@ -46,30 +46,30 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps({
   title: {
     type: String,
-    default: '',
+    default: "",
   },
   icon: {
     type: String,
-    default: '',
+    default: "",
   },
   theme: {
     type: String,
-    default: 'primary',
+    default: "primary",
   },
   kicker: {
     type: String,
-    default: '',
+    default: "",
   },
 });
 
 const themeClass = computed(() => `text-${props.theme}`);
 
-defineEmits(['closeModal']);
+defineEmits(["closeModal"]);
 </script>
 
 <style scoped>

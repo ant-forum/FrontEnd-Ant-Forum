@@ -34,7 +34,9 @@ const getErrorMessage = (error) =>
 export const isSessionInvalidError = (error) => {
   const status = error?.response?.status;
   const message = getErrorMessage(error);
-  const isRefreshTokenEndpoint = error?.config?.url?.includes("/auth/refresh-token");
+  const isRefreshTokenEndpoint = error?.config?.url?.includes(
+    "/auth/refresh-token",
+  );
 
   return (
     status === 401 ||

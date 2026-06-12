@@ -8,7 +8,10 @@
     <section class="analytics-toolbar">
       <div>
         <strong>Reporting range</strong>
-        <small><i class="bi bi-database"></i> Local preview data · Updated {{ lastUpdated }}</small>
+        <small
+          ><i class="bi bi-database"></i> Local preview data · Updated
+          {{ lastUpdated }}</small
+        >
       </div>
 
       <div class="toolbar-actions">
@@ -23,7 +26,12 @@
             {{ period }}
           </button>
         </div>
-        <button class="btn btn-light border export-btn" type="button" :disabled="!hasExportData" @click="exportCsv">
+        <button
+          class="btn btn-light border export-btn"
+          type="button"
+          :disabled="!hasExportData"
+          @click="exportCsv"
+        >
           <i class="bi bi-download"></i>
           Export CSV
         </button>
@@ -41,7 +49,11 @@
         </div>
 
         <div class="chart-summary">
-          <div v-for="series in chartTotals" :key="series.key" class="chart-summary-item">
+          <div
+            v-for="series in chartTotals"
+            :key="series.key"
+            class="chart-summary-item"
+          >
             <span :class="['series-dot', series.className]"></span>
             <div>
               <small>{{ series.label }}</small>
@@ -50,11 +62,19 @@
           </div>
         </div>
 
-        <div class="bar-chart" :aria-label="`${selectedPeriod} activity comparison chart`" role="img">
-          <div class="chart-grid" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div
+          class="bar-chart"
+          :aria-label="`${selectedPeriod} activity comparison chart`"
+          role="img"
+        >
+          <div class="chart-grid" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
           <div
             class="bar-columns"
-            :style="{ gridTemplateColumns: `repeat(${chartData.length}, minmax(56px, 1fr))` }"
+            :style="{
+              gridTemplateColumns: `repeat(${chartData.length}, minmax(56px, 1fr))`,
+            }"
           >
             <div v-for="item in chartData" :key="item.day" class="bar-column">
               <div class="bar-cluster">
@@ -86,19 +106,38 @@
             <h2>Needs Attention</h2>
             <p>Queues that may need an admin decision.</p>
           </div>
-          <span :class="['count-badge', { clear: attentionCount === 0 }]">{{ attentionCount }}</span>
+          <span :class="['count-badge', { clear: attentionCount === 0 }]">{{
+            attentionCount
+          }}</span>
         </div>
 
         <div class="signal-list">
-          <article v-for="signal in signals" :key="signal.label" class="signal-item">
-            <span :class="['signal-icon', signal.className]"><i :class="['bi', signal.icon]"></i></span>
+          <article
+            v-for="signal in signals"
+            :key="signal.label"
+            class="signal-item"
+          >
+            <span :class="['signal-icon', signal.className]"
+              ><i :class="['bi', signal.icon]"></i
+            ></span>
             <div>
               <strong>{{ signal.label }}</strong>
               <small>{{ signal.detail }}</small>
-              <router-link v-if="!signal.disabled" :to="signal.to" class="signal-action">
+              <router-link
+                v-if="!signal.disabled"
+                :to="signal.to"
+                class="signal-action"
+              >
                 {{ signal.action }} <i class="bi bi-arrow-right"></i>
               </router-link>
-              <button v-else type="button" class="signal-action disabled" disabled>No action needed</button>
+              <button
+                v-else
+                type="button"
+                class="signal-action disabled"
+                disabled
+              >
+                No action needed
+              </button>
             </div>
           </article>
         </div>
@@ -115,14 +154,21 @@
         </div>
 
         <div class="breakdown-list">
-          <div v-for="item in breakdown" :key="item.label" class="breakdown-row">
+          <div
+            v-for="item in breakdown"
+            :key="item.label"
+            class="breakdown-row"
+          >
             <div class="breakdown-heading">
               <span :class="['breakdown-dot', item.className]"></span>
               <strong>{{ item.label }}</strong>
               <span>{{ item.value }}</span>
             </div>
             <div class="breakdown-track">
-              <span :class="['breakdown-fill', item.className]" :style="{ width: `${breakdownWidth(item.value)}%` }"></span>
+              <span
+                :class="['breakdown-fill', item.className]"
+                :style="{ width: `${breakdownWidth(item.value)}%` }"
+              ></span>
             </div>
           </div>
         </div>
@@ -134,15 +180,25 @@
             <h2>Recent Admin Activity</h2>
             <p>Latest moderation, project, and settings actions.</p>
           </div>
-          <span class="soft-badge">{{ adminStore.activityLog.length }} records</span>
+          <span class="soft-badge"
+            >{{ adminStore.activityLog.length }} records</span
+          >
         </div>
 
         <div v-if="recentActivity.length" class="activity-list">
-          <div v-for="item in recentActivity" :key="item.id" class="activity-row">
-            <span :class="['activity-icon', item.type]"><i :class="['bi', activityIcon(item.type)]"></i></span>
+          <div
+            v-for="item in recentActivity"
+            :key="item.id"
+            class="activity-row"
+          >
+            <span :class="['activity-icon', item.type]"
+              ><i :class="['bi', activityIcon(item.type)]"></i
+            ></span>
             <div>
               <strong>{{ item.action }}</strong>
-              <small>{{ item.target }} · {{ formatDate(item.createdAt) }}</small>
+              <small
+                >{{ item.target }} · {{ formatDate(item.createdAt) }}</small
+              >
             </div>
           </div>
         </div>
@@ -158,17 +214,17 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue';
-import AdminPageShell from '../../components/admin/AdminPageShell.vue';
-import { useToast } from '../../composables/useToast';
-import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
-import { useProjectStore } from '../../stores/ProjectStore';
+import { computed, ref, onMounted } from "vue";
+import AdminPageShell from "../../components/admin/AdminPageShell.vue";
+import { useToast } from "../../composables/useToast";
+import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
+import { useProjectStore } from "../../stores/ProjectStore";
 
 const adminStore = useAdminOperationsStore();
 const projectStore = useProjectStore();
 const toast = useToast();
-const periods = ['7 Days', '30 Days', '90 Days'];
-const selectedPeriod = ref('7 Days');
+const periods = ["7 Days", "30 Days", "90 Days"];
+const selectedPeriod = ref("7 Days");
 
 onMounted(() => {
   if (projectStore.projects.length === 0) {
@@ -176,144 +232,236 @@ onMounted(() => {
   }
 });
 
-const percentage = (value, total) => total ? Math.round((value / total) * 100) : 0;
+const percentage = (value, total) =>
+  total ? Math.round((value / total) * 100) : 0;
 
 const metrics = computed(() => {
-  const pendingCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
-  const publishedCount = projectStore.projects.filter(p => {
-    const s = String(p.status || '').toLowerCase();
-    return s === 'published' || s === 'active';
+  const pendingCount = projectStore.projects.filter(
+    (p) => String(p.status || "").toLowerCase() === "in review",
+  ).length;
+  const publishedCount = projectStore.projects.filter((p) => {
+    const s = String(p.status || "").toLowerCase();
+    return s === "published" || s === "active";
   }).length;
   return [
-    { label: 'Open Reports', value: String(adminStore.pendingReports.length), change: `${adminStore.highPriorityReports.length} high priority`, icon: 'bi-flag', className: 'orange' },
-    { label: 'Pending Projects', value: String(pendingCount), change: 'Waiting for review', icon: 'bi-hourglass-split', className: 'blue' },
-    { label: 'Published', value: String(publishedCount), change: `${percentage(publishedCount, projectStore.projects.length)}% of projects`, icon: 'bi-cloud-check', className: 'green' },
-    { label: 'Admin Actions', value: String(adminStore.activityLog.length), change: 'Recorded locally', icon: 'bi-activity', className: 'purple' },
+    {
+      label: "Open Reports",
+      value: String(adminStore.pendingReports.length),
+      change: `${adminStore.highPriorityReports.length} high priority`,
+      icon: "bi-flag",
+      className: "orange",
+    },
+    {
+      label: "Pending Projects",
+      value: String(pendingCount),
+      change: "Waiting for review",
+      icon: "bi-hourglass-split",
+      className: "blue",
+    },
+    {
+      label: "Published",
+      value: String(publishedCount),
+      change: `${percentage(publishedCount, projectStore.projects.length)}% of projects`,
+      icon: "bi-cloud-check",
+      className: "green",
+    },
+    {
+      label: "Admin Actions",
+      value: String(adminStore.activityLog.length),
+      change: "Recorded locally",
+      icon: "bi-activity",
+      className: "purple",
+    },
   ];
 });
 
 const chartSeries = [
-  { key: 'reports', label: 'Reports', className: 'orange' },
-  { key: 'projects', label: 'Project reviews', className: 'blue' },
-  { key: 'actions', label: 'Admin actions', className: 'purple' },
+  { key: "reports", label: "Reports", className: "orange" },
+  { key: "projects", label: "Project reviews", className: "blue" },
+  { key: "actions", label: "Admin actions", className: "purple" },
 ];
 
 const chartSets = {
-  '7 Days': [
-    { day: 'Mon', reports: 4, projects: 3, actions: 5 },
-    { day: 'Tue', reports: 6, projects: 4, actions: 7 },
-    { day: 'Wed', reports: 5, projects: 6, actions: 8 },
-    { day: 'Thu', reports: 8, projects: 5, actions: 10 },
-    { day: 'Fri', reports: 7, projects: 7, actions: 9 },
-    { day: 'Sat', reports: 3, projects: 4, actions: 5 },
-    { day: 'Sun', reports: 2, projects: 3, actions: 4 },
+  "7 Days": [
+    { day: "Mon", reports: 4, projects: 3, actions: 5 },
+    { day: "Tue", reports: 6, projects: 4, actions: 7 },
+    { day: "Wed", reports: 5, projects: 6, actions: 8 },
+    { day: "Thu", reports: 8, projects: 5, actions: 10 },
+    { day: "Fri", reports: 7, projects: 7, actions: 9 },
+    { day: "Sat", reports: 3, projects: 4, actions: 5 },
+    { day: "Sun", reports: 2, projects: 3, actions: 4 },
   ],
-  '30 Days': [
-    { day: 'W1', reports: 22, projects: 14, actions: 28 },
-    { day: 'W2', reports: 18, projects: 19, actions: 31 },
-    { day: 'W3', reports: 26, projects: 17, actions: 35 },
-    { day: 'W4', reports: 20, projects: 22, actions: 38 },
+  "30 Days": [
+    { day: "W1", reports: 22, projects: 14, actions: 28 },
+    { day: "W2", reports: 18, projects: 19, actions: 31 },
+    { day: "W3", reports: 26, projects: 17, actions: 35 },
+    { day: "W4", reports: 20, projects: 22, actions: 38 },
   ],
-  '90 Days': [
-    { day: 'Apr', reports: 62, projects: 48, actions: 92 },
-    { day: 'May', reports: 74, projects: 56, actions: 108 },
-    { day: 'Jun', reports: 58, projects: 42, actions: 84 },
+  "90 Days": [
+    { day: "Apr", reports: 62, projects: 48, actions: 92 },
+    { day: "May", reports: 74, projects: 56, actions: 108 },
+    { day: "Jun", reports: 58, projects: 42, actions: 84 },
   ],
 };
 
 const chartData = computed(() => chartSets[selectedPeriod.value]);
 const chartMaximum = computed(() => {
-  const values = chartData.value.flatMap((item) => chartSeries.map((series) => item[series.key]));
+  const values = chartData.value.flatMap((item) =>
+    chartSeries.map((series) => item[series.key]),
+  );
   return Math.max(10, Math.ceil(Math.max(...values) / 10) * 10);
 });
-const chartTotals = computed(() => chartSeries.map((series) => ({
-  ...series,
-  value: chartData.value.reduce((total, item) => total + item[series.key], 0),
-})));
+const chartTotals = computed(() =>
+  chartSeries.map((series) => ({
+    ...series,
+    value: chartData.value.reduce((total, item) => total + item[series.key], 0),
+  })),
+);
 const barHeight = (value) => Math.max(5, (value / chartMaximum.value) * 100);
 
 const signals = computed(() => {
-  const pendingProjectsCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
+  const pendingProjectsCount = projectStore.projects.filter(
+    (p) => String(p.status || "").toLowerCase() === "in review",
+  ).length;
   return [
     {
       label: `${adminStore.pendingReports.length} reports need a decision`,
       detail: `${adminStore.highPriorityReports.length} marked high priority.`,
-      className: adminStore.pendingReports.length ? 'orange' : 'green',
-      icon: 'bi-flag',
-      to: '/admin/reports',
-      action: 'Review reports',
+      className: adminStore.pendingReports.length ? "orange" : "green",
+      icon: "bi-flag",
+      to: "/admin/reports",
+      action: "Review reports",
       disabled: adminStore.pendingReports.length === 0,
     },
     {
       label: `${pendingProjectsCount} projects await review`,
-      detail: 'Approve, reject, or request student changes.',
-      className: pendingProjectsCount ? 'blue' : 'green',
-      icon: 'bi-folder2-open',
-      to: '/admin/projects',
-      action: 'Review projects',
+      detail: "Approve, reject, or request student changes.",
+      className: pendingProjectsCount ? "blue" : "green",
+      icon: "bi-folder2-open",
+      to: "/admin/projects",
+      action: "Review projects",
       disabled: pendingProjectsCount === 0,
     },
     {
       label: `${adminStore.lockedThreads.length} threads are locked`,
-      detail: 'Check whether locked discussions need follow-up.',
-      className: adminStore.lockedThreads.length ? 'purple' : 'green',
-      icon: 'bi-lock',
-      to: '/admin/threads',
-      action: 'View threads',
+      detail: "Check whether locked discussions need follow-up.",
+      className: adminStore.lockedThreads.length ? "purple" : "green",
+      icon: "bi-lock",
+      to: "/admin/threads",
+      action: "View threads",
       disabled: adminStore.lockedThreads.length === 0,
     },
   ];
 });
 
 const attentionCount = computed(() => {
-  const pendingProjectsCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
-  return adminStore.pendingReports.length + pendingProjectsCount + adminStore.lockedThreads.length;
+  const pendingProjectsCount = projectStore.projects.filter(
+    (p) => String(p.status || "").toLowerCase() === "in review",
+  ).length;
+  return (
+    adminStore.pendingReports.length +
+    pendingProjectsCount +
+    adminStore.lockedThreads.length
+  );
 });
 const breakdown = computed(() => {
-  const pendingProjectsCount = projectStore.projects.filter(p => String(p.status || '').toLowerCase() === 'in review').length;
-  const publishedCount = projectStore.projects.filter(p => {
-    const s = String(p.status || '').toLowerCase();
-    return s === 'published' || s === 'active';
+  const pendingProjectsCount = projectStore.projects.filter(
+    (p) => String(p.status || "").toLowerCase() === "in review",
+  ).length;
+  const publishedCount = projectStore.projects.filter((p) => {
+    const s = String(p.status || "").toLowerCase();
+    return s === "published" || s === "active";
   }).length;
   return [
-    { label: 'Open Reports', value: adminStore.pendingReports.length, className: 'orange' },
-    { label: 'Resolved Reports', value: adminStore.resolvedReports.length, className: 'green' },
-    { label: 'Projects In Review', value: pendingProjectsCount, className: 'blue' },
-    { label: 'Published Projects', value: publishedCount, className: 'purple' },
+    {
+      label: "Open Reports",
+      value: adminStore.pendingReports.length,
+      className: "orange",
+    },
+    {
+      label: "Resolved Reports",
+      value: adminStore.resolvedReports.length,
+      className: "green",
+    },
+    {
+      label: "Projects In Review",
+      value: pendingProjectsCount,
+      className: "blue",
+    },
+    { label: "Published Projects", value: publishedCount, className: "purple" },
   ];
 });
-const breakdownMaximum = computed(() => Math.max(1, ...breakdown.value.map((item) => item.value)));
-const breakdownWidth = (value) => value ? Math.max(8, (value / breakdownMaximum.value) * 100) : 0;
+const breakdownMaximum = computed(() =>
+  Math.max(1, ...breakdown.value.map((item) => item.value)),
+);
+const breakdownWidth = (value) =>
+  value ? Math.max(8, (value / breakdownMaximum.value) * 100) : 0;
 const recentActivity = computed(() => adminStore.activityLog.slice(0, 5));
-const hasExportData = computed(() => Boolean(adminStore.threadReports.length || projectStore.projects.length || adminStore.activityLog.length));
-const lastUpdated = computed(() => adminStore.activityLog.length ? formatDate(adminStore.activityLog[0].createdAt) : 'Not available');
+const hasExportData = computed(() =>
+  Boolean(
+    adminStore.threadReports.length ||
+    projectStore.projects.length ||
+    adminStore.activityLog.length,
+  ),
+);
+const lastUpdated = computed(() =>
+  adminStore.activityLog.length
+    ? formatDate(adminStore.activityLog[0].createdAt)
+    : "Not available",
+);
 
-const activityIcon = (type) => ({ moderation: 'bi-shield-check', project: 'bi-folder-check', settings: 'bi-gear' }[type] || 'bi-activity');
-const formatDate = (date) => new Date(date).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const activityIcon = (type) =>
+  ({
+    moderation: "bi-shield-check",
+    project: "bi-folder-check",
+    settings: "bi-gear",
+  })[type] || "bi-activity";
+const formatDate = (date) =>
+  new Date(date).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
 const exportCsv = () => {
   if (!hasExportData.value) return;
 
   const rows = [
-    ['ANT Forum Admin Analytics', selectedPeriod.value],
+    ["ANT Forum Admin Analytics", selectedPeriod.value],
     [],
-    ['Metric', 'Value'],
+    ["Metric", "Value"],
     ...metrics.value.map((item) => [item.label, item.value]),
     [],
-    ['Period', ...chartSeries.map((item) => item.label)],
-    ...chartData.value.map((item) => [item.day, ...chartSeries.map((series) => item[series.key])]),
+    ["Period", ...chartSeries.map((item) => item.label)],
+    ...chartData.value.map((item) => [
+      item.day,
+      ...chartSeries.map((series) => item[series.key]),
+    ]),
     [],
-    ['Recent Action', 'Target', 'Date'],
-    ...adminStore.activityLog.map((item) => [item.action, item.target, item.createdAt]),
+    ["Recent Action", "Target", "Date"],
+    ...adminStore.activityLog.map((item) => [
+      item.action,
+      item.target,
+      item.createdAt,
+    ]),
   ];
-  const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? '').replaceAll('"', '""')}"`).join(',')).join('\n');
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  const link = document.createElement('a');
+  const csv = rows
+    .map((row) =>
+      row
+        .map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`)
+        .join(","),
+    )
+    .join("\n");
+  const url = URL.createObjectURL(
+    new Blob([csv], { type: "text/csv;charset=utf-8" }),
+  );
+  const link = document.createElement("a");
   link.href = url;
-  link.download = 'ant-forum-admin-analytics.csv';
+  link.download = "ant-forum-admin-analytics.csv";
   link.click();
   URL.revokeObjectURL(url);
-  toast.success('Analytics CSV exported.');
+  toast.success("Analytics CSV exported.");
 };
 </script>
 
@@ -546,7 +694,9 @@ const exportCsv = () => {
   position: relative;
   border-radius: 4px 4px 0 0;
   opacity: 0.9;
-  transition: opacity var(--transition-base), transform var(--transition-base);
+  transition:
+    opacity var(--transition-base),
+    transform var(--transition-base);
 }
 
 .bar-fill:hover {

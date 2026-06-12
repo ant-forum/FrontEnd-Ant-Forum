@@ -1,26 +1,26 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import Navbar from '../../components/layouts/header.vue';
-import BaseFooter from '../../components/layouts/footer.vue';
-import { useProjectStore } from '../../stores/ProjectStore.js';
-import { useTagsStore } from '../../stores/TagsStore.js';
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import Navbar from "../../components/layouts/header.vue";
+import BaseFooter from "../../components/layouts/footer.vue";
+import { useProjectStore } from "../../stores/ProjectStore.js";
+import { useTagsStore } from "../../stores/TagsStore.js";
 
 const router = useRouter();
 const route = useRoute();
 const projectStore = useProjectStore();
 const tagsStore = useTagsStore();
 
-const filterTab = ref('latest');
+const filterTab = ref("latest");
 const searchLoading = ref(false);
-const searchQuery = ref('');
-const selectedTag = ref('All');
-const activeTab = ref('projects');
+const searchQuery = ref("");
+const selectedTag = ref("All");
+const activeTab = ref("projects");
 
 const availableTags = computed(() => {
-  const list = ['All'];
+  const list = ["All"];
   if (tagsStore.tags) {
-    tagsStore.tags.forEach(t => {
+    tagsStore.tags.forEach((t) => {
       const name = t.name || t.tag_name;
       if (name) {
         const nameUpper = name.toUpperCase();
@@ -32,7 +32,7 @@ const availableTags = computed(() => {
   }
   return list;
 });
-const filters = ['Latest', 'Top Rated', 'Most Viewed'];
+const filters = ["Latest", "Top Rated", "Most Viewed"];
 
 const projects = computed(() => projectStore.projects);
 const loading = computed(() => projectStore.isLoading);
@@ -40,26 +40,27 @@ const loading = computed(() => projectStore.isLoading);
 const filteredProjects = computed(() => {
   let result = [...projects.value];
 
-  if (selectedTag.value !== 'All') {
+  if (selectedTag.value !== "All") {
     const selectedTagLower = selectedTag.value.toLowerCase();
-    result = result.filter(p => 
-      p.tags.some(tag => tag.toLowerCase().includes(selectedTagLower))
+    result = result.filter((p) =>
+      p.tags.some((tag) => tag.toLowerCase().includes(selectedTagLower)),
     );
   }
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    result = result.filter(p => 
-      p.title.toLowerCase().includes(query) || 
-      p.description.toLowerCase().includes(query)
+    result = result.filter(
+      (p) =>
+        p.title.toLowerCase().includes(query) ||
+        p.description.toLowerCase().includes(query),
     );
   }
 
-  if (filterTab.value === 'latest') {
+  if (filterTab.value === "latest") {
     result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  } else if (filterTab.value === 'top rated') {
+  } else if (filterTab.value === "top rated") {
     result.sort((a, b) => b.average_rating - a.average_rating);
-  } else if (filterTab.value === 'most viewed') {
+  } else if (filterTab.value === "most viewed") {
     result.sort((a, b) => b.views - a.views);
   }
 
@@ -71,7 +72,7 @@ const formatNumber = (num, isRating = false) => {
   if (isRating) {
     return n.toFixed(1);
   }
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  if (n >= 1000) return (n / 1000).toFixed(1) + "k";
   return n;
 };
 
@@ -83,9 +84,9 @@ const handleSearchInput = () => {
 };
 
 const clearFilters = () => {
-  searchQuery.value = '';
-  selectedTag.value = 'All';
-  filterTab.value = 'latest';
+  searchQuery.value = "";
+  selectedTag.value = "All";
+  filterTab.value = "latest";
 };
 
 onMounted(() => {
@@ -106,7 +107,10 @@ onMounted(() => {
           <div>
             <span class="showcase-page-kicker">Community Hub</span>
             <h1>Project Showcase</h1>
-            <p>Discover, review, and get inspired by projects built by our developers.</p>
+            <p>
+              Discover, review, and get inspired by projects built by our
+              developers.
+            </p>
           </div>
           <div class="showcase-stats">
             <div class="stat-badge">
@@ -125,9 +129,22 @@ onMounted(() => {
               placeholder="Search projects, tags, or authors..."
               class="search-bar"
               @input="handleSearchInput"
+            />
+            <button
+              class="search-btn"
+              @click="handleSearchInput"
+              title="Search"
             >
-            <button class="search-btn" @click="handleSearchInput" title="Search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
@@ -141,7 +158,10 @@ onMounted(() => {
             <button
               v-for="filter in filters"
               :key="filter"
-              :class="['tab-btn', { active: filterTab === filter.toLowerCase() }]"
+              :class="[
+                'tab-btn',
+                { active: filterTab === filter.toLowerCase() },
+              ]"
               @click="filterTab = filter.toLowerCase()"
             >
               {{ filter }}
@@ -187,56 +207,110 @@ onMounted(() => {
           </div>
 
           <!-- Empty State -->
-          <div v-else-if="filteredProjects.length === 0" class="empty-state-card">
+          <div
+            v-else-if="filteredProjects.length === 0"
+            class="empty-state-card"
+          >
             <div class="empty-icon-wrap">
               <i class="bi bi-code-slash"></i>
             </div>
             <h2>No Projects Found</h2>
-            <p>We couldn't find any projects matching your active search terms or category choices. Try resetting filters or submit your own project!</p>
+            <p>
+              We couldn't find any projects matching your active search terms or
+              category choices. Try resetting filters or submit your own
+              project!
+            </p>
             <div class="empty-actions">
-              <button class="reset-btn" @click="clearFilters">Reset All Filters</button>
-              <button class="create-secondary" @click="router.push('/showcase/create')">Submit Project</button>
+              <button class="reset-btn" @click="clearFilters">
+                Reset All Filters
+              </button>
+              <button
+                class="create-secondary"
+                @click="router.push('/showcase/create')"
+              >
+                Submit Project
+              </button>
             </div>
           </div>
 
           <!-- Projects Grid -->
           <div v-else class="projects-grid">
-            <div v-for="project in filteredProjects" :key="project.id" class="project-card">
+            <div
+              v-for="project in filteredProjects"
+              :key="project.id"
+              class="project-card"
+            >
               <div class="project-image-container">
-                <img :src="project.image" class="project-image" alt="project.title">
+                <img
+                  :src="project.image"
+                  class="project-image"
+                  alt="project.title"
+                />
                 <div class="project-overlay">
-                  <router-link :to="'/showcase/' + project.id" class="btn-view-details">
+                  <router-link
+                    :to="'/showcase/' + project.id"
+                    class="btn-view-details"
+                  >
                     View Details
                   </router-link>
                 </div>
               </div>
-              
+
               <div class="project-content">
-                <router-link :to="'/showcase/' + project.id" class="project-link">
+                <router-link
+                  :to="'/showcase/' + project.id"
+                  class="project-link"
+                >
                   <h3 class="project-title">{{ project.title }}</h3>
                 </router-link>
                 <p class="project-description">{{ project.description }}</p>
-                
+
                 <div class="project-tags">
-                  <span v-for="tag in project.tags" :key="tag" class="project-tag">{{ tag }}</span>
+                  <span
+                    v-for="tag in project.tags"
+                    :key="tag"
+                    class="project-tag"
+                    >{{ tag }}</span
+                  >
                 </div>
 
                 <div class="project-footer">
                   <div class="project-meta">
-                    <span class="meta-item"><i class="bi bi-star-fill"></i> {{ formatNumber(project.average_rating, true) }}</span>
-                    <span class="meta-item"><i class="bi bi-eye"></i> {{ formatNumber(project.views) }}</span>
+                    <span class="meta-item"
+                      ><i class="bi bi-star-fill"></i>
+                      {{ formatNumber(project.average_rating, true) }}</span
+                    >
+                    <span class="meta-item"
+                      ><i class="bi bi-eye"></i>
+                      {{ formatNumber(project.views) }}</span
+                    >
                   </div>
                   <div class="author-avatars">
-                    <span class="author-name-text" v-if="project.author && project.author.name !== 'Unknown'" :title="project.author.username">
+                    <span
+                      class="author-name-text"
+                      v-if="project.author && project.author.name !== 'Unknown'"
+                      :title="project.author.username"
+                    >
                       by {{ project.author.name }}
                     </span>
                     <div class="avatar-stack">
-                      <img v-for="(author, idx) in project.authors.slice(0, 3)" :key="idx" 
-                           :src="author.avatar" class="stack-avatar" 
-                           width="28" height="28" :style="{ zIndex: 10 - idx }"
-                           :title="author.name">
-                      <div v-if="project.authors.length > 3" class="stack-more" 
-                           style="width: 28px; height: 28px; z-index: 0;">+{{ project.authors.length - 3 }}</div>
+                      <img
+                        v-for="(author, idx) in project.authors.slice(0, 3)"
+                        :key="idx"
+                        :src="author.avatar"
+                        class="stack-avatar"
+                        width="28"
+                        height="28"
+                        :style="{ zIndex: 10 - idx }"
+                        :title="author.name"
+                      />
+                      <div
+                        v-if="project.authors.length > 3"
+                        class="stack-more"
+                        style="width: 28px; height: 28px; z-index: 0"
+                      >
+                        +{{ project.authors.length - 3 }}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -245,10 +319,22 @@ onMounted(() => {
           </div>
 
           <!-- Load More -->
-          <div v-if="filteredProjects.length > 0 && !loading && !searchLoading" class="load-more-wrap">
+          <div
+            v-if="filteredProjects.length > 0 && !loading && !searchLoading"
+            class="load-more-wrap"
+          >
             <button class="load-more-btn">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Load More Projects
             </button>
@@ -256,7 +342,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    
+
     <BaseFooter />
   </div>
 </template>
@@ -559,7 +645,7 @@ onMounted(() => {
   transition: opacity 0.3s ease;
 }
 
-[data-theme='dark'] .project-overlay {
+[data-theme="dark"] .project-overlay {
   background: rgba(0, 0, 0, 0.7);
 }
 
@@ -731,7 +817,12 @@ onMounted(() => {
 
 .skeleton-image {
   height: 180px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -747,7 +838,12 @@ onMounted(() => {
   width: 70%;
   height: 18px;
   border-radius: 6px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -756,7 +852,12 @@ onMounted(() => {
   width: 100%;
   height: 36px;
   border-radius: 6px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -770,7 +871,12 @@ onMounted(() => {
   width: 60px;
   height: 20px;
   border-radius: 99px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -787,7 +893,12 @@ onMounted(() => {
   width: 100px;
   height: 12px;
   border-radius: 6px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -796,14 +907,23 @@ onMounted(() => {
   width: 80px;
   height: 28px;
   border-radius: 99px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
 
 @keyframes pulse-glow {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Empty State Card styling */
@@ -872,7 +992,11 @@ onMounted(() => {
 
 .create-secondary {
   padding: 10px 20px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   border: none;
   border-radius: 10px;
   font-weight: 600;
@@ -917,14 +1041,28 @@ onMounted(() => {
 }
 
 @media (max-width: 1024px) {
-  .showcase-global-grid { grid-template-columns: 1fr; }
+  .showcase-global-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
-  .showcase-global-grid { padding: 20px 16px 40px; }
-  .tabs-group { width: 100%; justify-content: center; }
-  .tab-btn { flex: 1; text-align: center; }
-  .create-btn { justify-content: center; }
-  .projects-grid { grid-template-columns: 1fr; }
+  .showcase-global-grid {
+    padding: 20px 16px 40px;
+  }
+  .tabs-group {
+    width: 100%;
+    justify-content: center;
+  }
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+  }
+  .create-btn {
+    justify-content: center;
+  }
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

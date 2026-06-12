@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import api from '@/api/api.js';
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import api from "@/api/api.js";
 
-const TAG_COLORS = ['green', 'blue', 'orange', 'purple'];
+const TAG_COLORS = ["green", "blue", "orange", "purple"];
 
 const tagPayload = (tag) => {
   const payload = {
@@ -18,11 +18,11 @@ const tagPayload = (tag) => {
 
 const ensureSuccess = (response) => {
   if (response.data.result === false) {
-    throw new Error(response.data.message ?? 'Tag request failed.');
+    throw new Error(response.data.message ?? "Tag request failed.");
   }
 };
 
-export const useTagsStore = defineStore('tags', () => {
+export const useTagsStore = defineStore("tags", () => {
   const tags = ref([]);
   const tag = ref(null);
   const isLoading = ref(false);
@@ -35,7 +35,7 @@ export const useTagsStore = defineStore('tags', () => {
   const fetchTags = async () => {
     try {
       isLoading.value = true;
-      const response = await api.get('/api/tags/getAllTags');
+      const response = await api.get("/api/tags/getAllTags");
       ensureSuccess(response);
       tags.value = response.data.data.map(withCardStyle);
       return tags.value;
@@ -52,20 +52,25 @@ export const useTagsStore = defineStore('tags', () => {
   };
 
   const fetchTagByName = async (name) => {
-    const response = await api.get(`/api/tags/getTagByName/${encodeURIComponent(name)}`);
+    const response = await api.get(
+      `/api/tags/getTagByName/${encodeURIComponent(name)}`,
+    );
     ensureSuccess(response);
     tag.value = withCardStyle(response.data.data);
     return tag.value;
   };
 
   const createTag = async (payload) => {
-    const response = await api.post('/api/tags/createTag', tagPayload(payload));
+    const response = await api.post("/api/tags/createTag", tagPayload(payload));
     ensureSuccess(response);
     return response.data.data;
   };
 
   const updateTag = async (id, payload) => {
-    const response = await api.put(`/api/tags/updateTag/${id}`, tagPayload(payload));
+    const response = await api.put(
+      `/api/tags/updateTag/${id}`,
+      tagPayload(payload),
+    );
     ensureSuccess(response);
     return response.data.data;
   };

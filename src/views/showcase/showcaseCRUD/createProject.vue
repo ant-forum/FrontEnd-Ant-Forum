@@ -1,12 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { storeToRefs } from 'pinia';
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
 import Navbar from "../../../components/layouts/header.vue";
 import Footer from "../../../components/layouts/footer.vue";
-import { useProjectStore } from '../../../stores/ProjectStore.js';
-import { useTagsStore } from '../../../stores/TagsStore.js';
-import { useToast } from '../../../composables/useToast.js';
+import { useProjectStore } from "../../../stores/ProjectStore.js";
+import { useTagsStore } from "../../../stores/TagsStore.js";
+import { useToast } from "../../../composables/useToast.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -20,12 +20,24 @@ const isDragging = ref(false);
 const agreeToTerms = ref(false);
 const isSubmitting = ref(false);
 
-const isEditMode = computed(() => route.name === 'EditProject');
+const isEditMode = computed(() => route.name === "EditProject");
 
 const guidelines = [
-  { title: 'Technical Accuracy', desc: 'Ensure all repository and demo links are functional and public.', icon: 'bi-check-circle' },
-  { title: 'Clear Description', desc: 'A well-written description helps other developers and teachers understand your work.', icon: 'bi-file-text' },
-  { title: 'Visual Representation', desc: 'Upload a clear, high-quality logo or screenshot as your project thumbnail.', icon: 'bi-image' }
+  {
+    title: "Technical Accuracy",
+    desc: "Ensure all repository and demo links are functional and public.",
+    icon: "bi-check-circle",
+  },
+  {
+    title: "Clear Description",
+    desc: "A well-written description helps other developers and teachers understand your work.",
+    icon: "bi-file-text",
+  },
+  {
+    title: "Visual Representation",
+    desc: "Upload a clear, high-quality logo or screenshot as your project thumbnail.",
+    icon: "bi-image",
+  },
 ];
 
 onMounted(async () => {
@@ -38,25 +50,31 @@ onMounted(async () => {
     await projectStore.fetchProject(projectId);
     const p = projectStore.project;
     if (p) {
-      form.value.projectName = p.title || p.projectName || '';
-      form.value.description = p.description || '';
-      form.value.liveDemoUrl = p.link || p.liveDemoUrl || '';
-      form.value.thumbnailUrl = p.thumbnail || p.image || '';
-      
+      form.value.projectName = p.title || p.projectName || "";
+      form.value.description = p.description || "";
+      form.value.liveDemoUrl = p.link || p.liveDemoUrl || "";
+      form.value.thumbnailUrl = p.thumbnail || p.image || "";
+
       // Map tags
       if (p.tag && Array.isArray(p.tag)) {
-        form.value.tag_ids = p.tag.map(t => t.id !== undefined && t.id !== null ? t.id : t.tag_id).filter(Boolean);
-        form.value.tagsList = p.tag.map(t => ({
+        form.value.tag_ids = p.tag
+          .map((t) => (t.id !== undefined && t.id !== null ? t.id : t.tag_id))
+          .filter(Boolean);
+        form.value.tagsList = p.tag.map((t) => ({
           id: t.id !== undefined && t.id !== null ? t.id : t.tag_id,
           name: t.name || t.tag_name,
-          tag_name: t.name || t.tag_name
+          tag_name: t.name || t.tag_name,
         }));
       } else if (p.tags && Array.isArray(p.tags)) {
-        form.value.tagsList = p.tags.map(tagName => {
-          const matchedTag = tagsStore.tags.find(t => (t.name || t.tag_name) === tagName);
+        form.value.tagsList = p.tags.map((tagName) => {
+          const matchedTag = tagsStore.tags.find(
+            (t) => (t.name || t.tag_name) === tagName,
+          );
           return matchedTag || { id: null, name: tagName };
         });
-        form.value.tag_ids = form.value.tagsList.map(t => t.id).filter(Boolean);
+        form.value.tag_ids = form.value.tagsList
+          .map((t) => t.id)
+          .filter(Boolean);
       }
     }
   } else {
@@ -78,7 +96,7 @@ const removeTag = (index) => {
 };
 
 const logoPreviewUrl = computed(() => {
-  return form.value.thumbnailUrl || '';
+  return form.value.thumbnailUrl || "";
 });
 
 const triggerLogoUpload = () => {
@@ -120,15 +138,15 @@ const handleDrop = (event) => {
 
 const removeLogo = () => {
   form.value.thumbnail = null;
-  form.value.thumbnailUrl = '';
+  form.value.thumbnailUrl = "";
   if (logoInput.value) {
-    logoInput.value.value = '';
+    logoInput.value.value = "";
   }
 };
 
 const handleCancel = () => {
   projectStore.resetCreateForm();
-  router.push('/showcase');
+  router.push("/showcase");
 };
 
 const handleSubmit = async () => {
@@ -141,7 +159,7 @@ const handleSubmit = async () => {
     return;
   }
   if (!agreeToTerms.value) {
-    alert('Please agree to the developer terms and conditions.');
+    alert("Please agree to the developer terms and conditions.");
     return;
   }
 
@@ -150,19 +168,29 @@ const handleSubmit = async () => {
     if (!isEditMode.value && !form.value.thumbnail) {
       try {
         // Fetch default placeholder image and assign it as the thumbnail file
-        const response = await fetch("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600");
+        const response = await fetch(
+          "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600",
+        );
         const blob = await response.blob();
-        form.value.thumbnail = new File([blob], "default-thumbnail.jpg", { type: "image/jpeg" });
+        form.value.thumbnail = new File([blob], "default-thumbnail.jpg", {
+          type: "image/jpeg",
+        });
       } catch (err) {
         // Safe offline fallback: generate a tiny 1x1 transparent PNG file
-        const byteString = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=");
+        const byteString = atob(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+        );
         const ab = new ArrayBuffer(byteString.length);
         const ia = new Uint8Array(ab);
         for (let i = 0; i < byteString.length; i++) {
           ia[i] = byteString.charCodeAt(i);
         }
         const placeholderBlob = new Blob([ab], { type: "image/png" });
-        form.value.thumbnail = new File([placeholderBlob], "default-thumbnail.png", { type: "image/png" });
+        form.value.thumbnail = new File(
+          [placeholderBlob],
+          "default-thumbnail.png",
+          { type: "image/png" },
+        );
       }
     }
 
@@ -174,7 +202,7 @@ const handleSubmit = async () => {
       toast.success("Project submitted successfully!");
     }
     projectStore.resetCreateForm();
-    router.push('/showcase');
+    router.push("/showcase");
   } catch (error) {
     console.error("[CreateProject] handleSubmit error:", error);
     toast.error("Failed to submit project. Please try again.");
@@ -198,8 +226,16 @@ const handleSubmit = async () => {
       <div class="row g-4">
         <div class="col-12">
           <div class="mb-4">
-            <h1 class="fw-bold h2 mb-2 text-adaptive">{{ isEditMode ? 'Edit Project' : 'Create New Project' }}</h1>
-            <p class="text-muted">{{ isEditMode ? 'Update your project showcase details below.' : 'Submit your work to the ANT-Forum ecosystem. Ensure all technical details are accurate.' }}</p>
+            <h1 class="fw-bold h2 mb-2 text-adaptive">
+              {{ isEditMode ? "Edit Project" : "Create New Project" }}
+            </h1>
+            <p class="text-muted">
+              {{
+                isEditMode
+                  ? "Update your project showcase details below."
+                  : "Submit your work to the ANT-Forum ecosystem. Ensure all technical details are accurate."
+              }}
+            </p>
           </div>
         </div>
 
@@ -209,33 +245,62 @@ const handleSubmit = async () => {
             <form @submit.prevent="handleSubmit">
               <!-- Basic Information -->
               <section class="mb-5">
-                <div class="section-header d-flex align-items-center gap-3 mb-4">
+                <div
+                  class="section-header d-flex align-items-center gap-3 mb-4"
+                >
                   <div class="section-icon bg-primary-light text-primary">
                     <i class="bi bi-info-circle"></i>
                   </div>
                   <h5 class="fw-bold mb-0 text-adaptive">Basic Information</h5>
                 </div>
-                
+
                 <div class="form-group-custom mb-4">
-                  <label class="form-label-custom">Project Name <span class="required text-danger">*</span></label>
+                  <label class="form-label-custom"
+                    >Project Name
+                    <span class="required text-danger">*</span></label
+                  >
                   <div class="input-wrapper">
                     <i class="bi bi-rocket-takeoff input-icon"></i>
-                    <input type="text" v-model="form.projectName" class="form-control-modern" placeholder="e.g., Nexus Core Engine" required>
+                    <input
+                      type="text"
+                      v-model="form.projectName"
+                      class="form-control-modern"
+                      placeholder="e.g., Nexus Core Engine"
+                      required
+                    />
                   </div>
-                  <div class="form-text small opacity-75 mt-2 text-muted">A unique and memorable name for your project.</div>
+                  <div class="form-text small opacity-75 mt-2 text-muted">
+                    A unique and memorable name for your project.
+                  </div>
                 </div>
 
                 <div class="form-group-custom mb-4">
-                  <label class="form-label-custom">Full Description <span class="required text-danger">*</span></label>
-                  <textarea v-model="form.description" class="form-control-modern py-3" rows="6" placeholder="Detail the problem it solves and its main features..." required></textarea>
+                  <label class="form-label-custom"
+                    >Full Description
+                    <span class="required text-danger">*</span></label
+                  >
+                  <textarea
+                    v-model="form.description"
+                    class="form-control-modern py-3"
+                    rows="6"
+                    placeholder="Detail the problem it solves and its main features..."
+                    required
+                  ></textarea>
                   <div class="d-flex justify-content-between mt-2">
-                    <div class="form-text small opacity-75 text-muted">Markdown is supported.</div>
-                    <div class="form-text small opacity-75 text-muted">{{ form.description?.length || 0 }} / 2000</div>
+                    <div class="form-text small opacity-75 text-muted">
+                      Markdown is supported.
+                    </div>
+                    <div class="form-text small opacity-75 text-muted">
+                      {{ form.description?.length || 0 }} / 2000
+                    </div>
                   </div>
                 </div>
 
                 <div class="form-group-custom mb-4">
-                  <label class="form-label-custom">Select Tags <span class="required text-danger">*</span></label>
+                  <label class="form-label-custom"
+                    >Select Tags
+                    <span class="required text-danger">*</span></label
+                  >
                   <div class="tags-input-container p-3 mb-2">
                     <div class="tags-list d-flex flex-wrap gap-2">
                       <span
@@ -247,16 +312,19 @@ const handleSubmit = async () => {
                         <button
                           type="button"
                           class="btn-close btn-close-white"
-                          style="font-size: 0.65rem;"
+                          style="font-size: 0.65rem"
                           @click="removeTag(idx)"
                         ></button>
                       </span>
-                      <span v-if="form.tagsList.length === 0" class="text-muted small">
+                      <span
+                        v-if="form.tagsList.length === 0"
+                        class="text-muted small"
+                      >
                         Please choose one or more tags for your project.
                       </span>
                     </div>
                   </div>
-                  
+
                   <div class="tag-suggestions d-flex flex-wrap gap-2">
                     <button
                       v-for="tag in tagsStore.tags"
@@ -274,7 +342,9 @@ const handleSubmit = async () => {
 
               <!-- Repository Integration -->
               <section class="mb-5">
-                <div class="section-header d-flex align-items-center gap-3 mb-4">
+                <div
+                  class="section-header d-flex align-items-center gap-3 mb-4"
+                >
                   <div class="section-icon bg-purple-light text-purple">
                     <i class="bi bi-code-slash"></i>
                   </div>
@@ -287,7 +357,12 @@ const handleSubmit = async () => {
                       <label class="form-label-custom">Live Demo URL</label>
                       <div class="input-group-modern">
                         <span class="prefix">https://</span>
-                        <input type="text" v-model="form.liveDemoUrl" class="form-control-modern" placeholder="yourproject.com">
+                        <input
+                          type="text"
+                          v-model="form.liveDemoUrl"
+                          class="form-control-modern"
+                          placeholder="yourproject.com"
+                        />
                       </div>
                     </div>
                   </div>
@@ -296,72 +371,138 @@ const handleSubmit = async () => {
 
               <!-- Gallery & Media -->
               <section class="mb-5">
-                <div class="section-header d-flex align-items-center gap-3 mb-4">
+                <div
+                  class="section-header d-flex align-items-center gap-3 mb-4"
+                >
                   <div class="section-icon bg-primary-light text-primary">
                     <i class="bi bi-image"></i>
                   </div>
                   <h5 class="fw-bold mb-0 text-adaptive">Gallery & Media</h5>
                 </div>
-                <p class="text-muted x-small mb-4">Upload a high-quality thumbnail image (max 5 MB) to represent your project.</p>
-                
-                <div 
+                <p class="text-muted x-small mb-4">
+                  Upload a high-quality thumbnail image (max 5 MB) to represent
+                  your project.
+                </p>
+
+                <div
                   class="screenshot-dropzone-modern d-flex flex-column align-items-center justify-content-center border-dashed-modern rounded-4 py-5 position-relative overflow-hidden cursor-pointer"
-                  :class="{ 'dragging': isDragging }"
+                  :class="{ dragging: isDragging }"
                   @click="triggerLogoUpload"
                   @dragover.prevent="handleDragOver"
                   @dragleave="handleDragLeave"
                   @drop.prevent="handleDrop"
-                  style="min-height: 220px;"
+                  style="min-height: 220px"
                 >
-                  <div v-if="logoPreviewUrl" class="w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center bg-dark">
-                    <img :src="logoPreviewUrl" class="w-100 h-100 object-fit-cover" style="max-height: 100%;" />
+                  <div
+                    v-if="logoPreviewUrl"
+                    class="w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center bg-dark"
+                  >
+                    <img
+                      :src="logoPreviewUrl"
+                      class="w-100 h-100 object-fit-cover"
+                      style="max-height: 100%"
+                    />
                     <button
                       type="button"
                       class="btn btn-sm btn-danger position-absolute top-0 end-0 m-3 rounded-circle p-0 d-flex align-items-center justify-content-center"
-                      style="width: 28px; height: 28px; z-index: 10;"
+                      style="width: 28px; height: 28px; z-index: 10"
                       @click.stop="removeLogo"
                       title="Remove Image"
                     >
-                      <i class="bi bi-x" style="font-size: 1.25rem;"></i>
+                      <i class="bi bi-x" style="font-size: 1.25rem"></i>
                     </button>
                   </div>
-                  <div v-else class="d-flex flex-column align-items-center justify-content-center">
+                  <div
+                    v-else
+                    class="d-flex flex-column align-items-center justify-content-center"
+                  >
                     <div class="drop-icon-animated mb-3">
-                      <i class="bi bi-cloud-arrow-up-fill text-primary" style="font-size: 2.5rem;"></i>
+                      <i
+                        class="bi bi-cloud-arrow-up-fill text-primary"
+                        style="font-size: 2.5rem"
+                      ></i>
                     </div>
-                    <h6 class="fw-bold mb-1 text-adaptive">Drag & Drop Thumbnail Image</h6>
-                    <p class="text-muted x-small mb-4">Support for PNG, JPG and WEBP up to 5MB</p>
-                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold small">
+                    <h6 class="fw-bold mb-1 text-adaptive">
+                      Drag & Drop Thumbnail Image
+                    </h6>
+                    <p class="text-muted x-small mb-4">
+                      Support for PNG, JPG and WEBP up to 5MB
+                    </p>
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold small"
+                    >
                       Browse Files
                     </button>
                   </div>
-                  <input 
-                    type="file" 
-                    ref="logoInput" 
-                    class="d-none" 
-                    accept="image/*" 
-                    @change="handleLogoChange" 
+                  <input
+                    type="file"
+                    ref="logoInput"
+                    class="d-none"
+                    accept="image/*"
+                    @change="handleLogoChange"
                   />
                 </div>
               </section>
 
               <!-- Submission Agreement -->
-              <div class="agreement-card-modern p-4 rounded-4 border mb-4" :class="{ 'agreed': agreeToTerms }">
+              <div
+                class="agreement-card-modern p-4 rounded-4 border mb-4"
+                :class="{ agreed: agreeToTerms }"
+              >
                 <div class="form-check d-flex gap-3 align-items-center">
-                  <input class="form-check-input custom-checkbox" type="checkbox" v-model="agreeToTerms" id="termsCheck" required>
-                  <label class="form-check-label small text-muted fw-medium lh-sm cursor-pointer" for="termsCheck">
-                    I confirm that I am the owner of this project and agree to the 
-                    <router-link to="/terms-of-service" class="text-primary text-decoration-none fw-bold">Developer Terms</router-link>.
+                  <input
+                    class="form-check-input custom-checkbox"
+                    type="checkbox"
+                    v-model="agreeToTerms"
+                    id="termsCheck"
+                    required
+                  />
+                  <label
+                    class="form-check-label small text-muted fw-medium lh-sm cursor-pointer"
+                    for="termsCheck"
+                  >
+                    I confirm that I am the owner of this project and agree to
+                    the
+                    <router-link
+                      to="/terms-of-service"
+                      class="text-primary text-decoration-none fw-bold"
+                      >Developer Terms</router-link
+                    >.
                   </label>
                 </div>
               </div>
 
               <!-- Form Actions -->
-              <div class="d-flex justify-content-end align-items-center gap-4 mt-5 pt-4 border-top-theme">
-                <button type="button" @click="handleCancel" class="btn btn-link text-decoration-none fw-bold text-muted">Cancel</button>
-                <button type="submit" :disabled="!agreeToTerms || isSubmitting" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2">
-                  <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status"></span>
-                  <span v-else>{{ isEditMode ? 'Save Changes' : 'Publish Project' }} <i class="bi" :class="isEditMode ? 'bi-save-fill' : 'bi-rocket-takeoff-fill'"></i></span>
+              <div
+                class="d-flex justify-content-end align-items-center gap-4 mt-5 pt-4 border-top-theme"
+              >
+                <button
+                  type="button"
+                  @click="handleCancel"
+                  class="btn btn-link text-decoration-none fw-bold text-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  :disabled="!agreeToTerms || isSubmitting"
+                  class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2"
+                >
+                  <span
+                    v-if="isSubmitting"
+                    class="spinner-border spinner-border-sm"
+                    role="status"
+                  ></span>
+                  <span v-else
+                    >{{ isEditMode ? "Save Changes" : "Publish Project" }}
+                    <i
+                      class="bi"
+                      :class="
+                        isEditMode ? 'bi-save-fill' : 'bi-rocket-takeoff-fill'
+                      "
+                    ></i
+                  ></span>
                 </button>
               </div>
             </form>
@@ -377,12 +518,18 @@ const handleSubmit = async () => {
             </div>
 
             <div class="guidelines-list d-flex flex-column gap-4">
-              <div v-for="item in guidelines" :key="item.title" class="guideline-item d-flex gap-3">
+              <div
+                v-for="item in guidelines"
+                :key="item.title"
+                class="guideline-item d-flex gap-3"
+              >
                 <div class="check-icon text-primary">
                   <i :class="['bi', item.icon]"></i>
                 </div>
                 <div>
-                  <div class="fw-bold small mb-1 text-adaptive">{{ item.title }}</div>
+                  <div class="fw-bold small mb-1 text-adaptive">
+                    {{ item.title }}
+                  </div>
                   <p class="text-muted x-small mb-0">{{ item.desc }}</p>
                 </div>
               </div>
@@ -390,7 +537,12 @@ const handleSubmit = async () => {
 
             <div class="mt-5 pt-4 border-top-theme">
               <p class="text-muted small mb-0">
-                Need help? <router-link to="/help" class="text-primary text-decoration-none fw-semibold">Read the docs</router-link>
+                Need help?
+                <router-link
+                  to="/help"
+                  class="text-primary text-decoration-none fw-semibold"
+                  >Read the docs</router-link
+                >
               </p>
             </div>
           </div>
@@ -406,14 +558,16 @@ const handleSubmit = async () => {
 .create-project-page {
   min-height: 100vh;
   background: var(--color-bg);
-  background-image: 
+  background-image:
     linear-gradient(var(--color-border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
   background-size: 34px 34px;
   color: var(--color-text);
   position: relative;
   overflow: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 .orb-container {
@@ -435,7 +589,11 @@ const handleSubmit = async () => {
 .orb-1 {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.15),
+    transparent 70%
+  );
   top: -100px;
   left: -100px;
 }
@@ -443,7 +601,11 @@ const handleSubmit = async () => {
 .orb-2 {
   width: 350px;
   height: 350px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.12),
+    transparent 70%
+  );
   bottom: -80px;
   right: -50px;
 }
@@ -564,7 +726,11 @@ textarea.form-control-modern {
 .badge-tag-pill {
   font-size: 0.78rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
 }
 
@@ -607,8 +773,13 @@ textarea.form-control-modern {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .border-dashed-modern {

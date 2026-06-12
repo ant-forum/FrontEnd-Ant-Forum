@@ -15,7 +15,11 @@
         <div class="toolbar-controls">
           <label class="search-box">
             <i class="bi bi-search"></i>
-            <input v-model.trim="searchText" type="search" placeholder="Search activity">
+            <input
+              v-model.trim="searchText"
+              type="search"
+              placeholder="Search activity"
+            />
           </label>
 
           <select v-model="typeFilter" class="form-select compact-select">
@@ -67,7 +71,11 @@
         <i class="bi bi-clock-history"></i>
         <strong>No activity found</strong>
         <span>Try another search or filter.</span>
-        <button class="btn btn-light btn-sm border" type="button" @click="clearFilter">
+        <button
+          class="btn btn-light btn-sm border"
+          type="button"
+          @click="clearFilter"
+        >
           Clear Filter
         </button>
       </div>
@@ -76,14 +84,14 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
-import AdminPageShell from '../../components/admin/AdminPageShell.vue';
-import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
+import { computed, ref } from "vue";
+import AdminPageShell from "../../components/admin/AdminPageShell.vue";
+import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
 
 const adminStore = useAdminOperationsStore();
 
-const searchText = ref('');
-const typeFilter = ref('all');
+const searchText = ref("");
+const typeFilter = ref("all");
 
 const activities = computed(() => adminStore.activityLog);
 
@@ -91,7 +99,8 @@ const filteredActivities = computed(() => {
   const text = searchText.value.toLowerCase();
 
   return activities.value.filter((item) => {
-    const matchType = typeFilter.value === 'all' || item.type === typeFilter.value;
+    const matchType =
+      typeFilter.value === "all" || item.type === typeFilter.value;
     const matchText =
       !text ||
       item.action.toLowerCase().includes(text) ||
@@ -103,40 +112,44 @@ const filteredActivities = computed(() => {
 });
 
 const tabs = computed(() => [
-  { label: 'All', value: 'all', count: activities.value.length },
-  { label: 'Moderation', value: 'moderation', count: countByType('moderation') },
-  { label: 'Projects', value: 'project', count: countByType('project') },
-  { label: 'Settings', value: 'settings', count: countByType('settings') },
+  { label: "All", value: "all", count: activities.value.length },
+  {
+    label: "Moderation",
+    value: "moderation",
+    count: countByType("moderation"),
+  },
+  { label: "Projects", value: "project", count: countByType("project") },
+  { label: "Settings", value: "settings", count: countByType("settings") },
 ]);
 
 const metrics = computed(() => [
   {
-    label: 'Total Actions',
+    label: "Total Actions",
     value: String(activities.value.length),
-    change: 'Saved locally',
-    icon: 'bi-clock-history',
-    className: 'blue',
+    change: "Saved locally",
+    icon: "bi-clock-history",
+    className: "blue",
   },
   {
-    label: 'Moderation',
-    value: String(countByType('moderation')),
-    change: 'Reports and threads',
-    icon: 'bi-flag',
-    className: 'orange',
+    label: "Moderation",
+    value: String(countByType("moderation")),
+    change: "Reports and threads",
+    icon: "bi-flag",
+    className: "orange",
   },
   {
-    label: 'Projects',
-    value: String(countByType('project')),
-    change: 'Review decisions',
-    icon: 'bi-folder-check',
-    className: 'green',
+    label: "Projects",
+    value: String(countByType("project")),
+    change: "Review decisions",
+    icon: "bi-folder-check",
+    className: "green",
   },
   {
-    label: 'Settings',
-    value: String(countByType('settings')),
-    change: 'Forum changes',
-    icon: 'bi-gear',
-    className: 'purple',
+    label: "Settings",
+    value: String(countByType("settings")),
+    change: "Forum changes",
+    icon: "bi-gear",
+    className: "purple",
   },
 ]);
 
@@ -145,41 +158,41 @@ function countByType(type) {
 }
 
 function iconFor(type) {
-  if (type === 'moderation') return 'bi-flag';
-  if (type === 'project') return 'bi-folder-check';
-  if (type === 'settings') return 'bi-gear';
-  if (type === 'profile') return 'bi-person-badge';
-  if (type === 'security') return 'bi-shield-lock';
-  return 'bi-clock-history';
+  if (type === "moderation") return "bi-flag";
+  if (type === "project") return "bi-folder-check";
+  if (type === "settings") return "bi-gear";
+  if (type === "profile") return "bi-person-badge";
+  if (type === "security") return "bi-shield-lock";
+  return "bi-clock-history";
 }
 
 function labelFor(type) {
-  if (type === 'moderation') return 'Moderation action';
-  if (type === 'project') return 'Project review';
-  if (type === 'settings') return 'Settings update';
-  if (type === 'profile') return 'Profile update';
-  if (type === 'security') return 'Security update';
-  return 'Admin action';
+  if (type === "moderation") return "Moderation action";
+  if (type === "project") return "Project review";
+  if (type === "settings") return "Settings update";
+  if (type === "profile") return "Profile update";
+  if (type === "security") return "Security update";
+  return "Admin action";
 }
 
 function formatDate(value) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown date';
+    return "Unknown date";
   }
 
   return date.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
 function clearFilter() {
-  searchText.value = '';
-  typeFilter.value = 'all';
+  searchText.value = "";
+  typeFilter.value = "all";
 }
 </script>
 
@@ -263,7 +276,11 @@ function clearFilter() {
 .activity-tabs button.active {
   color: var(--color-primary);
   background: var(--color-primary-light);
-  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  border-color: color-mix(
+    in srgb,
+    var(--color-primary) 35%,
+    var(--color-border)
+  );
 }
 
 .activity-tabs small {

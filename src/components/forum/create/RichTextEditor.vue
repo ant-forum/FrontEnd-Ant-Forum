@@ -74,7 +74,7 @@ onMounted(() => {
         placeholder: props.placeholder,
       }),
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ["heading", "paragraph"],
       }),
     ],
     onUpdate: () => {
@@ -93,19 +93,22 @@ onMounted(() => {
       emit("blur");
     },
   });
-  
+
   if (editor.value) {
-     updateCounts();
+    updateCounts();
   }
 });
 
-watch(() => props.modelValue, (value) => {
-  if (!editor.value) return;
-  const currentHtml = editor.value.getHTML();
-  if (currentHtml !== value) {
-    editor.value.commands.setContent(value);
-  }
-});
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (!editor.value) return;
+    const currentHtml = editor.value.getHTML();
+    if (currentHtml !== value) {
+      editor.value.commands.setContent(value);
+    }
+  },
+);
 
 onBeforeUnmount(() => {
   if (editor.value) {
@@ -117,17 +120,23 @@ const toggleBold = () => editor.value?.chain().focus().toggleBold().run();
 const toggleItalic = () => editor.value?.chain().focus().toggleItalic().run();
 const toggleStrike = () => editor.value?.chain().focus().toggleStrike().run();
 const toggleCode = () => editor.value?.chain().focus().toggleCode().run();
-const toggleCodeBlock = () => editor.value?.chain().focus().toggleCodeBlock().run();
-const toggleBlockquote = () => editor.value?.chain().focus().toggleBlockquote().run();
-const toggleHeading = (level) => editor.value?.chain().focus().toggleHeading({ level }).run();
-const toggleBulletList = () => editor.value?.chain().focus().toggleBulletList().run();
-const toggleOrderedList = () => editor.value?.chain().focus().toggleOrderedList().run();
-const setHorizontalRule = () => editor.value?.chain().focus().setHorizontalRule().run();
+const toggleCodeBlock = () =>
+  editor.value?.chain().focus().toggleCodeBlock().run();
+const toggleBlockquote = () =>
+  editor.value?.chain().focus().toggleBlockquote().run();
+const toggleHeading = (level) =>
+  editor.value?.chain().focus().toggleHeading({ level }).run();
+const toggleBulletList = () =>
+  editor.value?.chain().focus().toggleBulletList().run();
+const toggleOrderedList = () =>
+  editor.value?.chain().focus().toggleOrderedList().run();
+const setHorizontalRule = () =>
+  editor.value?.chain().focus().setHorizontalRule().run();
 const undo = () => editor.value?.chain().focus().undo().run();
 const redo = () => editor.value?.chain().focus().redo().run();
 
 const openLinkPopup = () => {
-  const previousUrl = editor.value?.getAttributes('link').href;
+  const previousUrl = editor.value?.getAttributes("link").href;
   linkUrl.value = previousUrl || "";
   showLinkPopup.value = true;
 };
@@ -135,17 +144,24 @@ const openLinkPopup = () => {
 const saveLink = () => {
   const url = linkUrl.value.trim();
   if (!url) {
-    editor.value?.chain().focus().extendMarkRange('link').unsetLink().run();
+    editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
   } else {
     const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-    editor.value?.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
+    editor.value
+      ?.chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({ href: normalized })
+      .run();
   }
   showLinkPopup.value = false;
 };
 
 const insertImageFiles = async (files = []) => {
   const validFiles = Array.from(files)
-    .filter((file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024)
+    .filter(
+      (file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024,
+    )
     .slice(0, 3);
 
   if (!validFiles.length) return;
@@ -154,7 +170,11 @@ const insertImageFiles = async (files = []) => {
   for (const file of validFiles) {
     const cropped = await openBlogImageCropper(file);
     if (cropped?.dataUrl) {
-      editor.value?.chain().focus().setImage({ src: cropped.dataUrl, alt: file.name }).run();
+      editor.value
+        ?.chain()
+        .focus()
+        .setImage({ src: cropped.dataUrl, alt: file.name })
+        .run();
     }
   }
 };
@@ -191,10 +211,22 @@ const handleImageDrop = (event) => {
 
     <div v-if="editor" class="rich-toolbar">
       <div class="toolbar-left">
-        <button type="button" @mousedown.prevent="undo" :disabled="!editor.can().undo()" class="toolbar-btn" title="Undo">
+        <button
+          type="button"
+          @mousedown.prevent="undo"
+          :disabled="!editor.can().undo()"
+          class="toolbar-btn"
+          title="Undo"
+        >
           <i class="bi bi-arrow-counterclockwise"></i>
         </button>
-        <button type="button" @mousedown.prevent="redo" :disabled="!editor.can().redo()" class="toolbar-btn" title="Redo">
+        <button
+          type="button"
+          @mousedown.prevent="redo"
+          :disabled="!editor.can().redo()"
+          class="toolbar-btn"
+          title="Redo"
+        >
           <i class="bi bi-arrow-clockwise"></i>
         </button>
 
@@ -210,63 +242,155 @@ const handleImageDrop = (event) => {
             <span>H</span><i class="bi bi-chevron-down"></i>
           </button>
           <div v-if="showTextMenu" class="toolbar-dropdown">
-            <button type="button" @mousedown.prevent="editor.chain().focus().setParagraph().run(); showTextMenu = false" :class="{ 'is-active': editor.isActive('paragraph') }">
+            <button
+              type="button"
+              @mousedown.prevent="
+                editor.chain().focus().setParagraph().run();
+                showTextMenu = false;
+              "
+              :class="{ 'is-active': editor.isActive('paragraph') }"
+            >
               <i class="bi bi-paragraph"></i> Paragraph
             </button>
-            <button type="button" @mousedown.prevent="toggleHeading(1); showTextMenu = false" :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }">
+            <button
+              type="button"
+              @mousedown.prevent="
+                toggleHeading(1);
+                showTextMenu = false;
+              "
+              :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+            >
               <i class="bi bi-type-h1"></i> Heading 1
             </button>
-            <button type="button" @mousedown.prevent="toggleHeading(2); showTextMenu = false" :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }">
+            <button
+              type="button"
+              @mousedown.prevent="
+                toggleHeading(2);
+                showTextMenu = false;
+              "
+              :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+            >
               <i class="bi bi-type-h2"></i> Heading 2
             </button>
-            <button type="button" @mousedown.prevent="toggleHeading(3); showTextMenu = false" :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }">
+            <button
+              type="button"
+              @mousedown.prevent="
+                toggleHeading(3);
+                showTextMenu = false;
+              "
+              :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+            >
               <i class="bi bi-type-h3"></i> Heading 3
             </button>
           </div>
         </div>
 
-        <button type="button" @mousedown.prevent="toggleBulletList" :class="{ 'is-active': editor.isActive('bulletList') }" class="toolbar-btn" title="Bullet List">
+        <button
+          type="button"
+          @mousedown.prevent="toggleBulletList"
+          :class="{ 'is-active': editor.isActive('bulletList') }"
+          class="toolbar-btn"
+          title="Bullet List"
+        >
           <i class="bi bi-list-ul"></i>
         </button>
-        <button type="button" @mousedown.prevent="toggleOrderedList" :class="{ 'is-active': editor.isActive('orderedList') }" class="toolbar-btn" title="Numbered List">
+        <button
+          type="button"
+          @mousedown.prevent="toggleOrderedList"
+          :class="{ 'is-active': editor.isActive('orderedList') }"
+          class="toolbar-btn"
+          title="Numbered List"
+        >
           <i class="bi bi-list-ol"></i>
         </button>
 
-        <button type="button" @mousedown.prevent="toggleCodeBlock" :class="{ 'is-active': editor.isActive('codeBlock') }" class="toolbar-btn" title="Code Block">
+        <button
+          type="button"
+          @mousedown.prevent="toggleCodeBlock"
+          :class="{ 'is-active': editor.isActive('codeBlock') }"
+          class="toolbar-btn"
+          title="Code Block"
+        >
           <i class="bi bi-braces"></i>
         </button>
 
         <span class="toolbar-divider"></span>
 
-        <button type="button" @mousedown.prevent="toggleBold" :class="{ 'is-active': editor.isActive('bold') }" class="toolbar-btn" title="Bold">
+        <button
+          type="button"
+          @mousedown.prevent="toggleBold"
+          :class="{ 'is-active': editor.isActive('bold') }"
+          class="toolbar-btn"
+          title="Bold"
+        >
           <i class="bi bi-type-bold"></i>
         </button>
-        <button type="button" @mousedown.prevent="toggleItalic" :class="{ 'is-active': editor.isActive('italic') }" class="toolbar-btn" title="Italic">
+        <button
+          type="button"
+          @mousedown.prevent="toggleItalic"
+          :class="{ 'is-active': editor.isActive('italic') }"
+          class="toolbar-btn"
+          title="Italic"
+        >
           <i class="bi bi-type-italic"></i>
         </button>
-        <button type="button" @mousedown.prevent="toggleStrike" :class="{ 'is-active': editor.isActive('strike') }" class="toolbar-btn" title="Strikethrough">
+        <button
+          type="button"
+          @mousedown.prevent="toggleStrike"
+          :class="{ 'is-active': editor.isActive('strike') }"
+          class="toolbar-btn"
+          title="Strikethrough"
+        >
           <i class="bi bi-type-strikethrough"></i>
         </button>
-        <button type="button" @mousedown.prevent="toggleCode" :class="{ 'is-active': editor.isActive('code') }" class="toolbar-btn" title="Inline Code">
+        <button
+          type="button"
+          @mousedown.prevent="toggleCode"
+          :class="{ 'is-active': editor.isActive('code') }"
+          class="toolbar-btn"
+          title="Inline Code"
+        >
           <i class="bi bi-code-slash"></i>
         </button>
 
-        <button type="button" @mousedown.prevent="openLinkPopup" :class="{ 'is-active': editor.isActive('link') }" class="toolbar-btn" title="Link">
+        <button
+          type="button"
+          @mousedown.prevent="openLinkPopup"
+          :class="{ 'is-active': editor.isActive('link') }"
+          class="toolbar-btn"
+          title="Link"
+        >
           <i class="bi bi-link-45deg"></i>
         </button>
 
         <span class="toolbar-divider"></span>
 
-        <button type="button" @mousedown.prevent="setHorizontalRule" class="toolbar-btn" title="Divider">
+        <button
+          type="button"
+          @mousedown.prevent="setHorizontalRule"
+          class="toolbar-btn"
+          title="Divider"
+        >
           <i class="bi bi-hr"></i>
         </button>
-        <button type="button" @mousedown.prevent="toggleBlockquote" :class="{ 'is-active': editor.isActive('blockquote') }" class="toolbar-btn" title="Quote">
+        <button
+          type="button"
+          @mousedown.prevent="toggleBlockquote"
+          :class="{ 'is-active': editor.isActive('blockquote') }"
+          class="toolbar-btn"
+          title="Quote"
+        >
           <i class="bi bi-quote"></i>
         </button>
 
         <span class="toolbar-divider"></span>
 
-        <button type="button" class="toolbar-btn add-media-btn" title="Add image" @mousedown.prevent="openImageModal">
+        <button
+          type="button"
+          class="toolbar-btn add-media-btn"
+          title="Add image"
+          @mousedown.prevent="openImageModal"
+        >
           <i class="bi bi-image"></i>
           <span>Add</span>
         </button>
@@ -283,8 +407,20 @@ const handleImageDrop = (event) => {
           placeholder="https://example.com"
           @keydown.enter.prevent="saveLink"
         />
-        <button type="button" class="btn-save-link" @mousedown.prevent="saveLink">Apply</button>
-        <button type="button" class="btn-cancel-link" @mousedown.prevent="showLinkPopup = false">Cancel</button>
+        <button
+          type="button"
+          class="btn-save-link"
+          @mousedown.prevent="saveLink"
+        >
+          Apply
+        </button>
+        <button
+          type="button"
+          class="btn-cancel-link"
+          @mousedown.prevent="showLinkPopup = false"
+        >
+          Cancel
+        </button>
       </div>
     </div>
 
@@ -294,8 +430,13 @@ const handleImageDrop = (event) => {
     </div>
 
     <div class="rich-status">
-      <span><i class="bi bi-file-earmark-text"></i><strong>{{ wordCount }}</strong> words</span>
-      <span><strong>{{ charCount }}</strong> characters</span>
+      <span
+        ><i class="bi bi-file-earmark-text"></i
+        ><strong>{{ wordCount }}</strong> words</span
+      >
+      <span
+        ><strong>{{ charCount }}</strong> characters</span
+      >
       <span class="live-note"><i class="bi bi-eye"></i> Live rich editing</span>
     </div>
   </div>
@@ -346,7 +487,7 @@ const handleImageDrop = (event) => {
   flex-direction: column;
 }
 
-[data-theme='dark'] .rich-editor {
+[data-theme="dark"] .rich-editor {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
@@ -590,11 +731,19 @@ const handleImageDrop = (event) => {
   line-height: 1.2;
 }
 
-:deep(.tiptap h1) { font-size: 1.75rem; }
-:deep(.tiptap h2) { font-size: 1.5rem; }
-:deep(.tiptap h3) { font-size: 1.25rem; }
+:deep(.tiptap h1) {
+  font-size: 1.75rem;
+}
+:deep(.tiptap h2) {
+  font-size: 1.5rem;
+}
+:deep(.tiptap h3) {
+  font-size: 1.25rem;
+}
 
-:deep(.tiptap p) { margin-bottom: 1rem; }
+:deep(.tiptap p) {
+  margin-bottom: 1rem;
+}
 
 :deep(.tiptap img) {
   display: block;

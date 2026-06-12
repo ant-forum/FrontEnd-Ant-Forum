@@ -3,28 +3,28 @@
   <div v-if="fullPage" class="loading-page">
     <div class="glow-bg glow-primary"></div>
     <div class="glow-bg glow-accent"></div>
-    
+
     <div class="loading-card shadow-lg">
       <div class="brand-logo-container mb-4">
         <div class="brand-orb">
           <i class="bi bi-rocket-takeoff-fill"></i>
         </div>
       </div>
-      
+
       <h2 class="brand-title fw-black mb-2">ANT-Forum</h2>
       <p class="brand-subtitle text-muted mb-4">Ecosystem Initialization</p>
-      
+
       <!-- Progress Track -->
       <div class="progress-track mb-3">
         <div class="progress-bar-fill" :style="{ width: progress + '%' }"></div>
       </div>
-      
+
       <!-- Loading Status Text -->
       <div class="status-message-wrapper">
         <p class="status-text themed-text small">{{ statusText }}</p>
         <span class="status-percentage font-monospace">{{ progress }}%</span>
       </div>
-      
+
       <!-- Tiny Spinner -->
       <div class="spinner-mini mt-4">
         <div class="dot"></div>
@@ -46,22 +46,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useForumStore } from '@/stores/ForumStore';
-import { useBlogStore } from '@/stores/BlogStore';
-import { useArticleStore } from '@/stores/ArticleStore';
-import { useTagsStore } from '@/stores/TagsStore';
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useForumStore } from "@/stores/ForumStore";
+import { useBlogStore } from "@/stores/BlogStore";
+import { useArticleStore } from "@/stores/ArticleStore";
+import { useTagsStore } from "@/stores/TagsStore";
 
 const props = defineProps({
   fullPage: {
     type: Boolean,
-    default: true
+    default: true,
   },
   text: {
     type: String,
-    default: 'Loading...'
-  }
+    default: "Loading...",
+  },
 });
 
 const router = useRouter();
@@ -70,7 +70,7 @@ const blogStore = useBlogStore();
 const articleStore = useArticleStore();
 const tagsStore = useTagsStore();
 
-const statusText = ref('Connecting to server...');
+const statusText = ref("Connecting to server...");
 const progress = ref(0);
 
 // Smoothly increments progress to a target percentage
@@ -93,42 +93,52 @@ onMounted(async () => {
 
   try {
     // Stage 1: Load Tags
-    statusText.value = 'Syncing developer tags...';
+    statusText.value = "Syncing developer tags...";
     await Promise.all([
-      tagsStore.fetchTags().catch(err => console.warn('Tags fetch warning:', err)),
-      animateProgress(25)
+      tagsStore
+        .fetchTags()
+        .catch((err) => console.warn("Tags fetch warning:", err)),
+      animateProgress(25),
     ]);
 
     // Stage 2: Load Forums & Showcases (Forum Categories and Forums List)
-    statusText.value = 'Caching forum discussions and showcase pipeline...';
+    statusText.value = "Caching forum discussions and showcase pipeline...";
     await Promise.all([
-      forumStore.fetchCategories().catch(err => console.warn('Categories fetch warning:', err)),
-      forumStore.fetchDiscussions().catch(err => console.warn('Discussions fetch warning:', err)),
-      animateProgress(65)
+      forumStore
+        .fetchCategories()
+        .catch((err) => console.warn("Categories fetch warning:", err)),
+      forumStore
+        .fetchDiscussions()
+        .catch((err) => console.warn("Discussions fetch warning:", err)),
+      animateProgress(65),
     ]);
 
     // Stage 3: Load Blogs & Articles
-    statusText.value = 'Preparing engineering articles and blogs...';
+    statusText.value = "Preparing engineering articles and blogs...";
     await Promise.all([
-      blogStore.fetchBlogs().catch(err => console.warn('Blogs fetch warning:', err)),
-      articleStore.fetchArticles().catch(err => console.warn('Articles fetch warning:', err)),
-      animateProgress(90)
+      blogStore
+        .fetchBlogs()
+        .catch((err) => console.warn("Blogs fetch warning:", err)),
+      articleStore
+        .fetchArticles()
+        .catch((err) => console.warn("Articles fetch warning:", err)),
+      animateProgress(90),
     ]);
 
     // Stage 4: Execution Complete
-    statusText.value = 'Initialization complete!';
+    statusText.value = "Initialization complete!";
     await animateProgress(100, 5);
 
     // Pause briefly for transition animation / visual styling satisfaction
     await new Promise((resolve) => setTimeout(resolve, 300));
 
     // Redirect to home/dashboard page
-    router.push('/');
+    router.push("/");
   } catch (error) {
-    console.error('Failed to pre-fetch critical app data:', error);
-    statusText.value = 'System initialized with local fallback...';
+    console.error("Failed to pre-fetch critical app data:", error);
+    statusText.value = "System initialized with local fallback...";
     await animateProgress(100, 3);
-    router.push('/');
+    router.push("/");
   }
 });
 </script>
@@ -176,7 +186,8 @@ onMounted(async () => {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.12;
   }
@@ -215,7 +226,11 @@ onMounted(async () => {
   width: 72px;
   height: 72px;
   border-radius: 24px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   color: white;
   display: flex;
   align-items: center;
@@ -326,7 +341,9 @@ onMounted(async () => {
 }
 
 @keyframes pulse-dot {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0.6);
     opacity: 0.3;
   }
@@ -377,12 +394,14 @@ onMounted(async () => {
 }
 
 @keyframes bounce {
-  0%, 80%, 100% { 
+  0%,
+  80%,
+  100% {
     transform: scale(0);
     opacity: 0.3;
-  } 
-  40% { 
-    transform: scale(1.0);
+  }
+  40% {
+    transform: scale(1);
     opacity: 1;
   }
 }

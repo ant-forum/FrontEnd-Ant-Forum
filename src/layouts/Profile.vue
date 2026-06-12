@@ -54,7 +54,10 @@ onMounted(async () => {
     await forumStore.fetchDiscussions();
     await projectStore.fetchMyProjects();
   } catch (err) {
-    console.error("Failed to load user profile or discussions or projects:", err);
+    console.error(
+      "Failed to load user profile or discussions or projects:",
+      err,
+    );
   }
 });
 
@@ -66,11 +69,13 @@ const openProfileEditor = () => selectTab("edit");
 const handleProfileSaved = () => selectTab("profile");
 
 // Profile Dashboard Dynamic Data from AuthStore (which is globally synced and normalized)
-const profileFullname = computed(() => authStore.user?.fullname || authStore.user?.name || "");
+const profileFullname = computed(
+  () => authStore.user?.fullname || authStore.user?.name || "",
+);
 const profileName = computed(() => authStore.user?.username || "ANT Developer");
 const profileRole = computed(() => {
   const role = authStore.user?.role || "Student";
-  if (role.toLowerCase() === 'mentor') return 'Teacher';
+  if (role.toLowerCase() === "mentor") return "Teacher";
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 });
 const profileBio = computed(() => authStore.user?.bio || "");
@@ -81,12 +86,12 @@ const profileAvatar = computed(() => authStore.user?.profile_pic || "");
 
 // Dynamic user projects loaded via ProjectStore
 const defaultProjects = computed(() => {
-  return (projectStore.myProjects || []).map(p => ({
+  return (projectStore.myProjects || []).map((p) => ({
     id: p.id,
     title: p.title,
     desc: p.description,
     stars: p.average_rating || 0,
-    tags: p.tags || []
+    tags: p.tags || [],
   }));
 });
 const additionalProjects = ref([]);
@@ -95,18 +100,23 @@ const activityFeed = computed(() => {
   if (!authStore.user) return [];
   const username = authStore.user.username || authStore.user.name;
   if (!username) return [];
-  
-  return forumStore.discussions.filter(d => {
-    const authorName = (typeof d.author === 'object' && d.author !== null) ? (d.author.username || d.author.name) : d.author;
-    return (authorName || '').toLowerCase() === username.toLowerCase();
-  }).map(d => ({
-    id: d.id,
-    type: "discussion",
-    title: d.title,
-    meta: `Posted in ${d.category}`,
-    icon: "bi-chat-left-text-fill",
-    link: `/forum/${d.id}`
-  })); // Pass all activities
+
+  return forumStore.discussions
+    .filter((d) => {
+      const authorName =
+        typeof d.author === "object" && d.author !== null
+          ? d.author.username || d.author.name
+          : d.author;
+      return (authorName || "").toLowerCase() === username.toLowerCase();
+    })
+    .map((d) => ({
+      id: d.id,
+      type: "discussion",
+      title: d.title,
+      meta: `Posted in ${d.category}`,
+      icon: "bi-chat-left-text-fill",
+      link: `/forum/${d.id}`,
+    })); // Pass all activities
 });
 </script>
 
@@ -145,39 +155,38 @@ const activityFeed = computed(() => {
         </nav>
 
         <section class="profile-tab-content">
-        <!-- Tab 1: Profile Dashboard -->
-        <div v-if="activeTab === 'profile'" class="fade-in-content">
-          <ProfileOverview
-            :profileFullname="profileFullname"
-            :profileName="profileName"
-            :profileRole="profileRole"
-            :profileBio="profileBio"
-            :profileGithub="profileGithub"
-            :profileLinkedin="profileLinkedin"
-            :profileSkills="profileSkills"
-            :profileAvatar="profileAvatar"
-            :defaultProjects="defaultProjects"
-            :activityFeed="activityFeed"
-            canEdit
-            @edit="openProfileEditor"
-          />
-        </div>
-        
-        <!-- Tab 2: Projects Showcase -->
-        <div v-else-if="activeTab === 'projects'" class="fade-in-content">
-          <ProfileProject
-            :projects="[...defaultProjects, ...additionalProjects]"
-          />
-        </div>
+          <!-- Tab 1: Profile Dashboard -->
+          <div v-if="activeTab === 'profile'" class="fade-in-content">
+            <ProfileOverview
+              :profileFullname="profileFullname"
+              :profileName="profileName"
+              :profileRole="profileRole"
+              :profileBio="profileBio"
+              :profileGithub="profileGithub"
+              :profileLinkedin="profileLinkedin"
+              :profileSkills="profileSkills"
+              :profileAvatar="profileAvatar"
+              :defaultProjects="defaultProjects"
+              :activityFeed="activityFeed"
+              canEdit
+              @edit="openProfileEditor"
+            />
+          </div>
 
-        <div v-else-if="activeTab === 'edit'" class="fade-in-content">
-          <ProfileSetting
-            :user="authStore.user || {}"
-            @saved="handleProfileSaved"
-            @cancel="handleProfileSaved"
-          />
-        </div>
-        
+          <!-- Tab 2: Projects Showcase -->
+          <div v-else-if="activeTab === 'projects'" class="fade-in-content">
+            <ProfileProject
+              :projects="[...defaultProjects, ...additionalProjects]"
+            />
+          </div>
+
+          <div v-else-if="activeTab === 'edit'" class="fade-in-content">
+            <ProfileSetting
+              :user="authStore.user || {}"
+              @saved="handleProfileSaved"
+              @cancel="handleProfileSaved"
+            />
+          </div>
         </section>
       </main>
     </div>
@@ -194,7 +203,8 @@ const activityFeed = computed(() => {
     @closeModal="closeLogoutModal"
   >
     <p class="logout-modal-copy">
-      Are you sure you want to log out? You will need to sign in again to access your account.
+      Are you sure you want to log out? You will need to sign in again to access
+      your account.
     </p>
 
     <template #footer>
@@ -212,7 +222,11 @@ const activityFeed = computed(() => {
         :disabled="isLoggingOut"
         @click="confirmLogout"
       >
-        <span v-if="isLoggingOut" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span
+          v-if="isLoggingOut"
+          class="spinner-border spinner-border-sm"
+          aria-hidden="true"
+        ></span>
         <span>{{ isLoggingOut ? "Logging out..." : "Logout" }}</span>
       </button>
     </template>
@@ -349,8 +363,14 @@ const activityFeed = computed(() => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 1024px) {

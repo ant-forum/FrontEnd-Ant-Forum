@@ -4,7 +4,9 @@
       <div class="mb-4">
         <div>
           <h4 class="mb-0 fw-bold header-title themed-text">Edit Profile</h4>
-          <p class="text-muted small mb-0">Update your username, gender, bio, skills, and avatar picture.</p>
+          <p class="text-muted small mb-0">
+            Update your username, gender, bio, skills, and avatar picture.
+          </p>
         </div>
       </div>
 
@@ -26,18 +28,25 @@
             @click="openAvatarFilePicker"
           >
             <img
-              :src="avatarPreview || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default&backgroundColor=b6e3f4,c0aede,d1d4f9'"
+              :src="
+                avatarPreview ||
+                'https://api.dicebear.com/7.x/avataaars/svg?seed=default&backgroundColor=b6e3f4,c0aede,d1d4f9'
+              "
               class="rounded-circle"
               width="120"
               height="120"
-              style="object-fit: cover;"
+              style="object-fit: cover"
             />
-            <div class="avatar-overlay d-flex align-items-center justify-content-center rounded-circle">
+            <div
+              class="avatar-overlay d-flex align-items-center justify-content-center rounded-circle"
+            >
               <i class="bi bi-camera-fill text-white fs-4"></i>
             </div>
           </button>
           <div class="px-2 mt-2">
-            <label class="form-label text-muted small fw-bold d-block mb-2">Profile Picture</label>
+            <label class="form-label text-muted small fw-bold d-block mb-2"
+              >Profile Picture</label
+            >
             <div class="custom-file-upload">
               <button
                 type="button"
@@ -55,7 +64,9 @@
                 @change="handleAvatarChange"
               />
             </div>
-            <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">PNG, JPG up to 2MB</small>
+            <small class="text-muted d-block mt-2" style="font-size: 0.75rem"
+              >PNG, JPG up to 2MB</small
+            >
           </div>
         </div>
 
@@ -63,7 +74,9 @@
         <div class="col-md-8">
           <!-- Full Name -->
           <div class="mb-3">
-            <label class="form-label fw-bold small themed-text">Full Name *</label>
+            <label class="form-label fw-bold small themed-text"
+              >Full Name *</label
+            >
             <input
               v-model="form.fullname"
               class="form-control"
@@ -74,7 +87,9 @@
 
           <!-- Username -->
           <div class="mb-3">
-            <label class="form-label fw-bold small themed-text">Username *</label>
+            <label class="form-label fw-bold small themed-text"
+              >Username *</label
+            >
             <input
               v-model="form.username"
               class="form-control"
@@ -102,7 +117,9 @@
               maxlength="300"
               placeholder="Share your background, interests, or what you are building."
             ></textarea>
-            <small class="text-muted d-block text-end mt-1">{{ form.bio.length }}/300</small>
+            <small class="text-muted d-block text-end mt-1"
+              >{{ form.bio.length }}/300</small
+            >
           </div>
 
           <!-- Skills from Admin Tags -->
@@ -110,7 +127,10 @@
             <label class="form-label fw-bold small themed-text">Skills</label>
             <div class="skill-picker">
               <div v-if="tagsStore.isLoading" class="skill-picker-loading">
-                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span
+                  class="spinner-border spinner-border-sm"
+                  aria-hidden="true"
+                ></span>
                 <span>Loading skill tags...</span>
               </div>
 
@@ -119,11 +139,21 @@
                   v-for="tag in availableSkillTags"
                   :key="tag.id || tag.name"
                   type="button"
-                  :class="['skill-tag-option', { active: isSkillSelected(tag.name) }]"
+                  :class="[
+                    'skill-tag-option',
+                    { active: isSkillSelected(tag.name) },
+                  ]"
                   :title="tag.description || tag.name"
                   @click="toggleSkill(tag.name)"
                 >
-                  <i :class="['bi', isSkillSelected(tag.name) ? 'bi-check2-circle' : 'bi-plus-circle']"></i>
+                  <i
+                    :class="[
+                      'bi',
+                      isSkillSelected(tag.name)
+                        ? 'bi-check2-circle'
+                        : 'bi-plus-circle',
+                    ]"
+                  ></i>
                   <span>{{ tag.name }}</span>
                 </button>
               </div>
@@ -134,29 +164,39 @@
               </div>
             </div>
 
-            <div v-if="selectedSkills.length" class="selected-skills-row" aria-label="Selected skills">
+            <div
+              v-if="selectedSkills.length"
+              class="selected-skills-row"
+              aria-label="Selected skills"
+            >
               <span
                 v-for="skill in selectedSkills"
                 :key="skill"
                 class="selected-skill-chip"
               >
                 {{ skill }}
-                <button type="button" title="Remove skill" @click="toggleSkill(skill)">
+                <button
+                  type="button"
+                  title="Remove skill"
+                  @click="toggleSkill(skill)"
+                >
                   <i class="bi bi-x"></i>
                 </button>
               </span>
             </div>
-            <small class="text-muted d-block mt-2">Skills are selected from tags created by admins.</small>
+            <small class="text-muted d-block mt-2"
+              >Skills are selected from tags created by admins.</small
+            >
           </div>
         </div>
       </div>
-      
-      <hr class="border-slate my-4">
-      
+
+      <hr class="border-slate my-4" />
+
       <!-- Social Links Section -->
       <div class="mb-4">
         <h5 class="fw-bold header-title themed-text mb-3">Social Links</h5>
-        
+
         <div class="row g-3 mb-4">
           <div class="col-md-4">
             <select v-model="newSocialPlatform" class="form-select">
@@ -173,30 +213,58 @@
             </select>
           </div>
           <div class="col-md-6">
-            <input v-model="newSocialUrl" type="text" class="form-control" placeholder="URL (https://...)">
+            <input
+              v-model="newSocialUrl"
+              type="text"
+              class="form-control"
+              placeholder="URL (https://...)"
+            />
           </div>
           <div class="col-md-2">
-            <button class="btn btn-outline-primary w-100" :disabled="!newSocialPlatform || !newSocialUrl || isAddingSocial" @click="handleAddSocialLink">
-              {{ isAddingSocial ? 'Adding...' : 'Add Link' }}
+            <button
+              class="btn btn-outline-primary w-100"
+              :disabled="!newSocialPlatform || !newSocialUrl || isAddingSocial"
+              @click="handleAddSocialLink"
+            >
+              {{ isAddingSocial ? "Adding..." : "Add Link" }}
             </button>
           </div>
         </div>
-        
-        <div v-if="userProfilesStore.socialLinks.length === 0" class="card-empty-state p-3 text-center rounded">
+
+        <div
+          v-if="userProfilesStore.socialLinks.length === 0"
+          class="card-empty-state p-3 text-center rounded"
+        >
           <i class="bi bi-link-45deg text-muted fs-4 d-block mb-2"></i>
           <span class="text-muted small">No social links added yet.</span>
         </div>
-        
+
         <div v-else class="d-flex flex-column gap-2">
-          <div v-for="link in userProfilesStore.socialLinks" :key="link.id" class="d-flex align-items-center justify-content-between p-3 border rounded bg-surface">
+          <div
+            v-for="link in userProfilesStore.socialLinks"
+            :key="link.id"
+            class="d-flex align-items-center justify-content-between p-3 border rounded bg-surface"
+          >
             <div class="d-flex align-items-center gap-3">
-              <i :class="getPlatformIcon(link.platform)" class="fs-4 text-primary-purple"></i>
+              <i
+                :class="getPlatformIcon(link.platform)"
+                class="fs-4 text-primary-purple"
+              ></i>
               <div>
                 <strong class="d-block themed-text">{{ link.platform }}</strong>
-                <a :href="link.url" target="_blank" class="small text-muted text-decoration-none">{{ link.url }}</a>
+                <a
+                  :href="link.url"
+                  target="_blank"
+                  class="small text-muted text-decoration-none"
+                  >{{ link.url }}</a
+                >
               </div>
             </div>
-            <button class="btn btn-sm btn-outline-danger" title="Delete Link" @click="handleDeleteSocialLink(link.id)">
+            <button
+              class="btn btn-sm btn-outline-danger"
+              title="Delete Link"
+              @click="handleDeleteSocialLink(link.id)"
+            >
               <i class="bi bi-trash"></i>
             </button>
           </div>
@@ -247,10 +315,11 @@
           :src="pendingAvatarPreview"
           alt="Selected profile picture preview"
           class="avatar-confirm-preview"
-        >
+        />
         <p class="mb-1 fw-bold themed-text">Update your profile picture now?</p>
         <small class="text-muted">
-          This uploads immediately after you confirm. You do not need to click Save Changes.
+          This uploads immediately after you confirm. You do not need to click
+          Save Changes.
         </small>
       </div>
 
@@ -275,7 +344,9 @@
             role="status"
             aria-hidden="true"
           ></span>
-          <span>{{ isAvatarUploading ? "Updating..." : "Confirm Picture" }}</span>
+          <span>{{
+            isAvatarUploading ? "Updating..." : "Confirm Picture"
+          }}</span>
         </button>
       </template>
     </BaseModal>
@@ -317,7 +388,16 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch, onMounted, onBeforeUnmount, defineProps, defineEmits } from "vue";
+import {
+  reactive,
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onBeforeUnmount,
+  defineProps,
+  defineEmits,
+} from "vue";
 import BaseModal from "../base/BaseModal.vue";
 import ImageCropModal from "../base/ImageCropModal.vue";
 import { useUserProfilesStore } from "../../stores/UserProfilesStore";
@@ -328,7 +408,7 @@ import { normalizeSkills, skillsToText } from "../../utils/profileFields";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const props = defineProps({
-  user: { type: Object, required: true }
+  user: { type: Object, required: true },
 });
 
 const emit = defineEmits(["saved", "cancel"]);
@@ -412,9 +492,12 @@ const availableSkillTags = computed(() => {
     });
 });
 
-const selectedSkillSet = computed(() => new Set(selectedSkills.value.map((skill) => skill.toLowerCase())));
+const selectedSkillSet = computed(
+  () => new Set(selectedSkills.value.map((skill) => skill.toLowerCase())),
+);
 
-const isSkillSelected = (skillName) => selectedSkillSet.value.has(String(skillName || "").toLowerCase());
+const isSkillSelected = (skillName) =>
+  selectedSkillSet.value.has(String(skillName || "").toLowerCase());
 
 const toggleSkill = (skillName) => {
   const cleanName = String(skillName || "").trim();
@@ -449,7 +532,10 @@ onMounted(async () => {
 onBeforeUnmount(revokePendingAvatarPreview);
 
 // Watch for store changes or prop updates
-watch(() => userProfilesStore.profile, resetForm, { deep: true, immediate: true });
+watch(() => userProfilesStore.profile, resetForm, {
+  deep: true,
+  immediate: true,
+});
 
 const openAvatarFilePicker = () => {
   if (isProfileSaving.value || isAvatarUploading.value) return;
@@ -462,14 +548,14 @@ const handleAvatarChange = async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
-  if (!file.type.startsWith('image/')) {
-    toast.error('Only image files allowed');
+  if (!file.type.startsWith("image/")) {
+    toast.error("Only image files allowed");
     clearAvatarInput();
     return;
   }
 
   if (file.size > 2 * 1024 * 1024) {
-    toast.error('Max size is 2MB');
+    toast.error("Max size is 2MB");
     clearAvatarInput();
     return;
   }
@@ -519,7 +605,10 @@ const confirmAvatarUpload = async () => {
     clearAvatarInput();
   } catch (error) {
     console.error("Avatar upload failed:", error);
-    const message = error.response?.data?.message || error.message || "Unable to update profile picture.";
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Unable to update profile picture.";
     toast.error(message);
   } finally {
     isAvatarUploading.value = false;
@@ -551,13 +640,16 @@ const handleSubmit = async () => {
     successMessage.value = "Profile saved successfully.";
     toast.success("Profile saved successfully.");
     emit("saved");
-    
+
     setTimeout(() => {
       successMessage.value = "";
     }, 3000);
   } catch (error) {
     console.error("Profile update failed:", error);
-    errorMessage.value = error.response?.data?.message || error.message || "Unable to save profile. Please try again.";
+    errorMessage.value =
+      error.response?.data?.message ||
+      error.message ||
+      "Unable to save profile. Please try again.";
     toast.error(errorMessage.value);
   } finally {
     isProfileSaving.value = false;
@@ -573,7 +665,10 @@ const handleAddSocialLink = async () => {
   if (!newSocialPlatform.value || !newSocialUrl.value) return;
   isAddingSocial.value = true;
   try {
-    await userProfilesStore.addSocialLink(newSocialPlatform.value, newSocialUrl.value);
+    await userProfilesStore.addSocialLink(
+      newSocialPlatform.value,
+      newSocialUrl.value,
+    );
     toast.success("Social link added");
     newSocialPlatform.value = "";
     newSocialUrl.value = "";
@@ -613,18 +708,17 @@ const deleteSocialLinkConfirm = async () => {
 };
 
 const getPlatformIcon = (platformStr) => {
-  const p = (platformStr || '').toLowerCase();
-  if (p.includes('linkedin')) return 'bi-linkedin';
-  if (p.includes('github')) return 'bi-github';
-  if (p.includes('twitter') || p.includes('x')) return 'bi-twitter-x';
-  if (p.includes('facebook')) return 'bi-facebook';
-  if (p.includes('instagram')) return 'bi-instagram';
-  if (p.includes('youtube')) return 'bi-youtube';
-  if (p.includes('discord')) return 'bi-discord';
-  if (p.includes('tiktok')) return 'bi-tiktok';
-  return 'bi-link-45deg';
+  const p = (platformStr || "").toLowerCase();
+  if (p.includes("linkedin")) return "bi-linkedin";
+  if (p.includes("github")) return "bi-github";
+  if (p.includes("twitter") || p.includes("x")) return "bi-twitter-x";
+  if (p.includes("facebook")) return "bi-facebook";
+  if (p.includes("instagram")) return "bi-instagram";
+  if (p.includes("youtube")) return "bi-youtube";
+  if (p.includes("discord")) return "bi-discord";
+  if (p.includes("tiktok")) return "bi-tiktok";
+  return "bi-link-45deg";
 };
-
 </script>
 
 <style scoped>
@@ -634,7 +728,9 @@ const getPlatformIcon = (platformStr) => {
   border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  transition: background-color var(--transition-slow), border-color var(--transition-slow);
+  transition:
+    background-color var(--transition-slow),
+    border-color var(--transition-slow);
 }
 
 .header-title {
@@ -699,7 +795,11 @@ const getPlatformIcon = (platformStr) => {
 
 .skill-tag-option.active {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   border-color: transparent;
   box-shadow: 0 10px 22px -18px var(--color-primary);
 }
@@ -759,20 +859,20 @@ const getPlatformIcon = (platformStr) => {
   border-color: var(--color-primary);
 }
 
-[data-theme='dark'] .selected-skill-chip {
+[data-theme="dark"] .selected-skill-chip {
   color: #f5f3ff;
   background: color-mix(in srgb, var(--color-purple) 72%, #111827);
   border-color: color-mix(in srgb, var(--color-purple) 72%, #ffffff);
   box-shadow: 0 8px 18px -16px var(--color-purple);
 }
 
-[data-theme='dark'] .selected-skill-chip button {
+[data-theme="dark"] .selected-skill-chip button {
   color: #ffffff;
   background: color-mix(in srgb, var(--color-surface) 78%, #000000);
   border-color: color-mix(in srgb, #ffffff 34%, transparent);
 }
 
-[data-theme='dark'] .selected-skill-chip button:hover {
+[data-theme="dark"] .selected-skill-chip button:hover {
   color: #ffffff;
   background: var(--color-primary);
   border-color: color-mix(in srgb, #ffffff 54%, transparent);
@@ -877,7 +977,11 @@ const getPlatformIcon = (platformStr) => {
 
 /* Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-purple) 100%
+  );
   color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
@@ -887,7 +991,11 @@ const getPlatformIcon = (platformStr) => {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-purple-hover, #6d28d9) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-hover) 0%,
+    var(--color-purple-hover, #6d28d9) 100%
+  );
   transform: translateY(-1px);
   box-shadow: 0 6px 16px -2px var(--color-primary-light);
 }

@@ -1,8 +1,11 @@
 <template>
-  <section :class="['metric-grid mb-4', `cols-${metrics.length}`]" aria-label="Admin page metrics">
-    <article 
-      v-for="metric in metrics" 
-      :key="metric.label" 
+  <section
+    :class="['metric-grid mb-4', `cols-${metrics.length}`]"
+    aria-label="Admin page metrics"
+  >
+    <article
+      v-for="metric in metrics"
+      :key="metric.label"
       :class="['metric-tile', { 'clickable-tile': !!metric.onClick }]"
       @click="metric.onClick && metric.onClick()"
     >
@@ -10,7 +13,9 @@
         <span :class="['metric-icon', metric.className]">
           <i :class="['bi', metric.icon]"></i>
         </span>
-        <span v-if="metric.underIconText" class="metric-under-icon">{{ metric.underIconText }}</span>
+        <span v-if="metric.underIconText" class="metric-under-icon">{{
+          metric.underIconText
+        }}</span>
       </div>
       <div>
         <p class="metric-label mb-1">{{ metric.label }}</p>
@@ -84,7 +89,10 @@ defineProps({
 
 .clickable-tile {
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .clickable-tile:hover {
