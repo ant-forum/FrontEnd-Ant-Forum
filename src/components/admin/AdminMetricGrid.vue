@@ -1,5 +1,5 @@
 <template>
-  <section class="metric-grid mb-4" aria-label="Admin page metrics">
+  <section :class="['metric-grid mb-4', `cols-${metrics.length}`]" aria-label="Admin page metrics">
     <article 
       v-for="metric in metrics" 
       :key="metric.label" 
@@ -35,8 +35,19 @@ defineProps({
 <style scoped>
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.metric-grid.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.metric-grid.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric-grid.cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .metric-tile {
@@ -131,13 +142,13 @@ defineProps({
 
 @media (max-width: 1199.98px) {
   .metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
 @media (max-width: 767.98px) {
   .metric-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 }
 </style>
