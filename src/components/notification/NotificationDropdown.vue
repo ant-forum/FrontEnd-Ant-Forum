@@ -1,9 +1,13 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import { useNotificationStore } from "../../stores/NotificationStore";
+import { onMounted, onUnmounted, ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useNotificationStore } from '../../stores/NotificationStore';
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(['close']);
+
+const displayedNotifications = computed(() => {
+  return notificationStore.allNotifications.slice(0, 4);
+});
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
@@ -11,29 +15,25 @@ const notificationStore = useNotificationStore();
 onMounted(async () => {
   await notificationStore.fetchNotifications();
   // Add global click listener to close dropdown on clicking outside
-  document.addEventListener("click", handleOutsideClick);
+  document.addEventListener('click', handleOutsideClick);
 });
 
 onUnmounted(() => {
-  document.removeEventListener("click", handleOutsideClick);
+  document.removeEventListener('click', handleOutsideClick);
 });
 
 const dropdownRef = ref(null);
 
 const handleOutsideClick = (e) => {
   // If clicked outside the dropdown and outside the header bell toggle button
-  if (
-    dropdownRef.value &&
-    !dropdownRef.value.contains(e.target) &&
-    !e.target.closest(".btn-bell-toggle")
-  ) {
-    emit("close");
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target) && !e.target.closest('.btn-bell-toggle')) {
+    emit('close');
   }
 };
 
 const handleNotificationClick = async (item) => {
   await notificationStore.markAsRead(item.id);
-  emit("close");
+  emit('close');
   if (item.link) {
     router.push(item.link);
   }
@@ -53,9 +53,9 @@ const formatTime = (dateStr) => {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now - date;
-
+  
   if (diffMs < 0) return "Just now"; // Avoid future calculations due to clock offsets
-
+  
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -64,7 +64,7 @@ const formatTime = (dateStr) => {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 };
 
 const getNotificationIcon = (type) => {
@@ -79,18 +79,13 @@ const getNotificationIcon = (type) => {
 </script>
 
 <template>
-  <div
-    ref="dropdownRef"
-    class="notification-dropdown shadow-lg animate__animated animate__fadeIn"
-  >
+  <div ref="dropdownRef" class="notification-dropdown shadow-lg animate__animated animate__fadeIn">
     <!-- Header -->
-    <div
-      class="dropdown-header d-flex align-items-center justify-content-between"
-    >
+    <div class="dropdown-header d-flex align-items-center justify-content-between">
       <h5 class="m-0 fw-bold header-title">Notifications</h5>
-      <button
-        v-if="notificationStore.unreadCount > 0"
-        @click="handleMarkAllRead"
+      <button 
+        v-if="notificationStore.unreadCount > 0" 
+        @click="handleMarkAllRead" 
         class="btn-mark-read btn btn-sm bg-transparent border-0 px-2 fw-semibold"
       >
         Mark all as read
@@ -100,15 +95,8 @@ const getNotificationIcon = (type) => {
     <!-- Scrollable content area -->
     <div class="dropdown-content">
       <!-- Loading skeletons state -->
-      <div
-        v-if="notificationStore.loading"
-        class="skeletons-container p-3 d-flex flex-column gap-3"
-      >
-        <div
-          v-for="i in 3"
-          :key="i"
-          class="skeleton-item d-flex gap-3 align-items-start"
-        >
+      <div v-if="notificationStore.loading" class="skeletons-container p-3 d-flex flex-column gap-3">
+        <div v-for="i in 3" :key="i" class="skeleton-item d-flex gap-3 align-items-start">
           <div class="skeleton-avatar rounded-circle"></div>
           <div class="skeleton-lines flex-grow-1 d-flex flex-column gap-2">
             <div class="skeleton-line-long rounded"></div>
@@ -118,80 +106,63 @@ const getNotificationIcon = (type) => {
       </div>
 
       <!-- Empty State -->
-      <div
-        v-else-if="notificationStore.notifications.length === 0"
-        class="empty-state p-4 text-center d-flex flex-column align-items-center justify-content-center"
-      >
-        <div
-          class="empty-icon-wrapper d-flex align-items-center justify-content-center rounded-circle mb-3"
-        >
+      <div v-else-if="notificationStore.notifications.length === 0" class="empty-state p-4 text-center d-flex flex-column align-items-center justify-content-center">
+        <div class="empty-icon-wrapper d-flex align-items-center justify-content-center rounded-circle mb-3">
           <i class="bi bi-bell-slash"></i>
         </div>
         <h6 class="fw-bold mb-1 themed-text">All caught up!</h6>
-        <p class="text-muted small m-0">
-          You have no active notifications at the moment.
-        </p>
+        <p class="text-muted small m-0">You have no active notifications at the moment.</p>
       </div>
 
       <!-- Notification list -->
       <div v-else class="notifications-list">
-        <div
-          v-for="item in notificationStore.allNotifications"
-          :key="item.id"
-          @click="handleNotificationClick(item)"
+        <div 
+          v-for="item in displayedNotifications" 
+          :key="item.id" 
+          @click="handleNotificationClick(item)" 
           class="notification-item d-flex gap-3 align-items-start"
-          :class="{ unread: !item.read }"
+          :class="{ 'unread': !item.read }"
         >
           <!-- Avatar / Icon -->
           <div class="item-avatar-wrap position-relative">
-            <img
-              v-if="item.sender && item.sender.avatar"
-              :src="item.sender.avatar"
-              class="sender-avatar rounded-circle object-fit-cover"
-              alt="Avatar"
-              width="36"
+            <img 
+              v-if="item.sender && item.sender.avatar" 
+              :src="item.sender.avatar" 
+              class="sender-avatar rounded-circle object-fit-cover" 
+              alt="Avatar" 
+              width="36" 
               height="36"
-            />
-            <div
-              v-else
+            >
+            <div 
+              v-else 
               class="fallback-icon-wrap rounded-circle d-flex align-items-center justify-content-center bg-secondary-subtle"
             >
               <i class="bi bi-bell"></i>
             </div>
-
+            
             <!-- Type Icon badge -->
-            <div
-              class="badge-icon-wrap rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-            >
+            <div class="badge-icon-wrap rounded-circle d-flex align-items-center justify-content-center shadow-sm">
               <i :class="getNotificationIcon(item.type)"></i>
             </div>
           </div>
 
           <!-- Message Body -->
           <div class="item-body flex-grow-1 min-width-0">
-            <div
-              class="d-flex align-items-center justify-content-between gap-2 mb-1"
-            >
-              <span class="item-title text-truncate fw-bold">{{
-                item.title
-              }}</span>
-              <span class="item-time text-nowrap text-muted small">{{
-                formatTime(item.created_at)
-              }}</span>
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+              <span class="item-title text-truncate fw-bold">{{ item.title }}</span>
+              <span class="item-time text-nowrap text-muted small">{{ formatTime(item.created_at) }}</span>
             </div>
             <p class="item-message text-muted small m-0">{{ item.message }}</p>
           </div>
 
           <!-- Inline Actions -->
-          <div
-            class="item-actions d-flex align-items-center justify-content-center"
-          >
+          <div class="item-actions d-flex align-items-center justify-content-center">
             <!-- Unread Pulse Dot -->
             <span v-if="!item.read" class="unread-dot rounded-circle"></span>
-
+            
             <!-- Delete Button -->
-            <button
-              @click="handleDeleteClick($event, item.id)"
+            <button 
+              @click="handleDeleteClick($event, item.id)" 
               class="btn-delete-item btn btn-sm rounded-circle d-flex align-items-center justify-content-center border-0 bg-transparent text-muted"
               title="Delete Notification"
             >
@@ -202,9 +173,9 @@ const getNotificationIcon = (type) => {
       </div>
       <!-- Dropdown Footer -->
       <div class="dropdown-footer">
-        <router-link
-          to="/notifications"
-          @click="emit('close')"
+        <router-link 
+          to="/notifications" 
+          @click="emit('close')" 
           class="view-all-btn text-decoration-none fw-bold"
         >
           View all notifications
@@ -413,12 +384,7 @@ const getNotificationIcon = (type) => {
 .skeleton-avatar {
   width: 36px;
   height: 36px;
-  background: linear-gradient(
-    90deg,
-    var(--color-surface-hover) 25%,
-    var(--color-border) 50%,
-    var(--color-surface-hover) 75%
-  );
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -426,12 +392,7 @@ const getNotificationIcon = (type) => {
 .skeleton-line-long {
   width: 80%;
   height: 12px;
-  background: linear-gradient(
-    90deg,
-    var(--color-surface-hover) 25%,
-    var(--color-border) 50%,
-    var(--color-surface-hover) 75%
-  );
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
@@ -439,23 +400,14 @@ const getNotificationIcon = (type) => {
 .skeleton-line-short {
   width: 50%;
   height: 10px;
-  background: linear-gradient(
-    90deg,
-    var(--color-surface-hover) 25%,
-    var(--color-border) 50%,
-    var(--color-surface-hover) 75%
-  );
+  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite;
 }
 
 @keyframes pulse-glow {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 @media (max-width: 480px) {

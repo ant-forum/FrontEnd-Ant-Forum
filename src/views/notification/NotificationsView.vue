@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import Footer from "../../components/layouts/footer.vue";
 import { useNotificationStore } from "../../stores/NotificationStore";
@@ -9,18 +9,19 @@ const router = useRouter();
 const notificationStore = useNotificationStore();
 
 // Active filter state: 'all' | 'unread' | 'read' | 'reply' | 'like' | 'mention' | 'system'
-const activeFilter = ref("all");
-const searchQuery = ref("");
+const activeFilter = ref('all');
+const searchQuery = ref('');
+const displayLimit = ref(4);
+
+watch([activeFilter, searchQuery], () => {
+  displayLimit.value = 4;
+});
 
 const filterTypes = [
-  { value: "reply", label: "Replies", icon: "bi bi-chat-fill text-primary" },
-  { value: "like", label: "Likes", icon: "bi bi-heart-fill text-danger" },
-  { value: "mention", label: "Mentions", icon: "bi bi-at text-warning" },
-  {
-    value: "system",
-    label: "System Updates",
-    icon: "bi bi-shield-fill-check text-success",
-  },
+  { value: 'reply', label: 'Replies', icon: 'bi bi-chat-fill text-primary' },
+  { value: 'like', label: 'Likes', icon: 'bi bi-heart-fill text-danger' },
+  { value: 'mention', label: 'Mentions', icon: 'bi bi-at text-warning' },
+  { value: 'system', label: 'System Updates', icon: 'bi bi-shield-fill-check text-success' }
 ];
 
 onMounted(async () => {
@@ -32,40 +33,37 @@ const filteredNotifications = computed(() => {
   let list = notificationStore.allNotifications;
 
   // Apply Status / Type filter
-  if (activeFilter.value === "unread") {
-    list = list.filter((n) => !n.read);
-  } else if (activeFilter.value === "read") {
-    list = list.filter((n) => n.read);
-  } else if (
-    ["reply", "like", "mention", "system"].includes(activeFilter.value)
-  ) {
-    list = list.filter((n) => n.type === activeFilter.value);
+  if (activeFilter.value === 'unread') {
+    list = list.filter(n => !n.read);
+  } else if (activeFilter.value === 'read') {
+    list = list.filter(n => n.read);
+  } else if (['reply', 'like', 'mention', 'system'].includes(activeFilter.value)) {
+    list = list.filter(n => n.type === activeFilter.value);
   }
 
   // Apply Search query (matches title or message content)
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase().trim();
-    list = list.filter(
-      (n) =>
-        (n.title && n.title.toLowerCase().includes(query)) ||
-        (n.message && n.message.toLowerCase().includes(query)) ||
-        (n.sender &&
-          n.sender.name &&
-          n.sender.name.toLowerCase().includes(query)),
+    list = list.filter(n => 
+      (n.title && n.title.toLowerCase().includes(query)) ||
+      (n.message && n.message.toLowerCase().includes(query)) ||
+      (n.sender && n.sender.name && n.sender.name.toLowerCase().includes(query))
     );
   }
 
   return list;
 });
 
+const visibleNotifications = computed(() => {
+  return filteredNotifications.value.slice(0, displayLimit.value);
+});
+
 // Filter category counter helpers
 const getCount = (filterType) => {
-  if (filterType === "all") return notificationStore.notifications.length;
-  if (filterType === "unread") return notificationStore.unreadCount;
-  if (filterType === "read")
-    return notificationStore.notifications.filter((n) => n.read).length;
-  return notificationStore.notifications.filter((n) => n.type === filterType)
-    .length;
+  if (filterType === 'all') return notificationStore.notifications.length;
+  if (filterType === 'unread') return notificationStore.unreadCount;
+  if (filterType === 'read') return notificationStore.notifications.filter(n => n.read).length;
+  return notificationStore.notifications.filter(n => n.type === filterType).length;
 };
 
 // Handlers
@@ -80,7 +78,7 @@ const handleToggleRead = async (e, item) => {
   e.stopPropagation(); // Avoid triggering full routing navigation
   if (item.read) {
     // Custom mock functionality: allow toggling back to unread inside the detailed view page
-    const found = notificationStore.notifications.find((n) => n.id === item.id);
+    const found = notificationStore.notifications.find(n => n.id === item.id);
     if (found) found.read = false;
   } else {
     await notificationStore.markAsRead(item.id);
@@ -97,11 +95,7 @@ const handleMarkAllRead = async () => {
 };
 
 const handleClearAll = () => {
-  if (
-    confirm(
-      "Are you sure you want to delete all notifications? This cannot be undone.",
-    )
-  ) {
+  if (confirm("Are you sure you want to delete all notifications? This cannot be undone.")) {
     notificationStore.clearNotifications();
   }
 };
@@ -109,12 +103,12 @@ const handleClearAll = () => {
 const formatFullTime = (dateStr) => {
   if (!dateStr) return "";
   const date = new Date(dateStr);
-  return date.toLocaleString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return date.toLocaleString(undefined, { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit' 
   });
 };
 
@@ -130,34 +124,36 @@ const getNotificationIcon = (type) => {
 </script>
 
 <template>
-  <Navbar />
+  <div class="notifications-premium-page">
+    <div class="hero-bg-effects" aria-hidden="true">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+    </div>
+    
+    <Navbar />
 
-  <div class="container notifications-view-page py-4">
+    <div class="container page-container py-4">
     <!-- Page Header Title -->
     <div class="row align-items-center mb-4 g-3">
       <div class="col-sm">
-        <h2
-          class="page-title fw-black m-0 text-adaptive d-flex align-items-center gap-3"
-        >
+        <h2 class="page-title fw-black m-0 text-adaptive d-flex align-items-center gap-3">
           <i class="bi bi-bell-fill text-gradient"></i>
           <span>Notification Center</span>
         </h2>
-        <p class="text-muted small m-0 mt-1">
-          Manage, filter, and track all your school activity alerts.
-        </p>
+        <p class="text-muted small m-0 mt-1">Manage, filter, and track all your school activity alerts.</p>
       </div>
       <div class="col-sm-auto d-flex gap-2">
-        <button
-          v-if="notificationStore.unreadCount > 0"
-          @click="handleMarkAllRead"
+        <button 
+          v-if="notificationStore.unreadCount > 0" 
+          @click="handleMarkAllRead" 
           class="btn btn-action-modern btn-mark-read d-flex align-items-center gap-2"
         >
           <i class="bi bi-check2-all"></i>
           <span>Mark all as read</span>
         </button>
-        <button
-          v-if="notificationStore.notifications.length > 0"
-          @click="handleClearAll"
+        <button 
+          v-if="notificationStore.notifications.length > 0" 
+          @click="handleClearAll" 
           class="btn btn-action-modern btn-clear-all d-flex align-items-center gap-2"
         >
           <i class="bi bi-trash3"></i>
@@ -169,44 +165,33 @@ const getNotificationIcon = (type) => {
     <div class="row g-4">
       <!-- Left Filters Sidebar Column -->
       <aside class="col-lg-3">
-        <div class="sidebar-card shadow-sm p-3">
+        <div class="sidebar-card glass-panel p-4 mb-4">
           <!-- Search Box -->
           <div class="search-box-wrap mb-4 position-relative">
-            <i
-              class="bi bi-search search-icon position-absolute text-muted"
-            ></i>
-            <input
-              v-model="searchQuery"
-              type="text"
-              class="form-control ps-5"
+            <i class="bi bi-search search-icon position-absolute text-muted"></i>
+            <input 
+              v-model="searchQuery" 
+              type="text" 
+              class="form-control ps-5" 
               placeholder="Search notifications..."
             />
           </div>
 
           <!-- Navigation Filters -->
-          <h6
-            class="sidebar-section-title text-muted text-uppercase fw-bold mb-3 px-2"
-          >
-            Filters
-          </h6>
+          <h6 class="sidebar-section-title text-muted text-uppercase fw-bold mb-3 px-2">Filters</h6>
           <nav class="sidebar-nav d-flex flex-column gap-1">
-            <button
-              v-for="filter in ['all', 'unread', 'read']"
+            <button 
+              v-for="filter in ['all', 'unread', 'read']" 
               :key="filter"
-              @click="activeFilter = filter"
+              @click="activeFilter = filter" 
               class="filter-nav-btn text-start d-flex justify-content-between align-items-center"
-              :class="{ active: activeFilter === filter }"
+              :class="{ 'active': activeFilter === filter }"
             >
               <span class="d-flex align-items-center gap-3 flex-shrink-0">
-                <i
-                  :class="[
-                    filter === 'all'
-                      ? 'bi bi-grid-fill'
-                      : filter === 'unread'
-                        ? 'bi bi-envelope-fill'
-                        : 'bi bi-envelope-open-fill',
-                  ]"
-                ></i>
+                <i :class="[
+                  filter === 'all' ? 'bi bi-grid-fill' : 
+                  filter === 'unread' ? 'bi bi-envelope-fill' : 'bi bi-envelope-open-fill'
+                ]"></i>
                 <span class="text-capitalize">{{ filter }}</span>
               </span>
               <span class="sidebar-badge flex-shrink-0 ms-2">
@@ -215,20 +200,16 @@ const getNotificationIcon = (type) => {
             </button>
           </nav>
 
-          <hr class="my-4 border-slate" />
+          <hr class="my-4 border-slate">
 
-          <h6
-            class="sidebar-section-title text-muted text-uppercase fw-bold mb-3 px-2"
-          >
-            Types
-          </h6>
+          <h6 class="sidebar-section-title text-muted text-uppercase fw-bold mb-3 px-2">Types</h6>
           <nav class="sidebar-nav d-flex flex-column gap-1">
-            <button
-              v-for="type in filterTypes"
+            <button 
+              v-for="type in filterTypes" 
               :key="type.value"
-              @click="activeFilter = type.value"
+              @click="activeFilter = type.value" 
               class="filter-nav-btn text-start d-flex justify-content-between align-items-center"
-              :class="{ active: activeFilter === type.value }"
+              :class="{ 'active': activeFilter === type.value }"
             >
               <span class="d-flex align-items-center gap-3 flex-shrink-0">
                 <i :class="type.icon"></i>
@@ -245,16 +226,10 @@ const getNotificationIcon = (type) => {
       <!-- Right Main Feed Column -->
       <main class="col-lg-9">
         <div class="feed-container d-flex flex-column gap-3">
+          
           <!-- Loading skeleton state -->
-          <div
-            v-if="notificationStore.loading"
-            class="skeletons-wrapper d-flex flex-column gap-3"
-          >
-            <div
-              v-for="i in 4"
-              :key="i"
-              class="skeleton-card p-4 rounded-4 shadow-sm d-flex gap-4"
-            >
+          <div v-if="notificationStore.loading" class="skeletons-wrapper d-flex flex-column gap-3">
+            <div v-for="i in 4" :key="i" class="skeleton-card p-4 rounded-4 shadow-sm d-flex gap-4">
               <div class="skeleton-avatar rounded-circle"></div>
               <div class="skeleton-body flex-grow-1 d-flex flex-column gap-3">
                 <div class="skeleton-line-long"></div>
@@ -264,177 +239,206 @@ const getNotificationIcon = (type) => {
           </div>
 
           <!-- Empty State -->
-          <div
-            v-else-if="filteredNotifications.length === 0"
-            class="empty-state-card text-center p-5 rounded-4 border shadow-sm d-flex flex-column align-items-center justify-content-center"
-          >
-            <div
-              class="empty-icon-wrap mb-4 d-flex align-items-center justify-content-center rounded-circle"
-            >
+          <div v-else-if="filteredNotifications.length === 0" class="empty-state-card text-center p-5 rounded-4 border shadow-sm d-flex flex-column align-items-center justify-content-center">
+            <div class="empty-icon-wrap mb-4 d-flex align-items-center justify-content-center rounded-circle">
               <i class="bi bi-bell-slash"></i>
             </div>
             <h4 class="fw-black mb-2 text-adaptive">No Notifications Found</h4>
-            <p class="text-muted small mb-4 max-width-p">
-              We couldn't find any notifications matching the selected filter or
-              search query.
-            </p>
-            <button
-              @click="
-                activeFilter = 'all';
-                searchQuery = '';
-              "
-              class="btn btn-primary-gradient px-4 py-2 fw-bold shadow-sm rounded-pill"
-            >
+            <p class="text-muted small mb-4 max-width-p">We couldn't find any notifications matching the selected filter or search query.</p>
+            <button @click="activeFilter = 'all'; searchQuery = ''" class="btn btn-primary-gradient px-4 py-2 fw-bold shadow-sm rounded-pill">
               Clear All Filters
             </button>
           </div>
 
           <!-- Notifications List Feed -->
           <div v-else class="notifications-feed-list d-flex flex-column gap-3">
-            <div
-              v-for="item in filteredNotifications"
-              :key="item.id"
-              @click="handleNotificationClick(item)"
+            <div 
+              v-for="item in visibleNotifications" 
+              :key="item.id" 
+              @click="handleNotificationClick(item)" 
               class="notification-card-item p-4 rounded-4 shadow-sm d-flex gap-4 align-items-start transition-all cursor-pointer border border-theme"
-              :class="{ unread: !item.read }"
+              :class="{ 'unread': !item.read }"
             >
               <!-- Avatar Column -->
               <div class="avatar-wrap position-relative flex-shrink-0">
-                <img
-                  v-if="item.sender?.avatar"
-                  :src="item.sender.avatar"
-                  class="sender-avatar rounded-circle object-fit-cover shadow-sm"
+                <img 
+                  v-if="item.sender?.avatar" 
+                  :src="item.sender.avatar" 
+                  class="sender-avatar rounded-circle object-fit-cover shadow-sm" 
                   alt="User Avatar"
                   width="48"
                   height="48"
-                />
-                <div
-                  v-else
+                >
+                <div 
+                  v-else 
                   class="fallback-icon-wrap rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-                  style="width: 48px; height: 48px"
+                  style="width: 48px; height: 48px;"
                 >
                   <i class="bi bi-bell-fill text-muted"></i>
                 </div>
                 <!-- Badge Badge Icon -->
-                <div
-                  class="badge-icon-badge rounded-circle shadow-sm position-absolute d-flex align-items-center justify-content-center"
-                >
+                <div class="badge-icon-badge rounded-circle shadow-sm position-absolute d-flex align-items-center justify-content-center">
                   <i :class="getNotificationIcon(item.type)"></i>
                 </div>
               </div>
 
               <!-- Message Body Column -->
               <div class="body-wrap flex-grow-1 min-width-0">
-                <div
-                  class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-2 mb-2"
-                >
-                  <h6
-                    class="m-0 fw-black text-adaptive title-text text-truncate pe-sm-4"
-                  >
-                    {{ item.title }}
-                  </h6>
-                  <span class="time-text text-muted small text-nowrap">{{
-                    formatFullTime(item.created_at || item.timestamp)
-                  }}</span>
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-2 mb-2">
+                  <h6 class="m-0 fw-black text-adaptive title-text text-truncate pe-sm-4">{{ item.title }}</h6>
+                  <span class="time-text text-muted small text-nowrap">{{ formatFullTime(item.created_at || item.timestamp) }}</span>
                 </div>
-                <p class="message-text text-muted m-0 pe-md-4 mb-3">
-                  {{ item.message }}
-                </p>
+                <p class="message-text text-muted m-0 pe-md-4 mb-3">{{ item.message }}</p>
                 <div class="action-bar d-flex gap-2">
-                  <span
-                    v-if="!item.read"
-                    class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1-5 rounded-pill small fw-bold d-inline-flex align-items-center gap-2"
-                  >
+                  <span v-if="!item.read" class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1-5 rounded-pill small fw-bold d-inline-flex align-items-center gap-2">
                     <span class="pulse-dot"></span>
                     <span>New Alert</span>
                   </span>
-                  <span
-                    v-else
-                    class="badge bg-secondary-subtle text-muted border border-secondary-subtle px-3 py-1-5 rounded-pill small fw-bold"
-                  >
+                  <span v-else class="badge bg-secondary-subtle text-muted border border-secondary-subtle px-3 py-1-5 rounded-pill small fw-bold">
                     Read
                   </span>
-                  <span
-                    :class="[
-                      'badge text-uppercase type-badge px-3 py-1-5 rounded-pill small fw-bold',
-                      `badge-type-${item.type}`,
-                    ]"
-                  >
+                  <span :class="['badge text-uppercase type-badge px-3 py-1-5 rounded-pill small fw-bold', `badge-type-${item.type}`]">
                     {{ item.type }}
                   </span>
                 </div>
               </div>
 
               <!-- Action Buttons Column -->
-              <div class="actions-wrap flex-shrink-0 d-flex gap-2" @click.stop>
-                <!-- Toggle Read -->
-                <button
-                  @click="handleToggleRead($event, item)"
-                  class="btn-circle-action btn border"
-                  :title="item.read ? 'Mark as Unread' : 'Mark as Read'"
+              <div class="actions-wrap flex-shrink-0 dropdown" @click.stop>
+                <button 
+                  class="btn btn-circle-action border-0" 
+                  type="button" 
+                  data-bs-toggle="dropdown" 
+                  aria-expanded="false"
                 >
-                  <i
-                    :class="[
-                      item.read
-                        ? 'bi bi-envelope-fill text-muted'
-                        : 'bi bi-envelope-open-fill text-primary',
-                    ]"
-                  ></i>
+                  <i class="bi bi-three-dots-vertical"></i>
                 </button>
-                <!-- Delete -->
-                <button
-                  @click="handleDeleteClick($event, item.id)"
-                  class="btn-circle-action btn border btn-delete"
-                  title="Delete Notification"
-                >
-                  <i class="bi bi-trash3-fill text-danger"></i>
-                </button>
+                <ul class="dropdown-menu dropdown-menu-end custom-dropdown-menu shadow">
+                  <li>
+                    <button class="dropdown-item d-flex align-items-center gap-2" type="button" @click="handleToggleRead($event, item)">
+                      <i :class="item.read ? 'bi bi-envelope-fill text-muted' : 'bi bi-envelope-open-fill text-primary'"></i>
+                      <span>Mark as {{ item.read ? 'Unread' : 'Read' }}</span>
+                    </button>
+                  </li>
+                  <li><hr class="dropdown-divider custom-divider"></li>
+                  <li>
+                    <button class="dropdown-item d-flex align-items-center gap-2 text-danger action-delete" type="button" @click="handleDeleteClick($event, item.id)">
+                      <i class="bi bi-trash3-fill"></i>
+                      <span>Delete Notification</span>
+                    </button>
+                  </li>
+                </ul>
               </div>
             </div>
+            
+            <!-- See More Button -->
+            <div v-if="filteredNotifications.length > displayLimit" class="d-flex justify-content-center mt-3 mb-2">
+              <button @click="displayLimit += 10" class="btn btn-action-modern px-5 py-2 fw-bold">
+                See More
+              </button>
+            </div>
           </div>
+
         </div>
       </main>
     </div>
   </div>
 
   <Footer />
+  </div>
 </template>
 
 <style scoped>
-.notifications-view-page {
+/* ╔══════════════════════════════════════════════╗
+   ║  ANT FORUM — PREMIUM NOTIFICATIONS           ║
+   ╚══════════════════════════════════════════════╝ */
+
+.notifications-premium-page {
+  min-height: 100vh;
+  background: 
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    #080d18;
+  background-size: 34px 34px;
+  color: #f8fafc;
+  padding-bottom: 60px;
+  position: relative;
+  overflow-x: clip;
+}
+
+.hero-bg-effects {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: drift ease-in-out infinite;
+}
+
+.orb-1 {
+  width: 400px; height: 400px;
+  left: -10%; top: -10%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+  animation-duration: 12s;
+}
+
+.orb-2 {
+  width: 300px; height: 300px;
+  right: 0%; top: 40%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 70%);
+  animation-duration: 16s;
+  animation-delay: -4s;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(30px, -20px); }
+  66% { transform: translate(-20px, 15px); }
+}
+
+.page-container {
   max-width: 1280px;
-  margin: 40px auto 0 auto; /* Push page content down so it is not cut off by floating global header */
+  margin: 0 auto;
   padding-top: 24px;
-  min-height: 85vh;
-  font-family: var(--font-family-base);
-  color: var(--color-text);
+  position: relative;
+  z-index: 1;
 }
 
 .text-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-purple) 100%
-  );
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #a78bfa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
+.glass-panel {
+  background: rgba(16, 24, 39, 0.65);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+}
+
 /* Sidebar and Cards Styling */
 .sidebar-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  transition: all var(--transition-slow);
+  transition: all 0.3s ease;
+  position: sticky;
+  top: 100px;
+  z-index: 10;
 }
 
 .border-slate {
-  border-color: var(--color-border);
+  border-color: rgba(148, 163, 184, 0.14) !important;
 }
 
 .sidebar-section-title {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.8px;
+  color: #9aa5b6 !important;
 }
 
 .sidebar-nav {
@@ -449,34 +453,34 @@ const getNotificationIcon = (type) => {
   padding: 10px 14px !important;
   border: none !important;
   background: transparent !important;
-  color: var(--color-text-muted) !important;
-  font-weight: 700 !important;
+  color: #9aa5b6 !important;
+  font-weight: 600 !important;
   font-size: 0.9rem !important;
-  border-radius: var(--radius-md) !important;
+  border-radius: 12px !important;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  transition: all var(--transition-base) !important;
+  transition: all 0.3s ease !important;
 }
 
 .filter-nav-btn:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #f8fafc !important;
 }
 
 .filter-nav-btn.active {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: #818cf8 !important;
 }
 
 .sidebar-badge {
-  background: var(--color-surface-hover) !important;
-  color: var(--color-text-muted) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #9aa5b6 !important;
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   padding: 2px 8px !important;
-  border-radius: var(--radius-pill) !important;
-  border: 1px solid var(--color-border) !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(148, 163, 184, 0.14) !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -485,19 +489,10 @@ const getNotificationIcon = (type) => {
   line-height: 1 !important;
 }
 
-/* Active filter state badge should highlight beautifully! */
 .filter-nav-btn.active .sidebar-badge {
-  background: var(--color-primary) !important;
+  background: #6366f1 !important;
   color: white !important;
-  border-color: var(--color-primary) !important;
-}
-
-.bg-theme-subtle {
-  background-color: var(--color-surface-hover) !important;
-}
-
-.border-theme {
-  border-color: var(--color-border) !important;
+  border-color: #6366f1 !important;
 }
 
 /* modern search inputs */
@@ -506,87 +501,98 @@ const getNotificationIcon = (type) => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 1.05rem;
+  color: #9aa5b6 !important;
 }
 
 .form-control {
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  color: #f8fafc;
+  border-radius: 12px;
   padding: 10px 14px;
   font-weight: 500;
-  transition: all var(--transition-base);
+  transition: all 0.3s ease;
 }
 
 .form-control:focus {
-  background: var(--color-surface);
-  border-color: var(--color-primary);
-  box-shadow: var(--focus-ring);
+  background: rgba(0, 0, 0, 0.3);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  color: #f8fafc;
+}
+
+.form-control::placeholder {
+  color: #64748b;
 }
 
 /* Action Buttons Header */
 .btn-action-modern {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-weight: 700;
+  background: rgba(16, 24, 39, 0.65);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  color: #e2e8f0;
+  font-weight: 600;
   font-size: 0.85rem;
   padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  transition: all var(--transition-base);
+  border-radius: 999px;
+  transition: all 0.3s ease;
 }
 
 .btn-action-modern:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-  border-color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+  border-color: #6366f1;
 }
 
 .btn-clear-all:hover {
-  border-color: var(--color-danger);
-  color: var(--color-danger);
+  border-color: #ef4444;
+  color: #ef4444;
 }
 
 .btn-primary-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-purple) 100%
-  );
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   border: none;
-  transition: all var(--transition-base);
+  transition: all 0.3s ease;
 }
 
 .btn-primary-gradient:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--color-primary-light);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
 }
 
 /* Notifications feed items */
 .notification-card-item {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  transition: all var(--transition-base);
+  background: rgba(16, 24, 39, 0.65);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px;
+  position: relative;
+  z-index: 1;
 }
 
-.notification-card-item:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md) !important;
-  border-color: var(--color-primary) !important;
+.notification-card-item:hover,
+.notification-card-item:focus-within,
+.notification-card-item:has(.dropdown-menu.show) {
+  z-index: 50;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  background: rgba(30, 41, 59, 0.7);
 }
 
 .notification-card-item.unread {
-  background: var(--color-primary-light);
-  border-color: rgba(99, 102, 241, 0.25) !important;
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.3) !important;
 }
 
 .sender-avatar {
-  border: 2px solid var(--color-border);
+  border: 2px solid rgba(148, 163, 184, 0.2);
 }
 
 .fallback-icon-wrap {
-  background: var(--color-surface-hover);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .badge-icon-badge {
@@ -594,22 +600,25 @@ const getNotificationIcon = (type) => {
   right: -4px;
   width: 22px;
   height: 22px;
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
+  background: #1e293b;
+  border: 1.5px solid #0f172a;
   font-size: 10px;
 }
 
 .title-text {
   font-size: 1.05rem;
+  color: #f8fafc;
 }
 
 .message-text {
   font-size: 0.92rem;
   line-height: 1.5;
+  color: #94a3b8 !important;
 }
 
 .time-text {
   font-size: 0.8rem;
+  color: #64748b !important;
 }
 
 .py-1-5 {
@@ -621,25 +630,16 @@ const getNotificationIcon = (type) => {
 .pulse-dot {
   width: 7px;
   height: 7px;
-  background-color: var(--color-primary);
+  background-color: #818cf8;
   border-radius: 50%;
   display: inline-block;
   animation: pulse-ring 1.8s infinite;
 }
 
 @keyframes pulse-ring {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 5px rgba(99, 102, 241, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
-  }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(129, 140, 248, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(129, 140, 248, 0); }
 }
 
 /* Feed item circle button actions */
@@ -650,36 +650,38 @@ const getNotificationIcon = (type) => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--color-surface);
-  border-color: var(--color-border) !important;
-  color: var(--color-text-muted);
-  transition: all var(--transition-base);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.14) !important;
+  color: #9aa5b6;
+  transition: all 0.3s ease;
 }
 
 .btn-circle-action:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.1);
+  border-color: #6366f1 !important;
+  color: #818cf8;
 }
 
 .btn-delete:hover {
-  border-color: var(--color-danger) !important;
-  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444 !important;
+  color: #ef4444;
 }
 
 /* Empty State Card */
 .empty-state-card {
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
+  background: rgba(16, 24, 39, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px dashed rgba(148, 163, 184, 0.2);
   min-height: 350px;
 }
 
 .empty-icon-wrap {
   width: 72px;
   height: 72px;
-  background: var(--color-surface-hover);
+  background: rgba(255, 255, 255, 0.05);
   font-size: 2rem;
-  color: var(--color-text-muted);
+  color: #64748b;
 }
 
 .max-width-p {
@@ -688,63 +690,44 @@ const getNotificationIcon = (type) => {
 
 /* Skeleton Loading animations */
 .skeleton-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: rgba(16, 24, 39, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.14);
   overflow: hidden;
 }
 
 .skeleton-avatar {
   width: 48px;
   height: 48px;
-  background: linear-gradient(
-    90deg,
-    var(--color-surface-hover) 25%,
-    var(--color-border) 50%,
-    var(--color-surface-hover) 75%
-  );
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow-skel 1.5s infinite;
 }
 
 .skeleton-line-long {
   width: 70%;
   height: 14px;
   border-radius: 4px;
-  background: linear-gradient(
-    90deg,
-    var(--color-surface-hover) 25%,
-    var(--color-border) 50%,
-    var(--color-surface-hover) 75%
-  );
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow-skel 1.5s infinite;
 }
 
 .skeleton-line-short {
   width: 40%;
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(
-    90deg,
-    var(--color-surface-hover) 25%,
-    var(--color-border) 50%,
-    var(--color-surface-hover) 75%
-  );
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow-skel 1.5s infinite;
 }
 
-@keyframes pulse-glow {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+@keyframes pulse-glow-skel {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .actions-wrap {
-  align-self: center; /* Vertically center action buttons inside card on desktop */
+  align-self: center;
 }
 
 @media (max-width: 768px) {
@@ -761,26 +744,85 @@ const getNotificationIcon = (type) => {
 }
 
 .badge-type-reply {
-  background: rgba(99, 102, 241, 0.08) !important;
-  color: var(--color-primary, #6366f1) !important;
-  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: #a5b4fc !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
 }
 
 .badge-type-like {
-  background: rgba(239, 68, 68, 0.08) !important;
-  color: var(--color-danger, #ef4444) !important;
-  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #fca5a5 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
 }
 
 .badge-type-mention {
-  background: rgba(245, 158, 11, 0.08) !important;
-  color: var(--color-warning, #f59e0b) !important;
-  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fcd34d !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
 }
 
 .badge-type-system {
-  background: rgba(16, 185, 129, 0.08) !important;
-  color: var(--color-success, #10b981) !important;
-  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #6ee7b7 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Muted badge for old/read items */
+.bg-secondary-subtle {
+  background-color: rgba(148, 163, 184, 0.1) !important;
+}
+.border-secondary-subtle {
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+.bg-primary-subtle {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+.border-primary-subtle {
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}
+
+.text-adaptive {
+  color: #f8fafc !important;
+}
+
+p.text-muted {
+  color: #94a3b8 !important;
+}
+
+/* Custom Dropdown Menu for 3-dots */
+.custom-dropdown-menu {
+  background: rgba(16, 24, 39, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+  padding: 8px 0;
+  min-width: 200px;
+}
+
+.custom-dropdown-menu .dropdown-item {
+  color: #f8fafc;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.custom-dropdown-menu .dropdown-item:hover,
+.custom-dropdown-menu .dropdown-item:focus {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+  outline: none;
+}
+
+.custom-dropdown-menu .dropdown-item.action-delete:hover,
+.custom-dropdown-menu .dropdown-item.action-delete:focus {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444 !important;
+}
+
+.custom-divider {
+  border-top-color: rgba(148, 163, 184, 0.14);
+  margin: 4px 0;
 }
 </style>
