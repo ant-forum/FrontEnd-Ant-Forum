@@ -6,7 +6,8 @@ import LeftSidebar from "@/components/forum/LeftSidebar.vue";
 import { useForumStore } from "@/stores/ForumStore";
 import { useAuthStore } from "@/stores/AuthStore";
 import MarkdownEditor from "@/components/forum/create/MarkdownEditor.vue";
-import { markdownToHtml, stripMarkdown } from "@/utils/markdown";
+import { stripMarkdown } from "@/utils/markdown";
+import { renderStoredContent } from "@/utils/richContent";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
 import BaseModal from "@/components/base/BaseModal.vue";
 import { useToast } from "vue-toastification";
@@ -654,7 +655,7 @@ function getAvatarUrl(author) {
             <div
               class="thread-body"
               v-html="
-                markdownToHtml(discussionBody || 'No description provided.')
+                renderStoredContent(discussionBody || 'No description provided.')
               "
             ></div>
 
@@ -824,7 +825,7 @@ function getAvatarUrl(author) {
                     </div>
                     <div
                       class="reply-body"
-                      v-html="markdownToHtml(reply.body || '')"
+                      v-html="renderStoredContent(reply.body || '')"
                     ></div>
 
                     <div v-if="canDeleteReply(reply)" class="reply-actions">
