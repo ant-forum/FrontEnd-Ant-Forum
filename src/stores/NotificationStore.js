@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import api from "../api/api.js";
 
 export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref([]);
@@ -12,85 +13,58 @@ export const useNotificationStore = defineStore("notification", () => {
 
   const allNotifications = computed(() => {
     return [...notifications.value].sort((a, b) => {
-      return (
-        new Date(b.created_at || b.timestamp) -
-        new Date(a.created_at || a.timestamp)
-      );
+      return new Date(b.created_at || b.timestamp) - new Date(a.created_at || a.timestamp);
     });
   });
 
   // Actions
   // Actions
   const fetchNotifications = async () => {
-    // If notifications are already loaded, don't reload mock data
-    if (notifications.value.length > 0) return;
-
     loading.value = true;
-
-    // Simulate a brief, ultra-smooth local loading state to display skeleton loaders
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // High-fidelity static mock data tailored for ANT students and teachers
-    notifications.value = [
-      {
-        id: 1,
-        type: "reply",
-        title: "Sarah Chen replied to your thread",
-        message:
-          '"Make sure you use multi-stage builds and choose a lightweight base image like node:18-alpine..."',
-        read: false,
-        created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
-        link: "/forum/1",
-        sender: {
-          name: "Sarah Chen",
-          avatar: "https://i.pravatar.cc/150?u=sarahc",
-        },
-      },
-      {
-        id: 2,
-        type: "like",
-        title: "David Smith liked your post",
-        message:
-          "David Smith liked your project showcase 'DevOps Optimization Blueprint'.",
-        read: false,
-        created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
-        link: "/showcase/1",
-        sender: {
-          name: "David Smith",
-          avatar: "https://i.pravatar.cc/150?u=david",
-        },
-      },
-      {
-        id: 3,
-        type: "system",
-        title: "Project Showcase Approved",
-        message:
-          "Administrator Alex Chen approved your project 'ANT Forum Redesign Mockups' for public view.",
-        read: true,
-        created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-        link: "/showcase/1",
-        sender: {
-          name: "Alex Chen",
-          avatar: "/charles_leclerc.png",
-        },
-      },
-      {
-        id: 4,
-        type: "mention",
-        title: "Marcus Wright mentioned you in a comment",
-        message:
-          "@SopanhaZin is there an endpoint `/auth/refresh` on the deployed NodeJS server?",
-        read: true,
-        created_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(), // 3 days ago
-        link: "/forum/2",
-        sender: {
-          name: "Marcus Wright",
-          avatar: "https://i.pravatar.cc/150?u=marcus",
-        },
-      },
-    ];
-
-    loading.value = false;
+    try {
+      const response = await api.get('/api/notifications/getnotification');
+      if (response.data && response.data.result) {
+        notifications.value = response.data.data.map(n => {
+          let type = "system";
+          let title = "New Notification";
+          let message = "";
+          
+          if (n.type === "comment") {
+             type = "reply";
+             title = `${n.sender_username} replied to your post`;
+             message = `${n.sender_username} left a comment on your post.`;
+          } else if (n.type === "like") {
+             type = "like";
+             title = `${n.sender_username} liked your post`;
+             message = `${n.sender_username} reacted to your content.`;
+          } else if (n.type === "mention") {
+             type = "mention";
+             title = `${n.sender_username} mentioned you`;
+             message = `${n.sender_username} mentioned you.`;
+          }
+          
+          const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+          
+          return {
+             id: n.id,
+             type: type,
+             title: title,
+             message: message,
+             read: Boolean(n.is_read),
+             created_at: n.created_at,
+             link: "#",
+             sender: {
+                name: n.sender_username,
+                avatar: n.sender_profile_pic ? `${baseUrl}${n.sender_profile_pic}` : null
+             }
+          };
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    } finally {
+      loading.value = false;
+    }
   };
 
   const markAsRead = (id) => {
@@ -106,8 +80,14 @@ export const useNotificationStore = defineStore("notification", () => {
     });
   };
 
-  const deleteNotification = (id) => {
-    notifications.value = notifications.value.filter((n) => n.id !== id);
+  const deleteNotification = async (id) => {
+    try {
+      await api.delete(`/api/notifications/${id}`);
+      notifications.value = notifications.value.filter((n) => n.id !== id);
+    } catch (error) {
+      console.error("Failed to delete notification:", error);
+      throw error;
+    }
   };
 
   const addNotification = (item) => {
