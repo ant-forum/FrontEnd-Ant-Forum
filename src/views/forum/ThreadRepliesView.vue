@@ -11,6 +11,9 @@ import { renderStoredContent } from "@/utils/richContent";
 import { resolveMediaUrl } from "@/utils/mediaUrl";
 import BaseModal from "@/components/base/BaseModal.vue";
 import { useToast } from "vue-toastification";
+import ReportModal from "@/components/base/ReportModal.vue";
+
+const showReportModal = ref(false);
 
 const route = useRoute();
 const router = useRouter();
@@ -729,6 +732,10 @@ function getAvatarUrl(author) {
                   <i class="bi bi-trash"></i>
                   Delete
                 </button>
+                <button class="action-btn report-btn text-danger" @click="showReportModal = true">
+                  <i class="bi bi-flag"></i>
+                  Report
+                </button>
                 <button class="action-btn" @click="scrollToBottom">
                   <i class="bi bi-chat-square-text"></i>
                   {{ replyCount }} {{ replyCount === 1 ? "Reply" : "Replies" }}
@@ -933,6 +940,15 @@ function getAvatarUrl(author) {
         </button>
       </template>
     </BaseModal>
+
+    <!-- Report Modal -->
+    <ReportModal
+      v-if="showReportModal"
+      type="forum"
+      :target-id="discussion.id"
+      title="Report Discussion Thread"
+      @closeModal="showReportModal = false"
+    />
   </div>
 </template>
 

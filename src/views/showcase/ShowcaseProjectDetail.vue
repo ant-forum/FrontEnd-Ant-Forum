@@ -7,12 +7,15 @@ import SkeletonLoader from "../../components/SkeletonLoader.vue";
 import { useProjectStore } from "../../stores/ProjectStore.js";
 import { useAuthStore } from "../../stores/AuthStore.js";
 import { useToast } from "../../composables/useToast.js";
+import ReportModal from "../../components/base/ReportModal.vue";
 
 const route = useRoute();
 const router = useRouter();
 const projectStore = useProjectStore();
 const authStore = useAuthStore();
 const toast = useToast();
+
+const showReportModal = ref(false);
 
 const loading = ref(true);
 
@@ -146,6 +149,9 @@ onMounted(async () => {
   const projectId = route.params.id;
   if (projectId) {
     await projectStore.fetchProject(projectId);
+    projectStore.incrementProjectView(projectId).catch((err) => {
+      console.warn("Failed to increment project view count:", err);
+    });
   }
   loading.value = false;
 });
@@ -303,6 +309,14 @@ onMounted(async () => {
                   <span v-else
                     ><i class="bi bi-trash3 me-1"></i> Delete Project</span
                   >
+                </button>
+
+                <button
+                  v-if="project.id && !isOwner"
+                  @click="showReportModal = true"
+                  class="btn btn-outline-danger rounded-pill px-4 py-2 fw-bold shadow-sm"
+                >
+                  <i class="bi bi-flag me-1"></i> Report Project
                 </button>
               </div>
             </div>
@@ -566,6 +580,15 @@ onMounted(async () => {
         </div>
       </template>
     </main>
+
+    <!-- Report Modal -->
+    <ReportModal
+      v-if="showReportModal"
+      type="project"
+      :target-id="project.id"
+      title="Report Project Showcase"
+      @closeModal="showReportModal = false"
+    />
 
     <BaseFooter />
   </div>

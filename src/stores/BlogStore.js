@@ -341,6 +341,19 @@ export const useBlogStore = defineStore("blog", () => {
     }
   };
 
+  const incrementBlogView = async (id) => {
+    try {
+      const response = await api.post(`/api/blog/counter-view-post/${id}`, {}, { skipGlobalToast: true });
+      ensureSuccess(response);
+      if (blog.value && String(blog.value.id) === String(id)) {
+        blog.value.views = (blog.value.views || 0) + 1;
+      }
+      return response.data;
+    } catch (err) {
+      console.warn(`[BlogStore] incrementBlogView ${id} failed (silent):`, err);
+    }
+  };
+
   // 4. Own articles / blogs
   const fetchOwnBlogs = async (params = {}) => {
     try {
@@ -564,6 +577,7 @@ export const useBlogStore = defineStore("blog", () => {
     fetchBlogs,
     loadMore,
     fetchBlogPreview,
+    incrementBlogView,
     fetchOwnBlogs,
     deleteOwnBlog,
     fetchCategories,

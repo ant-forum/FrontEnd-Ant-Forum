@@ -73,7 +73,7 @@ export const useProjectStore = defineStore("project", () => {
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600",
     );
     const averageRating = Number(item.average_rating) || 0;
-    const views = Number(item.views) || 0;
+    const views = Number(item.views) || Number(item.view_count) || 0;
     let myRating = null;
     if (item.my_rating !== undefined && item.my_rating !== null) {
       myRating = Number(item.my_rating);
@@ -82,6 +82,8 @@ export const useProjectStore = defineStore("project", () => {
     const normalized = {
       ...item,
       id: item.id,
+      view_count: views,
+      views,
       title: item.title || "",
       description: item.description || "",
       image,
@@ -148,7 +150,7 @@ export const useProjectStore = defineStore("project", () => {
         // Ignore background fetch issues
       }
 
-      const res = await api.get("/api/projects");
+      const res = await api.get("/api/projects/getAllProjects");
       ensureSuccess(res);
       const list = extractList(res.data);
       // Fetch all unique user_ids in the list
@@ -179,7 +181,7 @@ export const useProjectStore = defineStore("project", () => {
         // Ignore background fetch issues
       }
 
-      const res = await api.get(`/api/projects/${id}`);
+      const res = await api.get(`/api/projects/getProjectById/${id}`);
       ensureSuccess(res);
       const raw =
         res.data?.data?.row || res.data?.row || res.data?.data || res.data;
@@ -211,10 +213,31 @@ export const useProjectStore = defineStore("project", () => {
     }
   };
 
+  const incrementProjectView = async (id) => {
+    try {
+      const response = await api.post(`/api/projects/counter-view-project/${id}`, {}, { skipGlobalToast: true });
+      ensureSuccess(response);
+      const resData = response.data?.data || response.data;
+      if (project.value && String(project.value.id) === String(id)) {
+        if (resData && resData.view_count !== undefined) {
+          project.value.views = Number(resData.view_count);
+          project.value.view_count = Number(resData.view_count);
+        } else {
+          project.value.views = (project.value.views || 0) + 1;
+          project.value.view_count = (project.value.view_count || 0) + 1;
+        }
+      }
+      return response.data;
+    } catch (err) {
+      console.warn(`[ProjectStore] incrementProjectView ${id} failed (silent):`, err);
+    }
+  };
+
+
   const fetchMyProjects = async () => {
     isLoading.value = true;
     try {
-      const res = await api.get("/api/projects/my");
+      const res = await api.get("/api/projects/getMyProjects");
       ensureSuccess(res);
       const list = extractList(res.data);
       // Fetch all unique user_ids in the list
@@ -453,6 +476,7 @@ export const useProjectStore = defineStore("project", () => {
     resetCreateForm,
     fetchProjects,
     fetchProject,
+    incrementProjectView,
     fetchMyProjects,
     fetchRatedProjects,
     createProject,

@@ -187,6 +187,10 @@ const loadBlogData = async (id) => {
     if (blogStore.blogs.length === 0) {
       await blogStore.fetchBlogs();
     }
+    // Increment view count
+    blogStore.incrementBlogView(id).catch((err) => {
+      console.warn("Failed to increment blog view count:", err);
+    });
   } catch (err) {
     console.error("Failed to load blog:", err);
     router.push({ name: "not-found" });
@@ -334,6 +338,11 @@ const handleImgError = (e) => {
                       <span class="d-inline-flex align-items-center gap-1">
                         <i class="bi bi-clock-history"></i>
                         {{ post.postedAt || post.date }}
+                      </span>
+                      <span class="mx-2">•</span>
+                      <span class="d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-eye"></i>
+                        {{ post.views || 0 }} views
                       </span>
                     </div>
                   </div>

@@ -280,9 +280,11 @@ import AdminTopbar from "../../components/admin/AdminTopbar.vue";
 import StatCard from "../../components/admin/StatCard.vue";
 import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
 import { useProjectStore } from "../../stores/ProjectStore";
+import { useReportStore } from "../../stores/ReportStore";
 
 const adminStore = useAdminOperationsStore();
 const projectStore = useProjectStore();
+const reportStore = useReportStore();
 const selectedPeriod = ref("Week");
 const periods = ["Day", "Week", "Month"];
 
@@ -290,6 +292,7 @@ onMounted(() => {
   if (projectStore.projects.length === 0) {
     projectStore.fetchProjects().catch(() => {});
   }
+  reportStore.fetchAllReports().catch(() => {});
 });
 
 const metrics = computed(() => {
@@ -319,8 +322,8 @@ const metrics = computed(() => {
     },
     {
       label: "Moderated Threads",
-      value: adminStore.threadReports.length,
-      description: `${adminStore.lockedThreads.length} currently locked`,
+      value: reportStore.threadReports.length,
+      description: `${reportStore.lockedThreads.length} currently locked`,
       descriptionIcon: "bi-chat-dots",
       descriptionColorClass: "text-success",
       icon: "bi bi-chat-square-text",
@@ -329,8 +332,8 @@ const metrics = computed(() => {
     },
     {
       label: "Reports",
-      value: adminStore.pendingReports.length,
-      description: `${adminStore.highPriorityReports.length} high priority`,
+      value: reportStore.pendingReports.length,
+      description: `${reportStore.highPriorityReports.length} high priority`,
       descriptionIcon: "bi-exclamation-triangle",
       descriptionColorClass: "text-danger",
       icon: "bi bi-flag",
@@ -400,7 +403,7 @@ const barHeight = (value) => Math.max(4, (value / chartMaximum.value) * 100);
 
 const queueItems = computed(() =>
   [
-    ...adminStore.pendingReports.slice(0, 2).map((item) => ({
+    ...reportStore.pendingReports.slice(0, 2).map((item) => ({
       id: `report-${item.id}`,
       title: item.title,
       type: "Reported thread",
@@ -464,7 +467,7 @@ const healthItems = computed(() => [
   { label: "Storage Usage", value: 68, colorClass: "bg-warning" },
   {
     label: "Moderation Load",
-    value: Math.min(100, adminStore.pendingReports.length * 20),
+    value: Math.min(100, reportStore.pendingReports.length * 20),
     colorClass: "bg-info",
   },
 ]);
