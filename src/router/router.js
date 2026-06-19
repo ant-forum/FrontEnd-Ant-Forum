@@ -177,6 +177,12 @@ const routes = [
     component: CreateProject,
   },
   {
+    path: "/showcase/edit/:id",
+    name: "EditProject",
+    meta: { requiresAuth: true },
+    component: CreateProject,
+  },
+  {
     path: "/showcase/create/assets",
     name: "VisualProject",
     meta: { requiresAuth: true },
@@ -295,6 +301,12 @@ const routes = [
     name: "Forum",
     meta: { requiresAuth: true },
     component: ForumView,
+  },
+  {
+    path: "/forum/edit/:id",
+    name: "EditDiscussion",
+    meta: { requiresAuth: true },
+    component: () => import("../views/forum/CreateDiscussionView.vue"),
   },
   {
     path: "/forum/create",

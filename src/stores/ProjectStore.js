@@ -295,7 +295,7 @@ export const useProjectStore = defineStore("project", () => {
         formData.append("status", rawData.status);
       }
 
-      const res = await api.post("/api/projects", formData);
+      const res = await api.post("/api/projects/createproject", formData);
       ensureSuccess(res);
       const created = res.data?.data || res.data;
 
@@ -345,7 +345,7 @@ export const useProjectStore = defineStore("project", () => {
         formData.append("status", rawData.status);
       }
 
-      const res = await api.put(`/api/projects/${id}`, formData);
+      const res = await api.put(`/api/projects/updateProject/${id}`, formData);
       ensureSuccess(res);
       const updated = res.data?.data || res.data;
 
@@ -379,7 +379,7 @@ export const useProjectStore = defineStore("project", () => {
   const deleteProject = async (id) => {
     isLoading.value = true;
     try {
-      const res = await api.delete(`/api/projects/${id}`);
+      const res = await api.delete(`/api/projects/deleteProject/${id}`);
       ensureSuccess(res);
       projects.value = projects.value.filter((p) => p.id != id);
       myProjects.value = myProjects.value.filter((p) => p.id != id);
