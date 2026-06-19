@@ -8,12 +8,27 @@ import { useProjectStore } from "../../stores/ProjectStore.js";
 import { useAuthStore } from "../../stores/AuthStore.js";
 import { useToast } from "../../composables/useToast.js";
 import ReportModal from "../../components/base/ReportModal.vue";
+import BaseModal from "../../components/base/BaseModal.vue";
+import { useTagsStore } from "../../stores/TagsStore.js";
 
 const route = useRoute();
 const router = useRouter();
 const projectStore = useProjectStore();
 const authStore = useAuthStore();
 const toast = useToast();
+const tagsStore = useTagsStore();
+
+const showDeleteConfirmModal = ref(false);
+const showEditModal = ref(false);
+const isUpdating = ref(false);
+
+const editForm = ref({
+  title: "",
+  description: "",
+  link: "",
+  tag_ids: [],
+  tagsList: [],
+});
 
 const showReportModal = ref(false);
 
@@ -72,14 +87,12 @@ const isOwner = computed(() => {
 const deleting = ref(false);
 // const hoveredStar = ref(0);
 
-const handleDelete = async () => {
-  if (
-    !confirm(
-      "Are you sure you want to delete this project? This action cannot be undone.",
-    )
-  ) {
-    return;
-  }
+const handleDelete = () => {
+  showDeleteConfirmModal.value = true;
+};
+
+const confirmDeleteProject = async () => {
+  showDeleteConfirmModal.value = false;
   deleting.value = true;
   try {
     const projectId = route.params.id;
@@ -92,6 +105,85 @@ const handleDelete = async () => {
   } finally {
     deleting.value = false;
   }
+};
+
+const openEditModal = () => {
+  const p = project.value;
+  if (p) {
+    editForm.value.title = p.title || "";
+    editForm.value.description = p.description || "";
+    editForm.value.link = p.link || "";
+
+    if (p.tag && Array.isArray(p.tag)) {
+      editForm.value.tag_ids = p.tag
+        .map((t) => (t.id !== undefined && t.id !== null ? t.id : t.tag_id))
+        .filter(Boolean);
+      editForm.value.tagsList = p.tag.map((t) => ({
+        id: t.id !== undefined && t.id !== null ? t.id : t.tag_id,
+        name: t.name || t.tag_name,
+        tag_name: t.name || t.tag_name,
+      }));
+    } else if (p.tags && Array.isArray(p.tags)) {
+      editForm.value.tagsList = p.tags
+        .map((tagName) => {
+          const matchedTag = tagsStore.tags.find(
+            (t) => (t.name || t.tag_name) === tagName,
+          );
+          return matchedTag || { id: null, name: tagName };
+        })
+        .filter(Boolean);
+      editForm.value.tag_ids = editForm.value.tagsList
+        .map((t) => t.id)
+        .filter(Boolean);
+    } else {
+      editForm.value.tag_ids = [];
+      editForm.value.tagsList = [];
+    }
+  }
+  showEditModal.value = true;
+};
+
+const submitEdit = async () => {
+  if (!editForm.value.title || !editForm.value.description) {
+    toast.error("Project name and description are required.");
+    return;
+  }
+  if (editForm.value.tag_ids.length === 0) {
+    toast.error("Please select at least one tag.");
+    return;
+  }
+
+  isUpdating.value = true;
+  try {
+    const projectId = route.params.id;
+    const updateData = {
+      projectName: editForm.value.title,
+      description: editForm.value.description,
+      liveDemoUrl: editForm.value.link,
+      tag_ids: editForm.value.tag_ids,
+    };
+    await projectStore.updateProject(projectId, updateData);
+    toast.success("Project updated successfully!");
+    showEditModal.value = false;
+  } catch (error) {
+    console.error("Failed to update project:", error);
+    toast.error("Failed to update project. Please try again.");
+  } finally {
+    isUpdating.value = false;
+  }
+};
+
+const addTag = (tag) => {
+  const id = tag.id !== undefined && tag.id !== null ? tag.id : tag.tag_id;
+  if (id !== undefined && id !== null && !editForm.value.tag_ids.includes(id)) {
+    editForm.value.tag_ids.push(id);
+    editForm.value.tagsList.push(tag);
+  }
+};
+
+const removeTag = (index) => {
+  editForm.value.tag_ids.splice(index, 1);
+  editForm.value.tagsList.splice(index, 1);
 };
 
 const isTeacher = computed(() => {
@@ -151,6 +243,11 @@ onMounted(async () => {
     await projectStore.fetchProject(projectId);
     projectStore.incrementProjectView(projectId).catch((err) => {
       console.warn("Failed to increment project view count:", err);
+    });
+  }
+  if (tagsStore.tags.length === 0) {
+    await tagsStore.fetchTags().catch((err) => {
+      console.warn("Failed to fetch tags:", err);
     });
   }
   loading.value = false;
@@ -287,13 +384,13 @@ onMounted(async () => {
                   No Demo
                 </button>
 
-                <router-link
+                <button
                   v-if="isOwner"
-                  :to="`/showcase/edit/${project.id}`"
+                  @click="openEditModal"
                   class="btn btn-outline-adaptive rounded-pill px-4 py-2 fw-bold shadow-sm"
                 >
                   <i class="bi bi-pencil-square me-1"></i> Edit Project
-                </router-link>
+                </button>
 
                 <button
                   v-if="isOwner"
@@ -589,6 +686,137 @@ onMounted(async () => {
       title="Report Project Showcase"
       @closeModal="showReportModal = false"
     />
+
+    <!-- Delete Project Confirmation Modal -->
+    <BaseModal
+      v-if="showDeleteConfirmModal"
+      title="Confirm Delete Project"
+      icon="bi-exclamation-triangle"
+      theme="danger"
+      @closeModal="showDeleteConfirmModal = false"
+    >
+      <div class="p-3 text-center">
+        <p class="themed-text">Are you sure you want to delete this project? This action cannot be undone.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+          <button
+            class="btn btn-light border px-4 rounded-pill fw-bold"
+            type="button"
+            @click="showDeleteConfirmModal = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn-danger px-4 rounded-pill fw-bold"
+            type="button"
+            @click="confirmDeleteProject"
+            :disabled="deleting"
+          >
+            <span v-if="deleting" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            <i v-else class="bi bi-trash3 me-1"></i> Confirm Delete
+          </button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Edit Project Modal -->
+    <BaseModal
+      v-if="showEditModal"
+      title="Edit Project Showcase"
+      icon="bi-pencil-square"
+      theme="primary"
+      @closeModal="showEditModal = false"
+    >
+      <form @submit.prevent="submitEdit" class="p-2">
+        <div class="mb-3">
+          <label class="form-label fw-bold small themed-text">Project Name <span class="text-danger">*</span></label>
+          <input
+            type="text"
+            v-model="editForm.title"
+            class="form-control"
+            placeholder="e.g., Nexus Core Engine"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small themed-text">Description <span class="text-danger">*</span></label>
+          <textarea
+            v-model="editForm.description"
+            class="form-control"
+            rows="5"
+            placeholder="Detail the problem it solves and its main features..."
+            required
+          ></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small themed-text">Live Demo URL</label>
+          <input
+            type="text"
+            v-model="editForm.link"
+            class="form-control"
+            placeholder="e.g., yourproject.com"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small themed-text">Select Tags <span class="text-danger">*</span></label>
+          <div class="tags-input-container p-2 mb-2 border rounded bg-light-theme" style="min-height: 48px;">
+            <div class="d-flex flex-wrap gap-2">
+              <span
+                v-for="(tag, idx) in editForm.tagsList"
+                :key="idx"
+                class="badge bg-primary rounded-3 p-2 d-inline-flex align-items-center gap-2"
+                style="font-size: 0.75rem;"
+              >
+                {{ tag.name || tag.tag_name }}
+                <button
+                  type="button"
+                  class="btn-close btn-close-white"
+                  style="font-size: 0.55rem"
+                  @click="removeTag(idx)"
+                ></button>
+              </span>
+              <span v-if="editForm.tagsList.length === 0" class="text-muted small">
+                Choose one or more tags.
+              </span>
+            </div>
+          </div>
+
+          <div class="tag-suggestions d-flex flex-wrap gap-2 mt-2">
+            <button
+              v-for="tag in tagsStore.tags"
+              :key="tag.id || tag.tag_id"
+              type="button"
+              class="btn btn-sm btn-outline-secondary rounded-pill"
+              :disabled="editForm.tag_ids.includes(tag.id || tag.tag_id)"
+              @click="addTag(tag)"
+              style="font-size: 0.75rem;"
+            >
+              + {{ tag.name || tag.tag_name }}
+            </button>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
+          <button
+            class="btn btn-light border px-4 rounded-pill fw-bold"
+            type="button"
+            @click="showEditModal = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary px-4 rounded-pill fw-bold"
+            type="submit"
+            :disabled="isUpdating"
+          >
+            <span v-if="isUpdating" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            <i v-else class="bi bi-save me-1"></i> Save Changes
+          </button>
+        </div>
+      </form>
+    </BaseModal>
 
     <BaseFooter />
   </div>

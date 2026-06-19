@@ -523,6 +523,57 @@
       </div>
     </div>
   </BaseModal>
+
+  <!-- Delete Social Link Confirmation Modal -->
+  <BaseModal
+    v-if="showDeleteSocialConfirm"
+    title="Confirm Delete Link"
+    icon="bi-exclamation-triangle"
+    theme="danger"
+    @closeModal="showDeleteSocialConfirm = false"
+  >
+    <div class="p-3 text-center">
+      <p class="themed-text">Are you sure you want to delete this social link?</p>
+      <div class="d-flex justify-content-center gap-3 mt-4">
+        <button
+          class="btn btn-light border px-4 rounded-pill fw-bold"
+          type="button"
+          @click="showDeleteSocialConfirm = false"
+        >
+          Cancel
+        </button>
+        <button
+          class="btn btn-danger px-4 rounded-pill fw-bold"
+          type="button"
+          @click="confirmDeleteSocialLink"
+        >
+          <i class="bi bi-trash me-1"></i> Confirm Delete
+        </button>
+      </div>
+    </div>
+  </BaseModal>
+
+  <!-- Send Message Modal -->
+  <BaseModal
+    v-if="showSendMessageModal"
+    :title="`Message ${profile.name}`"
+    icon="bi-chat-dots"
+    @closeModal="showSendMessageModal = false"
+  >
+    <div class="p-3 text-center">
+      <p class="themed-text">Opening chat dashboard with <strong>{{ profile.name }}</strong>...</p>
+      <p class="text-muted small">This is a mock chat dashboard integration.</p>
+      <div class="d-flex justify-content-end gap-3 mt-4">
+        <button
+          class="btn btn-primary px-4 rounded-pill fw-bold"
+          type="button"
+          @click="showSendMessageModal = false"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </BaseModal>
 </template>
 
 <script setup>
@@ -531,7 +582,7 @@ import { useRoute, useRouter } from "vue-router";
 import Navbar from "../components/layouts/header.vue";
 import Footer from "../components/layouts/footer.vue";
 import { useAuthStore } from "../stores/AuthStore";
-import api from "../api/api";
+import { useUserProfilesStore } from "../stores/UserProfilesStore";
 import { resolveMediaUrl } from "../utils/mediaUrl";
 import { normalizeSkills } from "../utils/profileFields";
 import { useForumStore } from "../stores/ForumStore";
@@ -541,8 +592,13 @@ import BaseModal from "../components/base/BaseModal.vue";
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const userProfilesStore = useUserProfilesStore();
 const forumStore = useForumStore();
 const toast = useToast();
+
+const showDeleteSocialConfirm = ref(false);
+const socialLinkIdToDelete = ref(null);
+const showSendMessageModal = ref(false);
 
 // Tab state: 'profile' | 'projects'
 const activeTab = ref("profile");
@@ -586,15 +642,8 @@ const isAddingSocial = ref(false);
 
 const loadSocialLinks = async () => {
   try {
-    const res = await api.get("/api/sociallink/get-all/social-link");
-    const links = res.data?.data || res.data || [];
-    if (links.length > 0 && links[0].user_id) {
-      socialLinks.value = links.filter(
-        (l) => Number(l.user_id) === Number(profile.id),
-      );
-    } else {
-      socialLinks.value = links;
-    }
+    await userProfilesStore.fetchViewedSocialLinks(profile.id);
+    socialLinks.value = userProfilesStore.viewedSocialLinks;
   } catch (err) {
     console.warn("Failed to load social links:", err);
   }
@@ -605,11 +654,10 @@ const addSocialLink = async () => {
     return;
   isAddingSocial.value = true;
   try {
-    await api.post("/api/sociallink/createSocialLink", {
-      platform: newSocialPlatform.value,
-      url: newSocialUrl.value,
-      user_id: authStore.user.id,
-    });
+    await userProfilesStore.addSocialLink(
+      newSocialPlatform.value,
+      newSocialUrl.value,
+    );
     newSocialPlatform.value = "";
     newSocialUrl.value = "";
     showSocialModal.value = false;
@@ -623,15 +671,23 @@ const addSocialLink = async () => {
   }
 };
 
-const deleteSocialLink = async (id) => {
-  if (!confirm("Are you sure you want to delete this link?")) return;
+const deleteSocialLink = (id) => {
+  socialLinkIdToDelete.value = id;
+  showDeleteSocialConfirm.value = true;
+};
+
+const confirmDeleteSocialLink = async () => {
+  if (!socialLinkIdToDelete.value) return;
+  showDeleteSocialConfirm.value = false;
   try {
-    await api.delete(`/api/sociallink/delete/social-link/${id}`);
+    await userProfilesStore.deleteSocialLink(socialLinkIdToDelete.value);
     toast.success("Social link deleted!");
     await loadSocialLinks();
   } catch (err) {
     toast.error("Failed to delete social link.");
     console.error(err);
+  } finally {
+    socialLinkIdToDelete.value = null;
   }
 };
 
@@ -650,379 +706,14 @@ const getPlatformIcon = (platformStr) => {
 
 const loadUserProjects = async (userId) => {
   try {
-    const res = await api.get("/api/projects");
-    const allProjects = res.data?.data || res.data || [];
-    // Filter projects to only those belonging to the current user
-    const userProjects = allProjects.filter(
-      (p) =>
-        Number(p.user_id) === Number(userId) ||
-        Number(p.created_by) === Number(userId),
-    );
-
-    // Map API project data to UI format
-    return userProjects.map((p) => {
-      const avgRating = Number(p.average_rating) || 0;
-      const stars =
-        avgRating > 0 ? `${avgRating.toFixed(1)}/5` : p.stars || "0.0";
-
-      return {
-        id: p.id,
-        title: p.title || p.name,
-        desc: p.description || p.desc || "No description available.",
-        tags: p.tags
-          ? typeof p.tags === "string"
-            ? p.tags.split(",").map((t) => t.trim().toUpperCase())
-            : p.tags
-          : ["GENERAL"],
-        stars: stars,
-        image: p.thumbnail || p.image_url || p.screenshot,
-      };
-    });
+    return await userProfilesStore.fetchViewedProjects(userId);
   } catch (err) {
     console.warn("Failed to load user projects:", err);
     return [];
   }
 };
 
-// Mock database for standard ANT users
-const mockProfiles = {
-  david: {
-    name: "David Smith",
-    role: "Mentor",
-    bio: "Senior DevOps Engineer and cloud architect. Specializing in high-performance dockerization, Kubernetes orchestration, and automating multi-stage deployment pipelines for Node.js workloads.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar: "https://i.pravatar.cc/150?u=david",
-    skills: ["Docker", "Kubernetes", "Node.js", "CI/CD", "AWS"],
-    projects: [
-      {
-        title: "Docker-Node Optimizer",
-        stars: "1.2k",
-        desc: "A collection of multi-stage Dockerfiles and configuration templates optimized specifically for production Node.js deployment.",
-        tags: ["DOCKER", "NODE.JS", "DEVOPS"],
-      },
-      {
-        title: "CloudFlow Orchestrator",
-        stars: "450",
-        desc: "Lightweight cloud orchestration utility wrapper around Kubernetes API for development teams.",
-        tags: ["GO", "KUBERNETES", "YAML"],
-      },
-    ],
-    activity: [
-      {
-        type: "discussion",
-        title: "How to optimize Docker images for Node.js?",
-        meta: "FORUM DISCUSSION • 2H AGO • 48 COMMENTS",
-        icon: "bi-chat-left-text",
-      },
-      {
-        type: "merge",
-        title: "Merge branch 'release-v1.4' into dev",
-        meta: "REPOSITORY: ANT-DOCKER • 1D AGO",
-        icon: "bi-git",
-      },
-    ],
-  },
-  sarahc: {
-    name: "Sarah Chen",
-    role: "Mentor",
-    bio: "Frontend Engineer passionate about design systems, accessible interface designs, and modular Vue 3 state management. Love creating smooth animations and custom CSS variables.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar: "https://i.pravatar.cc/150?u=sarahc",
-    skills: ["Vue 3", "CSS Grid", "Tailwind", "JavaScript", "TypeScript"],
-    projects: [
-      {
-        title: "Lumina Components",
-        stars: "2.4k",
-        desc: "A fully accessible, beautifully animated Vue 3 component library built with custom properties and HSL palettes.",
-        tags: ["VUE 3", "TAILWIND", "CSS"],
-      },
-      {
-        title: "FlexGrid Builder",
-        stars: "812",
-        desc: "Interactive visual generator for modern CSS Grid layouts with real-time responsive media queries.",
-        tags: ["JAVASCRIPT", "CSS", "UI/UX"],
-      },
-    ],
-    activity: [
-      {
-        type: "discussion",
-        title: "Best practices for Vue 3 Composition API in large scale apps",
-        meta: "FORUM DISCUSSION • 5H AGO • 12 COMMENTS",
-        icon: "bi-chat-left-text",
-      },
-      {
-        type: "merge",
-        title:
-          "Refactor: Add responsive layout variables in theme configuration",
-        meta: "REPOSITORY: LUMINA-UI • 3D AGO",
-        icon: "bi-git",
-      },
-    ],
-  },
-  marcus: {
-    name: "Marcus Wright",
-    role: "Student",
-    bio: "Aspiring full-stack engineer and backend learner. Currently focusing on modern database query optimization, Redis caching patterns, and REST-to-GraphQL migration pipelines.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar: "https://i.pravatar.cc/150?u=marcus",
-    skills: ["GraphQL", "Redis", "Node.js", "PostgreSQL", "API Design"],
-    projects: [
-      {
-        title: "Apollo REST Gateway",
-        stars: "340",
-        desc: "An auto-mapping GraphQL schema layer on top of legacy REST API endpoints with cached response headers.",
-        tags: ["GRAPHQL", "REDIS", "NODE.JS"],
-      },
-    ],
-    activity: [
-      {
-        type: "discussion",
-        title: "Is it worth moving from REST to GraphQL in 2026?",
-        meta: "FORUM DISCUSSION • 1D AGO • 9 COMMENTS",
-        icon: "bi-chat-left-text",
-      },
-      {
-        type: "post",
-        title: "Published tutorial on PostgreSQL query execution analysis",
-        meta: "BLOG POST • 5D AGO",
-        icon: "bi-book",
-      },
-    ],
-  },
-  elena: {
-    name: "Elena Vance",
-    role: "Admin",
-    bio: "System administrator and cyber security auditor. Managing backend infrastructure reliability, conducting regular package vulnerability audits, and implementing JWT/refresh token security layers.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar: "https://i.pravatar.cc/150?u=elena",
-    skills: ["Security", "Linux", "Node.js", "Bash", "Docker"],
-    projects: [
-      {
-        title: "NPM Audit Watchdog",
-        stars: "520",
-        desc: "Continuous integration shell script utility that alerts development channels on high-severity vulnerability dependencies.",
-        tags: ["SECURITY", "NPM", "BASH"],
-      },
-    ],
-    activity: [
-      {
-        type: "discussion",
-        title: "New security vulnerability found in popular npm package",
-        meta: "FORUM DISCUSSION • 12H AGO • 14 COMMENTS",
-        icon: "bi-chat-left-text",
-      },
-      {
-        type: "system",
-        title:
-          "System Patch: Updated secure headers configuration in production load balancer",
-        meta: "SYSTEM AUDIT • 2D AGO",
-        icon: "bi-shield-check",
-      },
-    ],
-  },
-  james: {
-    name: "James Wilson",
-    role: "Mentor",
-    bio: "Software Architect with 12+ years of enterprise experience. Specializing in microservices, distributed system designs, gRPC APIs, and teaching students how to structure applications for scale.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar: "https://i.pravatar.cc/150?u=james",
-    skills: ["Microservices", "System Design", "Go", "gRPC", "Kubernetes"],
-    projects: [
-      {
-        title: "Service Mesh Scaffold",
-        stars: "1.8k",
-        desc: "Boilerplate system design configuration for localized microservice orchestration with Istio and Docker Compose.",
-        tags: ["GO", "GRPC", "MICROSERVICES"],
-      },
-    ],
-    activity: [
-      {
-        type: "discussion",
-        title: "Microservices vs Monolith: A practical guide",
-        meta: "FORUM DISCUSSION • 2D AGO • 11 COMMENTS",
-        icon: "bi-chat-left-text",
-      },
-      {
-        type: "merge",
-        title: "Add protobuf definitions for user profile service events",
-        meta: "REPOSITORY: ANT-PROTO • 1W AGO",
-        icon: "bi-git",
-      },
-    ],
-  },
-  performance_dev: {
-    name: "Performance Dev",
-    role: "Student",
-    bio: "Obsessed with front-end rendering performance, low-latency lists, IntersectionObserver dynamic layout slots, and browser compositor thread optimizations.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=performance_dev",
-    skills: [
-      "Web Performance",
-      "IntersectionObserver",
-      "Vue.js",
-      "CSS Rendering",
-      "HTML5",
-    ],
-    projects: [
-      {
-        title: "Dynamic Virtual Scroll",
-        stars: "612",
-        desc: "Low-latency vertical scroller container for heavy composite layers utilizing custom offset margins.",
-        tags: ["VUE.JS", "PERFORMANCE", "HTML5"],
-      },
-    ],
-    activity: [
-      {
-        type: "discussion",
-        title:
-          "Optimizing IntersectionObserver composite layers for heavy lists",
-        meta: "FORUM DISCUSSION • 3H AGO • 10 COMMENTS",
-        icon: "bi-chat-left-text",
-      },
-    ],
-  },
-  another_dev: {
-    name: "Alternate Developer",
-    role: "Student",
-    bio: "Aspiring backend developer focused on API routing, middleware authentication structures, express controllers, and MongoDB clustering layouts.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=another_dev",
-    skills: ["Node.js", "Express", "MongoDB", "JWT Auth", "JavaScript"],
-    projects: [
-      {
-        title: "Express JWT Scaler",
-        stars: "140",
-        desc: "Drop-in authentication module with Redis token blacklisting features.",
-        tags: ["EXPRESS", "JWT", "REDIS"],
-      },
-    ],
-    activity: [
-      {
-        type: "reply",
-        title: "Replied: Optimizing IntersectionObserver composite layers",
-        meta: "FORUM REPLY • 1H AGO",
-        icon: "bi-chat-left-text",
-      },
-    ],
-  },
-  frontend_wizard: {
-    name: "Frontend Wizard",
-    role: "Student",
-    bio: "Designing clean layout frames, modern animations, typography scale charts, dark modes, and CSS variable-driven interactive templates.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=frontend_wizard",
-    skills: ["CSS", "Tailwind", "Framer Motion", "Vue", "UX Design"],
-    projects: [
-      {
-        title: "Magic Variables UI",
-        stars: "740",
-        desc: "A playground to build theme variables dynamically using HSL calculations and browser controls.",
-        tags: ["CSS", "VUE", "TAILWIND"],
-      },
-    ],
-    activity: [
-      {
-        type: "reply",
-        title: "Replied: Optimizing IntersectionObserver composite layers",
-        meta: "FORUM REPLY • 30M AGO",
-        icon: "bi-chat-left-text",
-      },
-    ],
-  },
-  elena_rostova: {
-    name: "Elena Rostova",
-    role: "Core Team",
-    bio: "Senior Architect at ANT. Contributing to the forum rendering modules, notification synchronization layers, and backend database index optimization.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=120",
-    skills: [
-      "Database indexing",
-      "NodeJS",
-      "Vue 3",
-      "TailwindCSS",
-      "PostgreSQL",
-    ],
-    projects: [
-      {
-        title: "Index Analyzer",
-        stars: "1.4k",
-        desc: "Real-time index scanning metrics display for heavy enterprise PostgreSQL databases.",
-        tags: ["POSTGRESQL", "NODEJS", "METRICS"],
-      },
-    ],
-    activity: [
-      {
-        type: "merge",
-        title: "Merge PR #892: Implement notification socket sync",
-        meta: "REPOSITORY: ANT-CORE • 2D AGO",
-        icon: "bi-git",
-      },
-    ],
-  },
-  david_chen: {
-    name: "David Chen",
-    role: "Mentor",
-    bio: "Full stack instructor. Love coaching students on modern frontend patterns, state stores, and modular code encapsulation.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=120",
-    skills: ["Vue 3", "Pinia", "JavaScript", "Webpack", "CSS Grid"],
-    projects: [
-      {
-        title: "Pinia Scaffold Dev",
-        stars: "342",
-        desc: "Scaffold generator tools to build modular state stores with automatic local storage persistence hooks.",
-        tags: ["PINIA", "VUE 3", "BUILDER"],
-      },
-    ],
-    activity: [
-      {
-        type: "post",
-        title: "Shared: Designing cohesive Vue Store modules",
-        meta: "FORUM DISCUSSION • 3D AGO",
-        icon: "bi-chat-left-text",
-      },
-    ],
-  },
-  samira_al_fayed: {
-    name: "Samira Al-Fayed",
-    role: "Pro Member",
-    bio: "Web developer specializing in accessible interactive visualizations, SVG animation charts, and client-side graph algorithms.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120",
-    skills: ["SVG", "D3.js", "TypeScript", "TailwindCSS", "Canvas"],
-    projects: [
-      {
-        title: "VectorGraph Engine",
-        stars: "890",
-        desc: "Interactive canvas and SVG charting engine optimized for tree nodes rendering and drag actions.",
-        tags: ["TYPESCRIPT", "SVG", "CANVAS"],
-      },
-    ],
-    activity: [
-      {
-        type: "merge",
-        title:
-          "Merge PR #341: Fix responsive sizing coordinates in SVG chart bounds",
-        meta: "REPOSITORY: VECTORGRAPH • 4D AGO",
-        icon: "bi-git",
-      },
-    ],
-  },
-};
+
 
 const cleanParam = (paramStr) => {
   if (!paramStr) return "";
@@ -1044,73 +735,16 @@ const loadProfileData = async () => {
 
   try {
     // Attempt 1: Fetch profile from backend by id
-    const res = await api.get(`/api/admin/get-user/${id}`);
-    const data = res.data?.data || res.data;
+    const data = await userProfilesStore.fetchViewedProfile(id);
     if (data && (data.name || data.username || data.id)) {
       await populateProfile(data);
       isLoading.value = false;
       return;
     }
   } catch (err) {
-    console.warn(
-      "Backend profile requests failed. Falling back to mock database...",
-    );
+    console.warn("Backend profile requests failed. Redirecting to 404...", err);
+    router.push("/404");
   }
-
-  // Fallback to high-fidelity mock profiles
-  // Check direct username mapping first
-  let match = mockProfiles[id];
-
-  // If not found directly, check by matching name (e.g. "Elena Fisher" -> "elena")
-  if (!match) {
-    const formattedName = id.replace(/_/g, " ").replace(/-/g, " ");
-    const matchingKey = Object.keys(mockProfiles).find((key) => {
-      const pName = mockProfiles[key].name.toLowerCase();
-      return pName.includes(id) || id.includes(key);
-    });
-    if (matchingKey) {
-      match = mockProfiles[matchingKey];
-    }
-  }
-
-  // Final fallback object
-  const profileFallback = match || {
-    name: rawParam
-      ? rawParam.charAt(0).toUpperCase() + rawParam.slice(1).replace(/_/g, " ")
-      : "Ecosystem Member",
-    role: "Student",
-    bio: "Proud member of the ANT Forum development community. Passionate about learning web architectures, sharing coding tips, and collaborating on projects.",
-    github: "https://github.com",
-    linkedin: "https://linkedin.com",
-    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${id || "user"}&backgroundColor=b6e3f4,c0aede,d1d4f9`,
-    skills: ["JavaScript", "HTML", "CSS", "Git"],
-    projects: [
-      {
-        title: "Sandbox Workspace",
-        stars: "5",
-        desc: "A sandbox environment for studying core web technologies and modern coding architectures.",
-        tags: ["JAVASCRIPT", "HTML", "CSS"],
-      },
-    ],
-    activity: [
-      {
-        type: "discussion",
-        title: "Joined the ANT Forum developer network!",
-        meta: "SYSTEM FEED • RECENT",
-        icon: "bi-person-plus-fill",
-      },
-    ],
-  };
-
-  await populateProfile({
-    username: "@" + id,
-    ...profileFallback,
-  });
-
-  // Small delay to make the premium skeleton transition visible
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 400);
 };
 
 const populateProfile = async (data) => {
@@ -1197,7 +831,7 @@ const handleFollowToggle = () => {
 };
 
 const handleSendMessage = () => {
-  alert(`Opening chat dashboard with ${profile.name}...`);
+  showSendMessageModal.value = true;
 };
 </script>
 
