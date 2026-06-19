@@ -29,7 +29,6 @@
             aria-label="Filter reports by status"
           >
             <option value="all">All statuses</option>
-            <option value="Open">Open</option>
             <option value="Resolved">Resolved</option>
             <option value="Dismissed">Dismissed</option>
           </select>
@@ -167,10 +166,8 @@
       </div>
 
       <footer class="reports-footer">
-        <span
-          >Showing {{ visibleReports.length }} of
-          {{ adminStore.threadReports.length }} cases</span
-        >
+        <span>Showing {{ visibleReports.length }} of
+          {{ reportStore.threadReports.length }} cases</span>
         <span><i class="bi bi-device-ssd"></i> Local preview data</span>
       </footer>
     </section>
@@ -183,7 +180,7 @@
         <div>
           <strong>Review high-priority cases first</strong>
           <p>
-            {{ adminStore.highPriorityReports.length }} open case requires
+            {{ reportStore.highPriorityReports.length }} open case requires
             immediate attention.
           </p>
         </div>
@@ -225,7 +222,7 @@
         >
       </div>
 
-      <div class="content-preview">{{ selectedReport.excerpt }}</div>
+
 
       <div class="detail-grid">
         <div>
@@ -283,12 +280,6 @@
       </label>
 
       <div class="modal-actions">
-        <button class="btn btn-light border" type="button" @click="handleLock">
-          <i
-            :class="['bi', selectedReport.locked ? 'bi-unlock' : 'bi-lock']"
-          ></i>
-          {{ selectedReport.locked ? "Unlock" : "Lock" }}
-        </button>
         <button
           class="btn btn-outline-warning"
           type="button"
@@ -304,6 +295,15 @@
         >
           Dismiss
         </button>
+        <button
+          v-if="selectedReport.status !== 'Open'"
+          class="btn btn-outline-danger"
+          type="button"
+          @click="requestDelete"
+        >
+          <i class="bi bi-trash"></i>
+          Delete
+        </button>
         <button class="btn btn-success" type="button" @click="handleResolve">
           <i class="bi bi-check2-circle"></i>
           Resolve
@@ -311,33 +311,61 @@
       </div>
     </div>
   </BaseModal>
+
+  <!-- Confirm Delete Modal -->
+  <BaseModal
+    v-if="showDeleteConfirm"
+    title="Confirm Delete"
+    icon="bi bi-exclamation-triangle"
+    theme="danger"
+    @closeModal="showDeleteConfirm = false"
+  >
+    <div class="p-2">
+      <p class="mb-4 text-adaptive fs-6">Are you sure you want to permanently delete this report case? This action cannot be undone.</p>
+      <div class="d-flex justify-content-end gap-3 mt-3">
+        <button class="btn btn-light border px-4 rounded-pill fw-bold" type="button" @click="showDeleteConfirm = false">
+          Cancel
+        </button>
+        <button class="btn btn-danger px-4 rounded-pill fw-bold" type="button" @click="confirmDelete">
+          <i class="bi bi-trash me-1"></i> Confirm Delete
+        </button>
+      </div>
+    </div>
+  </BaseModal>
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import AdminPageShell from "../../components/admin/AdminPageShell.vue";
 import BaseModal from "../../components/base/BaseModal.vue";
 import { useToast } from "../../composables/useToast";
 import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
+import { useReportStore } from "../../stores/ReportStore";
 
 const adminStore = useAdminOperationsStore();
+const reportStore = useReportStore();
 const toast = useToast();
 const query = ref("");
-const statusFilter = ref("Open");
+const statusFilter = ref("all");
 const priorityFilter = ref("all");
 const selectedId = ref(null);
 const decisionNote = ref("");
+const showDeleteConfirm = ref(false);
+
+onMounted(async () => {
+  await reportStore.fetchAllReports();
+});
 
 const selectedReport = computed(() =>
-  adminStore.threadReports.find((report) => report.id === selectedId.value),
+  reportStore.threadReports.find((report) => report.id === selectedId.value),
 );
 const totalReporterCount = computed(() =>
-  adminStore.threadReports.reduce((total, report) => total + report.reports, 0),
+  reportStore.threadReports.reduce((total, report) => total + report.reports, 0),
 );
 const metrics = computed(() => [
   {
     label: "Open Cases",
-    value: String(adminStore.pendingReports.length),
+    value: String(reportStore.pendingReports.length),
     change: "Needs a decision",
     icon: "bi-inbox",
     className: "orange",
@@ -351,39 +379,38 @@ const metrics = computed(() => [
   },
   {
     label: "High Priority",
-    value: String(adminStore.highPriorityReports.length),
+    value: String(reportStore.highPriorityReports.length),
     change: "Review first",
     icon: "bi-exclamation-triangle",
     className: "purple",
   },
   {
     label: "Closed Cases",
-    value: String(adminStore.resolvedReports.length),
+    value: String(reportStore.resolvedReports.length),
     change: "Resolved or dismissed",
     icon: "bi-check2-circle",
     className: "green",
   },
 ]);
 const statusTabs = computed(() => [
-  { label: "All Cases", value: "all", count: adminStore.threadReports.length },
-  { label: "Open", value: "Open", count: adminStore.pendingReports.length },
+  { label: "All Cases", value: "all", count: reportStore.threadReports.length },
   {
     label: "Resolved",
     value: "Resolved",
-    count: adminStore.threadReports.filter((item) => item.status === "Resolved")
+    count: reportStore.threadReports.filter((item) => item.status === "Resolved")
       .length,
   },
   {
     label: "Dismissed",
     value: "Dismissed",
-    count: adminStore.threadReports.filter(
+    count: reportStore.threadReports.filter(
       (item) => item.status === "Dismissed",
     ).length,
   },
 ]);
 const visibleReports = computed(() => {
   const needle = query.value.toLowerCase();
-  return adminStore.threadReports.filter((report) => {
+  return reportStore.threadReports.filter((report) => {
     const matchesQuery =
       !needle || JSON.stringify(report).toLowerCase().includes(needle);
     const matchesStatus =
@@ -410,12 +437,12 @@ const activeFilterChips = computed(() => [
     : []),
 ]);
 const emptyStateTitle = computed(() =>
-  adminStore.threadReports.length
+  reportStore.threadReports.length
     ? "No reports match these filters"
     : "No reports received yet",
 );
 const emptyStateMessage = computed(() =>
-  adminStore.threadReports.length
+  reportStore.threadReports.length
     ? "Clear the filters or try a different search phrase."
     : "New member reports will appear here when they need review.",
 );
@@ -444,30 +471,64 @@ const requireNote = () => {
   toast.warning("Add a short decision note before taking this action.");
   return false;
 };
-const handleResolve = () => {
+const handleResolve = async () => {
   if (!requireNote()) return;
-  adminStore.resolveReport(selectedReport.value.id, decisionNote.value);
-  toast.success("Report case resolved and recorded.");
-  closeReport();
+  try {
+    await reportStore.resolveReport(selectedReport.value.id, decisionNote.value);
+    toast.success("Report case resolved and recorded.");
+    closeReport();
+  } catch (err) {
+    const errorMsg = err?.message || err?.msg || (typeof err === "string" ? err : "Failed to resolve report.");
+    toast.error(errorMsg);
+  }
 };
-const handleDismiss = () => {
+const handleDismiss = async () => {
   if (!requireNote()) return;
-  adminStore.dismissReport(selectedReport.value.id, decisionNote.value);
-  toast.success("Report case dismissed with an admin note.");
-  closeReport();
+  try {
+    await reportStore.dismissReport(selectedReport.value.id, decisionNote.value);
+    toast.success("Report case dismissed with an admin note.");
+    closeReport();
+  } catch (err) {
+    const errorMsg = err?.message || err?.msg || (typeof err === "string" ? err : "Failed to dismiss report.");
+    toast.error(errorMsg);
+  }
 };
-const handleWarn = () => {
+const handleWarn = async () => {
   if (!requireNote()) return;
-  adminStore.warnThreadAuthor(selectedReport.value.id, decisionNote.value);
-  toast.success("Warning recorded for the thread author.");
-  decisionNote.value = "";
+  try {
+    await reportStore.warnThreadAuthor(selectedReport.value.id, decisionNote.value);
+    toast.success("Warning recorded for the thread author.");
+    decisionNote.value = "";
+  } catch (err) {
+    const errorMsg = err?.message || err?.msg || (typeof err === "string" ? err : "Failed to record warning.");
+    toast.error(errorMsg);
+  }
 };
-const handleLock = () => {
-  adminStore.toggleThreadLock(selectedReport.value.id, decisionNote.value);
-  toast.success(
-    selectedReport.value.locked ? "Thread locked." : "Thread unlocked.",
-  );
-  decisionNote.value = "";
+const handleLock = async () => {
+  try {
+    await reportStore.toggleThreadLock(selectedReport.value.id, decisionNote.value);
+    toast.success(
+      selectedReport.value.locked ? "Thread locked." : "Thread unlocked.",
+    );
+    decisionNote.value = "";
+  } catch (err) {
+    const errorMsg = err?.message || err?.msg || (typeof err === "string" ? err : "Failed to lock/unlock thread.");
+    toast.error(errorMsg);
+  }
+};
+const requestDelete = () => {
+  showDeleteConfirm.value = true;
+};
+const confirmDelete = async () => {
+  showDeleteConfirm.value = false;
+  try {
+    await reportStore.deleteReport(selectedReport.value.id);
+    toast.success("Report deleted successfully.");
+    closeReport();
+  } catch (err) {
+    const errorMsg = err?.message || err?.msg || (typeof err === "string" ? err : "Failed to delete report.");
+    toast.error(errorMsg);
+  }
 };
 
 const paddedId = (id) => String(id).padStart(4, "0");

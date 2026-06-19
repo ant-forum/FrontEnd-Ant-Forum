@@ -1,5 +1,6 @@
 import { computed, ref, watch } from "vue";
 import { defineStore } from "pinia";
+import api from "@/api/api.js";
 
 const STORAGE_KEY = "ANT_AdminOperations";
 
@@ -217,9 +218,97 @@ export const useAdminOperationsStore = defineStore("adminOperations", () => {
     });
   };
 
-  const updateReport = (id, patch, action, note = "") => {
+  const fetchReports = async () => {
+    try {
+      const res = await api.get("/api/report/getAllReport");
+      const data = res.data?.data || res.data || [];
+      const list = Array.isArray(data) ? data : (data.rows || data.items || []);
+
+      state.value.threadReports = list.map((item) => {
+        const isForum = Boolean(item.forum_id || item.forum);
+        const isProject = Boolean(item.project_id || item.project);
+        
+        let title = "Reported Content";
+        let detail = isForum ? "Forum Post" : (isProject ? "Project Showcase" : "General Content");
+        let authorName = "Unknown";
+        
+        if (isForum) {
+          const forumObj = item.forum || {};
+          title = forumObj.title || forumObj.name || `Forum Post #${item.forum_id}`;
+          authorName = forumObj.author?.name || forumObj.author?.username || forumObj.user?.username || `User ${forumObj.user_id || ""}`;
+        } else if (isProject) {
+          const projObj = item.project || {};
+          title = projObj.title || projObj.projectName || projObj.name || `Project #${item.project_id}`;
+          authorName = projObj.author?.name || projObj.author?.username || projObj.user?.username || `User ${projObj.user_id || ""}`;
+        }
+        
+        let priority = "Medium";
+        const reasonLower = String(item._reason || "").toLowerCase();
+        if (reasonLower.includes("harassment") || reasonLower.includes("hate") || reasonLower.includes("abuse") || reasonLower.includes("security")) {
+          priority = "High";
+        } else if (reasonLower.includes("spam") || reasonLower.includes("promo")) {
+          priority = "Low";
+        }
+        
+        let status = "Open";
+        const statusLower = String(item.status || "").toLowerCase();
+        if (statusLower === "approved" || statusLower === "resolved") {
+          status = "Resolved";
+        } else if (statusLower === "rejected" || statusLower === "dismissed") {
+          status = "Dismissed";
+        } else if (statusLower === "pending" || statusLower === "open") {
+          status = "Open";
+        } else if (item.status) {
+          status = item.status;
+        }
+        
+        const reasonsList = item._reason ? [item._reason] : ["No reason specified"];
+        const reportersList = item.user ? [item.user.name || item.user.username] : [`User #${item.user_id}`];
+        
+        return {
+          id: item.id,
+          threadId: item.forum_id || null,
+          projectId: item.project_id || null,
+          title: title,
+          detail: detail,
+          excerpt: item._reason || "",
+          author: authorName,
+          priority: priority,
+          reports: 1,
+          status: status,
+          locked: Boolean(item.forum?.locked || item.project?.locked || false),
+          createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+          reasons: reasonsList,
+          reportedBy: reportersList,
+          notes: item.notes || [],
+          image: item._image || null,
+          rawItem: item
+        };
+      });
+    } catch (err) {
+      console.error("[AdminOperationsStore] Failed to fetch reports:", err);
+    }
+  };
+
+  const updateReport = async (id, patch, action, note = "") => {
     const item = state.value.threadReports.find((report) => report.id === id);
     if (!item) return;
+
+    if (patch.status !== undefined) {
+      let backendStatus = "pending";
+      if (patch.status === "Resolved") {
+        backendStatus = "approved";
+      } else if (patch.status === "Dismissed") {
+        backendStatus = "rejected";
+      }
+      try {
+        await api.put(`/api/report/updateStatus/${id}`, { status: backendStatus });
+      } catch (err) {
+        console.error(`[AdminOperationsStore] Failed to update status for report ${id}:`, err);
+        throw err.response?.data || err.message;
+      }
+    }
+
     Object.assign(item, patch);
     if (note.trim()) {
       item.notes.push({ text: note.trim(), createdAt: now() });
@@ -227,21 +316,32 @@ export const useAdminOperationsStore = defineStore("adminOperations", () => {
     addActivity("moderation", action, item.title);
   };
 
-  const resolveReport = (id, note) =>
-    updateReport(id, { status: "Resolved" }, "Resolved report", note);
-  const dismissReport = (id, note) =>
-    updateReport(id, { status: "Dismissed" }, "Dismissed report", note);
-  const warnThreadAuthor = (id, note) =>
-    updateReport(id, {}, "Warned thread author", note);
-  const toggleThreadLock = (id, note) => {
+  const resolveReport = async (id, note) =>
+    await updateReport(id, { status: "Resolved" }, "Resolved report", note);
+  const dismissReport = async (id, note) =>
+    await updateReport(id, { status: "Dismissed" }, "Dismissed report", note);
+  const warnThreadAuthor = async (id, note) =>
+    await updateReport(id, {}, "Warned thread author", note);
+  const toggleThreadLock = async (id, note) => {
     const item = state.value.threadReports.find((report) => report.id === id);
     if (!item) return;
-    updateReport(
+    await updateReport(
       id,
       { locked: !item.locked },
       item.locked ? "Unlocked thread" : "Locked thread",
       note,
     );
+  };
+
+  const deleteReport = async (id) => {
+    try {
+      await api.delete(`/api/report/deleteReport/${id}`);
+      state.value.threadReports = state.value.threadReports.filter((r) => r.id != id);
+      addActivity("moderation", "Deleted report", `Report #${id}`);
+    } catch (err) {
+      console.error(`[AdminOperationsStore] Failed to delete report ${id}:`, err);
+      throw err.response?.data || err.message;
+    }
   };
 
   const reviewProject = (id, status, feedback = "") => {
@@ -299,5 +399,7 @@ export const useAdminOperationsStore = defineStore("adminOperations", () => {
     recordProfileUpdate,
     recordSecurityUpdate,
     resetDemoData,
+    fetchReports,
+    deleteReport,
   };
 });
