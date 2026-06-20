@@ -4,7 +4,12 @@ export function useRequiredValidator() {
   const errors = reactive({});
 
   const validateField = (field, value, message) => {
-    if (typeof field !== "string" || field === "__proto__" || field === "constructor" || field === "prototype") {
+    if (
+      typeof field !== "string" ||
+      field === "__proto__" ||
+      field === "constructor" ||
+      field === "prototype"
+    ) {
       return false;
     }
     const isValid = typeof value === "string" ? value.trim() !== "" : !!value;
@@ -13,12 +18,16 @@ export function useRequiredValidator() {
   };
 
   const clearError = (field) => {
-    if (typeof field !== "string" || field === "__proto__" || field === "constructor" || field === "prototype") {
+    if (
+      typeof field !== "string" ||
+      field === "__proto__" ||
+      field === "constructor" ||
+      field === "prototype"
+    ) {
       return;
     }
     errors[field] = "";
   };
-
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -35,7 +44,6 @@ export function useRequiredValidator() {
     return true;
   };
 
-
   const validatePassword = (value) => {
     if (!value || value === "") {
       errors.password = "Password is required.";
@@ -46,15 +54,16 @@ export function useRequiredValidator() {
       return false;
     }
     // Requires at least one uppercase letter, one lowercase letter, one number, and one special character
-    const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#.+=(){}[\]^~])[A-Za-z\d@$!%*?&_\-#.+=(){}[\]^~]{8,}$/;
+    const STRONG_PASSWORD_REGEX =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#.+=(){}[\]^~])[A-Za-z\d@$!%*?&_\-#.+=(){}[\]^~]{8,}$/;
     if (!STRONG_PASSWORD_REGEX.test(value)) {
-      errors.password = "Password must include uppercase, lowercase, numbers, and special characters.";
+      errors.password =
+        "Password must include uppercase, lowercase, numbers, and special characters.";
       return false;
     }
     errors.password = "";
     return true;
   };
-
 
   const validateUsername = (value) => {
     if (!value || value.trim() === "") {

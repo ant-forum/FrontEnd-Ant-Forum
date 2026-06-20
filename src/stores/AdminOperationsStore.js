@@ -1,7 +1,8 @@
-import { computed, ref, watch } from 'vue';
-import { defineStore } from 'pinia';
+import { computed, ref, watch } from "vue";
+import { defineStore } from "pinia";
+import api from "@/api/api.js";
 
-const STORAGE_KEY = 'ANT_AdminOperations';
+const STORAGE_KEY = "ANT_AdminOperations";
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const now = () => new Date().toISOString();
@@ -11,63 +12,75 @@ const defaultState = {
     {
       id: 1,
       threadId: 103,
-      title: 'Is it worth moving from REST to GraphQL in 2026?',
-      detail: 'Architecture discussion',
-      excerpt: 'The discussion has become personal and several replies are no longer about the original technical question.',
-      author: 'Marcus Wright',
-      priority: 'High',
+      title: "Is it worth moving from REST to GraphQL in 2026?",
+      detail: "Architecture discussion",
+      excerpt:
+        "The discussion has become personal and several replies are no longer about the original technical question.",
+      author: "Marcus Wright",
+      priority: "High",
       reports: 5,
-      status: 'Open',
+      status: "Open",
       locked: false,
-      createdAt: '2026-05-31T08:40:00.000Z',
-      reasons: ['Harassment or personal attack', 'Off-topic argument', 'Repeated disruptive replies'],
-      reportedBy: ['Dara Kim', 'Mony Rath', 'Lina Sok', 'Rithy Heng', 'Sophea V.'],
+      createdAt: "2026-05-31T08:40:00.000Z",
+      reasons: [
+        "Harassment or personal attack",
+        "Off-topic argument",
+        "Repeated disruptive replies",
+      ],
+      reportedBy: [
+        "Dara Kim",
+        "Mony Rath",
+        "Lina Sok",
+        "Rithy Heng",
+        "Sophea V.",
+      ],
       notes: [],
     },
     {
       id: 2,
       threadId: 102,
-      title: 'Best practices for Vue 3 Composition API',
-      detail: 'Vue help thread',
-      excerpt: 'Members reported repeated promotional links inside otherwise useful replies.',
-      author: 'Sarah Chen',
-      priority: 'Medium',
+      title: "Best practices for Vue 3 Composition API",
+      detail: "Vue help thread",
+      excerpt:
+        "Members reported repeated promotional links inside otherwise useful replies.",
+      author: "Sarah Chen",
+      priority: "Medium",
       reports: 2,
-      status: 'Open',
+      status: "Open",
       locked: false,
-      createdAt: '2026-05-30T15:20:00.000Z',
-      reasons: ['Spam or promotional content', 'Repeated external links'],
-      reportedBy: ['Sokha Lim', 'Nita Chan'],
+      createdAt: "2026-05-30T15:20:00.000Z",
+      reasons: ["Spam or promotional content", "Repeated external links"],
+      reportedBy: ["Sokha Lim", "Nita Chan"],
       notes: [],
     },
     {
       id: 3,
       threadId: 104,
-      title: 'New security vulnerability in popular npm package',
-      detail: 'Security announcement',
-      excerpt: 'The thread was locked after several duplicate replies. It remains visible for reference.',
-      author: 'Elena Vance',
-      priority: 'Low',
+      title: "New security vulnerability in popular npm package",
+      detail: "Security announcement",
+      excerpt:
+        "The thread was locked after several duplicate replies. It remains visible for reference.",
+      author: "Elena Vance",
+      priority: "Low",
       reports: 1,
-      status: 'Resolved',
+      status: "Resolved",
       locked: true,
-      createdAt: '2026-05-29T11:10:00.000Z',
-      reasons: ['Duplicate replies'],
-      reportedBy: ['Admin Team'],
-      notes: [{ text: 'Locked after posting the verified update.', createdAt: '2026-05-29T14:00:00.000Z' }],
+      createdAt: "2026-05-29T11:10:00.000Z",
+      reasons: ["Duplicate replies"],
+      reportedBy: ["Admin Team"],
+      notes: [
+        {
+          text: "Locked after posting the verified update.",
+          createdAt: "2026-05-29T14:00:00.000Z",
+        },
+      ],
     },
   ],
-  projects: [
-    { id: 201, name: 'ANT Forum Redesign', description: 'Student forum interface and moderation experience.', status: 'In Review', author: 'Sopanha Voeun', category: 'Web App', updated: 'Today', dateOrder: 6, likes: 184, comments: 32, feedback: '', reviewedBy: '', reviewedAt: '' },
-    { id: 202, name: 'Portfolio Showcase', description: 'Public project gallery with profile and publishing flow.', status: 'Published', author: 'Mony Rath', category: 'Showcase', updated: 'Yesterday', dateOrder: 5, likes: 241, comments: 44, feedback: 'Strong presentation and a clear submission flow.', reviewedBy: 'Admin Team', reviewedAt: '2026-05-31T09:30:00.000Z' },
-    { id: 203, name: 'Learning Tracker', description: 'Dashboard for assignments, tasks, and class progress.', status: 'Published', author: 'Dara Kim', category: 'Education', updated: 'May 24', dateOrder: 4, likes: 163, comments: 18, feedback: 'Approved for the student showcase.', reviewedBy: 'Admin Team', reviewedAt: '2026-05-24T10:15:00.000Z' },
-    { id: 204, name: 'Dormitory Helper', description: 'Student utility app for room reports and maintenance requests.', status: 'In Review', author: 'Lina Sok', category: 'Mobile App', updated: 'May 21', dateOrder: 3, likes: 98, comments: 11, feedback: '', reviewedBy: '', reviewedAt: '' },
-    { id: 205, name: 'Code Snippet Library', description: 'Reusable snippets with tags, copy actions, and search.', status: 'Changes Requested', author: 'Rithy Heng', category: 'Developer Tool', updated: 'May 18', dateOrder: 2, likes: 207, comments: 29, feedback: 'Add screenshots and clarify how snippets are reviewed before publishing.', reviewedBy: 'Admin Team', reviewedAt: '2026-05-19T13:00:00.000Z' },
-  ],
+  projects: [],
   settings: {
-    forumName: 'ANT Forum',
-    supportEmail: 'support@ant.dev',
-    replyWindow: '48 hours',
+    forumName: "ANT Forum",
+    supportEmail: "support@ant.dev",
+    replyWindow: "48 hours",
     requireFirstPostReview: true,
     allowProjectSubmissions: true,
     autoLockReportThreshold: 5,
@@ -83,7 +96,7 @@ const defaultState = {
       maxUploadMb: 8,
       allowNewUserLinks: false,
       autoHideReportedContent: true,
-      blockedKeywords: 'spam, scam, phishing',
+      blockedKeywords: "spam, scam, phishing",
     },
     security: {
       requireStrongPasswords: true,
@@ -99,9 +112,27 @@ const defaultState = {
     },
   },
   activityLog: [
-    { id: 1, type: 'project', action: 'Approved project', target: 'Portfolio Showcase', createdAt: '2026-05-31T09:30:00.000Z' },
-    { id: 2, type: 'moderation', action: 'Locked thread', target: 'New security vulnerability in popular npm package', createdAt: '2026-05-29T14:00:00.000Z' },
-    { id: 3, type: 'settings', action: 'Updated forum settings', target: 'Moderation controls', createdAt: '2026-05-28T08:15:00.000Z' },
+    {
+      id: 1,
+      type: "project",
+      action: "Approved project",
+      target: "Portfolio Showcase",
+      createdAt: "2026-05-31T09:30:00.000Z",
+    },
+    {
+      id: 2,
+      type: "moderation",
+      action: "Locked thread",
+      target: "New security vulnerability in popular npm package",
+      createdAt: "2026-05-29T14:00:00.000Z",
+    },
+    {
+      id: 3,
+      type: "settings",
+      action: "Updated forum settings",
+      target: "Moderation controls",
+      createdAt: "2026-05-28T08:15:00.000Z",
+    },
   ],
 };
 
@@ -139,7 +170,7 @@ const loadState = () => {
   }
 };
 
-export const useAdminOperationsStore = defineStore('adminOperations', () => {
+export const useAdminOperationsStore = defineStore("adminOperations", () => {
   const state = ref(loadState());
 
   const threadReports = computed(() => state.value.threadReports);
@@ -147,18 +178,34 @@ export const useAdminOperationsStore = defineStore('adminOperations', () => {
   const settings = computed(() => state.value.settings);
   const activityLog = computed(() => state.value.activityLog);
 
-  const pendingReports = computed(() => threadReports.value.filter((item) => item.status === 'Open'));
-  const resolvedReports = computed(() => threadReports.value.filter((item) => item.status !== 'Open'));
-  const highPriorityReports = computed(() => pendingReports.value.filter((item) => item.priority === 'High'));
-  const lockedThreads = computed(() => threadReports.value.filter((item) => item.locked));
-  const pendingProjects = computed(() => projects.value.filter((item) => item.status === 'In Review'));
-  const publishedProjects = computed(() => projects.value.filter((item) => item.status === 'Published'));
-  const rejectedProjects = computed(() => projects.value.filter((item) => item.status === 'Rejected'));
-  const totalProjectLikes = computed(() => projects.value.reduce((total, item) => total + item.likes, 0));
+  const pendingReports = computed(() =>
+    threadReports.value.filter((item) => item.status === "Open"),
+  );
+  const resolvedReports = computed(() =>
+    threadReports.value.filter((item) => item.status !== "Open"),
+  );
+  const highPriorityReports = computed(() =>
+    pendingReports.value.filter((item) => item.priority === "High"),
+  );
+  const lockedThreads = computed(() =>
+    threadReports.value.filter((item) => item.locked),
+  );
+  const pendingProjects = computed(() =>
+    projects.value.filter((item) => item.status === "In Review"),
+  );
+  const publishedProjects = computed(() =>
+    projects.value.filter((item) => item.status === "Published"),
+  );
+  const rejectedProjects = computed(() =>
+    projects.value.filter((item) => item.status === "Rejected"),
+  );
+  const totalProjectLikes = computed(() =>
+    projects.value.reduce((total, item) => total + item.likes, 0),
+  );
 
   const sidebarBadges = computed(() => ({
-    '/admin/reports': pendingReports.value.length,
-    '/admin/projects': pendingProjects.value.length,
+    "/admin/reports": pendingReports.value.length,
+    "/admin/projects": pendingProjects.value.length,
   }));
 
   const addActivity = (type, action, target) => {
@@ -171,50 +218,163 @@ export const useAdminOperationsStore = defineStore('adminOperations', () => {
     });
   };
 
-  const updateReport = (id, patch, action, note = '') => {
+  const fetchReports = async () => {
+    try {
+      const res = await api.get("/api/report/getAllReport");
+      const data = res.data?.data || res.data || [];
+      const list = Array.isArray(data) ? data : (data.rows || data.items || []);
+
+      state.value.threadReports = list.map((item) => {
+        const isForum = Boolean(item.forum_id || item.forum);
+        const isProject = Boolean(item.project_id || item.project);
+        
+        let title = "Reported Content";
+        let detail = isForum ? "Forum Post" : (isProject ? "Project Showcase" : "General Content");
+        let authorName = "Unknown";
+        
+        if (isForum) {
+          const forumObj = item.forum || {};
+          title = forumObj.title || forumObj.name || `Forum Post #${item.forum_id}`;
+          authorName = forumObj.author?.name || forumObj.author?.username || forumObj.user?.username || `User ${forumObj.user_id || ""}`;
+        } else if (isProject) {
+          const projObj = item.project || {};
+          title = projObj.title || projObj.projectName || projObj.name || `Project #${item.project_id}`;
+          authorName = projObj.author?.name || projObj.author?.username || projObj.user?.username || `User ${projObj.user_id || ""}`;
+        }
+        
+        let priority = "Medium";
+        const reasonLower = String(item._reason || "").toLowerCase();
+        if (reasonLower.includes("harassment") || reasonLower.includes("hate") || reasonLower.includes("abuse") || reasonLower.includes("security")) {
+          priority = "High";
+        } else if (reasonLower.includes("spam") || reasonLower.includes("promo")) {
+          priority = "Low";
+        }
+        
+        let status = "Open";
+        const statusLower = String(item.status || "").toLowerCase();
+        if (statusLower === "approved" || statusLower === "resolved") {
+          status = "Resolved";
+        } else if (statusLower === "rejected" || statusLower === "dismissed") {
+          status = "Dismissed";
+        } else if (statusLower === "pending" || statusLower === "open") {
+          status = "Open";
+        } else if (item.status) {
+          status = item.status;
+        }
+        
+        const reasonsList = item._reason ? [item._reason] : ["No reason specified"];
+        const reportersList = item.user ? [item.user.name || item.user.username] : [`User #${item.user_id}`];
+        
+        return {
+          id: item.id,
+          threadId: item.forum_id || null,
+          projectId: item.project_id || null,
+          title: title,
+          detail: detail,
+          excerpt: item._reason || "",
+          author: authorName,
+          priority: priority,
+          reports: 1,
+          status: status,
+          locked: Boolean(item.forum?.locked || item.project?.locked || false),
+          createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+          reasons: reasonsList,
+          reportedBy: reportersList,
+          notes: item.notes || [],
+          image: item._image || null,
+          rawItem: item
+        };
+      });
+    } catch (err) {
+      console.error("[AdminOperationsStore] Failed to fetch reports:", err);
+    }
+  };
+
+  const updateReport = async (id, patch, action, note = "") => {
     const item = state.value.threadReports.find((report) => report.id === id);
     if (!item) return;
+
+    if (patch.status !== undefined) {
+      let backendStatus = "pending";
+      if (patch.status === "Resolved") {
+        backendStatus = "approved";
+      } else if (patch.status === "Dismissed") {
+        backendStatus = "rejected";
+      }
+      try {
+        await api.put(`/api/report/updateStatus/${id}`, { status: backendStatus });
+      } catch (err) {
+        console.error(`[AdminOperationsStore] Failed to update status for report ${id}:`, err);
+        throw err.response?.data || err.message;
+      }
+    }
+
     Object.assign(item, patch);
     if (note.trim()) {
       item.notes.push({ text: note.trim(), createdAt: now() });
     }
-    addActivity('moderation', action, item.title);
+    addActivity("moderation", action, item.title);
   };
 
-  const resolveReport = (id, note) => updateReport(id, { status: 'Resolved' }, 'Resolved report', note);
-  const dismissReport = (id, note) => updateReport(id, { status: 'Dismissed' }, 'Dismissed report', note);
-  const warnThreadAuthor = (id, note) => updateReport(id, {}, 'Warned thread author', note);
-  const toggleThreadLock = (id, note) => {
+  const resolveReport = async (id, note) =>
+    await updateReport(id, { status: "Resolved" }, "Resolved report", note);
+  const dismissReport = async (id, note) =>
+    await updateReport(id, { status: "Dismissed" }, "Dismissed report", note);
+  const warnThreadAuthor = async (id, note) =>
+    await updateReport(id, {}, "Warned thread author", note);
+  const toggleThreadLock = async (id, note) => {
     const item = state.value.threadReports.find((report) => report.id === id);
     if (!item) return;
-    updateReport(id, { locked: !item.locked }, item.locked ? 'Unlocked thread' : 'Locked thread', note);
+    await updateReport(
+      id,
+      { locked: !item.locked },
+      item.locked ? "Unlocked thread" : "Locked thread",
+      note,
+    );
   };
 
-  const reviewProject = (id, status, feedback = '') => {
+  const deleteReport = async (id) => {
+    try {
+      await api.delete(`/api/report/deleteReport/${id}`);
+      state.value.threadReports = state.value.threadReports.filter((r) => r.id != id);
+      addActivity("moderation", "Deleted report", `Report #${id}`);
+    } catch (err) {
+      console.error(`[AdminOperationsStore] Failed to delete report ${id}:`, err);
+      throw err.response?.data || err.message;
+    }
+  };
+
+  const reviewProject = (id, status, feedback = "") => {
     const item = state.value.projects.find((project) => project.id === id);
     if (!item) return;
     item.status = status;
     item.feedback = feedback.trim();
-    item.reviewedBy = 'Admin Team';
+    item.reviewedBy = "Admin Team";
     item.reviewedAt = now();
-    addActivity('project', `${status} project`, item.name);
+    addActivity("project", `${status} project`, item.name);
   };
 
   const saveSettings = (nextSettings) => {
     state.value.settings = { ...state.value.settings, ...clone(nextSettings) };
-    addActivity('settings', 'Updated forum settings', 'Forum configuration');
+    addActivity("settings", "Updated forum settings", "Forum configuration");
   };
 
-  const recordProfileUpdate = () => addActivity('profile', 'Updated staff profile', 'Profile details');
-  const recordSecurityUpdate = () => addActivity('security', 'Updated account password', 'Security credentials');
+  const recordProfileUpdate = () =>
+    addActivity("profile", "Updated staff profile", "Profile details");
+  const recordSecurityUpdate = () =>
+    addActivity("security", "Updated account password", "Security credentials");
 
   const resetDemoData = () => {
     state.value = clone(defaultState);
   };
 
-  watch(state, (nextState) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-  }, { deep: true });
+  watch(
+    state,
+    (nextState) => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+    },
+    { deep: true },
+  );
 
   return {
     threadReports,
@@ -239,5 +399,7 @@ export const useAdminOperationsStore = defineStore('adminOperations', () => {
     recordProfileUpdate,
     recordSecurityUpdate,
     resetDemoData,
+    fetchReports,
+    deleteReport,
   };
 });

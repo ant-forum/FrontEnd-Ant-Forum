@@ -44,8 +44,19 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn btn-light border" type="button" @click="closeDetailModal">Close</button>
-        <button v-if="!mDetail.isLoading" class="btn btn-primary" type="button" @click="editFromDetail">
+        <button
+          class="btn btn-light border"
+          type="button"
+          @click="closeDetailModal"
+        >
+          Close
+        </button>
+        <button
+          v-if="!mDetail.isLoading"
+          class="btn btn-primary"
+          type="button"
+          @click="editFromDetail"
+        >
           <i class="bi bi-pencil"></i>
           <span>Edit Tag</span>
         </button>
@@ -70,8 +81,10 @@
             maxlength="40"
             placeholder="Example: Vue"
             @input="handleFormInput('tagName')"
-          >
-          <small v-if="errors.tagName" class="field-error">{{ errors.tagName }}</small>
+          />
+          <small v-if="errors.tagName" class="field-error">{{
+            errors.tagName
+          }}</small>
         </label>
         <label>
           <span>Description</span>
@@ -83,17 +96,32 @@
             placeholder="Explain when this tag should be used"
             @input="handleFormInput('tagDescription')"
           ></textarea>
-          <small v-if="errors.tagDescription" class="field-error">{{ errors.tagDescription }}</small>
+          <small v-if="errors.tagDescription" class="field-error">{{
+            errors.tagDescription
+          }}</small>
         </label>
         <div v-if="mForm.errorMessage" class="form-error-message">
           <i class="bi bi-exclamation-circle"></i>
           <span>{{ mForm.errorMessage }}</span>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-light border" type="button" @click="closeFormModal">Cancel</button>
-          <button class="btn btn-primary" type="submit" :disabled="mForm.isLoading">
-            <span v-if="mForm.isLoading" class="spinner-border spinner-border-sm"></span>
-            {{ mForm.mode === 'edit' ? 'Save Changes' : 'Create Tag' }}
+          <button
+            class="btn btn-light border"
+            type="button"
+            @click="closeFormModal"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            type="submit"
+            :disabled="mForm.isLoading"
+          >
+            <span
+              v-if="mForm.isLoading"
+              class="spinner-border spinner-border-sm"
+            ></span>
+            {{ mForm.mode === "edit" ? "Save Changes" : "Create Tag" }}
           </button>
         </div>
       </form>
@@ -108,12 +136,27 @@
       @closeModal="closeDeleteModal"
     >
       <p class="delete-message">
-        Delete <strong>{{ mDelete.item?.name }}</strong>? This action cannot be undone.
+        Delete <strong>{{ mDelete.item?.name }}</strong
+        >? This action cannot be undone.
       </p>
       <div class="modal-actions">
-        <button class="btn btn-light border" type="button" @click="closeDeleteModal">Cancel</button>
-        <button class="btn btn-danger" type="button" :disabled="mDelete.isLoading" @click="deleteTag">
-          <span v-if="mDelete.isLoading" class="spinner-border spinner-border-sm"></span>
+        <button
+          class="btn btn-light border"
+          type="button"
+          @click="closeDeleteModal"
+        >
+          Cancel
+        </button>
+        <button
+          class="btn btn-danger"
+          type="button"
+          :disabled="mDelete.isLoading"
+          @click="deleteTag"
+        >
+          <span
+            v-if="mDelete.isLoading"
+            class="spinner-border spinner-border-sm"
+          ></span>
           <i class="bi bi-trash"></i>
           <span>Delete</span>
         </button>
@@ -123,14 +166,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive } from 'vue';
-import { storeToRefs } from 'pinia';
-import AdminPageShell from '../../components/admin/AdminPageShell.vue';
-import AdminTaxonomyCards from '../../components/admin/AdminTaxonomyCards.vue';
-import BaseModal from '../../components/base/BaseModal.vue';
-import { useToast } from '../../composables/useToast';
-import { useRequiredValidator } from '../../composables/useRequiredValidator';
-import { useTagsStore } from '../../stores/TagsStore';
+import { computed, onMounted, reactive } from "vue";
+import { storeToRefs } from "pinia";
+import AdminPageShell from "../../components/admin/AdminPageShell.vue";
+import AdminTaxonomyCards from "../../components/admin/AdminTaxonomyCards.vue";
+import BaseModal from "../../components/base/BaseModal.vue";
+import { useToast } from "../../composables/useToast";
+import { useRequiredValidator } from "../../composables/useRequiredValidator";
+import { useTagsStore } from "../../stores/TagsStore";
 
 const tagStore = useTagsStore();
 const { tags, isLoading } = storeToRefs(tagStore);
@@ -138,22 +181,46 @@ const toast = useToast();
 const { errors, clearError, validateField } = useRequiredValidator();
 
 const metrics = computed(() => [
-  { label: 'Tags', value: tags.value.length, change: 'Loaded from API', icon: 'bi-tags', className: 'blue' },
-  { label: 'Described', value: tags.value.filter((tag) => tag.description).length, change: 'Ready to use', icon: 'bi-card-text', className: 'green' },
-  { label: 'Needs Copy', value: tags.value.filter((tag) => !tag.description).length, change: 'Missing description', icon: 'bi-pencil', className: 'orange' },
-  { label: 'Source', value: 'API', change: 'Live tag records', icon: 'bi-cloud-check', className: 'purple' },
+  {
+    label: "Tags",
+    value: tags.value.length,
+    change: "Loaded from API",
+    icon: "bi-tags",
+    className: "blue",
+  },
+  {
+    label: "Described",
+    value: tags.value.filter((tag) => tag.description).length,
+    change: "Ready to use",
+    icon: "bi-card-text",
+    className: "green",
+  },
+  {
+    label: "Needs Copy",
+    value: tags.value.filter((tag) => !tag.description).length,
+    change: "Missing description",
+    icon: "bi-pencil",
+    className: "orange",
+  },
+  {
+    label: "Source",
+    value: "API",
+    change: "Live tag records",
+    icon: "bi-cloud-check",
+    className: "purple",
+  },
 ]);
 
 const mForm = reactive({
   isVisible: false,
-  mode: 'create',
+  mode: "create",
   item: null,
   editId: null,
   isLoading: false,
-  errorMessage: '',
+  errorMessage: "",
   data: {
-    name: '',
-    description: '',
+    name: "",
+    description: "",
   },
 });
 
@@ -173,32 +240,32 @@ onMounted(async () => {
   try {
     await tagStore.fetchTags();
   } catch (error) {
-    console.error('Failed to fetch tags:', error);
+    console.error("Failed to fetch tags:", error);
   }
 });
 
 const openCreateModal = () => {
-  mForm.mode = 'create';
+  mForm.mode = "create";
   mForm.item = null;
   mForm.editId = null;
-  mForm.errorMessage = '';
-  clearError('tagName');
-  clearError('tagDescription');
-  mForm.data = { name: '', description: '' };
+  mForm.errorMessage = "";
+  clearError("tagName");
+  clearError("tagDescription");
+  mForm.data = { name: "", description: "" };
   mForm.isVisible = true;
 };
 
 const openEditModal = (tag) => {
   if (!tag) return;
-  mForm.mode = 'edit';
+  mForm.mode = "edit";
   mForm.item = tag;
   mForm.editId = tag.id;
-  mForm.errorMessage = '';
-  clearError('tagName');
-  clearError('tagDescription');
+  mForm.errorMessage = "";
+  clearError("tagName");
+  clearError("tagDescription");
   mForm.data = {
-    name: tag.name || '',
-    description: tag.description || '',
+    name: tag.name || "",
+    description: tag.description || "",
   };
   mForm.isVisible = true;
 };
@@ -207,13 +274,13 @@ const closeFormModal = () => {
   mForm.isVisible = false;
   mForm.item = null;
   mForm.editId = null;
-  mForm.errorMessage = '';
-  clearError('tagName');
-  clearError('tagDescription');
+  mForm.errorMessage = "";
+  clearError("tagName");
+  clearError("tagDescription");
 };
 
 const clearFormError = () => {
-  mForm.errorMessage = '';
+  mForm.errorMessage = "";
 };
 
 const handleFormInput = (field) => {
@@ -226,10 +293,10 @@ const getErrorMessage = (error) => {
     error?.response?.data?.message ||
     error?.response?.data?.error ||
     error?.message ||
-    'Tag request failed.';
+    "Tag request failed.";
 
-  if (String(message).toLowerCase().includes('already')) {
-    return 'This tag name already exists. Please choose a different name.';
+  if (String(message).toLowerCase().includes("already")) {
+    return "This tag name already exists. Please choose a different name.";
   }
 
   return message;
@@ -239,7 +306,10 @@ const isTagNameTaken = () => {
   const formName = mForm.data.name.trim().toLowerCase();
 
   return tags.value.some((tag) => {
-    const sameName = String(tag.name || '').trim().toLowerCase() === formName;
+    const sameName =
+      String(tag.name || "")
+        .trim()
+        .toLowerCase() === formName;
     const sameTag = String(tag.id) === String(mForm.editId);
 
     return sameName && !sameTag;
@@ -253,7 +323,7 @@ const openDetailModal = async (tag) => {
     mDetail.isLoading = true;
     mDetail.item = await tagStore.fetchTagById(tag.id);
   } catch (error) {
-    console.error('Failed to fetch tag details:', error);
+    console.error("Failed to fetch tag details:", error);
   } finally {
     mDetail.isLoading = false;
   }
@@ -281,27 +351,36 @@ const closeDeleteModal = () => {
 };
 
 const saveTag = async () => {
-  let successMessage = '';
+  let successMessage = "";
 
   try {
     mForm.isLoading = true;
-    mForm.errorMessage = '';
+    mForm.errorMessage = "";
 
-    const isNameValid = validateField('tagName', mForm.data.name, 'Tag name is required.');
-    const isDescriptionValid = validateField('tagDescription', mForm.data.description, 'Description is required.');
+    const isNameValid = validateField(
+      "tagName",
+      mForm.data.name,
+      "Tag name is required.",
+    );
+    const isDescriptionValid = validateField(
+      "tagDescription",
+      mForm.data.description,
+      "Description is required.",
+    );
 
     if (!isNameValid || !isDescriptionValid) {
       return;
     }
 
     if (isTagNameTaken()) {
-      mForm.errorMessage = 'This tag name already exists. Please choose a different name.';
+      mForm.errorMessage =
+        "This tag name already exists. Please choose a different name.";
       return;
     }
 
-    if (mForm.mode === 'edit') {
+    if (mForm.mode === "edit") {
       if (!mForm.editId) {
-        mForm.errorMessage = 'Please select a tag to edit again.';
+        mForm.errorMessage = "Please select a tag to edit again.";
         return;
       }
 
@@ -309,7 +388,7 @@ const saveTag = async () => {
         description: mForm.data.description,
       };
 
-      const originalName = String(mForm.item?.name || '').trim();
+      const originalName = String(mForm.item?.name || "").trim();
       const nextName = mForm.data.name.trim();
 
       if (nextName !== originalName) {
@@ -317,13 +396,13 @@ const saveTag = async () => {
       }
 
       await tagStore.updateTag(mForm.editId, updatePayload);
-      successMessage = 'Tag updated successfully!';
+      successMessage = "Tag updated successfully!";
     } else {
       await tagStore.createTag(mForm.data);
-      successMessage = 'Tag created successfully!';
+      successMessage = "Tag created successfully!";
     }
   } catch (error) {
-    console.error('Failed to save tag:', error);
+    console.error("Failed to save tag:", error);
     mForm.errorMessage = getErrorMessage(error);
     return;
   } finally {
@@ -336,8 +415,8 @@ const saveTag = async () => {
   try {
     await tagStore.fetchTags();
   } catch (error) {
-    console.error('Failed to refresh tags:', error);
-    toast.warning('Saved, but could not refresh tags.');
+    console.error("Failed to refresh tags:", error);
+    toast.warning("Saved, but could not refresh tags.");
   }
 };
 
@@ -346,20 +425,20 @@ const deleteTag = async () => {
     mDelete.isLoading = true;
     await tagStore.deleteTag(mDelete.item.id);
   } catch (error) {
-    console.error('Failed to delete tag:', error);
+    console.error("Failed to delete tag:", error);
     return;
   } finally {
     mDelete.isLoading = false;
   }
 
   closeDeleteModal();
-  toast.success('Tag deleted successfully!');
+  toast.success("Tag deleted successfully!");
 
   try {
     await tagStore.fetchTags();
   } catch (error) {
-    console.error('Failed to refresh tags:', error);
-    toast.warning('Deleted, but could not refresh tags.');
+    console.error("Failed to refresh tags:", error);
+    toast.warning("Deleted, but could not refresh tags.");
   }
 };
 </script>
@@ -443,7 +522,8 @@ const deleteTag = async () => {
   padding: 0.65rem 0.75rem;
   color: var(--color-danger);
   background: var(--color-danger-light);
-  border: 1px solid color-mix(in srgb, var(--color-danger) 24%, var(--color-border));
+  border: 1px solid
+    color-mix(in srgb, var(--color-danger) 24%, var(--color-border));
   border-radius: 8px;
   font-size: 0.84rem;
   font-weight: 700;
@@ -457,12 +537,14 @@ const deleteTag = async () => {
 
 .taxonomy-form .form-control.is-invalid {
   border-color: var(--color-danger) !important;
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-danger) 18%, transparent);
+  box-shadow: 0 0 0 0.2rem
+    color-mix(in srgb, var(--color-danger) 18%, transparent);
 }
 
 .taxonomy-form .form-control.is-invalid:focus {
   border-color: var(--color-danger) !important;
-  box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--color-danger) 24%, transparent);
+  box-shadow: 0 0 0 0.22rem
+    color-mix(in srgb, var(--color-danger) 24%, transparent);
 }
 
 .btn-danger {

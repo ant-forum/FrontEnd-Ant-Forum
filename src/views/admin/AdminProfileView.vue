@@ -4,21 +4,29 @@
     kicker="Official ANT Staff"
     subtitle="A simple staff profile for the signed-in administrator. System rules, security, and notification controls stay in Admin Settings."
   >
-
     <section class="admin-profile-page">
       <div class="admin-profile-grid">
         <main class="profile-main-stack">
           <section class="official-admin-card">
             <div class="admin-card-glow"></div>
 
-            <router-link v-if="isOwnProfile" class="card-edit-profile-btn" to="/admin/profile/edit" title="Edit Profile">
+            <router-link
+              v-if="isOwnProfile"
+              class="card-edit-profile-btn"
+              to="/admin/profile/edit"
+              title="Edit Profile"
+            >
               <i class="bi bi-pencil-fill"></i>
               <span>Edit Profile</span>
             </router-link>
 
             <div class="admin-identity-row">
               <div class="admin-avatar">
-                <img v-if="adminAvatar" :src="adminAvatar" :alt="`${adminName} avatar`">
+                <img
+                  v-if="adminAvatar"
+                  :src="adminAvatar"
+                  :alt="`${adminName} avatar`"
+                />
                 <span v-else>{{ adminInitials }}</span>
                 <span class="verified-mark">
                   <i class="bi bi-patch-check-fill"></i>
@@ -84,13 +92,20 @@
             </div>
 
             <div v-if="recentActivity.length" class="activity-list">
-              <div v-for="item in recentActivity" :key="item.id" class="activity-row">
+              <div
+                v-for="item in recentActivity"
+                :key="item.id"
+                class="activity-row"
+              >
                 <span :class="['activity-icon', item.type]">
                   <i :class="['bi', activityIcon(item.type)]"></i>
                 </span>
                 <div>
                   <strong>{{ item.action }}</strong>
-                  <small>{{ item.target }} · {{ formatActivityDate(item.createdAt) }}</small>
+                  <small
+                    >{{ item.target }} ·
+                    {{ formatActivityDate(item.createdAt) }}</small
+                  >
                 </div>
               </div>
             </div>
@@ -99,7 +114,10 @@
               <i class="bi bi-activity"></i>
               <div>
                 <strong>No admin activity yet</strong>
-                <small>Your moderation, project review, and settings actions will appear here.</small>
+                <small
+                  >Your moderation, project review, and settings actions will
+                  appear here.</small
+                >
               </div>
             </div>
           </section>
@@ -111,11 +129,22 @@
               <i class="bi bi-shield-check"></i>
             </span>
             <h3>ANT Forum Staff</h3>
-            <p>This account represents an official administrator, not a student or mentor profile.</p>
+            <p>
+              This account represents an official administrator, not a student
+              or mentor profile.
+            </p>
             <div class="seal-list">
-              <span><i class="bi bi-check2-circle"></i> Can moderate reports</span>
-              <span><i class="bi bi-check2-circle"></i> Can review showcase projects</span>
-              <span><i class="bi bi-check2-circle"></i> Can manage admin content</span>
+              <span
+                ><i class="bi bi-check2-circle"></i> Can moderate reports</span
+              >
+              <span
+                ><i class="bi bi-check2-circle"></i> Can review showcase
+                projects</span
+              >
+              <span
+                ><i class="bi bi-check2-circle"></i> Can manage admin
+                content</span
+              >
             </div>
           </section>
 
@@ -152,7 +181,10 @@
               <i class="bi bi-info-circle"></i>
               <strong>Where did settings go?</strong>
             </div>
-            <p>Password policy, session timeout, notifications, and moderation rules belong in Admin Settings.</p>
+            <p>
+              Password policy, session timeout, notifications, and moderation
+              rules belong in Admin Settings.
+            </p>
             <RouterLink to="/admin/settings">
               Open settings
               <i class="bi bi-arrow-right"></i>
@@ -161,22 +193,29 @@
         </aside>
       </div>
     </section>
-
   </AdminPageShell>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { useAuthStore } from '../../stores/AuthStore';
-import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
-import AdminPageShell from '../../components/admin/AdminPageShell.vue';
+import { computed, ref, watch, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import { useAuthStore } from "../../stores/AuthStore";
+import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
+import { useProjectStore } from "../../stores/ProjectStore";
+import AdminPageShell from "../../components/admin/AdminPageShell.vue";
 
 const authStore = useAuthStore();
 const adminStore = useAdminOperationsStore();
+const projectStore = useProjectStore();
 const route = useRoute();
 
-const staffId = ref('ANT-2026-904');
+onMounted(() => {
+  if (projectStore.projects.length === 0) {
+    projectStore.fetchProjects().catch(() => {});
+  }
+});
+
+const staffId = ref("ANT-2026-904");
 
 // Checks if the profile belongs to the currently signed-in user
 const isOwnProfile = computed(() => {
@@ -188,17 +227,18 @@ const isOwnProfile = computed(() => {
 });
 
 // Local profile details loaded from localStorage to persist edits across reloads
-const isTemporaryAvatarUrl = (value) => typeof value === 'string' && value.includes('blob:');
-const usableAvatar = (value) => (value && !isTemporaryAvatarUrl(value) ? value : '');
-const profileAvatarFrom = (profile = {}) => (
+const isTemporaryAvatarUrl = (value) =>
+  typeof value === "string" && value.includes("blob:");
+const usableAvatar = (value) =>
+  value && !isTemporaryAvatarUrl(value) ? value : "";
+const profileAvatarFrom = (profile = {}) =>
   usableAvatar(profile.profile_pic) ||
   usableAvatar(profile.avatar) ||
-  usableAvatar(profile.avatarUrl)
-);
+  usableAvatar(profile.avatarUrl);
 
 const getStoredProfile = () => {
   try {
-    const email = authStore.user?.email || 'admin@antforum.com';
+    const email = authStore.user?.email || "admin@antforum.com";
     const storageKey = `ANT_AdminProfile:${email}`;
     const storedProfile = JSON.parse(localStorage.getItem(storageKey)) || {};
     if (isTemporaryAvatarUrl(storedProfile.avatar)) {
@@ -213,40 +253,68 @@ const getStoredProfile = () => {
 
 const localProfile = ref(getStoredProfile());
 
-watch(() => authStore.user?.email, () => {
-  localProfile.value = getStoredProfile();
-}, { immediate: true });
+watch(
+  () => authStore.user?.email,
+  () => {
+    localProfile.value = getStoredProfile();
+  },
+  { immediate: true },
+);
 
-const adminName = computed(() => localProfile.value.name || authStore.user?.name || authStore.user?.username || 'ANT Administrator');
-const adminEmail = computed(() => authStore.user?.email || 'admin@antforum.com');
-const adminDepartment = computed(() => localProfile.value.department || authStore.user?.department || 'Forum Operations');
-const adminAvatar = computed(() => (
-  usableAvatar(localProfile.value.avatar) ||
-  profileAvatarFrom(authStore.user)
-));
-const officeHours = computed(() => localProfile.value.officeHours || authStore.user?.officeHours || 'Mon - Fri, 8:00 AM - 5:00 PM');
+const adminName = computed(
+  () =>
+    localProfile.value.name ||
+    authStore.user?.name ||
+    authStore.user?.username ||
+    "ANT Administrator",
+);
+const adminEmail = computed(
+  () => authStore.user?.email || "admin@antforum.com",
+);
+const adminDepartment = computed(
+  () =>
+    localProfile.value.department ||
+    authStore.user?.department ||
+    "Forum Operations",
+);
+const adminAvatar = computed(
+  () =>
+    usableAvatar(localProfile.value.avatar) ||
+    profileAvatarFrom(authStore.user),
+);
+const officeHours = computed(
+  () =>
+    localProfile.value.officeHours ||
+    authStore.user?.officeHours ||
+    "Mon - Fri, 8:00 AM - 5:00 PM",
+);
 const adminBio = computed(() => {
-  return localProfile.value.bio || authStore.user?.bio
-    || 'Responsible for keeping ANT Forum safe, organized, and useful for students, mentors, and project reviewers.';
+  return (
+    localProfile.value.bio ||
+    authStore.user?.bio ||
+    "Responsible for keeping ANT Forum safe, organized, and useful for students, mentors, and project reviewers."
+  );
 });
 
 const adminRole = computed(() => {
-  const role = authStore.user?.role || 'admin';
+  const role = authStore.user?.role || "admin";
   return String(role)
-    .split(' ')
+    .split(" ")
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+    .join(" ");
 });
 
 const adminInitials = computed(() => {
-  return adminName.value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase() || 'AD';
+  return (
+    adminName.value
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "AD"
+  );
 });
 
 // Sync local profile details back to the active user store
@@ -261,56 +329,78 @@ const syncToStore = () => {
 };
 
 // Sync if authStore.user gets loaded/initialized
-watch(() => authStore.user, (newUser) => {
-  if (newUser) {
-    syncToStore();
-  }
-}, { immediate: true, deep: true });
+watch(
+  () => authStore.user,
+  (newUser) => {
+    if (newUser) {
+      syncToStore();
+    }
+  },
+  { immediate: true, deep: true },
+);
 
 // Responsibility cards with correct pluralization based on counts
-const responsibilityCards = computed(() => [
-  {
-    label: adminStore.pendingReports.length === 1 ? 'Pending report' : 'Pending reports',
-    value: adminStore.pendingReports.length,
-    helper: `${adminStore.highPriorityReports.length} high priority`,
-    icon: 'bi-flag',
-    tone: 'danger',
-    to: '/admin/reports',
-  },
-  {
-    label: adminStore.pendingProjects.length === 1 ? 'Project in review' : 'Projects in review',
-    value: adminStore.pendingProjects.length,
-    helper: `${adminStore.publishedProjects.length} published`,
-    icon: 'bi-folder-check',
-    tone: 'warning',
-    to: '/admin/projects',
-  },
-  {
-    label: adminStore.lockedThreads.length === 1 ? 'Locked thread' : 'Locked threads',
-    value: adminStore.lockedThreads.length,
-    helper: 'Moderation state',
-    icon: 'bi-lock',
-    tone: 'purple',
-    to: '/admin/threads',
-  },
-]);
+const responsibilityCards = computed(() => {
+  const pendingProjectsCount = projectStore.projects.filter(
+    (p) => String(p.status || "").toLowerCase() === "in review",
+  ).length;
+  const publishedCount = projectStore.projects.filter((p) => {
+    const s = String(p.status || "").toLowerCase();
+    return s === "published" || s === "active";
+  }).length;
+  return [
+    {
+      label:
+        adminStore.pendingReports.length === 1
+          ? "Pending report"
+          : "Pending reports",
+      value: adminStore.pendingReports.length,
+      helper: `${adminStore.highPriorityReports.length} high priority`,
+      icon: "bi-flag",
+      tone: "danger",
+      to: "/admin/reports",
+    },
+    {
+      label:
+        pendingProjectsCount === 1 ? "Project in review" : "Projects in review",
+      value: pendingProjectsCount,
+      helper: `${publishedCount} published`,
+      icon: "bi-folder-check",
+      tone: "warning",
+      to: "/admin/projects",
+    },
+    {
+      label:
+        adminStore.lockedThreads.length === 1
+          ? "Locked thread"
+          : "Locked threads",
+      value: adminStore.lockedThreads.length,
+      helper: "Moderation state",
+      icon: "bi-lock",
+      tone: "purple",
+      to: "/admin/threads",
+    },
+  ];
+});
 
 const recentActivity = computed(() => adminStore.activityLog.slice(0, 4));
 
-const activityIcon = (type) => ({
-  moderation: 'bi-shield-check',
-  project: 'bi-folder-check',
-  settings: 'bi-gear',
-  profile: 'bi-person-check',
-  security: 'bi-shield-lock',
-}[type] || 'bi-activity');
+const activityIcon = (type) =>
+  ({
+    moderation: "bi-shield-check",
+    project: "bi-folder-check",
+    settings: "bi-gear",
+    profile: "bi-person-check",
+    security: "bi-shield-lock",
+  })[type] || "bi-activity";
 
-const formatActivityDate = (value) => new Intl.DateTimeFormat('en', {
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-}).format(new Date(value));
+const formatActivityDate = (value) =>
+  new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
 </script>
 
 <style scoped>
@@ -336,8 +426,13 @@ const formatActivityDate = (value) => new Intl.DateTimeFormat('en', {
 
 .admin-panel,
 .official-admin-card {
-  background: color-mix(in srgb, var(--color-surface) 96%, var(--color-primary) 4%);
-  border: 1px solid color-mix(in srgb, var(--color-border) 84%, var(--color-primary) 16%);
+  background: color-mix(
+    in srgb,
+    var(--color-surface) 96%,
+    var(--color-primary) 4%
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-border) 84%, var(--color-primary) 16%);
   border-radius: 18px;
   box-shadow: var(--shadow-sm);
 }
@@ -353,7 +448,11 @@ const formatActivityDate = (value) => new Intl.DateTimeFormat('en', {
   inset: 0;
   background:
     radial-gradient(circle at 8% 0%, rgba(99, 102, 241, 0.26), transparent 34%),
-    radial-gradient(circle at 100% 12%, rgba(16, 185, 129, 0.13), transparent 28%);
+    radial-gradient(
+      circle at 100% 12%,
+      rgba(16, 185, 129, 0.13),
+      transparent 28%
+    );
   pointer-events: none;
 }
 
@@ -385,7 +484,11 @@ const formatActivityDate = (value) => new Intl.DateTimeFormat('en', {
   justify-content: center;
   flex-shrink: 0;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   border: 3px solid color-mix(in srgb, var(--color-surface) 82%, #ffffff 18%);
   border-radius: 32px;
   box-shadow: 0 22px 48px -28px var(--color-primary);
@@ -441,7 +544,11 @@ const formatActivityDate = (value) => new Intl.DateTimeFormat('en', {
 
 .official-badge {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   box-shadow: 0 10px 28px -20px var(--color-primary);
 }
 
@@ -522,7 +629,10 @@ const formatActivityDate = (value) => new Intl.DateTimeFormat('en', {
   border-radius: 16px;
   padding: 1.1rem 5rem 1.1rem 1.15rem;
   text-decoration: none;
-  transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .responsibility-card:hover {
@@ -709,7 +819,11 @@ const formatActivityDate = (value) => new Intl.DateTimeFormat('en', {
   width: 58px;
   height: 58px;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   font-size: 1.5rem;
   margin: 0 auto 0.85rem;
 }
@@ -872,5 +986,4 @@ const formatActivityDate = (value) => new Intl.DateTimeFormat('en', {
     align-self: flex-start;
   }
 }
-
 </style>

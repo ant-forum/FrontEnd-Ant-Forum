@@ -50,7 +50,7 @@
   --color-brand-hover: var(--color-primary-hover);
 
   /* FOOTER */
-  --color-footer-bg: #4A0E4E;
+  --color-footer-bg: #4a0e4e;
   --color-footer-text: #ffffff;
   --color-footer-link: rgba(255, 255, 255, 0.7);
   --color-footer-link-hover: #ffffff;
@@ -75,8 +75,10 @@
   --color-tag-purple-text: #6d28d9;
 
   /* FONTS */
-  --font-family-base: "MiSans Khmer", "Kantumruy", "Inter", system-ui, -apple-system, sans-serif;
-  --font-family-display: "Sora", "MiSans Khmer", "Kantumruy", "Inter", system-ui, sans-serif;
+  --font-family-base:
+    "MiSans Khmer", "Kantumruy", "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-display:
+    "Sora", "MiSans Khmer", "Kantumruy", "Inter", system-ui, sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.25rem;
@@ -115,7 +117,7 @@
   --focus-ring: 0 0 0 3px var(--color-focus);
 }
 
-[data-theme='dark'] {
+[data-theme="dark"] {
   /* DARK MODE SURFACES */
   --color-bg: #030712;
   --color-surface: #111827;

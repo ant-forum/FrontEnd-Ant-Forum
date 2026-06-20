@@ -1,53 +1,48 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../stores/AuthStore";
 
+import HomePage from "../views/HomePage.vue";
+import Dashboard from "../views/Dashboard.vue";
+import Profile from "../views/Profile.vue";
+import ViewProfile from "../views/ViewProfile.vue";
+import LoginView from "../views/auth/LoginView.vue";
+import ForgotPasswordView from "../views/auth/ForgotPasswordView.vue";
+import VerifyAccountView from "../views/auth/VerifyAccountView.vue";
+import TermsOfService from "../views/TermsOfService.vue";
+import FAQView from "../views/FAQView.vue";
 
-import HomePage from '../views/HomePage.vue';
-import Dashboard from '../views/Dashboard.vue';
-import Profile from "../views/Profile.vue"
-import ViewProfile from "../views/ViewProfile.vue"
-import LoginView from '../views/auth/LoginView.vue';
-import ForgotPasswordView from '../views/auth/ForgotPasswordView.vue';
-import VerifyAccountView from '../views/auth/VerifyAccountView.vue';
-import TermsOfService from '../views/TermsOfService.vue';
-import FAQView from '../views/FAQView.vue';
-
-import ShowcaseDashboard from '../views/showcase/ShowcaseDashboard.vue';
-import ShowcaseProjectDetail from '../views/showcase/ShowcaseProjectDetail.vue';
-import CreateProject from '../views/showcase/showcaseCRUD/createProject.vue';
-import VisualProject from '../views/showcase/showcaseCRUD/visaulProject.vue';
-import ReviewProject from '../views/showcase/showcaseCRUD/reviewCreateProject.vue';
+import ShowcaseDashboard from "../views/showcase/ShowcaseDashboard.vue";
+import ShowcaseProjectDetail from "../views/showcase/ShowcaseProjectDetail.vue";
+import CreateProject from "../views/showcase/showcaseCRUD/createProject.vue";
+import VisualProject from "../views/showcase/showcaseCRUD/visaulProject.vue";
+import ReviewProject from "../views/showcase/showcaseCRUD/reviewCreateProject.vue";
 import HelpView from "../views/HelpView.vue";
 
 import CreateDiscussionView from "../views/forum/CreateDiscussionView.vue";
-import ThreadRepliesView from "../views/forum/ThreadRepliesView.vue"
-
-
+import ThreadRepliesView from "../views/forum/ThreadRepliesView.vue";
 
 import BlogDetail from "../views/blog/BlogDetail.vue";
-import AboutUs from '../views/AboutUs.vue';
+import AboutUs from "../views/AboutUs.vue";
 import Blog from "../views/blog/Blog.vue";
 import UserSettingsView from "../views/settings/UserSettingsView.vue";
-import NotificationsView from "../views/notification/NotificationsView.vue"
+import NotificationsView from "../views/notification/NotificationsView.vue";
 
-
-import AdminDashboard from '../views/admin/adminDashboard.vue';
-import AdminUsersView from '../views/admin/AdminUsersView.vue';
-import AdminCreateUserView from '../views/admin/AdminCreateUserView.vue';
-import ProjectReviewManagement from '../views/admin/ProjectReviewManagement.vue';
-import ThreadModerationView from '../views/admin/ThreadModerationView.vue';
-import AdminAnalyticsView from '../views/admin/AdminAnalyticsView.vue';
-import AdminSettingsView from '../views/admin/AdminSettingsView.vue';
-import AdminBlogsView from '../views/admin/AdminBlogsView.vue';
-import AdminBlogCreateView from '../views/admin/AdminBlogCreateView.vue';
-import AdminCategoriesView from '../views/admin/AdminCategoriesView.vue';
-import AdminCategoryDetailView from '../views/admin/AdminCategoryDetailView.vue';
-import AdminTagsView from '../views/admin/AdminTagsView.vue';
-import AdminReportsView from '../views/admin/AdminReportsView.vue';
-import AdminProfileView from '../views/admin/AdminProfileView.vue';
-import AdminProfileEditView from '../views/admin/AdminProfileEditView.vue';
-import AdminActivityView from '../views/admin/AdminActivityView.vue';
-
+import AdminDashboard from "../views/admin/adminDashboard.vue";
+import AdminUsersView from "../views/admin/AdminUsersView.vue";
+import AdminCreateUserView from "../views/admin/AdminCreateUserView.vue";
+import ProjectReviewManagement from "../views/admin/ProjectReviewManagement.vue";
+import ThreadModerationView from "../views/admin/ThreadModerationView.vue";
+import AdminAnalyticsView from "../views/admin/AdminAnalyticsView.vue";
+import AdminSettingsView from "../views/admin/AdminSettingsView.vue";
+import AdminBlogsView from "../views/admin/AdminBlogsView.vue";
+import AdminBlogCreateView from "../views/admin/AdminBlogCreateView.vue";
+import AdminCategoriesView from "../views/admin/AdminCategoriesView.vue";
+import AdminCategoryDetailView from "../views/admin/AdminCategoryDetailView.vue";
+import AdminTagsView from "../views/admin/AdminTagsView.vue";
+import AdminReportsView from "../views/admin/AdminReportsView.vue";
+import AdminProfileView from "../views/admin/AdminProfileView.vue";
+import AdminProfileEditView from "../views/admin/AdminProfileEditView.vue";
+import AdminActivityView from "../views/admin/AdminActivityView.vue";
 
 //this is new
 
@@ -61,7 +56,7 @@ const routes = [
   {
     path: "/",
     name: "HomePage",
-    component: HomePage
+    component: HomePage,
     // meta: { requiresAuth: true },
   },
   {
@@ -178,6 +173,12 @@ const routes = [
   {
     path: "/showcase/create",
     name: "CreateProject",
+    meta: { requiresAuth: true },
+    component: CreateProject,
+  },
+  {
+    path: "/showcase/edit/:id",
+    name: "EditProject",
     meta: { requiresAuth: true },
     component: CreateProject,
   },
@@ -302,6 +303,12 @@ const routes = [
     component: ForumView,
   },
   {
+    path: "/forum/edit/:id",
+    name: "EditDiscussion",
+    meta: { requiresAuth: true },
+    component: () => import("../views/forum/CreateDiscussionView.vue"),
+  },
+  {
     path: "/forum/create",
     name: "CreateDiscussion",
     meta: { requiresAuth: true },
@@ -319,13 +326,12 @@ const routes = [
   },
 ];
 
-
 const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
     // always scroll to top
-    return { top: 0 }
+    return { top: 0 };
   },
 });
 
@@ -358,7 +364,9 @@ router.beforeEach(async (to, from) => {
 
     // Role verification guard
     if (to.meta.role && authStore.user?.role !== to.meta.role) {
-      console.warn(`[Route Guard] Unauthorized access attempt to ${to.path}. Required: ${to.meta.role}. Current: ${authStore.user?.role}`);
+      console.warn(
+        `[Route Guard] Unauthorized access attempt to ${to.path}. Required: ${to.meta.role}. Current: ${authStore.user?.role}`,
+      );
 
       // Cancel navigation if user was already browsing a valid page inside the app
       if (from && from.name && from.path !== "/") {
@@ -394,23 +402,25 @@ router.afterEach((to) => {
   }
 
   // Handle admin route class on body
-  if (to.path.startsWith('/admin')) {
-    document.body.classList.add('admin-route');
+  if (to.path.startsWith("/admin")) {
+    document.body.classList.add("admin-route");
   } else {
-    document.body.classList.remove('admin-route');
+    document.body.classList.remove("admin-route");
   }
 
   // Ensure theme is applied based on localStorage or system preference
   const saved = localStorage.getItem("theme");
-  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const theme = saved ? saved : (prefersDark ? "dark" : "light");
+  const prefersDark =
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved ? saved : prefersDark ? "dark" : "light";
 
   if (theme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
-    document.body.classList.add('dark-mode');
+    document.body.classList.add("dark-mode");
   } else {
     document.documentElement.setAttribute("data-theme", "light");
-    document.body.classList.remove('dark-mode');
+    document.body.classList.remove("dark-mode");
   }
 });
 

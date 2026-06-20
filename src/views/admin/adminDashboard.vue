@@ -11,7 +11,8 @@
             <p class="section-kicker mb-2">Admin Overview</p>
             <h1 class="fw-bold text-adaptive mb-2">ANT Forum Control Center</h1>
             <p class="text-muted mb-0">
-              Track review queues, publishing activity, and forum moderation from one control center.
+              Track review queues, publishing activity, and forum moderation
+              from one control center.
             </p>
           </div>
 
@@ -24,7 +25,11 @@
         </header>
 
         <section class="row g-3 mb-4">
-          <div v-for="metric in metrics" :key="metric.label" class="col-sm-6 col-xl-3">
+          <div
+            v-for="metric in metrics"
+            :key="metric.label"
+            class="col-sm-6 col-xl-3"
+          >
             <StatCard
               :label="metric.label"
               :value="metric.value"
@@ -44,15 +49,26 @@
             <div class="card border-0 shadow-sm dashboard-panel mb-4">
               <div class="panel-header">
                 <div>
-                  <h5 class="fw-bold text-adaptive mb-1">{{ selectedPeriod }} Activity</h5>
-                  <p class="text-muted small mb-0">Compare forum activity across the selected period</p>
+                  <h5 class="fw-bold text-adaptive mb-1">
+                    {{ selectedPeriod }} Activity
+                  </h5>
+                  <p class="text-muted small mb-0">
+                    Compare forum activity across the selected period
+                  </p>
                 </div>
-                <div class="btn-group btn-group-sm period-tabs" role="group" aria-label="Activity period">
+                <div
+                  class="btn-group btn-group-sm period-tabs"
+                  role="group"
+                  aria-label="Activity period"
+                >
                   <button
                     v-for="period in periods"
                     :key="period"
                     type="button"
-                    :class="['btn', selectedPeriod === period ? 'btn-primary' : 'btn-light']"
+                    :class="[
+                      'btn',
+                      selectedPeriod === period ? 'btn-primary' : 'btn-light',
+                    ]"
                     @click="selectedPeriod = period"
                   >
                     {{ period }}
@@ -61,7 +77,11 @@
               </div>
 
               <div class="activity-summary">
-                <article v-for="item in activityTotals" :key="item.key" class="activity-total">
+                <article
+                  v-for="item in activityTotals"
+                  :key="item.key"
+                  class="activity-total"
+                >
                   <span :class="['legend-dot', item.key]"></span>
                   <div>
                     <small>{{ item.label }}</small>
@@ -70,7 +90,10 @@
                 </article>
               </div>
 
-              <div class="activity-chart" :aria-label="`${selectedPeriod} activity chart`">
+              <div
+                class="activity-chart"
+                :aria-label="`${selectedPeriod} activity chart`"
+              >
                 <div class="chart-scale" aria-hidden="true">
                   <span v-for="tick in chartScale" :key="tick">{{ tick }}</span>
                 </div>
@@ -80,8 +103,17 @@
                     <span v-for="tick in chartScale" :key="tick"></span>
                   </div>
 
-                  <div class="bar-groups" :style="{ gridTemplateColumns: `repeat(${chartData.length}, minmax(54px, 1fr))` }">
-                    <div v-for="item in chartData" :key="item.day" class="bar-group">
+                  <div
+                    class="bar-groups"
+                    :style="{
+                      gridTemplateColumns: `repeat(${chartData.length}, minmax(54px, 1fr))`,
+                    }"
+                  >
+                    <div
+                      v-for="item in chartData"
+                      :key="item.day"
+                      class="bar-group"
+                    >
                       <div class="bar-stack">
                         <span
                           v-for="series in activitySeries"
@@ -111,9 +143,14 @@
               <div class="panel-header">
                 <div>
                   <h5 class="fw-bold text-adaptive mb-1">Moderation Queue</h5>
-                  <p class="text-muted small mb-0">Items that need admin review</p>
+                  <p class="text-muted small mb-0">
+                    Items that need admin review
+                  </p>
                 </div>
-                <router-link class="btn btn-light btn-sm border" to="/admin/reports">
+                <router-link
+                  class="btn btn-light btn-sm border"
+                  to="/admin/reports"
+                >
                   <i class="bi bi-arrow-up-right"></i>
                 </router-link>
               </div>
@@ -136,17 +173,24 @@
                             <i :class="['bi', item.icon]"></i>
                           </span>
                           <div>
-                            <p class="fw-bold text-adaptive mb-0">{{ item.title }}</p>
+                            <p class="fw-bold text-adaptive mb-0">
+                              {{ item.title }}
+                            </p>
                             <small class="text-muted">{{ item.type }}</small>
                           </div>
                         </div>
                       </td>
                       <td class="text-muted small">{{ item.owner }}</td>
                       <td>
-                        <span :class="['status-pill', item.statusClass]">{{ item.status }}</span>
+                        <span :class="['status-pill', item.statusClass]">{{
+                          item.status
+                        }}</span>
                       </td>
                       <td class="text-end">
-                        <router-link class="btn btn-light btn-sm border" :to="item.to">
+                        <router-link
+                          class="btn btn-light btn-sm border"
+                          :to="item.to"
+                        >
                           Review
                         </router-link>
                       </td>
@@ -189,14 +233,24 @@
               <div class="panel-header">
                 <div>
                   <h5 class="fw-bold text-adaptive mb-1">System Health</h5>
-                  <p class="text-muted small mb-0">Current operational snapshot</p>
+                  <p class="text-muted small mb-0">
+                    Current operational snapshot
+                  </p>
                 </div>
               </div>
 
               <div class="health-list">
-                <div v-for="item in healthItems" :key="item.label" class="health-item">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-adaptive small">{{ item.label }}</span>
+                <div
+                  v-for="item in healthItems"
+                  :key="item.label"
+                  class="health-item"
+                >
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-2"
+                  >
+                    <span class="fw-bold text-adaptive small">{{
+                      item.label
+                    }}</span>
                     <span class="text-muted small">{{ item.value }}%</span>
                   </div>
                   <div class="progress health-progress">
@@ -220,167 +274,202 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
-import AdminSidebar from '../../components/admin/AdminSidebar.vue';
-import AdminTopbar from '../../components/admin/AdminTopbar.vue';
-import StatCard from '../../components/admin/StatCard.vue';
-import { useAdminOperationsStore } from '../../stores/AdminOperationsStore';
+import { computed, ref, onMounted } from "vue";
+import AdminSidebar from "../../components/admin/AdminSidebar.vue";
+import AdminTopbar from "../../components/admin/AdminTopbar.vue";
+import StatCard from "../../components/admin/StatCard.vue";
+import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
+import { useProjectStore } from "../../stores/ProjectStore";
+import { useReportStore } from "../../stores/ReportStore";
 
 const adminStore = useAdminOperationsStore();
-const selectedPeriod = ref('Week');
-const periods = ['Day', 'Week', 'Month'];
+const projectStore = useProjectStore();
+const reportStore = useReportStore();
+const selectedPeriod = ref("Week");
+const periods = ["Day", "Week", "Month"];
 
-const metrics = computed(() => [
-  {
-    label: 'Admin Actions',
-    value: adminStore.activityLog.length,
-    description: 'Recorded locally',
-    descriptionIcon: 'bi-activity',
-    descriptionColorClass: 'text-muted',
-    icon: 'bi bi-activity',
-    iconBgClass: 'bg-purple-light',
-    iconColorClass: 'text-purple',
-  },
-  {
-    label: 'Projects',
-    value: adminStore.projects.length,
-    description: `${adminStore.pendingProjects.length} pending review`,
-    descriptionIcon: 'bi-folder-check',
-    descriptionColorClass: 'text-warning',
-    icon: 'bi bi-folder2-open',
-    iconBgClass: 'bg-orange-light',
-    iconColorClass: 'text-orange',
-  },
-  {
-    label: 'Moderated Threads',
-    value: adminStore.threadReports.length,
-    description: `${adminStore.lockedThreads.length} currently locked`,
-    descriptionIcon: 'bi-chat-dots',
-    descriptionColorClass: 'text-success',
-    icon: 'bi bi-chat-square-text',
-    iconBgClass: 'bg-teal-light',
-    iconColorClass: 'text-teal',
-  },
-  {
-    label: 'Reports',
-    value: adminStore.pendingReports.length,
-    description: `${adminStore.highPriorityReports.length} high priority`,
-    descriptionIcon: 'bi-exclamation-triangle',
-    descriptionColorClass: 'text-danger',
-    icon: 'bi bi-flag',
-    iconBgClass: 'bg-red-light',
-    iconColorClass: 'text-red',
-  },
-]);
+onMounted(() => {
+  if (projectStore.projects.length === 0) {
+    projectStore.fetchProjects().catch(() => {});
+  }
+  reportStore.fetchAllReports().catch(() => {});
+});
+
+const metrics = computed(() => {
+  const pendingCount = projectStore.projects.filter(
+    (p) => String(p.status || "").toLowerCase() === "in review",
+  ).length;
+  return [
+    {
+      label: "Admin Actions",
+      value: adminStore.activityLog.length,
+      description: "Recorded locally",
+      descriptionIcon: "bi-activity",
+      descriptionColorClass: "text-muted",
+      icon: "bi bi-activity",
+      iconBgClass: "bg-purple-light",
+      iconColorClass: "text-purple",
+    },
+    {
+      label: "Projects",
+      value: projectStore.projects.length,
+      description: `${pendingCount} pending review`,
+      descriptionIcon: "bi-folder-check",
+      descriptionColorClass: "text-warning",
+      icon: "bi bi-folder2-open",
+      iconBgClass: "bg-orange-light",
+      iconColorClass: "text-orange",
+    },
+    {
+      label: "Moderated Threads",
+      value: reportStore.threadReports.length,
+      description: `${reportStore.lockedThreads.length} currently locked`,
+      descriptionIcon: "bi-chat-dots",
+      descriptionColorClass: "text-success",
+      icon: "bi bi-chat-square-text",
+      iconBgClass: "bg-teal-light",
+      iconColorClass: "text-teal",
+    },
+    {
+      label: "Reports",
+      value: reportStore.pendingReports.length,
+      description: `${reportStore.highPriorityReports.length} high priority`,
+      descriptionIcon: "bi-exclamation-triangle",
+      descriptionColorClass: "text-danger",
+      icon: "bi bi-flag",
+      iconBgClass: "bg-red-light",
+      iconColorClass: "text-red",
+    },
+  ];
+});
 
 const chartSets = {
   Day: [
-    { day: '8AM', discussions: 24, replies: 36, projects: 18 },
-    { day: '10AM', discussions: 44, replies: 52, projects: 26 },
-    { day: '12PM', discussions: 62, replies: 70, projects: 34 },
-    { day: '2PM', discussions: 74, replies: 82, projects: 42 },
-    { day: '4PM', discussions: 58, replies: 64, projects: 30 },
-    { day: '6PM', discussions: 42, replies: 50, projects: 24 },
+    { day: "8AM", discussions: 24, replies: 36, projects: 18 },
+    { day: "10AM", discussions: 44, replies: 52, projects: 26 },
+    { day: "12PM", discussions: 62, replies: 70, projects: 34 },
+    { day: "2PM", discussions: 74, replies: 82, projects: 42 },
+    { day: "4PM", discussions: 58, replies: 64, projects: 30 },
+    { day: "6PM", discussions: 42, replies: 50, projects: 24 },
   ],
   Week: [
-    { day: 'Mon', discussions: 42, replies: 66, projects: 28 },
-    { day: 'Tue', discussions: 54, replies: 72, projects: 34 },
-    { day: 'Wed', discussions: 68, replies: 84, projects: 48 },
-    { day: 'Thu', discussions: 76, replies: 90, projects: 56 },
-    { day: 'Fri', discussions: 62, replies: 78, projects: 42 },
-    { day: 'Sat', discussions: 46, replies: 58, projects: 32 },
-    { day: 'Sun', discussions: 36, replies: 48, projects: 24 },
+    { day: "Mon", discussions: 42, replies: 66, projects: 28 },
+    { day: "Tue", discussions: 54, replies: 72, projects: 34 },
+    { day: "Wed", discussions: 68, replies: 84, projects: 48 },
+    { day: "Thu", discussions: 76, replies: 90, projects: 56 },
+    { day: "Fri", discussions: 62, replies: 78, projects: 42 },
+    { day: "Sat", discussions: 46, replies: 58, projects: 32 },
+    { day: "Sun", discussions: 36, replies: 48, projects: 24 },
   ],
   Month: [
-    { day: 'W1', discussions: 52, replies: 64, projects: 36 },
-    { day: 'W2', discussions: 76, replies: 88, projects: 52 },
-    { day: 'W3', discussions: 68, replies: 74, projects: 46 },
-    { day: 'W4', discussions: 82, replies: 94, projects: 58 },
+    { day: "W1", discussions: 52, replies: 64, projects: 36 },
+    { day: "W2", discussions: 76, replies: 88, projects: 52 },
+    { day: "W3", discussions: 68, replies: 74, projects: 46 },
+    { day: "W4", discussions: 82, replies: 94, projects: 58 },
   ],
 };
 
 const chartData = computed(() => chartSets[selectedPeriod.value]);
 
 const activitySeries = [
-  { key: 'discussions', label: 'Discussions' },
-  { key: 'replies', label: 'Replies' },
-  { key: 'projects', label: 'Projects' },
+  { key: "discussions", label: "Discussions" },
+  { key: "replies", label: "Replies" },
+  { key: "projects", label: "Projects" },
 ];
 
-const activityTotals = computed(() => activitySeries.map((series) => ({
-  ...series,
-  value: chartData.value.reduce((sum, item) => sum + item[series.key], 0),
-})));
+const activityTotals = computed(() =>
+  activitySeries.map((series) => ({
+    ...series,
+    value: chartData.value.reduce((sum, item) => sum + item[series.key], 0),
+  })),
+);
 
 const chartMaximum = computed(() => {
-  const values = chartData.value.flatMap((item) => activitySeries.map((series) => item[series.key]));
+  const values = chartData.value.flatMap((item) =>
+    activitySeries.map((series) => item[series.key]),
+  );
   return Math.max(100, Math.ceil(Math.max(...values) / 20) * 20);
 });
 
-const chartScale = computed(() => [chartMaximum.value, chartMaximum.value * 0.75, chartMaximum.value * 0.5, chartMaximum.value * 0.25, 0]);
+const chartScale = computed(() => [
+  chartMaximum.value,
+  chartMaximum.value * 0.75,
+  chartMaximum.value * 0.5,
+  chartMaximum.value * 0.25,
+  0,
+]);
 
 const barHeight = (value) => Math.max(4, (value / chartMaximum.value) * 100);
 
-const queueItems = computed(() => [
-  ...adminStore.pendingReports.slice(0, 2).map((item) => ({
-    id: `report-${item.id}`,
-    title: item.title,
-    type: 'Reported thread',
-    owner: item.author,
-    status: item.priority,
-    statusClass: item.priority === 'High' ? 'danger' : 'warning',
-    icon: 'bi-chat-left-text',
-    iconClass: 'danger',
-    to: '/admin/reports',
-  })),
-  ...adminStore.pendingProjects.slice(0, 2).map((item) => ({
-    id: `project-${item.id}`,
-    title: item.name,
-    type: 'Project approval',
-    owner: item.author,
-    status: 'Pending',
-    statusClass: 'warning',
-    icon: 'bi-folder2',
-    iconClass: 'warning',
-    to: '/admin/projects',
-  })),
-].slice(0, 4));
+const queueItems = computed(() =>
+  [
+    ...reportStore.pendingReports.slice(0, 2).map((item) => ({
+      id: `report-${item.id}`,
+      title: item.title,
+      type: "Reported thread",
+      owner: item.author,
+      status: item.priority,
+      statusClass: item.priority === "High" ? "danger" : "warning",
+      icon: "bi-chat-left-text",
+      iconClass: "danger",
+      to: "/admin/reports",
+    })),
+    ...projectStore.projects
+      .filter((p) => String(p.status || "").toLowerCase() === "in review")
+      .slice(0, 2)
+      .map((item) => ({
+        id: `project-${item.id}`,
+        title: item.title || "Untitled Project",
+        type: "Project approval",
+        owner: item.author?.name || "Unknown",
+        status: "Pending",
+        statusClass: "warning",
+        icon: "bi-folder2",
+        iconClass: "warning",
+        to: "/admin/projects",
+      })),
+  ].slice(0, 4),
+);
 
 const quickActions = [
   {
-    label: 'Create User',
-    description: 'Add a new student or admin',
-    icon: 'bi-person-plus',
-    colorClass: 'purple',
-    to: '/admin/users/create',
+    label: "Create User",
+    description: "Add a new student or admin",
+    icon: "bi-person-plus",
+    colorClass: "purple",
+    to: "/admin/users/create",
   },
   {
-    label: 'Review Reports',
-    description: 'Resolve flagged discussions',
-    icon: 'bi-flag',
-    colorClass: 'teal',
-    to: '/admin/reports',
+    label: "Review Reports",
+    description: "Resolve flagged discussions",
+    icon: "bi-flag",
+    colorClass: "teal",
+    to: "/admin/reports",
   },
   {
-    label: 'Edit Categories',
-    description: 'Organize content sections',
-    icon: 'bi-grid',
-    colorClass: 'orange',
-    to: '/admin/categories',
+    label: "Edit Categories",
+    description: "Organize content sections",
+    icon: "bi-grid",
+    colorClass: "orange",
+    to: "/admin/categories",
   },
   {
-    label: 'View Analytics',
-    description: 'Check platform reports',
-    icon: 'bi-bar-chart',
-    colorClass: 'blue',
-    to: '/admin/analytics',
+    label: "View Analytics",
+    description: "Check platform reports",
+    icon: "bi-bar-chart",
+    colorClass: "blue",
+    to: "/admin/analytics",
   },
 ];
 
 const healthItems = computed(() => [
-  { label: 'API Response', value: 94, colorClass: 'bg-success' },
-  { label: 'Storage Usage', value: 68, colorClass: 'bg-warning' },
-  { label: 'Moderation Load', value: Math.min(100, adminStore.pendingReports.length * 20), colorClass: 'bg-info' },
+  { label: "API Response", value: 94, colorClass: "bg-success" },
+  { label: "Storage Usage", value: 68, colorClass: "bg-warning" },
+  {
+    label: "Moderation Load",
+    value: Math.min(100, reportStore.pendingReports.length * 20),
+    colorClass: "bg-info",
+  },
 ]);
 </script>
 
@@ -582,7 +671,9 @@ const healthItems = computed(() => [
   position: relative;
   border-radius: 4px 4px 2px 2px;
   opacity: 0.88;
-  transition: opacity var(--transition-base), transform var(--transition-base);
+  transition:
+    opacity var(--transition-base),
+    transform var(--transition-base);
 }
 
 .activity-bar:hover {

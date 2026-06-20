@@ -1,343 +1,394 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
-import Navbar from '../components/layouts/header.vue'
-import Footer from '../components/layouts/footer.vue'
-import { useAuthStore } from '../stores/AuthStore'
-import { useForumStore } from '../stores/ForumStore'
-import { resolveMediaUrl } from '@/utils/mediaUrl'
-import heroStack from '@/assets/hero.png'
+import { computed, onMounted, onUnmounted, ref, nextTick } from "vue";
+import { useRouter } from "vue-router";
+import Navbar from "../components/layouts/header.vue";
+import Footer from "../components/layouts/footer.vue";
+import { useAuthStore } from "../stores/AuthStore";
+import { useForumStore } from "../stores/ForumStore";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
+import heroStack from "@/assets/hero.png";
 
-const auth = useAuthStore()
-const forumStore = useForumStore()
-const router = useRouter()
+const auth = useAuthStore();
+const forumStore = useForumStore();
+const router = useRouter();
 
 /* ── typing animation ── */
-const typingPhrases = ['Technical Discussions', 'Project Showcases', 'Saved Knowledge', 'Developer Blogs']
-const typedText = ref('')
-const typingIndex = ref(0)
-const charIndex = ref(0)
-const isDeleting = ref(false)
-let typingTimer = null
+const typingPhrases = [
+  "Technical Discussions",
+  "Project Showcases",
+  "Saved Knowledge",
+  "Developer Blogs",
+];
+const typedText = ref("");
+const typingIndex = ref(0);
+const charIndex = ref(0);
+const isDeleting = ref(false);
+let typingTimer = null;
 
 function typeLoop() {
-  const current = typingPhrases[typingIndex.value]
+  const current = typingPhrases[typingIndex.value];
   if (!isDeleting.value) {
-    typedText.value = current.slice(0, charIndex.value + 1)
-    charIndex.value++
+    typedText.value = current.slice(0, charIndex.value + 1);
+    charIndex.value++;
     if (charIndex.value >= current.length) {
-      isDeleting.value = true
-      typingTimer = setTimeout(typeLoop, 1800)
-      return
+      isDeleting.value = true;
+      typingTimer = setTimeout(typeLoop, 1800);
+      return;
     }
-    typingTimer = setTimeout(typeLoop, 70)
+    typingTimer = setTimeout(typeLoop, 70);
   } else {
-    typedText.value = current.slice(0, charIndex.value - 1)
-    charIndex.value--
+    typedText.value = current.slice(0, charIndex.value - 1);
+    charIndex.value--;
     if (charIndex.value <= 0) {
-      isDeleting.value = false
-      typingIndex.value = (typingIndex.value + 1) % typingPhrases.length
-      typingTimer = setTimeout(typeLoop, 400)
-      return
+      isDeleting.value = false;
+      typingIndex.value = (typingIndex.value + 1) % typingPhrases.length;
+      typingTimer = setTimeout(typeLoop, 400);
+      return;
     }
-    typingTimer = setTimeout(typeLoop, 40)
+    typingTimer = setTimeout(typeLoop, 40);
   }
 }
 
 /* ── count-up animation ── */
-const statsVisible = ref(false)
-const countUpValues = ref([0, 0, 0, 0])
+const statsVisible = ref(false);
+const countUpValues = ref([0, 0, 0, 0]);
 
 function animateCountUp(target, index, duration = 1600) {
-  const num = parseInt(target) || 0
-  const start = performance.now()
+  const num = parseInt(target) || 0;
+  const start = performance.now();
   function step(now) {
-    const elapsed = now - start
-    const progress = Math.min(elapsed / duration, 1)
-    const eased = 1 - Math.pow(1 - progress, 3)
-    countUpValues.value[index] = Math.floor(eased * num)
-    if (progress < 1) requestAnimationFrame(step)
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    countUpValues.value[index] = Math.floor(eased * num);
+    if (progress < 1) requestAnimationFrame(step);
   }
-  requestAnimationFrame(step)
+  requestAnimationFrame(step);
 }
 
 /* ── scroll reveal ── */
-const revealElements = ref([])
-let observer = null
+const revealElements = ref([]);
+let observer = null;
 
 function setupScrollReveal() {
   observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('revealed')
+          entry.target.classList.add("revealed");
           // trigger count-up when stats section appears
-          if (entry.target.classList.contains('preview-stats') && !statsVisible.value) {
-            statsVisible.value = true
+          if (
+            entry.target.classList.contains("preview-stats") &&
+            !statsVisible.value
+          ) {
+            statsVisible.value = true;
             platformStats.value.forEach((stat, i) => {
-              const num = parseInt(stat.value) || 0
-              setTimeout(() => animateCountUp(num, i), i * 150)
-            })
+              const num = parseInt(stat.value) || 0;
+              setTimeout(() => animateCountUp(num, i), i * 150);
+            });
           }
-          observer.unobserve(entry.target)
+          observer.unobserve(entry.target);
         }
-      })
+      });
     },
-    { threshold: 0.15 }
-  )
+    { threshold: 0.15 },
+  );
 
   nextTick(() => {
-    document.querySelectorAll('.scroll-reveal').forEach((el) => {
-      observer.observe(el)
-    })
-  })
+    document.querySelectorAll(".scroll-reveal").forEach((el) => {
+      observer.observe(el);
+    });
+  });
 }
 
 /* ── existing data logic (unchanged) ── */
 
 const capabilityCards = [
   {
-    title: 'Ask With Context',
-    desc: 'Markdown, tags, categories, and code blocks keep technical posts easy to scan.',
-    icon: 'bi-chat-square-text',
-    accent: 'violet'
+    title: "Ask With Context",
+    desc: "Markdown, tags, categories, and code blocks keep technical posts easy to scan.",
+    icon: "bi-chat-square-text",
+    accent: "violet",
   },
   {
-    title: 'Discuss Better',
-    desc: 'Replies, saves, votes, and clean author details make every thread easier to follow.',
-    icon: 'bi-command',
-    accent: 'blue'
+    title: "Discuss Better",
+    desc: "Replies, saves, votes, and clean author details make every thread easier to follow.",
+    icon: "bi-command",
+    accent: "blue",
   },
   {
-    title: 'Show The Work',
-    desc: 'Showcase projects, screenshots, and tags turn finished builds into public proof.',
-    icon: 'bi-window-stack',
-    accent: 'green'
-  }
-]
+    title: "Show The Work",
+    desc: "Showcase projects, screenshots, and tags turn finished builds into public proof.",
+    icon: "bi-window-stack",
+    accent: "green",
+  },
+];
 
 const workflowSteps = [
-  { label: 'Create', text: 'Write a focused post with category, tags, and code.' },
-  { label: 'Discuss', text: 'Collect replies, suggestions, and better approaches.' },
-  { label: 'Save', text: 'Keep useful threads visible for future reference.' },
-  { label: 'Showcase', text: 'Publish the final project for community feedback.' }
-]
+  {
+    label: "Create",
+    text: "Write a focused post with category, tags, and code.",
+  },
+  {
+    label: "Discuss",
+    text: "Collect replies, suggestions, and better approaches.",
+  },
+  { label: "Save", text: "Keep useful threads visible for future reference." },
+  {
+    label: "Showcase",
+    text: "Publish the final project for community feedback.",
+  },
+];
 
 const previewThreads = [
   {
     id: null,
-    title: 'How should I handle refresh-token races in Axios?',
-    desc: 'Multiple protected requests can fail at the same time. Keep the code block, timeline, and accepted answer in one thread.',
-    author: 'PanhaZin6767',
-    avatar: 'https://i.pravatar.cc/150?u=panha-preview',
-    category: 'Questions & Answers',
+    title: "How should I handle refresh-token races in Axios?",
+    desc: "Multiple protected requests can fail at the same time. Keep the code block, timeline, and accepted answer in one thread.",
+    author: "PanhaZin6767",
+    avatar: "https://i.pravatar.cc/150?u=panha-preview",
+    category: "Questions & Answers",
     replies: 8,
-    time: 'Active'
+    time: "Active",
   },
   {
     id: null,
-    title: 'Best way to render markdown code blocks in forum posts?',
-    desc: 'A clean discussion about storing markdown in description and rendering snippets without breaking edit mode.',
-    author: 'Admin_Nha',
-    avatar: 'https://i.pravatar.cc/150?u=admin-preview',
-    category: 'Tutorials',
+    title: "Best way to render markdown code blocks in forum posts?",
+    desc: "A clean discussion about storing markdown in description and rendering snippets without breaking edit mode.",
+    author: "Admin_Nha",
+    avatar: "https://i.pravatar.cc/150?u=admin-preview",
+    category: "Tutorials",
     replies: 5,
-    time: 'New'
+    time: "New",
   },
   {
     id: null,
-    title: 'Profile skills should come from admin tags',
-    desc: 'A product thread for keeping user profile skills consistent with tags managed by admins.',
-    author: 'Sopanha',
-    avatar: 'https://i.pravatar.cc/150?u=sopanha-preview',
-    category: 'Resources',
+    title: "Profile skills should come from admin tags",
+    desc: "A product thread for keeping user profile skills consistent with tags managed by admins.",
+    author: "Sopanha",
+    avatar: "https://i.pravatar.cc/150?u=sopanha-preview",
+    category: "Resources",
     replies: 3,
-    time: 'Today'
-  }
-]
+    time: "Today",
+  },
+];
 
 const previewProjects = [
   {
     id: null,
-    title: 'ANT Forum Developer Console',
-    desc: 'A workspace for discussions, project showcases, blog publishing, and profile tools.',
-    author: 'Admin_Nha',
-    avatar: 'https://i.pravatar.cc/150?u=admin-nha-preview',
-    tags: ['Vue.js', 'Pinia', 'UI/UX'],
+    title: "ANT Forum Developer Console",
+    desc: "A workspace for discussions, project showcases, blog publishing, and profile tools.",
+    author: "Admin_Nha",
+    avatar: "https://i.pravatar.cc/150?u=admin-nha-preview",
+    tags: ["Vue.js", "Pinia", "UI/UX"],
     stars: 12,
-    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=900'
+    image:
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=900",
   },
   {
     id: null,
-    title: 'Markdown Forum Editor',
-    desc: 'Create technical posts with code blocks, inline code, categories, and clean edit states.',
-    author: 'PanhaZin6767',
-    avatar: 'https://i.pravatar.cc/150?u=panha-project-preview',
-    tags: ['Markdown', 'Tiptap', 'Frontend'],
+    title: "Markdown Forum Editor",
+    desc: "Create technical posts with code blocks, inline code, categories, and clean edit states.",
+    author: "PanhaZin6767",
+    avatar: "https://i.pravatar.cc/150?u=panha-project-preview",
+    tags: ["Markdown", "Tiptap", "Frontend"],
     stars: 9,
-    image: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&q=80&w=900'
-  }
-]
+    image:
+      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&q=80&w=900",
+  },
+];
 
 onMounted(async () => {
   if (!forumStore.allDiscussions || forumStore.allDiscussions.length === 0) {
     try {
-      await forumStore.fetchDiscussions()
+      await forumStore.fetchDiscussions();
     } catch (error) {
-      console.error('Error loading homepage discussions:', error)
+      console.error("Error loading homepage discussions:", error);
     }
   }
-  typeLoop()
-  setupScrollReveal()
-})
+  typeLoop();
+  setupScrollReveal();
+});
 
 onUnmounted(() => {
-  clearTimeout(typingTimer)
-  if (observer) observer.disconnect()
-})
+  clearTimeout(typingTimer);
+  if (observer) observer.disconnect();
+});
 
 const liveDiscussions = computed(() => {
-  return Array.isArray(forumStore.allDiscussions) ? forumStore.allDiscussions : []
-})
+  return Array.isArray(forumStore.allDiscussions)
+    ? forumStore.allDiscussions
+    : [];
+});
 
 const getCategoryName = (discussion) => {
-  return discussion?.categoryLabel ||
+  return (
+    discussion?.categoryLabel ||
     discussion?.categoryMeta?.label ||
     discussion?.category_name ||
     discussion?.category ||
-    'General'
-}
+    "General"
+  );
+};
 
 const isShowcaseThread = (discussion) => {
-  const category = getCategoryName(discussion).toLowerCase()
-  return category.includes('showcase') || category.includes('project')
-}
+  const category = getCategoryName(discussion).toLowerCase();
+  return category.includes("showcase") || category.includes("project");
+};
 
-const cleanText = (text = '', max = 130) => {
-  const value = String(text || '').replace(/\s+/g, ' ').trim()
-  return value.length > max ? `${value.slice(0, max).trim()}...` : value
-}
+const cleanText = (text = "", max = 130) => {
+  const value = String(text || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return value.length > max ? `${value.slice(0, max).trim()}...` : value;
+};
 
 const countReplies = (discussion = {}) => {
-  if (Array.isArray(discussion.replies)) return discussion.replies.length
-  return Number(discussion.replies || discussion.comment_count || 0)
-}
+  if (Array.isArray(discussion.replies)) return discussion.replies.length;
+  return Number(discussion.replies || discussion.comment_count || 0);
+};
 
 const getAuthorInfo = (discussion = {}) => {
-  let author = 'Community Member'
-  let avatar = `https://i.pravatar.cc/150?u=${discussion?.id || 'community'}`
+  let author = "Community Member";
+  let avatar = `https://i.pravatar.cc/150?u=${discussion?.id || "community"}`;
 
   if (discussion.user) {
-    author = discussion.user.username || discussion.user.name || author
-    avatar = discussion.user.profile_pic || discussion.user.avatar || avatar
+    author = discussion.user.username || discussion.user.name || author;
+    avatar = discussion.user.profile_pic || discussion.user.avatar || avatar;
   } else if (discussion.author) {
-    author = typeof discussion.author === 'object'
-      ? (discussion.author.username || discussion.author.name || author)
-      : discussion.author
-    avatar = discussion.author_avatar || avatar
+    author =
+      typeof discussion.author === "object"
+        ? discussion.author.username || discussion.author.name || author
+        : discussion.author;
+    avatar = discussion.author_avatar || avatar;
   }
 
   return {
     author,
-    avatar: resolveMediaUrl(avatar, `https://i.pravatar.cc/150?u=${encodeURIComponent(author)}`)
-  }
-}
+    avatar: resolveMediaUrl(
+      avatar,
+      `https://i.pravatar.cc/150?u=${encodeURIComponent(author)}`,
+    ),
+  };
+};
 
 const platformStats = computed(() => {
-  const discussions = liveDiscussions.value
-  const replies = discussions.reduce((total, item) => total + countReplies(item), 0)
-  const projects = discussions.filter(isShowcaseThread).length
-  const categories = new Set(discussions.map(getCategoryName).filter(Boolean)).size
+  const discussions = liveDiscussions.value;
+  const replies = discussions.reduce(
+    (total, item) => total + countReplies(item),
+    0,
+  );
+  const projects = discussions.filter(isShowcaseThread).length;
+  const categories = new Set(discussions.map(getCategoryName).filter(Boolean))
+    .size;
 
   return [
-    { value: `${discussions.length || 12}+`, label: 'Threads' },
-    { value: `${replies || 28}+`, label: 'Replies' },
-    { value: `${projects || 4}+`, label: 'Projects' },
-    { value: `${categories || 6}+`, label: 'Categories' }
-  ]
-})
+    { value: `${discussions.length || 12}+`, label: "Threads" },
+    { value: `${replies || 28}+`, label: "Replies" },
+    { value: `${projects || 4}+`, label: "Projects" },
+    { value: `${categories || 6}+`, label: "Categories" },
+  ];
+});
 
 const categorySummary = computed(() => {
-  const counts = new Map()
+  const counts = new Map();
 
   liveDiscussions.value.forEach((discussion) => {
-    const name = getCategoryName(discussion)
-    counts.set(name, (counts.get(name) || 0) + 1)
-  })
+    const name = getCategoryName(discussion);
+    counts.set(name, (counts.get(name) || 0) + 1);
+  });
 
   const live = [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
-    .map(([label, count]) => ({ label, count }))
+    .map(([label, count]) => ({ label, count }));
 
   return live.length
     ? live
     : [
-        { label: 'Questions & Answers', count: 4 },
-        { label: 'Showcase Projects', count: 3 },
-        { label: 'Tutorials', count: 2 },
-        { label: 'Resources', count: 2 }
-      ]
-})
+        { label: "Questions & Answers", count: 4 },
+        { label: "Showcase Projects", count: 3 },
+        { label: "Tutorials", count: 2 },
+        { label: "Resources", count: 2 },
+      ];
+});
 
 const recentThreadsLive = computed(() => {
   return liveDiscussions.value
     .filter((discussion) => !isShowcaseThread(discussion))
     .slice(0, 4)
     .map((discussion) => {
-      const { author, avatar } = getAuthorInfo(discussion)
-      const createdAt = discussion.created_at || discussion.createdAt
+      const { author, avatar } = getAuthorInfo(discussion);
+      const createdAt = discussion.created_at || discussion.createdAt;
       const time = createdAt
-        ? new Date(createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-        : 'Recent'
+        ? new Date(createdAt).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          })
+        : "Recent";
 
       return {
         id: discussion.id,
-        title: discussion.title || 'Untitled discussion',
-        desc: cleanText(discussion.description || discussion.excerpt || discussion.body || ''),
+        title: discussion.title || "Untitled discussion",
+        desc: cleanText(
+          discussion.description || discussion.excerpt || discussion.body || "",
+        ),
         author,
         avatar,
         category: getCategoryName(discussion),
         replies: countReplies(discussion),
-        time
-      }
-    })
-})
+        time,
+      };
+    });
+});
 
 const latestProjectsLive = computed(() => {
   return liveDiscussions.value
     .filter(isShowcaseThread)
     .slice(0, 2)
     .map((discussion) => {
-      const { author, avatar } = getAuthorInfo(discussion)
+      const { author, avatar } = getAuthorInfo(discussion);
       const tags = Array.isArray(discussion.tags)
-        ? discussion.tags.map((tag) => typeof tag === 'object' ? (tag.label || tag.name) : tag).filter(Boolean)
-        : []
+        ? discussion.tags
+            .map((tag) =>
+              typeof tag === "object" ? tag.label || tag.name : tag,
+            )
+            .filter(Boolean)
+        : [];
 
       return {
         id: discussion.id,
-        title: discussion.title || 'Untitled project',
-        desc: cleanText(discussion.description || discussion.excerpt || discussion.body || ''),
+        title: discussion.title || "Untitled project",
+        desc: cleanText(
+          discussion.description || discussion.excerpt || discussion.body || "",
+        ),
         author,
         avatar,
         tags: tags.slice(0, 3),
-        stars: discussion.likes !== undefined ? discussion.likes : (discussion.votes || 0),
+        stars:
+          discussion.likes !== undefined
+            ? discussion.likes
+            : discussion.votes || 0,
         image: resolveMediaUrl(
           discussion.thumbnail || discussion.image,
-          'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=900'
-        )
-      }
-    })
-})
+          "https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?auto=format&fit=crop&q=80&w=900",
+        ),
+      };
+    });
+});
 
-const displayThreads = computed(() => recentThreadsLive.value.length ? recentThreadsLive.value : previewThreads)
-const displayProjects = computed(() => latestProjectsLive.value.length ? latestProjectsLive.value : previewProjects)
-const heroThread = computed(() => displayThreads.value[0])
-const primaryProject = computed(() => displayProjects.value[0])
+const displayThreads = computed(() =>
+  recentThreadsLive.value.length ? recentThreadsLive.value : previewThreads,
+);
+const displayProjects = computed(() =>
+  latestProjectsLive.value.length ? latestProjectsLive.value : previewProjects,
+);
+const heroThread = computed(() => displayThreads.value[0]);
+const primaryProject = computed(() => displayProjects.value[0]);
 
 const goToThread = (id) => {
-  router.push(id ? `/forum/${id}` : '/forum')
-}
+  router.push(id ? `/forum/${id}` : "/forum");
+};
 </script>
 
 <template>
@@ -372,19 +423,24 @@ const goToThread = (id) => {
             </div>
 
             <h1 class="hero-title">
-              <span class="gradient-text">ANT</span><span class="gradient-text-alt">FORUM</span>
+              <span class="gradient-text">ANT</span
+              ><span class="gradient-text-alt">FORUM</span>
             </h1>
 
             <p class="hero-lead">
               A clean home for
               <span class="typing-wrapper">
-                <span class="typed-text">{{ typedText }}</span><span class="typing-cursor">|</span>
+                <span class="typed-text">{{ typedText }}</span
+                ><span class="typing-cursor">|</span>
               </span>
               <br />from your developer community.
             </p>
 
             <div class="hero-actions">
-              <router-link :to="auth.user ? '/forum/create' : '/login'" class="primary-action glow-btn">
+              <router-link
+                :to="auth.user ? '/forum/create' : '/login'"
+                class="primary-action glow-btn"
+              >
                 <i class="bi bi-plus-circle"></i>
                 Start a Discussion
               </router-link>
@@ -395,33 +451,54 @@ const goToThread = (id) => {
             </div>
 
             <div class="feature-pills" aria-label="ANT Forum platform support">
-              <span class="feature-pill floating-pill" style="--float-delay: 0s">
+              <span
+                class="feature-pill floating-pill"
+                style="--float-delay: 0s"
+              >
                 <i class="bi bi-code-slash"></i> Markdown editor
               </span>
-              <span class="feature-pill floating-pill" style="--float-delay: 0.5s">
+              <span
+                class="feature-pill floating-pill"
+                style="--float-delay: 0.5s"
+              >
                 <i class="bi bi-tags"></i> Admin tags
               </span>
-              <span class="feature-pill floating-pill" style="--float-delay: 1s">
+              <span
+                class="feature-pill floating-pill"
+                style="--float-delay: 1s"
+              >
                 <i class="bi bi-person-badge"></i> Member profiles
               </span>
-              <span class="feature-pill floating-pill" style="--float-delay: 1.5s">
+              <span
+                class="feature-pill floating-pill"
+                style="--float-delay: 1.5s"
+              >
                 <i class="bi bi-kanban"></i> Showcases
               </span>
             </div>
           </section>
 
           <!-- Right: Live Activity Feed -->
-          <section class="activity-feed glass-panel scroll-reveal" aria-label="Forum activity feed">
+          <section
+            class="activity-feed glass-panel scroll-reveal"
+            aria-label="Forum activity feed"
+          >
             <div class="feed-header">
               <div>
-                <span class="feed-label"><span class="pulse-dot"></span> Live</span>
+                <span class="feed-label"
+                  ><span class="pulse-dot"></span> Live</span
+                >
                 <strong>Community Activity</strong>
               </div>
               <img :src="heroStack" alt="ANT Forum" class="feed-logo" />
             </div>
 
             <!-- Featured thread card -->
-            <button class="featured-card" type="button" @click="goToThread(heroThread?.id)">
+            <button
+              class="featured-card"
+              type="button"
+              @click="goToThread(heroThread?.id)"
+            >
               <span class="featured-badge">{{ heroThread?.category }}</span>
               <strong>{{ heroThread?.title }}</strong>
               <small>{{ heroThread?.desc }}</small>
@@ -429,9 +506,16 @@ const goToThread = (id) => {
 
             <!-- Animated stats -->
             <div class="preview-stats scroll-reveal">
-              <div v-for="(stat, index) in platformStats" :key="stat.label" class="stat-card" :style="{ '--stagger': index }">
+              <div
+                v-for="(stat, index) in platformStats"
+                :key="stat.label"
+                class="stat-card"
+                :style="{ '--stagger': index }"
+              >
                 <strong>
-                  <template v-if="statsVisible">{{ countUpValues[index] }}+</template>
+                  <template v-if="statsVisible"
+                    >{{ countUpValues[index] }}+</template
+                  >
                   <template v-else>0+</template>
                 </strong>
                 <span>{{ stat.label }}</span>
@@ -440,7 +524,12 @@ const goToThread = (id) => {
 
             <!-- Category tags -->
             <div class="preview-categories">
-              <span v-for="(category, i) in categorySummary" :key="category.label" class="cat-tag" :style="{ '--cat-delay': `${i * 0.1}s` }">
+              <span
+                v-for="(category, i) in categorySummary"
+                :key="category.label"
+                class="cat-tag"
+                :style="{ '--cat-delay': `${i * 0.1}s` }"
+              >
                 {{ category.label }} <b>{{ category.count }}</b>
               </span>
             </div>
@@ -456,7 +545,12 @@ const goToThread = (id) => {
           <article
             v-for="(card, i) in capabilityCards"
             :key="card.title"
-            :class="['capability-card', 'glass-card', card.accent, 'scroll-reveal']"
+            :class="[
+              'capability-card',
+              'glass-card',
+              card.accent,
+              'scroll-reveal',
+            ]"
             :style="{ '--stagger': i }"
           >
             <div class="card-icon-wrap">
@@ -484,7 +578,10 @@ const goToThread = (id) => {
         </div>
 
         <div class="activity-grid">
-          <article class="project-spotlight glass-card scroll-reveal" @click="goToThread(primaryProject?.id)">
+          <article
+            class="project-spotlight glass-card scroll-reveal"
+            @click="goToThread(primaryProject?.id)"
+          >
             <img :src="primaryProject?.image" :alt="primaryProject?.title" />
             <div class="project-body">
               <span class="section-label">Showcase</span>
@@ -492,18 +589,30 @@ const goToThread = (id) => {
               <p>{{ primaryProject?.desc }}</p>
               <div class="project-meta">
                 <div class="author-inline">
-                  <img :src="primaryProject?.avatar" :alt="primaryProject?.author" />
+                  <img
+                    :src="primaryProject?.avatar"
+                    :alt="primaryProject?.author"
+                  />
                   <span>{{ primaryProject?.author }}</span>
                 </div>
                 <div class="tag-list">
-                  <span v-for="tag in primaryProject?.tags" :key="tag">{{ tag }}</span>
+                  <span v-for="tag in primaryProject?.tags" :key="tag">{{
+                    tag
+                  }}</span>
                 </div>
               </div>
             </div>
           </article>
 
           <div class="thread-list glass-card scroll-reveal">
-            <button v-for="(thread, i) in displayThreads" :key="thread.title" type="button" class="thread-row" :style="{ '--stagger': i }" @click="goToThread(thread.id)">
+            <button
+              v-for="(thread, i) in displayThreads"
+              :key="thread.title"
+              type="button"
+              class="thread-row"
+              :style="{ '--stagger': i }"
+              @click="goToThread(thread.id)"
+            >
               <img :src="thread.avatar" :alt="thread.author" />
               <span class="thread-main">
                 <strong>{{ thread.title }}</strong>
@@ -524,17 +633,28 @@ const goToThread = (id) => {
             <span class="section-label">Workflow</span>
             <h2>Built around how developers actually ask for help</h2>
             <p>
-              The landing page now points people straight into the useful parts of the app: forum questions, categorized content, and showcase work.
+              The landing page now points people straight into the useful parts
+              of the app: forum questions, categorized content, and showcase
+              work.
             </p>
           </div>
           <div class="workflow-steps">
-            <article v-for="(step, index) in workflowSteps" :key="step.label" class="scroll-reveal" :style="{ '--stagger': index }">
+            <article
+              v-for="(step, index) in workflowSteps"
+              :key="step.label"
+              class="scroll-reveal"
+              :style="{ '--stagger': index }"
+            >
               <span class="step-number">{{ index + 1 }}</span>
               <div>
                 <strong>{{ step.label }}</strong>
                 <p>{{ step.text }}</p>
               </div>
-              <div class="step-connector" v-if="index < workflowSteps.length - 1" aria-hidden="true"></div>
+              <div
+                class="step-connector"
+                v-if="index < workflowSteps.length - 1"
+                aria-hidden="true"
+              ></div>
             </article>
           </div>
         </div>
@@ -550,7 +670,10 @@ const goToThread = (id) => {
             <h2>Bring your next technical problem into ANT Forum.</h2>
           </div>
           <div class="cta-actions">
-            <router-link :to="auth.user ? '/forum/create' : '/login'" class="primary-action glow-btn">
+            <router-link
+              :to="auth.user ? '/forum/create' : '/login'"
+              class="primary-action glow-btn"
+            >
               Ask now
             </router-link>
             <router-link to="/showcase" class="secondary-action glass-btn">
@@ -613,8 +736,16 @@ const goToThread = (id) => {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139, 92, 246, 0.08), transparent);
+    radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      rgba(99, 102, 241, 0.12),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 80% 80%,
+      rgba(139, 92, 246, 0.08),
+      transparent
+    );
 }
 
 /* Floating particles */
@@ -628,21 +759,94 @@ const goToThread = (id) => {
   animation: float-particle linear infinite;
 }
 
-.p1 { left: 10%; top: 20%; width: 3px; height: 3px; animation-duration: 18s; animation-delay: 0s; }
-.p2 { left: 25%; top: 60%; width: 5px; height: 5px; animation-duration: 22s; animation-delay: -3s; background: rgba(99, 102, 241, 0.5); }
-.p3 { left: 45%; top: 30%; width: 3px; height: 3px; animation-duration: 20s; animation-delay: -7s; }
-.p4 { left: 65%; top: 70%; width: 4px; height: 4px; animation-duration: 16s; animation-delay: -2s; background: rgba(40, 183, 215, 0.5); }
-.p5 { left: 80%; top: 15%; width: 6px; height: 6px; animation-duration: 24s; animation-delay: -5s; }
-.p6 { left: 15%; top: 80%; width: 3px; height: 3px; animation-duration: 19s; animation-delay: -8s; background: rgba(40, 183, 215, 0.4); }
-.p7 { left: 55%; top: 50%; width: 4px; height: 4px; animation-duration: 21s; animation-delay: -12s; }
-.p8 { left: 90%; top: 40%; width: 3px; height: 3px; animation-duration: 17s; animation-delay: -4s; background: rgba(99, 102, 241, 0.4); }
+.p1 {
+  left: 10%;
+  top: 20%;
+  width: 3px;
+  height: 3px;
+  animation-duration: 18s;
+  animation-delay: 0s;
+}
+.p2 {
+  left: 25%;
+  top: 60%;
+  width: 5px;
+  height: 5px;
+  animation-duration: 22s;
+  animation-delay: -3s;
+  background: rgba(99, 102, 241, 0.5);
+}
+.p3 {
+  left: 45%;
+  top: 30%;
+  width: 3px;
+  height: 3px;
+  animation-duration: 20s;
+  animation-delay: -7s;
+}
+.p4 {
+  left: 65%;
+  top: 70%;
+  width: 4px;
+  height: 4px;
+  animation-duration: 16s;
+  animation-delay: -2s;
+  background: rgba(40, 183, 215, 0.5);
+}
+.p5 {
+  left: 80%;
+  top: 15%;
+  width: 6px;
+  height: 6px;
+  animation-duration: 24s;
+  animation-delay: -5s;
+}
+.p6 {
+  left: 15%;
+  top: 80%;
+  width: 3px;
+  height: 3px;
+  animation-duration: 19s;
+  animation-delay: -8s;
+  background: rgba(40, 183, 215, 0.4);
+}
+.p7 {
+  left: 55%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  animation-duration: 21s;
+  animation-delay: -12s;
+}
+.p8 {
+  left: 90%;
+  top: 40%;
+  width: 3px;
+  height: 3px;
+  animation-duration: 17s;
+  animation-delay: -4s;
+  background: rgba(99, 102, 241, 0.4);
+}
 
 @keyframes float-particle {
-  0% { transform: translate(0, 0) scale(1); opacity: 0; }
-  10% { opacity: 1; }
-  50% { transform: translate(-40px, -60px) scale(1.5); opacity: 0.7; }
-  90% { opacity: 0.3; }
-  100% { transform: translate(30px, -120px) scale(0.8); opacity: 0; }
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-40px, -60px) scale(1.5);
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(30px, -120px) scale(0.8);
+    opacity: 0;
+  }
 }
 
 /* Glowing orbs */
@@ -654,32 +858,57 @@ const goToThread = (id) => {
 }
 
 .orb-1 {
-  width: 320px; height: 320px;
-  left: -5%; top: -10%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.18), transparent 70%);
+  width: 320px;
+  height: 320px;
+  left: -5%;
+  top: -10%;
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.18),
+    transparent 70%
+  );
   animation-duration: 12s;
 }
 
 .orb-2 {
-  width: 260px; height: 260px;
-  right: 5%; top: 30%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.14), transparent 70%);
+  width: 260px;
+  height: 260px;
+  right: 5%;
+  top: 30%;
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.14),
+    transparent 70%
+  );
   animation-duration: 16s;
   animation-delay: -4s;
 }
 
 .orb-3 {
-  width: 200px; height: 200px;
-  left: 35%; bottom: -10%;
-  background: radial-gradient(circle, rgba(40, 183, 215, 0.12), transparent 70%);
+  width: 200px;
+  height: 200px;
+  left: 35%;
+  bottom: -10%;
+  background: radial-gradient(
+    circle,
+    rgba(40, 183, 215, 0.12),
+    transparent 70%
+  );
   animation-duration: 14s;
   animation-delay: -8s;
 }
 
 @keyframes drift {
-  0%, 100% { transform: translate(0, 0); }
-  33% { transform: translate(30px, -20px); }
-  66% { transform: translate(-20px, 15px); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(30px, -20px);
+  }
+  66% {
+    transform: translate(-20px, 15px);
+  }
 }
 
 /* ── HERO GRID ── */
@@ -713,13 +942,17 @@ const goToThread = (id) => {
 
 /* Subtle inner gradient glow */
 .hero-copy::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -20%;
   width: 140%;
   height: 140%;
-  background: radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.08), transparent 60%);
+  background: radial-gradient(
+    ellipse at 30% 20%,
+    rgba(99, 102, 241, 0.08),
+    transparent 60%
+  );
   pointer-events: none;
 }
 
@@ -747,8 +980,15 @@ const goToThread = (id) => {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 5px rgba(33, 185, 130, 0.14); }
-  50% { box-shadow: 0 0 0 10px rgba(33, 185, 130, 0.06), 0 0 20px rgba(33, 185, 130, 0.2); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 5px rgba(33, 185, 130, 0.14);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(33, 185, 130, 0.06),
+      0 0 20px rgba(33, 185, 130, 0.2);
+  }
 }
 
 /* ── Gradient title ── */
@@ -805,8 +1045,13 @@ const goToThread = (id) => {
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* ── CTA Buttons ── */
@@ -838,12 +1083,16 @@ const goToThread = (id) => {
   color: #fff;
   background: linear-gradient(135deg, #625df5, #7c3aed);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 20px rgba(98, 93, 245, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 0 20px rgba(98, 93, 245, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .glow-btn:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 0 30px rgba(98, 93, 245, 0.5), 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    0 0 30px rgba(98, 93, 245, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.25);
   background: linear-gradient(135deg, #7c78f8, #8b5cf6);
 }
 
@@ -900,8 +1149,13 @@ const goToThread = (id) => {
 }
 
 @keyframes float-pill {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 /* ── ACTIVITY FEED (right panel) ── */
@@ -926,7 +1180,7 @@ const goToThread = (id) => {
 
 /* Decorative corner glow */
 .activity-feed::after {
-  content: '';
+  content: "";
   position: absolute;
   top: -60px;
   right: -60px;
@@ -969,8 +1223,15 @@ const goToThread = (id) => {
 }
 
 @keyframes pulse-live {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.8); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.8);
+  }
 }
 
 .feed-header strong {
@@ -992,7 +1253,11 @@ const goToThread = (id) => {
   padding: 22px;
   border: 1px solid rgba(109, 106, 247, 0.22);
   border-radius: 22px;
-  background: linear-gradient(135deg, rgba(11, 17, 32, 0.9), rgba(16, 24, 39, 0.7));
+  background: linear-gradient(
+    135deg,
+    rgba(11, 17, 32, 0.9),
+    rgba(16, 24, 39, 0.7)
+  );
   backdrop-filter: blur(8px);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
@@ -1001,7 +1266,7 @@ const goToThread = (id) => {
 }
 
 .featured-card::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), transparent);
@@ -1073,13 +1338,18 @@ const goToThread = (id) => {
 }
 
 .stat-card::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.04),
+    transparent
+  );
   transition: left 0.6s ease;
 }
 
@@ -1194,9 +1464,27 @@ const goToThread = (id) => {
   pointer-events: none;
 }
 
-.capability-card.violet .card-glow { background: radial-gradient(ellipse at 50% 100%, rgba(99, 102, 241, 0.1), transparent 70%); }
-.capability-card.blue .card-glow { background: radial-gradient(ellipse at 50% 100%, rgba(40, 183, 215, 0.1), transparent 70%); }
-.capability-card.green .card-glow { background: radial-gradient(ellipse at 50% 100%, rgba(33, 185, 130, 0.1), transparent 70%); }
+.capability-card.violet .card-glow {
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(99, 102, 241, 0.1),
+    transparent 70%
+  );
+}
+.capability-card.blue .card-glow {
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(40, 183, 215, 0.1),
+    transparent 70%
+  );
+}
+.capability-card.green .card-glow {
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(33, 185, 130, 0.1),
+    transparent 70%
+  );
+}
 
 .capability-card:hover .card-glow {
   opacity: 1;
@@ -1212,7 +1500,9 @@ const goToThread = (id) => {
   margin-bottom: 22px;
   color: #fff;
   font-size: 1.2rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .capability-card:hover .card-icon-wrap {
@@ -1232,9 +1522,15 @@ const goToThread = (id) => {
   box-shadow: 0 4px 16px rgba(33, 185, 130, 0.3);
 }
 
-.capability-card:hover.violet .card-icon-wrap { box-shadow: 0 8px 24px rgba(98, 93, 245, 0.45); }
-.capability-card:hover.blue .card-icon-wrap { box-shadow: 0 8px 24px rgba(40, 183, 215, 0.45); }
-.capability-card:hover.green .card-icon-wrap { box-shadow: 0 8px 24px rgba(33, 185, 130, 0.45); }
+.capability-card:hover.violet .card-icon-wrap {
+  box-shadow: 0 8px 24px rgba(98, 93, 245, 0.45);
+}
+.capability-card:hover.blue .card-icon-wrap {
+  box-shadow: 0 8px 24px rgba(40, 183, 215, 0.45);
+}
+.capability-card:hover.green .card-icon-wrap {
+  box-shadow: 0 8px 24px rgba(33, 185, 130, 0.45);
+}
 
 .capability-card h2,
 .section-top h2,
@@ -1433,7 +1729,11 @@ const goToThread = (id) => {
   place-items: center;
   border-radius: 12px;
   color: #fff;
-  background: linear-gradient(135deg, rgba(109, 106, 247, 0.2), rgba(139, 92, 246, 0.15));
+  background: linear-gradient(
+    135deg,
+    rgba(109, 106, 247, 0.2),
+    rgba(139, 92, 246, 0.15)
+  );
   border: 1px solid rgba(109, 106, 247, 0.25);
   font-weight: 950;
   font-size: 0.9rem;
@@ -1519,10 +1819,14 @@ const goToThread = (id) => {
 }
 
 .cta-panel::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), transparent 60%);
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.06),
+    transparent 60%
+  );
   pointer-events: none;
 }
 
@@ -1553,7 +1857,7 @@ const goToThread = (id) => {
 /* ══════════════════════════════════════
    LIGHT MODE OVERRIDES
    ══════════════════════════════════════ */
-[data-theme='light'] .landing-page {
+[data-theme="light"] .landing-page {
   --page-bg: #f7f9fc;
   --panel-bg: #ffffff;
   --panel-soft: #f1f5f9;
@@ -1563,88 +1867,106 @@ const goToThread = (id) => {
   --muted: #637083;
 }
 
-[data-theme='light'] .hero-copy,
-[data-theme='light'] .activity-feed,
-[data-theme='light'] .capability-card,
-[data-theme='light'] .project-spotlight,
-[data-theme='light'] .thread-list,
-[data-theme='light'] .workflow-panel,
-[data-theme='light'] .cta-panel {
+[data-theme="light"] .hero-copy,
+[data-theme="light"] .activity-feed,
+[data-theme="light"] .capability-card,
+[data-theme="light"] .project-spotlight,
+[data-theme="light"] .thread-list,
+[data-theme="light"] .workflow-panel,
+[data-theme="light"] .cta-panel {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
 }
 
-[data-theme='light'] .hero-copy {
+[data-theme="light"] .hero-copy {
   background: rgba(255, 255, 255, 0.88);
 }
 
-[data-theme='light'] .hero-title .gradient-text {
+[data-theme="light"] .hero-title .gradient-text {
   background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-[data-theme='light'] .hero-title .gradient-text-alt {
+[data-theme="light"] .hero-title .gradient-text-alt {
   background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-[data-theme='light'] .hero-lead,
-[data-theme='light'] .feature-pill {
+[data-theme="light"] .hero-lead,
+[data-theme="light"] .feature-pill {
   color: var(--color-text-muted);
 }
 
-[data-theme='light'] .typed-text {
+[data-theme="light"] .typed-text {
   color: #4f46e5;
 }
 
-[data-theme='light'] .featured-card,
-[data-theme='light'] .stat-card,
-[data-theme='light'] .thread-row,
-[data-theme='light'] .workflow-steps article {
+[data-theme="light"] .featured-card,
+[data-theme="light"] .stat-card,
+[data-theme="light"] .thread-row,
+[data-theme="light"] .workflow-steps article {
   background: #ffffff;
   border-color: var(--landing-border);
 }
 
-[data-theme='light'] .featured-card strong,
-[data-theme='light'] .feed-header strong,
-[data-theme='light'] .stat-card strong,
-[data-theme='light'] .project-body h3,
-[data-theme='light'] .thread-main strong,
-[data-theme='light'] .workflow-steps strong {
+[data-theme="light"] .featured-card strong,
+[data-theme="light"] .feed-header strong,
+[data-theme="light"] .stat-card strong,
+[data-theme="light"] .project-body h3,
+[data-theme="light"] .thread-main strong,
+[data-theme="light"] .workflow-steps strong {
   color: var(--color-text);
 }
 
-[data-theme='light'] .glass-btn {
+[data-theme="light"] .glass-btn {
   background: #fff;
   color: var(--color-text);
   border-color: var(--landing-border);
 }
 
-[data-theme='light'] .feature-pill {
+[data-theme="light"] .feature-pill {
   background: rgba(99, 102, 241, 0.06);
   border-color: rgba(99, 102, 241, 0.15);
   color: #475569;
 }
 
-[data-theme='light'] .cat-tag {
+[data-theme="light"] .cat-tag {
   background: rgba(99, 102, 241, 0.06);
   border-color: rgba(99, 102, 241, 0.12);
   color: #475569;
 }
 
-[data-theme='light'] .particle {
+[data-theme="light"] .particle {
   background: rgba(99, 102, 241, 0.25);
   box-shadow: 0 0 6px rgba(99, 102, 241, 0.15);
 }
 
-[data-theme='light'] .orb-1 { background: radial-gradient(circle, rgba(99, 102, 241, 0.08), transparent 70%); }
-[data-theme='light'] .orb-2 { background: radial-gradient(circle, rgba(139, 92, 246, 0.06), transparent 70%); }
-[data-theme='light'] .orb-3 { background: radial-gradient(circle, rgba(40, 183, 215, 0.06), transparent 70%); }
+[data-theme="light"] .orb-1 {
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.08),
+    transparent 70%
+  );
+}
+[data-theme="light"] .orb-2 {
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.06),
+    transparent 70%
+  );
+}
+[data-theme="light"] .orb-3 {
+  background: radial-gradient(
+    circle,
+    rgba(40, 183, 215, 0.06),
+    transparent 70%
+  );
+}
 
 /* ══════════════════════════════════════
    RESPONSIVE
@@ -1716,7 +2038,11 @@ const goToThread = (id) => {
   }
 
   /* Reduce particle effects on mobile for performance */
-  .particle { display: none; }
-  .orb { filter: blur(40px); }
+  .particle {
+    display: none;
+  }
+  .orb {
+    filter: blur(40px);
+  }
 }
 </style>

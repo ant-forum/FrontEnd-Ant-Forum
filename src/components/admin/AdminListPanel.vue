@@ -8,7 +8,7 @@
 
       <label class="search-box">
         <i class="bi bi-search"></i>
-        <input v-model.trim="search" type="search" :placeholder="placeholder">
+        <input v-model.trim="search" type="search" :placeholder="placeholder" />
       </label>
     </div>
 
@@ -24,21 +24,29 @@
       <table class="table clean-table align-middle mb-0">
         <thead>
           <tr>
-            <th v-for="column in columns" :key="column.key">{{ column.label }}</th>
+            <th v-for="column in columns" :key="column.key">
+              {{ column.label }}
+            </th>
             <th v-if="showActions" class="text-end">Actions</th>
           </tr>
         </thead>
         <tbody v-if="isLoading">
           <tr v-for="i in 5" :key="i" class="skeleton-row">
             <td v-for="column in columns" :key="column.key">
-              <div v-if="column.key === 'name'" class="identity-skeleton d-flex align-items-center gap-3">
+              <div
+                v-if="column.key === 'name'"
+                class="identity-skeleton d-flex align-items-center gap-3"
+              >
                 <div class="skeleton-circle shimmer"></div>
                 <div class="d-flex flex-column gap-2 flex-grow-1">
                   <div class="skeleton-line w-75 shimmer"></div>
                   <div class="skeleton-line w-50 shimmer"></div>
                 </div>
               </div>
-              <div v-else-if="column.type === 'status'" class="skeleton-badge shimmer"></div>
+              <div
+                v-else-if="column.type === 'status'"
+                class="skeleton-badge shimmer"
+              ></div>
               <div v-else class="skeleton-line w-75 shimmer"></div>
             </td>
             <td v-if="showActions" class="text-end">
@@ -49,7 +57,12 @@
           </tr>
         </tbody>
         <tbody v-else-if="filteredRows.length">
-          <tr v-for="row in paginatedRows" :key="row.id ?? row.name">
+          <tr
+            v-for="row in paginatedRows"
+            :key="row.id ?? row.name"
+            :class="{ 'clickable-row': clickableRows }"
+            @click="handleRowClick(row, $event)"
+          >
             <td v-for="column in columns" :key="column.key">
               <div v-if="column.key === 'name'" class="identity-cell">
                 <img
@@ -58,35 +71,49 @@
                   :alt="`${row.name} profile picture`"
                   class="avatar-image"
                   @error="handleAvatarError(row)"
-                >
+                />
                 <span v-else class="avatar-dot">{{ initials(row.name) }}</span>
                 <div>
                   <strong>{{ row.name }}</strong>
                   <small>{{ row.detail }}</small>
                 </div>
               </div>
-              <span v-else-if="column.type === 'status'" :class="['status-pill', statusClass(row[column.key])]">
+              <span
+                v-else-if="column.type === 'status'"
+                :class="['status-pill', statusClass(row[column.key])]"
+              >
                 {{ row[column.key] }}
               </span>
               <span v-else>{{ row[column.key] }}</span>
             </td>
             <td v-if="showActions" class="text-end">
               <div class="actions-dropdown-container">
-                <button 
-                  class="btn-action-dots" 
-                  type="button" 
+                <button
+                  class="btn-action-dots"
+                  type="button"
                   title="Actions"
                   @click.stop="toggleMenu(row.id ?? row.name)"
                 >
                   <i class="bi bi-three-dots-vertical"></i>
                 </button>
-                
-                <div v-if="activeMenuId === (row.id ?? row.name)" class="actions-dropdown-menu">
-                  <button type="button" @click.stop="handleEdit(row)" class="dropdown-item">
+
+                <div
+                  v-if="activeMenuId === (row.id ?? row.name)"
+                  class="actions-dropdown-menu"
+                >
+                  <button
+                    type="button"
+                    @click.stop="handleEdit(row)"
+                    class="dropdown-item"
+                  >
                     <i class="bi bi-pencil-fill text-primary"></i>
                     <span>Edit</span>
                   </button>
-                  <button type="button" @click.stop="handleDelete(row)" class="dropdown-item delete">
+                  <button
+                    type="button"
+                    @click.stop="handleDelete(row)"
+                    class="dropdown-item delete"
+                  >
                     <i class="bi bi-trash-fill text-danger"></i>
                     <span>Delete</span>
                   </button>
@@ -97,11 +124,19 @@
         </tbody>
         <tbody v-else>
           <tr>
-            <td class="empty-table-state" :colspan="columns.length + (showActions ? 1 : 0)">
+            <td
+              class="empty-table-state"
+              :colspan="columns.length + (showActions ? 1 : 0)"
+            >
               <i class="bi bi-search"></i>
               <strong>{{ emptyStateTitle }}</strong>
               <span>{{ emptyStateMessage }}</span>
-              <button v-if="search" class="btn btn-light btn-sm border empty-action" type="button" @click="search = ''">
+              <button
+                v-if="search"
+                class="btn btn-light btn-sm border empty-action"
+                type="button"
+                @click="search = ''"
+              >
                 <i class="bi bi-x-circle"></i>
                 Clear Search
               </button>
@@ -113,11 +148,15 @@
 
     <footer v-if="!isLoading && filteredRows.length" class="pagination-footer">
       <p>
-        Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong>
-        of <strong>{{ filteredRows.length }}</strong> {{ itemLabel }}
+        Showing <strong>{{ firstVisibleRow }}-{{ lastVisibleRow }}</strong> of
+        <strong>{{ filteredRows.length }}</strong> {{ itemLabel }}
       </p>
 
-      <nav v-if="totalPages > 1" class="pagination-controls" :aria-label="`${itemLabel} list pagination`">
+      <nav
+        v-if="totalPages > 1"
+        class="pagination-controls"
+        :aria-label="`${itemLabel} list pagination`"
+      >
         <button
           class="pagination-btn"
           type="button"
@@ -158,7 +197,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
 
 const props = defineProps({
   title: {
@@ -179,19 +218,19 @@ const props = defineProps({
   },
   placeholder: {
     type: String,
-    default: 'Search records',
+    default: "Search records",
   },
   itemLabel: {
     type: String,
-    default: 'records',
+    default: "records",
   },
   emptyTitle: {
     type: String,
-    default: '',
+    default: "",
   },
   emptyDescription: {
     type: String,
-    default: '',
+    default: "",
   },
   showActions: {
     type: Boolean,
@@ -205,9 +244,13 @@ const props = defineProps({
     type: Number,
     default: 10,
   },
+  clickableRows: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const search = ref('');
+const search = ref("");
 const currentPage = ref(1);
 const failedAvatars = ref(new Set());
 
@@ -215,15 +258,34 @@ const filteredRows = computed(() => {
   const needle = search.value.toLowerCase();
   if (!needle) return props.rows;
 
-  return props.rows.filter((row) => JSON.stringify(row).toLowerCase().includes(needle));
+  return props.rows.filter((row) =>
+    JSON.stringify(row).toLowerCase().includes(needle),
+  );
 });
-const emptyStateTitle = computed(() => search.value ? `No ${props.itemLabel} match your search` : (props.emptyTitle || `No ${props.itemLabel} yet`));
-const emptyStateMessage = computed(() => search.value ? 'Clear the search or try a different phrase.' : (props.emptyDescription || `New ${props.itemLabel} will appear here when available.`));
+const emptyStateTitle = computed(() =>
+  search.value
+    ? `No ${props.itemLabel} match your search`
+    : props.emptyTitle || `No ${props.itemLabel} yet`,
+);
+const emptyStateMessage = computed(() =>
+  search.value
+    ? "Clear the search or try a different phrase."
+    : props.emptyDescription ||
+      `New ${props.itemLabel} will appear here when available.`,
+);
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / props.pageSize)));
-const firstVisibleRow = computed(() => (currentPage.value - 1) * props.pageSize + 1);
-const lastVisibleRow = computed(() => Math.min(currentPage.value * props.pageSize, filteredRows.value.length));
-const pageNumbers = computed(() => Array.from({ length: totalPages.value }, (_, index) => index + 1));
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredRows.value.length / props.pageSize)),
+);
+const firstVisibleRow = computed(
+  () => (currentPage.value - 1) * props.pageSize + 1,
+);
+const lastVisibleRow = computed(() =>
+  Math.min(currentPage.value * props.pageSize, filteredRows.value.length),
+);
+const pageNumbers = computed(() =>
+  Array.from({ length: totalPages.value }, (_, index) => index + 1),
+);
 const paginatedRows = computed(() => {
   const start = (currentPage.value - 1) * props.pageSize;
   return filteredRows.value.slice(start, start + props.pageSize);
@@ -243,24 +305,41 @@ const handleAvatarError = (row) => {
   failedAvatars.value = new Set([...failedAvatars.value, row.id ?? row.name]);
 };
 
-const initials = (name) => name
-  .split(' ')
-  .filter(Boolean)
-  .slice(0, 2)
-  .map((part) => part[0])
-  .join('')
-  .toUpperCase();
+const initials = (name) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 
 const statusClass = (status) => {
-  const value = String(status || '').toLowerCase();
+  const value = String(status || "").toLowerCase();
 
-  if (value.includes('active') || value.includes('published')) return 'success';
-  if (value.includes('pending') || value.includes('draft') || value.includes('scheduled')) return 'warning';
-  if (value.includes('suspended')) return 'danger';
-  return 'neutral';
+  if (value.includes("active") || value.includes("published")) return "success";
+  if (
+    value.includes("pending") ||
+    value.includes("draft") ||
+    value.includes("scheduled")
+  )
+    return "warning";
+  if (value.includes("suspended")) return "danger";
+  return "neutral";
 };
 
-const emit = defineEmits(['edit', 'delete']);
+const emit = defineEmits(["edit", "delete", "row-click"]);
+
+const handleRowClick = (row, event) => {
+  if (!props.clickableRows) return;
+  if (
+    event.target.closest(".actions-dropdown-container") ||
+    event.target.closest(".btn-action-dots")
+  ) {
+    return;
+  }
+  emit("row-click", row);
+};
 
 const activeMenuId = ref(null);
 
@@ -274,20 +353,20 @@ const closeMenu = () => {
 
 const handleEdit = (row) => {
   closeMenu();
-  emit('edit', row);
+  emit("edit", row);
 };
 
 const handleDelete = (row) => {
   closeMenu();
-  emit('delete', row);
+  emit("delete", row);
 };
 
 onMounted(() => {
-  document.addEventListener('click', closeMenu);
+  document.addEventListener("click", closeMenu);
 });
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', closeMenu);
+  document.removeEventListener("click", closeMenu);
 });
 </script>
 
@@ -331,7 +410,10 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.6rem;
   padding: 0 0.8rem;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background-color var(--transition-base);
 }
 
 .search-box:focus-within {
@@ -489,8 +571,14 @@ onBeforeUnmount(() => {
 }
 
 @keyframes dropdown-enter {
-  from { opacity: 0; transform: translateY(-4px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .dropdown-item {
@@ -670,6 +758,15 @@ onBeforeUnmount(() => {
   }
 }
 
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.clickable-row:hover {
+  background-color: var(--color-surface-hover) !important;
+}
+
 /* Shimmer Skeleton Styles */
 .skeleton-row td {
   padding: 1.15rem 0.8rem;
@@ -682,7 +779,7 @@ onBeforeUnmount(() => {
   border-radius: 4px;
 }
 
-[data-theme='dark'] .skeleton-line {
+[data-theme="dark"] .skeleton-line {
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -694,7 +791,7 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-[data-theme='dark'] .skeleton-circle {
+[data-theme="dark"] .skeleton-circle {
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -705,7 +802,7 @@ onBeforeUnmount(() => {
   background: var(--color-border-soft);
 }
 
-[data-theme='dark'] .skeleton-badge {
+[data-theme="dark"] .skeleton-badge {
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -716,7 +813,7 @@ onBeforeUnmount(() => {
   background: var(--color-border-soft);
 }
 
-[data-theme='dark'] .skeleton-btn {
+[data-theme="dark"] .skeleton-btn {
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -731,7 +828,7 @@ onBeforeUnmount(() => {
   animation: shimmer-animation 1.4s ease infinite;
 }
 
-[data-theme='dark'] .shimmer {
+[data-theme="dark"] .shimmer {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.04) 25%,

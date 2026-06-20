@@ -2,7 +2,24 @@
   <div class="empty-container">
     <div class="empty-icon-wrapper">
       <slot name="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="empty-svg"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"></path><path d="m21 12-3.05 1.74a2 2 0 0 1-2 0L12 11.5l-3.95 2.26a2 2 0 0 1-2 0L3 12"></path><path d="M3 16v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"></path></svg>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="64"
+          height="64"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="empty-svg"
+        >
+          <path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"></path>
+          <path
+            d="m21 12-3.05 1.74a2 2 0 0 1-2 0L12 11.5l-3.95 2.26a2 2 0 0 1-2 0L3 12"
+          ></path>
+          <path d="M3 16v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"></path>
+        </svg>
       </slot>
     </div>
     <h3 class="empty-title">{{ title }}</h3>
@@ -17,13 +34,14 @@
 defineProps({
   title: {
     type: String,
-    default: 'No results found'
+    default: "No results found",
   },
   description: {
     type: String,
-    default: "We couldn't find what you're looking for. Try adjusting your search or filters."
-  }
-})
+    default:
+      "We couldn't find what you're looking for. Try adjusting your search or filters.",
+  },
+});
 </script>
 
 <style scoped>
@@ -59,7 +77,7 @@ defineProps({
 }
 
 .empty-title {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 1.25rem;
   font-weight: 600;
   color: #1e293b;
@@ -67,7 +85,7 @@ defineProps({
 }
 
 .empty-description {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 1rem;
   color: #64748b;
   max-width: 350px;

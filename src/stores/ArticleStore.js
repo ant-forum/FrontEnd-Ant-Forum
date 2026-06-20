@@ -62,8 +62,8 @@ export const useArticleStore = defineStore("articles", () => {
         params: {
           search,
           _per_page,
-          sortBy: 'createdAt',
-          sortDir: 'desc'
+          sortBy: "createdAt",
+          sortDir: "desc",
         },
       });
       return res.data;
@@ -114,5 +114,18 @@ export const useArticleStore = defineStore("articles", () => {
     }
   };
 
-  return { articles, isLoading, hasMore, article, fetchArticles, loadMore, fetchArticleById, fetchOwnArticles, deleteOwnArticle, createArticle, updateArticle, createThumbnail };
+  return {
+    articles,
+    isLoading,
+    hasMore,
+    article,
+    fetchArticles,
+    loadMore,
+    fetchArticleById,
+    fetchOwnArticles,
+    deleteOwnArticle,
+    createArticle,
+    updateArticle,
+    createThumbnail,
+  };
 });

@@ -66,7 +66,9 @@ defineEmits(["action"]);
   background-color: var(--color-surface-hover);
   border-radius: var(--radius-lg);
   border: 1px dashed var(--color-border);
-  transition: background-color var(--transition-base), border-color var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base);
 }
 
 .empty-icon {

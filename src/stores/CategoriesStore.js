@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import api from '@/api/api.js';
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import api from "@/api/api.js";
 
-const CATEGORY_COLORS = ['blue', 'green', 'purple', 'orange'];
+const CATEGORY_COLORS = ["blue", "green", "purple", "orange"];
 
 const categoryPayload = (category) => {
   const payload = {
@@ -19,11 +19,11 @@ const categoryPayload = (category) => {
 
 const ensureSuccess = (response) => {
   if (response.data.result === false) {
-    throw new Error(response.data.message ?? 'Category request failed.');
+    throw new Error(response.data.message ?? "Category request failed.");
   }
 };
 
-export const useCategoriesStore = defineStore('categories', () => {
+export const useCategoriesStore = defineStore("categories", () => {
   const categories = ref([]);
   const category = ref(null);
   const isLoading = ref(false);
@@ -36,7 +36,7 @@ export const useCategoriesStore = defineStore('categories', () => {
   const fetchCategories = async () => {
     try {
       isLoading.value = true;
-      const response = await api.get('/api/categories/getAllCategories');
+      const response = await api.get("/api/categories/getAllCategories");
       ensureSuccess(response);
       categories.value = response.data.data.map(withCardStyle);
       return categories.value;
@@ -53,20 +53,28 @@ export const useCategoriesStore = defineStore('categories', () => {
   };
 
   const fetchCategoryByName = async (name) => {
-    const response = await api.get(`/api/categories/getCategoryByName/${encodeURIComponent(name)}`);
+    const response = await api.get(
+      `/api/categories/getCategoryByName/${encodeURIComponent(name)}`,
+    );
     ensureSuccess(response);
     category.value = withCardStyle(response.data.data);
     return category.value;
   };
 
   const createCategory = async (payload) => {
-    const response = await api.post('/api/categories/createCategory', categoryPayload(payload));
+    const response = await api.post(
+      "/api/categories/createCategory",
+      categoryPayload(payload),
+    );
     ensureSuccess(response);
     return response.data.data;
   };
 
   const updateCategory = async (id, payload) => {
-    const response = await api.put(`/api/categories/updateCategory/${id}`, categoryPayload(payload));
+    const response = await api.put(
+      `/api/categories/updateCategory/${id}`,
+      categoryPayload(payload),
+    );
     ensureSuccess(response);
     return response.data.data;
   };

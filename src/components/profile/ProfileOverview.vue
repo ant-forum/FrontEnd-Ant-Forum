@@ -14,61 +14,104 @@
               width="120"
               height="120"
               alt="Developer avatar"
+            />
+            <div
+              v-else
+              class="profile-avatar-fallback rounded-4"
+              aria-label="Developer avatar"
             >
-            <div v-else class="profile-avatar-fallback rounded-4" aria-label="Developer avatar">
               {{ profileInitials }}
             </div>
             <span class="status-indicator-dot"></span>
           </div>
-          
+
           <!-- Info Block -->
           <div class="flex-grow-1">
-            <div class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3 mb-2">
+            <div
+              class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3 mb-2"
+            >
               <div>
-                <h3 v-if="profileFullname" class="fw-bold mb-0 profile-name">{{ profileFullname }}</h3>
-                <h3 v-else class="fw-bold mb-0 profile-name">{{ profileName }}</h3>
+                <h3 v-if="profileFullname" class="fw-bold mb-0 profile-name">
+                  {{ profileFullname }}
+                </h3>
+                <h3 v-else class="fw-bold mb-0 profile-name">
+                  {{ profileName }}
+                </h3>
                 <div class="d-flex align-items-center gap-2 mt-1 mb-2">
                   <span class="text-muted fw-semibold">@{{ profileName }}</span>
                   <span class="role-badge-overview">{{ profileRole }}</span>
                 </div>
               </div>
-              <button v-if="canEdit" type="button" class="btn-edit-profile" @click="emit('edit')">
+              <button
+                v-if="canEdit"
+                type="button"
+                class="btn-edit-profile"
+                @click="emit('edit')"
+              >
                 <i class="bi bi-pencil-square"></i>
                 <span>Edit Profile</span>
               </button>
             </div>
             <!-- Description -->
-            <p class="bio-text text-muted mb-0 mt-3 pt-1 border-top border-slate text-break">
-              {{ profileBio || "Share your background, interests, and what you are building with the ANT Forum community." }}
+            <p
+              class="bio-text text-muted mb-0 mt-3 pt-1 border-top border-slate text-break"
+            >
+              {{
+                profileBio ||
+                "Share your background, interests, and what you are building with the ANT Forum community."
+              }}
             </p>
           </div>
         </div>
       </div>
-      
+
       <!-- Featured Projects -->
       <div class="featured-projects-section">
         <div class="d-flex align-items-center gap-2 mb-3">
           <i class="bi bi-rocket-takeoff text-primary-purple fs-4"></i>
-          <h5 class="mb-0 fw-bold header-title themed-text">Featured Projects</h5>
+          <h5 class="mb-0 fw-bold header-title themed-text">
+            Featured Projects
+          </h5>
         </div>
-        
+
         <div class="row g-3">
-          <div v-for="project in defaultProjects" :key="project.title" class="col-md-6">
-            <div class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between">
+          <div
+            v-for="project in defaultProjects"
+            :key="project.title"
+            class="col-md-6"
+          >
+            <div
+              class="project-card-modern-v2 p-4 h-100 d-flex flex-column justify-content-between"
+            >
               <div>
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <router-link :to="'/showcase/' + project.id" class="text-decoration-none">
-                    <h6 class="fw-bold mb-0 themed-text project-title-v2">{{ project.title }}</h6>
+                <div
+                  class="d-flex justify-content-between align-items-start mb-2"
+                >
+                  <router-link
+                    :to="'/showcase/' + project.id"
+                    class="text-decoration-none"
+                  >
+                    <h6 class="fw-bold mb-0 themed-text project-title-v2">
+                      {{ project.title }}
+                    </h6>
                   </router-link>
-                  <span class="d-flex align-items-center gap-1 text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ project.stars }}</span>
+                  <span class="d-flex align-items-center gap-1 text-muted small"
+                    ><i class="bi bi-star-fill text-warning"></i>
+                    {{ project.stars }}</span
+                  >
                 </div>
                 <p class="text-muted small mb-4 line-clamp-3">
                   {{ project.desc }}
                 </p>
               </div>
-              
+
               <div class="d-flex flex-wrap gap-2">
-                <span v-for="tag in project.tags" :key="tag" class="tag-badge-v2" :class="tag.toLowerCase()">
+                <span
+                  v-for="tag in project.tags"
+                  :key="tag"
+                  class="tag-badge-v2"
+                  :class="tag.toLowerCase()"
+                >
                   {{ tag }}
                 </span>
               </div>
@@ -79,56 +122,77 @@
               <i class="bi bi-code-square"></i>
               <div>
                 <h6>No featured projects yet</h6>
-                <p>Submit your first project to start building your developer showcase.</p>
+                <p>
+                  Submit your first project to start building your developer
+                  showcase.
+                </p>
               </div>
               <router-link to="/showcase/create">Submit project</router-link>
             </div>
           </div>
         </div>
       </div>
-      
+
       <!-- Recent Activity -->
       <div class="recent-activity-section">
         <div class="d-flex align-items-center gap-2 mb-3">
           <i class="bi bi-clock-history text-primary-purple fs-4"></i>
           <h5 class="mb-0 fw-bold header-title themed-text">Recent Activity</h5>
         </div>
-        
+
         <div class="d-flex flex-column gap-3">
-          <div v-for="activity in displayedActivities" :key="activity.id || activity.title" 
-               class="activity-row-modern p-3 d-flex align-items-center gap-3"
-               style="cursor: pointer;"
-               @click="activity.link ? router.push(activity.link) : null">
+          <div
+            v-for="activity in displayedActivities"
+            :key="activity.id || activity.title"
+            class="activity-row-modern p-3 d-flex align-items-center gap-3"
+            style="cursor: pointer"
+            @click="activity.link ? router.push(activity.link) : null"
+          >
             <div class="activity-icon-container">
               <i :class="['bi', activity.icon, 'text-primary-purple']"></i>
             </div>
             <div class="overflow-hidden">
-              <h6 class="mb-1 fw-bold themed-text text-truncate small-title">{{ activity.title }}</h6>
-              <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ activity.meta }}</small>
+              <h6 class="mb-1 fw-bold themed-text text-truncate small-title">
+                {{ activity.title }}
+              </h6>
+              <small
+                class="text-muted text-uppercase fw-semibold"
+                style="font-size: 0.65rem; letter-spacing: 0.5px"
+                >{{ activity.meta }}</small
+              >
             </div>
           </div>
-          
-          <button v-if="activityFeed.length > 3" 
-                  @click="showAllActivities = !showAllActivities" 
-                  class="btn btn-sm btn-outline-secondary mt-2 border-0 fw-bold themed-text">
-            {{ showAllActivities ? 'Show Less' : `View All Activity (${activityFeed.length})` }}
+
+          <button
+            v-if="activityFeed.length > 3"
+            @click="showAllActivities = !showAllActivities"
+            class="btn btn-sm btn-outline-secondary mt-2 border-0 fw-bold themed-text"
+          >
+            {{
+              showAllActivities
+                ? "Show Less"
+                : `View All Activity (${activityFeed.length})`
+            }}
           </button>
           <div v-if="activityFeed.length === 0" class="empty-state-card">
             <i class="bi bi-clock-history"></i>
             <div>
               <h6>No recent activity</h6>
-              <p>Your forum participation and project updates will appear here.</p>
+              <p>
+                Your forum participation and project updates will appear here.
+              </p>
             </div>
           </div>
         </div>
       </div>
-      
     </div>
-    
+
     <!-- Right Column: Profile Snapshot -->
     <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
       <div class="dashboard-card-modern p-4">
-        <h6 class="themed-text fw-bold mb-3 snapshot-heading">Profile Snapshot</h6>
+        <h6 class="themed-text fw-bold mb-3 snapshot-heading">
+          Profile Snapshot
+        </h6>
 
         <div class="snapshot-grid">
           <div class="snapshot-item">
@@ -145,27 +209,46 @@
           </div>
         </div>
 
-        <hr class="my-3 border-slate">
+        <hr class="my-3 border-slate" />
 
-        <h6 class="text-muted text-uppercase fw-bold mb-3 skills-heading">Skills</h6>
+        <h6 class="text-muted text-uppercase fw-bold mb-3 skills-heading">
+          Skills
+        </h6>
         <div v-if="profileSkills.length" class="d-flex flex-wrap gap-2">
-          <span v-for="skill in profileSkills" :key="skill" class="language-badge">
+          <span
+            v-for="skill in profileSkills"
+            :key="skill"
+            class="language-badge"
+          >
             {{ skill }}
           </span>
         </div>
-        <p v-else class="empty-skills-copy">Add skills to help the community understand your strengths.</p>
-        
-        <hr class="my-3 border-slate">
+        <p v-else class="empty-skills-copy">
+          Add skills to help the community understand your strengths.
+        </p>
 
-        <h6 class="text-muted text-uppercase fw-bold mb-3 skills-heading">Social Links</h6>
-        <div v-if="userProfilesStore.socialLinks.length" class="d-flex flex-wrap gap-2">
-          <a v-for="link in userProfilesStore.socialLinks" :key="link.id" :href="link.url" target="_blank" class="social-icon-btn d-flex align-items-center justify-content-center rounded-circle text-decoration-none" :title="link.platform">
+        <hr class="my-3 border-slate" />
+
+        <h6 class="text-muted text-uppercase fw-bold mb-3 skills-heading">
+          Social Links
+        </h6>
+        <div
+          v-if="userProfilesStore.socialLinks.length"
+          class="d-flex flex-wrap gap-2"
+        >
+          <a
+            v-for="link in userProfilesStore.socialLinks"
+            :key="link.id"
+            :href="link.url"
+            target="_blank"
+            class="social-icon-btn d-flex align-items-center justify-content-center rounded-circle text-decoration-none"
+            :title="link.platform"
+          >
             <i :class="getPlatformIcon(link.platform)"></i>
           </a>
         </div>
         <p v-else class="empty-skills-copy">No social links added yet.</p>
       </div>
-      
     </div>
   </div>
 </template>
@@ -196,30 +279,34 @@ const emit = defineEmits(["edit"]);
 
 const profileInitials = computed(() => {
   const nameToUse = props.profileFullname || props.profileName;
-  return nameToUse
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((name) => name[0])
-    .join("")
-    .toUpperCase() || "A";
+  return (
+    nameToUse
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((name) => name[0])
+      .join("")
+      .toUpperCase() || "A"
+  );
 });
 
 const getPlatformIcon = (platformStr) => {
-  const p = (platformStr || '').toLowerCase();
-  if (p.includes('linkedin')) return 'bi-linkedin';
-  if (p.includes('github')) return 'bi-github';
-  if (p.includes('twitter') || p.includes('x')) return 'bi-twitter-x';
-  if (p.includes('facebook')) return 'bi-facebook';
-  if (p.includes('instagram')) return 'bi-instagram';
-  if (p.includes('youtube')) return 'bi-youtube';
-  if (p.includes('discord')) return 'bi-discord';
-  if (p.includes('tiktok')) return 'bi-tiktok';
-  return 'bi-link-45deg';
+  const p = (platformStr || "").toLowerCase();
+  if (p.includes("linkedin")) return "bi-linkedin";
+  if (p.includes("github")) return "bi-github";
+  if (p.includes("twitter") || p.includes("x")) return "bi-twitter-x";
+  if (p.includes("facebook")) return "bi-facebook";
+  if (p.includes("instagram")) return "bi-instagram";
+  if (p.includes("youtube")) return "bi-youtube";
+  if (p.includes("discord")) return "bi-discord";
+  if (p.includes("tiktok")) return "bi-tiktok";
+  return "bi-link-45deg";
 };
 
 const displayedActivities = computed(() => {
-  return showAllActivities.value ? props.activityFeed : props.activityFeed.slice(0, 3);
+  return showAllActivities.value
+    ? props.activityFeed
+    : props.activityFeed.slice(0, 3);
 });
 </script>
 
@@ -267,7 +354,11 @@ const displayedActivities = computed(() => {
   left: 0;
   width: 100%;
   height: 4px;
-  background: linear-gradient(90deg, var(--color-purple) 0%, var(--color-primary) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--color-purple) 0%,
+    var(--color-primary) 100%
+  );
 }
 
 .profile-avatar-wrapper img {
@@ -283,7 +374,11 @@ const displayedActivities = computed(() => {
   width: 120px;
   height: 120px;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--color-purple) 0%, var(--color-primary) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-purple) 0%,
+    var(--color-primary) 100%
+  );
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.05em;
@@ -399,12 +494,30 @@ const displayedActivities = computed(() => {
   letter-spacing: 0.5px;
 }
 
-.tag-badge-v2.react { background: var(--color-tag-blue-bg) !important; color: var(--color-tag-blue-text) !important; }
-.tag-badge-v2.webgpu { background: var(--color-tag-pink-bg) !important; color: var(--color-tag-pink-text) !important; }
-.tag-badge-v2.typescript { background: var(--color-tag-indigo-bg) !important; color: var(--color-tag-indigo-text) !important; }
-.tag-badge-v2.go { background: var(--color-tag-cyan-bg) !important; color: var(--color-tag-cyan-text) !important; }
-.tag-badge-v2.redis { background: var(--color-tag-red-bg) !important; color: var(--color-tag-red-text) !important; }
-.tag-badge-v2.grpc { background: var(--color-tag-purple-bg) !important; color: var(--color-tag-purple-text) !important; }
+.tag-badge-v2.react {
+  background: var(--color-tag-blue-bg) !important;
+  color: var(--color-tag-blue-text) !important;
+}
+.tag-badge-v2.webgpu {
+  background: var(--color-tag-pink-bg) !important;
+  color: var(--color-tag-pink-text) !important;
+}
+.tag-badge-v2.typescript {
+  background: var(--color-tag-indigo-bg) !important;
+  color: var(--color-tag-indigo-text) !important;
+}
+.tag-badge-v2.go {
+  background: var(--color-tag-cyan-bg) !important;
+  color: var(--color-tag-cyan-text) !important;
+}
+.tag-badge-v2.redis {
+  background: var(--color-tag-red-bg) !important;
+  color: var(--color-tag-red-text) !important;
+}
+.tag-badge-v2.grpc {
+  background: var(--color-tag-purple-bg) !important;
+  color: var(--color-tag-purple-text) !important;
+}
 
 /* Timeline Activity */
 .activity-row-modern {

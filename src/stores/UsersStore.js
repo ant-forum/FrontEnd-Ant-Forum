@@ -1,14 +1,14 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import api from '@/api/api.js';
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import api from "@/api/api.js";
 
 const ensureSuccess = (response) => {
   if (response.data && response.data.result === false) {
-    throw new Error(response.data.message ?? 'User request failed.');
+    throw new Error(response.data.message ?? "User request failed.");
   }
 };
 
-export const useUsersStore = defineStore('users', () => {
+export const useUsersStore = defineStore("users", () => {
   const users = ref([]);
   const user = ref(null);
   const isLoading = ref(false);
@@ -18,7 +18,7 @@ export const useUsersStore = defineStore('users', () => {
   const createUser = async (payload) => {
     try {
       isLoading.value = true;
-      const response = await api.post('/auth/createUsers', {
+      const response = await api.post("/auth/createUsers", {
         username: payload.username,
         email: payload.email,
         password: payload.password,
@@ -26,11 +26,14 @@ export const useUsersStore = defineStore('users', () => {
         gender: payload.gender,
       });
       ensureSuccess(response);
-      console.log("response",response);
+      console.log("response", response);
 
       // Save created user in-memory so they show up in the table instantly!
       const newUserObj = {
-        id: response.data.data?.id || response.data.data?._id || String(Date.now()),
+        id:
+          response.data.data?.id ||
+          response.data.data?._id ||
+          String(Date.now()),
         username: payload.username,
         email: payload.email,
         role: payload.role,
@@ -49,7 +52,7 @@ export const useUsersStore = defineStore('users', () => {
   const fetchUsers = async (silent = false) => {
     try {
       if (!silent) isListLoading.value = true;
-      const response = await api.get('/api/admin/gell-all-users');
+      const response = await api.get("/api/admin/gell-all-users");
       ensureSuccess(response);
       users.value = response.data.data || response.data;
       return users.value;

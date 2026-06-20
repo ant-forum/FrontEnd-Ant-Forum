@@ -1,14 +1,14 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import Navbar from '@/components/layouts/header.vue';
-import BaseFooter from '@/components/layouts/footer.vue';
-import DiscussionThreadList from '@/components/forum/DiscussionThreadList.vue';
-import ForumSidebar from '@/components/forum/ForumSidebar.vue';
-import LeftSidebar from '@/components/forum/LeftSidebar.vue';
-import { useForumStore } from '@/stores/ForumStore';
-import { useTagsStore } from '@/stores/TagsStore';
-import { useAuthStore } from '@/stores/AuthStore';
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import Navbar from "@/components/layouts/header.vue";
+import BaseFooter from "@/components/layouts/footer.vue";
+import DiscussionThreadList from "@/components/forum/DiscussionThreadList.vue";
+import ForumSidebar from "@/components/forum/ForumSidebar.vue";
+import LeftSidebar from "@/components/forum/LeftSidebar.vue";
+import { useForumStore } from "@/stores/ForumStore";
+import { useTagsStore } from "@/stores/TagsStore";
+import { useAuthStore } from "@/stores/AuthStore";
 
 const route = useRoute();
 const router = useRouter();
@@ -17,26 +17,29 @@ const forumStore = useForumStore();
 const tagsStore = useTagsStore();
 const authStore = useAuthStore();
 
-const filterTab = ref('latest');
+const filterTab = ref("latest");
 const loading = ref(false);
 const searchLoading = ref(false);
-const searchQuery = ref('');
-const activeTagFilter = ref('');
+const searchQuery = ref("");
+const activeTagFilter = ref("");
 
-const activeTab = computed(() => route.query.tab || '');
-const showSavedOnly = computed(() => activeTab.value === 'saves');
-const showMyPostsOnly = computed(() => activeTab.value === 'myposts');
-const selectedCategory = computed(() => route.query.category || 'all');
+const activeTab = computed(() => route.query.tab || "");
+const showSavedOnly = computed(() => activeTab.value === "saves");
+const showMyPostsOnly = computed(() => activeTab.value === "myposts");
+const selectedCategory = computed(() => route.query.category || "all");
 
 const searchInput = ref(null);
 
-const filters = ['Latest', 'Top Rated', 'Unanswered'];
+const filters = ["Latest", "Top Rated", "Unanswered"];
 
-const normalizeCategoryValue = (value = '') => String(value || '').trim().toLowerCase();
+const normalizeCategoryValue = (value = "") =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
 
 const categoryMatches = (discussion, selected) => {
   const target = normalizeCategoryValue(selected);
-  if (!target || target === 'all') return true;
+  if (!target || target === "all") return true;
 
   return [
     discussion.category_id,
@@ -58,84 +61,116 @@ const getDiscussionCategoryText = (discussion) => {
     discussion.category,
   ]
     .filter(Boolean)
-    .join(' ')
+    .join(" ")
     .toLowerCase();
 };
 
 const filteredDiscussions = computed(() => {
-  let list = Array.isArray(forumStore.allDiscussions) ? [...forumStore.allDiscussions] : [];
+  let list = Array.isArray(forumStore.allDiscussions)
+    ? [...forumStore.allDiscussions]
+    : [];
 
   if (activeTagFilter.value) {
     const tq = activeTagFilter.value.toLowerCase().trim();
-    list = list.filter(d => {
-      return d.tags && Array.isArray(d.tags) && d.tags.some(t => {
-        if (!t) return false;
-        const label = typeof t === 'object' ? (t.label || t.name || '') : String(t);
-        return label.toLowerCase() === tq;
-      });
+    list = list.filter((d) => {
+      return (
+        d.tags &&
+        Array.isArray(d.tags) &&
+        d.tags.some((t) => {
+          if (!t) return false;
+          const label =
+            typeof t === "object" ? t.label || t.name || "" : String(t);
+          return label.toLowerCase() === tq;
+        })
+      );
     });
   }
 
   // 1. Search Query filter
-  if (searchQuery.value && typeof searchQuery.value === 'string' && searchQuery.value.trim()) {
+  if (
+    searchQuery.value &&
+    typeof searchQuery.value === "string" &&
+    searchQuery.value.trim()
+  ) {
     const q = searchQuery.value.toLowerCase().trim();
-    list = list.filter(d => {
+    list = list.filter((d) => {
       if (!d) return false;
-      const title = (d.title || '').toString().toLowerCase();
-      const excerpt = (d.excerpt || d.description || d.body || '').toString().toLowerCase();
-      
-      let authorName = '';
+      const title = (d.title || "").toString().toLowerCase();
+      const excerpt = (d.excerpt || d.description || d.body || "")
+        .toString()
+        .toLowerCase();
+
+      let authorName = "";
       if (d.author) {
-        if (typeof d.author === 'object') {
-          authorName = (d.author.username || d.author.name || '').toString().toLowerCase();
+        if (typeof d.author === "object") {
+          authorName = (d.author.username || d.author.name || "")
+            .toString()
+            .toLowerCase();
         } else {
           authorName = d.author.toString().toLowerCase();
         }
       }
 
-      const matchesTags = d.tags && Array.isArray(d.tags) && d.tags.some(t => {
-        if (!t) return false;
-        const label = typeof t === 'object' ? (t.label || t.name || '') : String(t);
-        return label.toLowerCase().includes(q);
-      });
+      const matchesTags =
+        d.tags &&
+        Array.isArray(d.tags) &&
+        d.tags.some((t) => {
+          if (!t) return false;
+          const label =
+            typeof t === "object" ? t.label || t.name || "" : String(t);
+          return label.toLowerCase().includes(q);
+        });
 
       const matchesCategory = getDiscussionCategoryText(d).includes(q);
 
-      return title.includes(q) || excerpt.includes(q) || authorName.includes(q) || matchesTags || matchesCategory;
+      return (
+        title.includes(q) ||
+        excerpt.includes(q) ||
+        authorName.includes(q) ||
+        matchesTags ||
+        matchesCategory
+      );
     });
   }
 
   // 1.5 Saves filter
   if (showSavedOnly.value) {
-    list = list.filter(d => d.saved);
+    list = list.filter((d) => d.saved);
   }
 
   // 1.6 My Posts filter
   if (showMyPostsOnly.value && authStore.user) {
-    const myUsername = (authStore.user.username || authStore.user.name || '').toLowerCase();
-    list = list.filter(d => {
-      const authorName = (typeof d.author === 'object' && d.author !== null) ? (d.author.username || d.author.name) : d.author;
-      return (authorName || '').toLowerCase() === myUsername;
+    const myUsername = (
+      authStore.user.username ||
+      authStore.user.name ||
+      ""
+    ).toLowerCase();
+    list = list.filter((d) => {
+      const authorName =
+        typeof d.author === "object" && d.author !== null
+          ? d.author.username || d.author.name
+          : d.author;
+      return (authorName || "").toLowerCase() === myUsername;
     });
   }
 
   // 2. Category filter
-  if (selectedCategory.value !== 'all') {
-    list = list.filter(d => categoryMatches(d, selectedCategory.value));
+  if (selectedCategory.value !== "all") {
+    list = list.filter((d) => categoryMatches(d, selectedCategory.value));
   }
 
   // 3. Tab Sort / Unanswered Filter
-  if (filterTab.value === 'latest') {
+  if (filterTab.value === "latest") {
     list.sort((a, b) => {
       if (a.createdAt && b.createdAt) {
         return new Date(b.createdAt) - new Date(a.createdAt);
       }
       return b.id - a.id;
     });
-  } else if (filterTab.value === 'top rated') {
+  } else if (filterTab.value === "top rated") {
     list.sort((a, b) => (b.votes || 0) - (a.votes || 0));
-  } else if (filterTab.value === 'unanswered') {
-    list = list.filter(d => {
+  } else if (filterTab.value === "unanswered") {
+    list = list.filter((d) => {
       const repliesCount = d.replies !== undefined ? Number(d.replies) : 0;
       const likesCount = d.likes !== undefined ? Number(d.likes) : 0;
       return repliesCount === 0 && likesCount === 0;
@@ -154,21 +189,23 @@ const handleSearchInput = () => {
 
 const submitSearch = () => {
   const qVal = searchQuery.value.trim();
-  router.push({ path: '/forum', query: { q: qVal || undefined } });
+  router.push({ path: "/forum", query: { q: qVal || undefined } });
 };
 
 const showSuggestions = ref(false);
 
 const matchingSuggestedTags = computed(() => {
   if (!searchQuery.value || !tagsStore.tags) return [];
-  const q = searchQuery.value.toLowerCase().replace('#', '').trim();
+  const q = searchQuery.value.toLowerCase().replace("#", "").trim();
   if (!q) return [];
-  return tagsStore.tags.filter(t => t.name.toLowerCase().includes(q)).slice(0, 5);
+  return tagsStore.tags
+    .filter((t) => t.name.toLowerCase().includes(q))
+    .slice(0, 5);
 });
 
 const selectSuggestedTag = (tagName) => {
-  const cleanTag = tagName.replace('#', '').trim();
-  router.push({ path: '/forum', query: { tag: cleanTag } });
+  const cleanTag = tagName.replace("#", "").trim();
+  router.push({ path: "/forum", query: { tag: cleanTag } });
   showSuggestions.value = false;
 };
 
@@ -178,49 +215,62 @@ const handleSearchBlur = () => {
   }, 200);
 };
 
-watch(() => [route.query.tab, route.query.category], () => {
-  searchLoading.value = true;
-  setTimeout(() => {
-    searchLoading.value = false;
-  }, 350);
+watch(
+  () => [route.query.tab, route.query.category],
+  () => {
+    searchLoading.value = true;
+    setTimeout(() => {
+      searchLoading.value = false;
+    }, 350);
 
-  if (route.query.tab === 'saves') {
-    forumStore.fetchBookmarks().catch(() => {});
-  }
-});
-
-watch(() => [route.query.q, route.query.tag], async ([newQ, newTag]) => {
-  const qVal = newQ ? String(newQ).replace('#', '').trim() : '';
-  const tagVal = newTag ? String(newTag).replace('#', '').trim() : '';
-  
-  searchQuery.value = newQ ? String(newQ) : '';
-  activeTagFilter.value = tagVal;
-  
-  loading.value = true;
-  try {
-    if (!tagsStore.tags || tagsStore.tags.length === 0) {
-      await tagsStore.fetchTags();
+    if (route.query.tab === "saves") {
+      forumStore.fetchBookmarks().catch(() => {});
     }
-    if (tagVal) {
-      const matchedTag = tagsStore.tags && tagsStore.tags.find(t => t.name.toLowerCase() === tagVal.toLowerCase());
-      if (matchedTag) {
-        const results = await forumStore.fetchDiscussionsByTagName(matchedTag.name);
-        if (!results || results.length === 0) {
-          // Fallback to fetching recent discussions so local filtering can find newly created tags
+  },
+);
+
+watch(
+  () => [route.query.q, route.query.tag],
+  async ([newQ, newTag]) => {
+    const qVal = newQ ? String(newQ).replace("#", "").trim() : "";
+    const tagVal = newTag ? String(newTag).replace("#", "").trim() : "";
+
+    searchQuery.value = newQ ? String(newQ) : "";
+    activeTagFilter.value = tagVal;
+
+    loading.value = true;
+    try {
+      if (!tagsStore.tags || tagsStore.tags.length === 0) {
+        await tagsStore.fetchTags();
+      }
+      if (tagVal) {
+        const matchedTag =
+          tagsStore.tags &&
+          tagsStore.tags.find(
+            (t) => t.name.toLowerCase() === tagVal.toLowerCase(),
+          );
+        if (matchedTag) {
+          const results = await forumStore.fetchDiscussionsByTagName(
+            matchedTag.name,
+          );
+          if (!results || results.length === 0) {
+            // Fallback to fetching recent discussions so local filtering can find newly created tags
+            await forumStore.fetchDiscussions();
+          }
+        } else {
           await forumStore.fetchDiscussions();
         }
       } else {
         await forumStore.fetchDiscussions();
       }
-    } else {
-      await forumStore.fetchDiscussions();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading.value = false;
     }
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-}, { immediate: true });
+  },
+  { immediate: true },
+);
 
 onMounted(async () => {
   loading.value = true;
@@ -229,7 +279,7 @@ onMounted(async () => {
   } catch (e) {}
 
   try {
-    if (route.query.tab === 'saves') {
+    if (route.query.tab === "saves") {
       await forumStore.fetchBookmarks().catch(() => {});
     }
   } catch (err) {
@@ -238,16 +288,20 @@ onMounted(async () => {
     loading.value = false;
   }
 
-  window.addEventListener('keydown', handleGlobalKeydown);
+  window.addEventListener("keydown", handleGlobalKeydown);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleGlobalKeydown);
+  window.removeEventListener("keydown", handleGlobalKeydown);
 });
 
 const handleGlobalKeydown = (e) => {
   // Focus search input on slash "/" if not inside an editor
-  if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+  if (
+    e.key === "/" &&
+    document.activeElement.tagName !== "INPUT" &&
+    document.activeElement.tagName !== "TEXTAREA"
+  ) {
     e.preventDefault();
     searchInput.value?.focus();
   }
@@ -261,15 +315,15 @@ const handleLoadMore = () => {
 };
 
 const clearSearch = () => {
-  searchQuery.value = '';
-  router.push({ path: '/forum', query: { ...route.query, q: undefined } });
+  searchQuery.value = "";
+  router.push({ path: "/forum", query: { ...route.query, q: undefined } });
   searchInput.value?.focus();
 };
 
 const clearFilters = () => {
-  searchQuery.value = '';
-  filterTab.value = 'latest';
-  router.push({ path: '/forum', query: {} });
+  searchQuery.value = "";
+  filterTab.value = "latest";
+  router.push({ path: "/forum", query: {} });
 };
 </script>
 
@@ -297,14 +351,37 @@ const clearFilters = () => {
               @blur="handleSearchBlur"
               @keydown.enter="submitSearch"
             />
-            <button v-if="searchQuery" class="clear-btn" @click="clearSearch" title="Clear search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <button
+              v-if="searchQuery"
+              class="clear-btn"
+              @click="clearSearch"
+              title="Clear search"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
             <button class="search-btn" @click="submitSearch" title="Search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
@@ -312,7 +389,10 @@ const clearFilters = () => {
           </div>
 
           <!-- Tag Suggestions Dropdown -->
-          <div v-if="showSuggestions && matchingSuggestedTags.length > 0" class="search-suggestions-dropdown">
+          <div
+            v-if="showSuggestions && matchingSuggestedTags.length > 0"
+            class="search-suggestions-dropdown"
+          >
             <div class="suggestions-header">Suggested Tags</div>
             <div class="suggestions-list">
               <button
@@ -333,7 +413,10 @@ const clearFilters = () => {
             <button
               v-for="filter in filters"
               :key="filter"
-              :class="['tab-btn', { active: filterTab === filter.toLowerCase() }]"
+              :class="[
+                'tab-btn',
+                { active: filterTab === filter.toLowerCase() },
+              ]"
               @click="filterTab = filter.toLowerCase()"
             >
               {{ filter }}
@@ -369,28 +452,61 @@ const clearFilters = () => {
             </div>
 
             <!-- Empty Search State -->
-            <div v-else-if="filteredDiscussions.length === 0" class="empty-state-card">
+            <div
+              v-else-if="filteredDiscussions.length === 0"
+              class="empty-state-card"
+            >
               <div class="empty-icon-wrap">
                 <i class="bi bi-chat-square-text"></i>
               </div>
               <h2>No Threads Found</h2>
-              <p>We couldn't find any threads matching your active search terms or category choices. Try resetting filters or write the very first discussion yourself!</p>
+              <p>
+                We couldn't find any threads matching your active search terms
+                or category choices. Try resetting filters or write the very
+                first discussion yourself!
+              </p>
               <div class="empty-actions">
-                <button class="reset-btn" @click="clearFilters">Reset All Filters</button>
-                <button class="create-secondary" @click="$router.push('/forum/create')">Write Discussion</button>
+                <button class="reset-btn" @click="clearFilters">
+                  Reset All Filters
+                </button>
+                <button
+                  class="create-secondary"
+                  @click="$router.push('/forum/create')"
+                >
+                  Write Discussion
+                </button>
               </div>
             </div>
 
             <!-- Discussions List -->
             <DiscussionThreadList v-else :discussions="filteredDiscussions" />
 
-            <div v-if="filteredDiscussions.length > 0 && !loading && !searchLoading" class="load-more-wrap">
-              <button @click="handleLoadMore" :disabled="loading" class="load-more-btn">
-                <svg v-if="!loading" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            <div
+              v-if="
+                filteredDiscussions.length > 0 && !loading && !searchLoading
+              "
+              class="load-more-wrap"
+            >
+              <button
+                @click="handleLoadMore"
+                :disabled="loading"
+                class="load-more-btn"
+              >
+                <svg
+                  v-if="!loading"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 <span v-if="loading" class="btn-spinner"></span>
-                {{ loading ? 'Loading...' : 'Load More Threads' }}
+                {{ loading ? "Loading..." : "Load More Threads" }}
               </button>
             </div>
           </div>
@@ -402,7 +518,7 @@ const clearFilters = () => {
         </div>
       </div>
     </div>
-    
+
     <BaseFooter />
   </div>
 </template>
@@ -614,7 +730,12 @@ const clearFilters = () => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite linear;
 }
@@ -641,7 +762,12 @@ const clearFilters = () => {
   width: 60px;
   height: 20px;
   border-radius: 100px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite linear;
 }
@@ -650,7 +776,12 @@ const clearFilters = () => {
   width: 100px;
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite linear;
 }
@@ -663,7 +794,12 @@ const clearFilters = () => {
   width: 80%;
   height: 18px;
   border-radius: 6px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite linear;
 }
@@ -672,7 +808,12 @@ const clearFilters = () => {
   width: 100%;
   height: 38px;
   border-radius: 6px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite linear;
 }
@@ -681,14 +822,23 @@ const clearFilters = () => {
   width: 120px;
   height: 14px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 25%,
+    var(--color-border) 50%,
+    var(--color-surface-hover) 75%
+  );
   background-size: 200% 100%;
   animation: pulse-glow 1.5s infinite linear;
 }
 
 @keyframes pulse-glow {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Empty State Card styling */
@@ -757,7 +907,11 @@ const clearFilters = () => {
 
 .create-secondary {
   padding: 10px 20px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-purple)
+  );
   border: none;
   border-radius: 10px;
   font-weight: 600;
@@ -809,25 +963,47 @@ const clearFilters = () => {
 .btn-spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(109,40,217,0.2);
+  border: 2px solid rgba(109, 40, 217, 0.2);
   border-top-color: #6d28d9;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 @media (max-width: 1024px) {
-  .forum-global-grid { grid-template-columns: 1fr; }
-  .forum-feed-content { grid-template-columns: 1fr; }
+  .forum-global-grid {
+    grid-template-columns: 1fr;
+  }
+  .forum-feed-content {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
-  .forum-global-grid { padding: 20px 16px 40px; }
-  .filter-actions-bar { flex-direction: column; align-items: stretch; gap: 10px; }
-  .tabs-group { width: 100%; justify-content: center; }
-  .tab-btn { flex: 1; text-align: center; }
-  .create-btn { justify-content: center; }
+  .forum-global-grid {
+    padding: 20px 16px 40px;
+  }
+  .filter-actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .tabs-group {
+    width: 100%;
+    justify-content: center;
+  }
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+  }
+  .create-btn {
+    justify-content: center;
+  }
 }
 
 .forum-search-section {

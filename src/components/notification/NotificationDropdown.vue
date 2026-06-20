@@ -1,12 +1,18 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotificationStore } from '../../stores/NotificationStore';
+import { useTimeFormat } from '../../composables/useTimeFormat';
 
 const emit = defineEmits(['close']);
 
+const displayedNotifications = computed(() => {
+  return notificationStore.allNotifications.slice(0, 4);
+});
+
 const router = useRouter();
 const notificationStore = useNotificationStore();
+const { formatRelativeTime } = useTimeFormat();
 
 onMounted(async () => {
   await notificationStore.fetchNotifications();
@@ -42,25 +48,6 @@ const handleDeleteClick = async (e, id) => {
 
 const handleMarkAllRead = async () => {
   await notificationStore.markAllAsRead();
-};
-
-const formatTime = (dateStr) => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now - date;
-  
-  if (diffMs < 0) return "Just now"; // Avoid future calculations due to clock offsets
-  
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 };
 
 const getNotificationIcon = (type) => {
@@ -113,7 +100,7 @@ const getNotificationIcon = (type) => {
       <!-- Notification list -->
       <div v-else class="notifications-list">
         <div 
-          v-for="item in notificationStore.allNotifications" 
+          v-for="item in displayedNotifications" 
           :key="item.id" 
           @click="handleNotificationClick(item)" 
           class="notification-item d-flex gap-3 align-items-start"
@@ -146,7 +133,7 @@ const getNotificationIcon = (type) => {
           <div class="item-body flex-grow-1 min-width-0">
             <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
               <span class="item-title text-truncate fw-bold">{{ item.title }}</span>
-              <span class="item-time text-nowrap text-muted small">{{ formatTime(item.created_at) }}</span>
+              <span class="item-time text-nowrap text-muted small">{{ formatRelativeTime(item.created_at) }}</span>
             </div>
             <p class="item-message text-muted small m-0">{{ item.message }}</p>
           </div>
@@ -155,15 +142,6 @@ const getNotificationIcon = (type) => {
           <div class="item-actions d-flex align-items-center justify-content-center">
             <!-- Unread Pulse Dot -->
             <span v-if="!item.read" class="unread-dot rounded-circle"></span>
-            
-            <!-- Delete Button -->
-            <button 
-              @click="handleDeleteClick($event, item.id)" 
-              class="btn-delete-item btn btn-sm rounded-circle d-flex align-items-center justify-content-center border-0 bg-transparent text-muted"
-              title="Delete Notification"
-            >
-              <i class="bi bi-trash3-fill"></i>
-            </button>
           </div>
         </div>
       </div>
@@ -185,7 +163,8 @@ const getNotificationIcon = (type) => {
 .notification-dropdown {
   position: absolute;
   top: calc(100% + 12px);
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 380px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -234,7 +213,6 @@ const getNotificationIcon = (type) => {
 
 .view-all-btn:hover {
   color: var(--color-primary-hover) !important;
-  text-decoration: underline !important;
 }
 
 .dropdown-content {

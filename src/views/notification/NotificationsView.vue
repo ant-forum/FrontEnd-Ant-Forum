@@ -1,16 +1,25 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import Footer from "../../components/layouts/footer.vue";
 import { useNotificationStore } from "../../stores/NotificationStore";
+import { useToast } from "../../composables/useToast";
+import { useTimeFormat } from "../../composables/useTimeFormat";
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
+const toast = useToast();
+const { formatFullTime } = useTimeFormat();
 
 // Active filter state: 'all' | 'unread' | 'read' | 'reply' | 'like' | 'mention' | 'system'
 const activeFilter = ref('all');
 const searchQuery = ref('');
+const displayLimit = ref(4);
+
+watch([activeFilter, searchQuery], () => {
+  displayLimit.value = 4;
+});
 
 const filterTypes = [
   { value: 'reply', label: 'Replies', icon: 'bi bi-chat-fill text-primary' },
@@ -49,6 +58,10 @@ const filteredNotifications = computed(() => {
   return list;
 });
 
+const visibleNotifications = computed(() => {
+  return filteredNotifications.value.slice(0, displayLimit.value);
+});
+
 // Filter category counter helpers
 const getCount = (filterType) => {
   if (filterType === 'all') return notificationStore.notifications.length;
@@ -58,7 +71,8 @@ const getCount = (filterType) => {
 };
 
 // Handlers
-const handleNotificationClick = async (item) => {
+const handleNotificationClick = async (e, item) => {
+  if (e.target.closest('.actions-wrap')) return;
   await notificationStore.markAsRead(item.id);
   if (item.link) {
     router.push(item.link);
@@ -78,7 +92,12 @@ const handleToggleRead = async (e, item) => {
 
 const handleDeleteClick = async (e, id) => {
   e.stopPropagation();
-  await notificationStore.deleteNotification(id);
+  try {
+    await notificationStore.deleteNotification(id);
+    toast.success("Notification deleted successfully");
+  } catch (error) {
+    toast.error("Failed to delete notification");
+  }
 };
 
 const handleMarkAllRead = async () => {
@@ -88,19 +107,8 @@ const handleMarkAllRead = async () => {
 const handleClearAll = () => {
   if (confirm("Are you sure you want to delete all notifications? This cannot be undone.")) {
     notificationStore.clearNotifications();
+    toast.success("All notifications deleted successfully");
   }
-};
-
-const formatFullTime = (dateStr) => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return date.toLocaleString(undefined, { 
-    weekday: 'short', 
-    month: 'short', 
-    day: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
 };
 
 const getNotificationIcon = (type) => {
@@ -115,9 +123,15 @@ const getNotificationIcon = (type) => {
 </script>
 
 <template>
-  <Navbar />
+  <div class="notifications-premium-page">
+    <div class="hero-bg-effects" aria-hidden="true">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+    </div>
+    
+    <Navbar />
 
-  <div class="container notifications-view-page py-4">
+    <div class="container page-container py-4">
     <!-- Page Header Title -->
     <div class="row align-items-center mb-4 g-3">
       <div class="col-sm">
@@ -150,7 +164,7 @@ const getNotificationIcon = (type) => {
     <div class="row g-4">
       <!-- Left Filters Sidebar Column -->
       <aside class="col-lg-3">
-        <div class="sidebar-card shadow-sm p-3">
+        <div class="sidebar-card glass-panel p-4 mb-4">
           <!-- Search Box -->
           <div class="search-box-wrap mb-4 position-relative">
             <i class="bi bi-search search-icon position-absolute text-muted"></i>
@@ -238,9 +252,9 @@ const getNotificationIcon = (type) => {
           <!-- Notifications List Feed -->
           <div v-else class="notifications-feed-list d-flex flex-column gap-3">
             <div 
-              v-for="item in filteredNotifications" 
+              v-for="item in visibleNotifications" 
               :key="item.id" 
-              @click="handleNotificationClick(item)" 
+              @click="handleNotificationClick($event, item)" 
               class="notification-card-item p-4 rounded-4 shadow-sm d-flex gap-4 align-items-start transition-all cursor-pointer border border-theme"
               :class="{ 'unread': !item.read }"
             >
@@ -289,24 +303,38 @@ const getNotificationIcon = (type) => {
               </div>
 
               <!-- Action Buttons Column -->
-              <div class="actions-wrap flex-shrink-0 d-flex gap-2" @click.stop>
-                <!-- Toggle Read -->
+              <div class="actions-wrap flex-shrink-0 dropdown">
                 <button 
-                  @click="handleToggleRead($event, item)" 
-                  class="btn-circle-action btn border" 
-                  :title="item.read ? 'Mark as Unread' : 'Mark as Read'"
+                  class="btn btn-circle-action border-0" 
+                  type="button" 
+                  data-bs-toggle="dropdown" 
+                  aria-expanded="false"
                 >
-                  <i :class="[item.read ? 'bi bi-envelope-fill text-muted' : 'bi bi-envelope-open-fill text-primary']"></i>
+                  <i class="bi bi-three-dots-vertical"></i>
                 </button>
-                <!-- Delete -->
-                <button 
-                  @click="handleDeleteClick($event, item.id)" 
-                  class="btn-circle-action btn border btn-delete" 
-                  title="Delete Notification"
-                >
-                  <i class="bi bi-trash3-fill text-danger"></i>
-                </button>
+                <ul class="dropdown-menu dropdown-menu-end custom-dropdown-menu shadow">
+                  <li>
+                    <button class="dropdown-item d-flex align-items-center gap-2" type="button" @click="handleToggleRead($event, item)">
+                      <i :class="item.read ? 'bi bi-envelope-fill text-muted' : 'bi bi-envelope-open-fill text-primary'"></i>
+                      <span>Mark as {{ item.read ? 'Unread' : 'Read' }}</span>
+                    </button>
+                  </li>
+                  <li><hr class="dropdown-divider custom-divider"></li>
+                  <li>
+                    <button class="dropdown-item d-flex align-items-center gap-2 text-danger action-delete" type="button" @click="handleDeleteClick($event, item.id)">
+                      <i class="bi bi-trash3-fill"></i>
+                      <span>Delete Notification</span>
+                    </button>
+                  </li>
+                </ul>
               </div>
+            </div>
+            
+            <!-- See More Button -->
+            <div v-if="filteredNotifications.length > displayLimit" class="d-flex justify-content-center mt-3 mb-2">
+              <button @click="displayLimit += 10" class="btn btn-action-modern px-5 py-2 fw-bold">
+                See More
+              </button>
             </div>
           </div>
 
@@ -316,39 +344,97 @@ const getNotificationIcon = (type) => {
   </div>
 
   <Footer />
+  </div>
 </template>
 
 <style scoped>
-.notifications-view-page {
-  max-width: 1280px;
-  margin: 40px auto 0 auto; /* Push page content down so it is not cut off by floating global header */
-  padding-top: 24px;
-  min-height: 85vh;
-  font-family: var(--font-family-base);
+
+.notifications-premium-page {
+  min-height: 100vh;
+  background: 
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    var(--color-bg);
+  background-size: 34px 34px;
   color: var(--color-text);
+  padding-bottom: 60px;
+  position: relative;
+  overflow-x: clip;
+}
+
+.hero-bg-effects {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: drift ease-in-out infinite;
+}
+
+.orb-1 {
+  width: 400px; height: 400px;
+  left: -10%; top: -10%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+  animation-duration: 12s;
+}
+
+.orb-2 {
+  width: 300px; height: 300px;
+  right: 0%; top: 40%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 70%);
+  animation-duration: 16s;
+  animation-delay: -4s;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(30px, -20px); }
+  66% { transform: translate(-20px, 15px); }
+}
+
+.page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-top: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #a78bfa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
+.glass-panel {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+}
+
 /* Sidebar and Cards Styling */
 .sidebar-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  transition: all var(--transition-slow);
+  transition: all 0.3s ease;
+  position: sticky;
+  top: 100px;
+  z-index: 10;
 }
 
 .border-slate {
-  border-color: var(--color-border);
+  border-color: var(--color-border) !important;
 }
 
 .sidebar-section-title {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.8px;
+  color: var(--color-text-muted) !important;
 }
 
 .sidebar-nav {
@@ -364,23 +450,23 @@ const getNotificationIcon = (type) => {
   border: none !important;
   background: transparent !important;
   color: var(--color-text-muted) !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   font-size: 0.9rem !important;
-  border-radius: var(--radius-md) !important;
+  border-radius: 12px !important;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  transition: all var(--transition-base) !important;
+  transition: all 0.3s ease !important;
 }
 
 .filter-nav-btn:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text);
+  background: var(--color-surface-hover) !important;
+  color: var(--color-text) !important;
 }
 
 .filter-nav-btn.active {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
 }
 
 .sidebar-badge {
@@ -389,7 +475,7 @@ const getNotificationIcon = (type) => {
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   padding: 2px 8px !important;
-  border-radius: var(--radius-pill) !important;
+  border-radius: 999px !important;
   border: 1px solid var(--color-border) !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -399,19 +485,10 @@ const getNotificationIcon = (type) => {
   line-height: 1 !important;
 }
 
-/* Active filter state badge should highlight beautifully! */
 .filter-nav-btn.active .sidebar-badge {
   background: var(--color-primary) !important;
-  color: white !important;
+  color: #fff !important;
   border-color: var(--color-primary) !important;
-}
-
-.bg-theme-subtle {
-  background-color: var(--color-surface-hover) !important;
-}
-
-.border-theme {
-  border-color: var(--color-border) !important;
 }
 
 /* modern search inputs */
@@ -420,34 +497,41 @@ const getNotificationIcon = (type) => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 1.05rem;
+  color: var(--color-text-muted) !important;
 }
 
 .form-control {
   background: var(--color-input-bg);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   padding: 10px 14px;
   font-weight: 500;
-  transition: all var(--transition-base);
+  transition: all 0.3s ease;
 }
 
 .form-control:focus {
   background: var(--color-surface);
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+  color: var(--color-text);
+}
+
+.form-control::placeholder {
+  color: var(--color-text-muted);
 }
 
 /* Action Buttons Header */
 .btn-action-modern {
-  background: var(--color-surface);
+  background: var(--color-surface-elevated);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-weight: 700;
+  color: var(--color-text);
+  font-weight: 600;
   font-size: 0.85rem;
   padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  transition: all var(--transition-base);
+  border-radius: 999px;
+  transition: all 0.3s ease;
 }
 
 .btn-action-modern:hover {
@@ -457,38 +541,46 @@ const getNotificationIcon = (type) => {
 }
 
 .btn-clear-all:hover {
-  border-color: var(--color-danger);
-  color: var(--color-danger);
+  border-color: #ef4444;
+  color: #ef4444;
 }
 
 .btn-primary-gradient {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   border: none;
-  transition: all var(--transition-base);
+  transition: all 0.3s ease;
 }
 
 .btn-primary-gradient:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--color-primary-light);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
 }
 
 /* Notifications feed items */
 .notification-card-item {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  transition: all var(--transition-base);
+  background: var(--color-surface-elevated);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-soft);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px;
+  position: relative;
+  z-index: 1;
 }
 
-.notification-card-item:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md) !important;
-  border-color: var(--color-primary) !important;
+.notification-card-item:hover,
+.notification-card-item:focus-within,
+.notification-card-item:has(.dropdown-menu.show) {
+  z-index: 50;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg) !important;
+  border-color: var(--color-primary-light) !important;
+  background: var(--color-surface-hover);
 }
 
 .notification-card-item.unread {
   background: var(--color-primary-light);
-  border-color: rgba(99, 102, 241, 0.25) !important;
+  border-color: var(--color-primary-light) !important;
 }
 
 .sender-avatar {
@@ -504,22 +596,25 @@ const getNotificationIcon = (type) => {
   right: -4px;
   width: 22px;
   height: 22px;
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-elevated);
+  border: 1.5px solid var(--color-bg);
   font-size: 10px;
 }
 
 .title-text {
   font-size: 1.05rem;
+  color: var(--color-text);
 }
 
 .message-text {
   font-size: 0.92rem;
   line-height: 1.5;
+  color: var(--color-text-muted) !important;
 }
 
 .time-text {
   font-size: 0.8rem;
+  color: var(--color-secondary) !important;
 }
 
 .py-1-5 {
@@ -531,16 +626,16 @@ const getNotificationIcon = (type) => {
 .pulse-dot {
   width: 7px;
   height: 7px;
-  background-color: var(--color-primary);
+  background-color: #818cf8;
   border-radius: 50%;
   display: inline-block;
   animation: pulse-ring 1.8s infinite;
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(129, 140, 248, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(129, 140, 248, 0); }
 }
 
 /* Feed item circle button actions */
@@ -551,26 +646,28 @@ const getNotificationIcon = (type) => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--color-surface);
-  border-color: var(--color-border) !important;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border) !important;
   color: var(--color-text-muted);
-  transition: all var(--transition-base);
+  transition: all 0.3s ease;
 }
 
 .btn-circle-action:hover {
-  background: var(--color-surface-hover);
+  background: var(--color-primary-light);
   border-color: var(--color-primary) !important;
   color: var(--color-primary);
 }
 
 .btn-delete:hover {
+  background: var(--color-danger-light);
   border-color: var(--color-danger) !important;
   color: var(--color-danger);
 }
 
 /* Empty State Card */
 .empty-state-card {
-  background: var(--color-surface);
+  background: var(--color-surface-elevated);
+  backdrop-filter: blur(10px);
   border: 1px dashed var(--color-border);
   min-height: 350px;
 }
@@ -589,7 +686,7 @@ const getNotificationIcon = (type) => {
 
 /* Skeleton Loading animations */
 .skeleton-card {
-  background: var(--color-surface);
+  background: var(--color-surface-elevated);
   border: 1px solid var(--color-border);
   overflow: hidden;
 }
@@ -597,36 +694,36 @@ const getNotificationIcon = (type) => {
 .skeleton-avatar {
   width: 48px;
   height: 48px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(90deg, var(--color-border-soft) 25%, var(--color-border) 50%, var(--color-border-soft) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow-skel 1.5s infinite;
 }
 
 .skeleton-line-long {
   width: 70%;
   height: 14px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(90deg, var(--color-border-soft) 25%, var(--color-border) 50%, var(--color-border-soft) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow-skel 1.5s infinite;
 }
 
 .skeleton-line-short {
   width: 40%;
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--color-surface-hover) 25%, var(--color-border) 50%, var(--color-surface-hover) 75%);
+  background: linear-gradient(90deg, var(--color-border-soft) 25%, var(--color-border) 50%, var(--color-border-soft) 75%);
   background-size: 200% 100%;
-  animation: pulse-glow 1.5s infinite;
+  animation: pulse-glow-skel 1.5s infinite;
 }
 
-@keyframes pulse-glow {
+@keyframes pulse-glow-skel {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
 .actions-wrap {
-  align-self: center; /* Vertically center action buttons inside card on desktop */
+  align-self: center;
 }
 
 @media (max-width: 768px) {
@@ -643,26 +740,85 @@ const getNotificationIcon = (type) => {
 }
 
 .badge-type-reply {
-  background: rgba(99, 102, 241, 0.08) !important;
-  color: var(--color-primary, #6366f1) !important;
-  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  background: var(--color-tag-indigo-bg) !important;
+  color: var(--color-tag-indigo-text) !important;
+  border: 1px solid var(--color-primary-light) !important;
 }
 
 .badge-type-like {
-  background: rgba(239, 68, 68, 0.08) !important;
-  color: var(--color-danger, #ef4444) !important;
-  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  background: var(--color-tag-red-bg) !important;
+  color: var(--color-tag-red-text) !important;
+  border: 1px solid var(--color-danger-light) !important;
 }
 
 .badge-type-mention {
-  background: rgba(245, 158, 11, 0.08) !important;
-  color: var(--color-warning, #f59e0b) !important;
-  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+  background: var(--color-warning-light) !important;
+  color: var(--color-warning) !important;
+  border: 1px solid var(--color-warning-light) !important;
 }
 
 .badge-type-system {
-  background: rgba(16, 185, 129, 0.08) !important;
-  color: var(--color-success, #10b981) !important;
-  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  background: var(--color-success-light) !important;
+  color: var(--color-success) !important;
+  border: 1px solid var(--color-success-light) !important;
+}
+
+/* Muted badge for old/read items */
+.bg-secondary-subtle {
+  background-color: var(--color-surface-hover) !important;
+}
+.border-secondary-subtle {
+  border-color: var(--color-border) !important;
+}
+
+.bg-primary-subtle {
+  background-color: var(--color-primary-light) !important;
+}
+.border-primary-subtle {
+  border-color: var(--color-primary-light) !important;
+}
+
+.text-adaptive {
+  color: var(--color-text) !important;
+}
+
+p.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+/* Custom Dropdown Menu for 3-dots */
+.custom-dropdown-menu {
+  background: var(--color-surface-elevated);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 8px 0;
+  min-width: 200px;
+}
+
+.custom-dropdown-menu .dropdown-item {
+  color: var(--color-text);
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.custom-dropdown-menu .dropdown-item:hover,
+.custom-dropdown-menu .dropdown-item:focus {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  outline: none;
+}
+
+.custom-dropdown-menu .dropdown-item.action-delete:hover,
+.custom-dropdown-menu .dropdown-item.action-delete:focus {
+  background: var(--color-danger-light);
+  color: var(--color-danger) !important;
+}
+
+.custom-divider {
+  border-top-color: var(--color-border);
+  margin: 4px 0;
 }
 </style>

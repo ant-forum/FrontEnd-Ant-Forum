@@ -23,7 +23,7 @@ export const useProjectStore = defineStore("project", () => {
     tag_ids: [],
     tagsList: [],
     thumbnail: null,
-    thumbnailUrl: ""
+    thumbnailUrl: "",
   });
 
   const resetCreateForm = () => {
@@ -35,7 +35,7 @@ export const useProjectStore = defineStore("project", () => {
       tag_ids: [],
       tagsList: [],
       thumbnail: null,
-      thumbnailUrl: ""
+      thumbnailUrl: "",
     };
   };
 
@@ -52,8 +52,6 @@ export const useProjectStore = defineStore("project", () => {
     }
   };
 
-
-
   const normalizeProject = (item) => {
     if (!item) return null;
 
@@ -61,9 +59,13 @@ export const useProjectStore = defineStore("project", () => {
 
     let tags = [];
     if (Array.isArray(item.tag)) {
-      tags = item.tag.map(t => t.name || t.tag_name || `Tag ${t.tag_id}`).filter(Boolean);
+      tags = item.tag
+        .map((t) => t.name || t.tag_name || `Tag ${t.tag_id}`)
+        .filter(Boolean);
     } else if (Array.isArray(item.tags)) {
-      tags = item.tags.map(t => typeof t === 'string' ? t : (t.name || t.tag_name)).filter(Boolean);
+      tags = item.tags
+        .map((t) => (typeof t === "string" ? t : t.name || t.tag_name))
+        .filter(Boolean);
     }
 
     const image = resolveMediaUrl(
@@ -71,7 +73,7 @@ export const useProjectStore = defineStore("project", () => {
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600",
     );
     const averageRating = Number(item.average_rating) || 0;
-    const views = Number(item.views) || 0;
+    const views = Number(item.views) || Number(item.view_count) || 0;
     let myRating = null;
     if (item.my_rating !== undefined && item.my_rating !== null) {
       myRating = Number(item.my_rating);
@@ -80,6 +82,8 @@ export const useProjectStore = defineStore("project", () => {
     const normalized = {
       ...item,
       id: item.id,
+      view_count: views,
+      views,
       title: item.title || "",
       description: item.description || "",
       image,
@@ -93,11 +97,16 @@ export const useProjectStore = defineStore("project", () => {
       my_rating: myRating,
       get author() {
         const cachedUser = userCache.value[item.user_id || item.userId];
-        return resolveAuthor(item.user_id || item.userId, defaultAuthor, item, cachedUser);
+        return resolveAuthor(
+          item.user_id || item.userId,
+          defaultAuthor,
+          item,
+          cachedUser,
+        );
       },
       get authors() {
         return [this.author];
-      }
+      },
     };
 
     return normalized;
@@ -105,7 +114,8 @@ export const useProjectStore = defineStore("project", () => {
 
   const extractList = (responseData) => {
     if (!responseData) return [];
-    const d = responseData.data !== undefined ? responseData.data : responseData;
+    const d =
+      responseData.data !== undefined ? responseData.data : responseData;
     if (Array.isArray(d)) return d;
     if (d && Array.isArray(d.data)) return d.data;
     if (d && Array.isArray(d.items)) return d.items;
@@ -117,7 +127,11 @@ export const useProjectStore = defineStore("project", () => {
   const ensureSuccess = (res) => {
     if (res.data && (res.data.result === false || res.data.success === false)) {
       const msg = String(res.data.message || res.data.msg || "").toLowerCase();
-      if (msg.includes("no project") || msg.includes("no rating") || msg.includes("not found")) {
+      if (
+        msg.includes("no project") ||
+        msg.includes("no rating") ||
+        msg.includes("not found")
+      ) {
         return; // Treat empty states as successful empty collections
       }
       throw new Error(res.data.message || res.data.msg || "API request failed");
@@ -136,12 +150,16 @@ export const useProjectStore = defineStore("project", () => {
         // Ignore background fetch issues
       }
 
-      const res = await api.get("/api/projects");
+      const res = await api.get("/api/projects/getAllProjects");
       ensureSuccess(res);
       const list = extractList(res.data);
       // Fetch all unique user_ids in the list
-      const uniqueUserIds = [...new Set(list.map(item => item.user_id || item.userId).filter(Boolean))];
-      await Promise.all(uniqueUserIds.map(id => fetchAndCacheUser(id)));
+      const uniqueUserIds = [
+        ...new Set(
+          list.map((item) => item.user_id || item.userId).filter(Boolean),
+        ),
+      ];
+      await Promise.all(uniqueUserIds.map((id) => fetchAndCacheUser(id)));
       projects.value = list.map(normalizeProject);
     } catch (err) {
       console.error("[ProjectStore] fetchProjects failed:", err);
@@ -163,22 +181,26 @@ export const useProjectStore = defineStore("project", () => {
         // Ignore background fetch issues
       }
 
-      const res = await api.get(`/api/projects/${id}`);
+      const res = await api.get(`/api/projects/getProjectById/${id}`);
       ensureSuccess(res);
-      const raw = res.data?.data?.row || res.data?.row || res.data?.data || res.data;
+      const raw =
+        res.data?.data?.row || res.data?.row || res.data?.data || res.data;
       const rawTags = res.data?.data?.tag || res.data?.tag || [];
       // Fetch the user if we have user_id
       if (raw.user_id || raw.userId) {
         await fetchAndCacheUser(raw.user_id || raw.userId);
       }
-      
+
       // Preserve existing my_rating if the new data doesn't have it
-      const existingRating = project.value && project.value.id == id ? project.value.my_rating : null;
+      const existingRating =
+        project.value && project.value.id == id
+          ? project.value.my_rating
+          : null;
       const normalized = normalizeProject({ ...raw, tag: rawTags });
       if (existingRating && !normalized.my_rating) {
         normalized.my_rating = existingRating;
       }
-      
+
       project.value = normalized;
       return project.value;
     } catch (err) {
@@ -191,15 +213,40 @@ export const useProjectStore = defineStore("project", () => {
     }
   };
 
+  const incrementProjectView = async (id) => {
+    try {
+      const response = await api.post(`/api/projects/counter-view-project/${id}`, {}, { skipGlobalToast: true });
+      ensureSuccess(response);
+      const resData = response.data?.data || response.data;
+      if (project.value && String(project.value.id) === String(id)) {
+        if (resData && resData.view_count !== undefined) {
+          project.value.views = Number(resData.view_count);
+          project.value.view_count = Number(resData.view_count);
+        } else {
+          project.value.views = (project.value.views || 0) + 1;
+          project.value.view_count = (project.value.view_count || 0) + 1;
+        }
+      }
+      return response.data;
+    } catch (err) {
+      console.warn(`[ProjectStore] incrementProjectView ${id} failed (silent):`, err);
+    }
+  };
+
+
   const fetchMyProjects = async () => {
     isLoading.value = true;
     try {
-      const res = await api.get("/api/projects/my");
+      const res = await api.get("/api/projects/getMyProjects");
       ensureSuccess(res);
       const list = extractList(res.data);
       // Fetch all unique user_ids in the list
-      const uniqueUserIds = [...new Set(list.map(item => item.user_id || item.userId).filter(Boolean))];
-      await Promise.all(uniqueUserIds.map(id => fetchAndCacheUser(id)));
+      const uniqueUserIds = [
+        ...new Set(
+          list.map((item) => item.user_id || item.userId).filter(Boolean),
+        ),
+      ];
+      await Promise.all(uniqueUserIds.map((id) => fetchAndCacheUser(id)));
       myProjects.value = list.map(normalizeProject);
     } catch (err) {
       console.error("[ProjectStore] fetchMyProjects failed:", err);
@@ -207,7 +254,6 @@ export const useProjectStore = defineStore("project", () => {
     } finally {
       isLoading.value = false;
     }
-
   };
 
   const fetchRatedProjects = async () => {
@@ -216,8 +262,12 @@ export const useProjectStore = defineStore("project", () => {
       ensureSuccess(res);
       const list = extractList(res.data);
       // Fetch all unique user_ids in the list
-      const uniqueUserIds = [...new Set(list.map(item => item.user_id || item.userId).filter(Boolean))];
-      await Promise.all(uniqueUserIds.map(id => fetchAndCacheUser(id)));
+      const uniqueUserIds = [
+        ...new Set(
+          list.map((item) => item.user_id || item.userId).filter(Boolean),
+        ),
+      ];
+      await Promise.all(uniqueUserIds.map((id) => fetchAndCacheUser(id)));
       ratedProjects.value = list.map(normalizeProject);
     } catch (err) {
       console.warn("[ProjectStore] fetchRatedProjects failed:", err);
@@ -241,11 +291,14 @@ export const useProjectStore = defineStore("project", () => {
       if (rawData.tag_ids && rawData.tag_ids.length > 0) {
         formData.append("tag_ids", JSON.stringify(rawData.tag_ids));
       }
+      if (rawData.status !== undefined) {
+        formData.append("status", rawData.status);
+      }
 
-      const res = await api.post("/api/projects", formData);
+      const res = await api.post("/api/projects/createproject", formData);
       ensureSuccess(res);
       const created = res.data?.data || res.data;
-      
+
       // Ensure user_id is set to currently logged-in user if missing from response
       if (created && !created.user_id && !created.userId) {
         const authStore = useAuthStore();
@@ -274,16 +327,25 @@ export const useProjectStore = defineStore("project", () => {
       if (rawData.projectName || rawData.title) {
         formData.append("title", rawData.projectName || rawData.title);
       }
-      if (rawData.description) formData.append("description", rawData.description);
+      if (rawData.description)
+        formData.append("description", rawData.description);
       if (rawData.liveDemoUrl !== undefined || rawData.link !== undefined) {
-        formData.append("link", rawData.liveDemoUrl !== undefined ? rawData.liveDemoUrl : rawData.link);
+        formData.append(
+          "link",
+          rawData.liveDemoUrl !== undefined
+            ? rawData.liveDemoUrl
+            : rawData.link,
+        );
       }
       if (rawData.thumbnail) formData.append("thumbnail", rawData.thumbnail);
       if (rawData.tag_ids) {
         formData.append("tag_ids", JSON.stringify(rawData.tag_ids));
       }
+      if (rawData.status !== undefined) {
+        formData.append("status", rawData.status);
+      }
 
-      const res = await api.put(`/api/projects/${id}`, formData);
+      const res = await api.put(`/api/projects/updateProject/${id}`, formData);
       ensureSuccess(res);
       const updated = res.data?.data || res.data;
 
@@ -297,10 +359,10 @@ export const useProjectStore = defineStore("project", () => {
 
       const normalized = normalizeProject(updated);
 
-      const projectIndex = projects.value.findIndex(p => p.id == id);
+      const projectIndex = projects.value.findIndex((p) => p.id == id);
       if (projectIndex !== -1) projects.value[projectIndex] = normalized;
 
-      const myProjectIndex = myProjects.value.findIndex(p => p.id == id);
+      const myProjectIndex = myProjects.value.findIndex((p) => p.id == id);
       if (myProjectIndex !== -1) myProjects.value[myProjectIndex] = normalized;
 
       if (project.value && project.value.id == id) project.value = normalized;
@@ -317,10 +379,10 @@ export const useProjectStore = defineStore("project", () => {
   const deleteProject = async (id) => {
     isLoading.value = true;
     try {
-      const res = await api.delete(`/api/projects/${id}`);
+      const res = await api.delete(`/api/projects/deleteProject/${id}`);
       ensureSuccess(res);
-      projects.value = projects.value.filter(p => p.id != id);
-      myProjects.value = myProjects.value.filter(p => p.id != id);
+      projects.value = projects.value.filter((p) => p.id != id);
+      myProjects.value = myProjects.value.filter((p) => p.id != id);
       if (project.value && project.value.id == id) project.value = null;
     } catch (err) {
       console.error(`[ProjectStore] deleteProject ${id} failed:`, err);
@@ -336,17 +398,17 @@ export const useProjectStore = defineStore("project", () => {
       project.value.my_rating = newRating;
     }
     // Update projects list
-    const projectIndex = projects.value.findIndex(p => p.id == id);
+    const projectIndex = projects.value.findIndex((p) => p.id == id);
     if (projectIndex !== -1) {
       projects.value[projectIndex].my_rating = newRating;
     }
     // Update my projects
-    const myProjectIndex = myProjects.value.findIndex(p => p.id == id);
+    const myProjectIndex = myProjects.value.findIndex((p) => p.id == id);
     if (myProjectIndex !== -1) {
       myProjects.value[myProjectIndex].my_rating = newRating;
     }
     // Update rated projects
-    const ratedProjectIndex = ratedProjects.value.findIndex(p => p.id == id);
+    const ratedProjectIndex = ratedProjects.value.findIndex((p) => p.id == id);
     if (ratedProjectIndex !== -1) {
       ratedProjects.value[ratedProjectIndex].my_rating = newRating;
     }
@@ -359,11 +421,15 @@ export const useProjectStore = defineStore("project", () => {
     try {
       // First try to rate
       try {
-        const res = await api.post(`/api/projects/rateProject/${id}`, { rate_star: rateStar });
+        const res = await api.post(`/api/projects/rateProject/${id}`, {
+          rate_star: rateStar,
+        });
         ensureSuccess(res);
       } catch (rateErr) {
         // If rate fails (already rated), try to update
-        const res = await api.put(`/api/projects/updateRateProject/${id}`, { rate_star: rateStar });
+        const res = await api.put(`/api/projects/updateRateProject/${id}`, {
+          rate_star: rateStar,
+        });
         ensureSuccess(res);
       }
       // Refresh project data
@@ -410,6 +476,7 @@ export const useProjectStore = defineStore("project", () => {
     resetCreateForm,
     fetchProjects,
     fetchProject,
+    incrementProjectView,
     fetchMyProjects,
     fetchRatedProjects,
     createProject,

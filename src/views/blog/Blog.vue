@@ -1,20 +1,20 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
-import { useBlogStore } from '../../stores/BlogStore';
-import { useAuthStore } from '../../stores/AuthStore';
-import { createPlainTextExcerpt } from '../../utils/richContent';
+import { useBlogStore } from "../../stores/BlogStore";
+import { useAuthStore } from "../../stores/AuthStore";
+import { createPlainTextExcerpt } from "../../utils/richContent";
 
 const blogStore = useBlogStore();
 const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 
-const searchQuery = ref('');
-const selectedCategory = ref('All');
-const sortBy = ref('latest');
+const searchQuery = ref("");
+const selectedCategory = ref("All");
+const sortBy = ref("latest");
 const showDrafts = ref(false);
 const initialLoading = ref(true);
 const BLOGS_PER_PAGE = 6;
@@ -35,18 +35,18 @@ const handleClickOutside = (e) => {
 };
 
 onMounted(() => {
-  window.addEventListener('click', handleClickOutside);
+  window.addEventListener("click", handleClickOutside);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('click', handleClickOutside);
+  window.removeEventListener("click", handleClickOutside);
 });
 
 const fallbackCategories = [
-  { id: 1, name: 'Frontend' },
-  { id: 2, name: 'DevOps' },
-  { id: 3, name: 'Systems' },
-  { id: 4, name: 'Architecture' }
+  { id: 1, name: "Frontend" },
+  { id: 2, name: "DevOps" },
+  { id: 3, name: "Systems" },
+  { id: 4, name: "Architecture" },
 ];
 
 const activeCategories = computed(() => {
@@ -56,44 +56,48 @@ const activeCategories = computed(() => {
 });
 
 const categories = computed(() => {
-  const categoryNames = activeCategories.value.map(c => c.name || c.title);
+  const categoryNames = activeCategories.value.map((c) => c.name || c.title);
   const uniqueCategoryNames = [...new Set(categoryNames)];
-  return ['All', ...uniqueCategoryNames];
+  return ["All", ...uniqueCategoryNames];
 });
 
 const categoryMeta = {
-  All: { icon: 'bi-grid-1x2-fill', tone: 'all' },
-  'General Discussion': { icon: 'bi-chat-square-text-fill', tone: 'discussion' },
-  'Questions & Answers': { icon: 'bi-question-circle-fill', tone: 'questions' },
-  Showcase: { icon: 'bi-stars', tone: 'showcase' },
-  Announcements: { icon: 'bi-megaphone-fill', tone: 'announcements' },
-  Tutorials: { icon: 'bi-journal-code', tone: 'tutorials' },
-  Resources: { icon: 'bi-collection-fill', tone: 'resources' },
-  'Showcase Projects': { icon: 'bi-window-stack', tone: 'projects' },
-  Frontend: { icon: 'bi-layout-text-window-reverse', tone: 'frontend' },
-  DevOps: { icon: 'bi-cloud-arrow-up-fill', tone: 'devops' },
-  Systems: { icon: 'bi-cpu-fill', tone: 'systems' },
-  Architecture: { icon: 'bi-diagram-3-fill', tone: 'architecture' },
+  All: { icon: "bi-grid-1x2-fill", tone: "all" },
+  "General Discussion": {
+    icon: "bi-chat-square-text-fill",
+    tone: "discussion",
+  },
+  "Questions & Answers": { icon: "bi-question-circle-fill", tone: "questions" },
+  Showcase: { icon: "bi-stars", tone: "showcase" },
+  Announcements: { icon: "bi-megaphone-fill", tone: "announcements" },
+  Tutorials: { icon: "bi-journal-code", tone: "tutorials" },
+  Resources: { icon: "bi-collection-fill", tone: "resources" },
+  "Showcase Projects": { icon: "bi-window-stack", tone: "projects" },
+  Frontend: { icon: "bi-layout-text-window-reverse", tone: "frontend" },
+  DevOps: { icon: "bi-cloud-arrow-up-fill", tone: "devops" },
+  Systems: { icon: "bi-cpu-fill", tone: "systems" },
+  Architecture: { icon: "bi-diagram-3-fill", tone: "architecture" },
 };
 
 const categoryOptions = computed(() => {
   return categories.value.map((name) => {
-    const count = name === 'All'
-      ? activeBlogs.value.length
-      : activeBlogs.value.filter((post) => post.category === name).length;
+    const count =
+      name === "All"
+        ? activeBlogs.value.length
+        : activeBlogs.value.filter((post) => post.category === name).length;
     return {
       name,
       count,
-      ...(categoryMeta[name] || { icon: 'bi-folder-fill', tone: 'default' }),
+      ...(categoryMeta[name] || { icon: "bi-folder-fill", tone: "default" }),
     };
   });
 });
 
 const allTags = computed(() => {
   const tagsSet = new Set();
-  activeBlogs.value.forEach(p => {
+  activeBlogs.value.forEach((p) => {
     if (p.tags) {
-      p.tags.forEach(t => tagsSet.add(t));
+      p.tags.forEach((t) => tagsSet.add(t));
     }
   });
   return Array.from(tagsSet);
@@ -108,11 +112,11 @@ const thumbnailPreview = ref(null);
 const cameFromAdmin = ref(false);
 
 const form = ref({
-  title: '',
-  description: '',
-  category_id: '1',
-  status: 'published',
-  thumbnail: null
+  title: "",
+  description: "",
+  category_id: "1",
+  status: "published",
+  thumbnail: null,
 });
 
 onMounted(async () => {
@@ -124,7 +128,7 @@ onMounted(async () => {
       console.error("Failed to fetch categories:", err);
     }
 
-    if (authStore.user?.role === 'admin') {
+    if (authStore.user?.role === "admin") {
       await blogStore.fetchAllBlogs();
     } else {
       await blogStore.fetchBlogs();
@@ -135,7 +139,7 @@ onMounted(async () => {
 });
 
 const activeBlogs = computed(() => {
-  if (authStore.user?.role === 'admin' && showDrafts.value) {
+  if (authStore.user?.role === "admin" && showDrafts.value) {
     return blogStore.drafts;
   }
   return blogStore.blogs;
@@ -144,23 +148,24 @@ const activeBlogs = computed(() => {
 const filteredPosts = computed(() => {
   let result = [...activeBlogs.value];
 
-  if (selectedCategory.value !== 'All') {
-    result = result.filter(p => p.category === selectedCategory.value);
+  if (selectedCategory.value !== "All") {
+    result = result.filter((p) => p.category === selectedCategory.value);
   }
 
   if (selectedTag.value) {
-    result = result.filter(p => p.tags && p.tags.includes(selectedTag.value));
+    result = result.filter((p) => p.tags && p.tags.includes(selectedTag.value));
   }
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    result = result.filter(p => 
-      p.title.toLowerCase().includes(query) || 
-      (p.excerpt || p.description || '').toLowerCase().includes(query)
+    result = result.filter(
+      (p) =>
+        p.title.toLowerCase().includes(query) ||
+        (p.excerpt || p.description || "").toLowerCase().includes(query),
     );
   }
 
-  if (sortBy.value === 'popular') {
+  if (sortBy.value === "popular") {
     result.sort((a, b) => b.views - a.views);
   } else {
     result.sort((a, b) => {
@@ -173,9 +178,14 @@ const filteredPosts = computed(() => {
   return result;
 });
 
-const visiblePosts = computed(() => filteredPosts.value.slice(0, visibleBlogCount.value));
+const visiblePosts = computed(() =>
+  filteredPosts.value.slice(0, visibleBlogCount.value),
+);
 const canShowMore = computed(() => {
-  return visibleBlogCount.value < filteredPosts.value.length || (blogStore.hasMore && !showDrafts.value);
+  return (
+    visibleBlogCount.value < filteredPosts.value.length ||
+    (blogStore.hasMore && !showDrafts.value)
+  );
 });
 
 watch([searchQuery, selectedCategory, selectedTag, sortBy, showDrafts], () => {
@@ -199,11 +209,11 @@ const openCreateModal = () => {
   editingBlogId.value = null;
   thumbnailPreview.value = null;
   form.value = {
-    title: '',
-    description: '',
-    category_id: '1',
-    status: 'published',
-    thumbnail: null
+    title: "",
+    description: "",
+    category_id: "1",
+    status: "published",
+    thumbnail: null,
   };
   showModal.value = true;
 };
@@ -214,10 +224,10 @@ const openEditModal = (post) => {
   thumbnailPreview.value = post.image || null;
   form.value = {
     title: post.title,
-    description: post.content || post.description || '',
-    category_id: post.category_id ? post.category_id.toString() : '1',
-    status: post.status || 'published',
-    thumbnail: null
+    description: post.content || post.description || "",
+    category_id: post.category_id ? post.category_id.toString() : "1",
+    status: post.status || "published",
+    thumbnail: null,
   };
   showModal.value = true;
 };
@@ -226,7 +236,7 @@ const closeModal = () => {
   showModal.value = false;
   if (cameFromAdmin.value) {
     cameFromAdmin.value = false;
-    router.push('/admin/blogs');
+    router.push("/admin/blogs");
   }
 };
 
@@ -245,14 +255,14 @@ const handleFileChange = (e) => {
 const submitForm = async () => {
   const formData = new FormData();
   const content = form.value.description;
-  formData.append('title', form.value.title);
-  formData.append('description', createPlainTextExcerpt(content, 180));
-  formData.append('content', content);
-  formData.append('category_id', form.value.category_id);
-  formData.append('status', form.value.status);
-  
+  formData.append("title", form.value.title);
+  formData.append("description", createPlainTextExcerpt(content, 180));
+  formData.append("content", content);
+  formData.append("category_id", form.value.category_id);
+  formData.append("status", form.value.status);
+
   if (form.value.thumbnail) {
-    formData.append('thumbnail', form.value.thumbnail);
+    formData.append("thumbnail", form.value.thumbnail);
   }
 
   try {
@@ -261,14 +271,14 @@ const submitForm = async () => {
     } else {
       await blogStore.createBlog(formData);
     }
-    
+
     // Refresh blogs
-    if (authStore.user?.role === 'admin') {
+    if (authStore.user?.role === "admin") {
       await blogStore.fetchAllBlogs();
     } else {
       await blogStore.fetchBlogs();
     }
-    
+
     closeModal();
   } catch (err) {
     console.error("Failed to submit blog form:", err);
@@ -276,11 +286,12 @@ const submitForm = async () => {
 };
 
 const handleImgError = (e) => {
-  e.target.src = "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800";
+  e.target.src =
+    "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800";
 };
 
 const formatNumber = (num) => {
-  if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+  if (num >= 1000) return (num / 1000).toFixed(1) + "k";
   return num;
 };
 </script>
@@ -301,7 +312,7 @@ const formatNumber = (num) => {
               type="text"
               placeholder="Search articles..."
               class="sidebar-search-input"
-            >
+            />
           </div>
         </div>
 
@@ -314,10 +325,15 @@ const formatNumber = (num) => {
               :key="cat.name"
               type="button"
               @click="selectedCategory = cat.name"
-              :class="['sidebar-menu-item', { active: selectedCategory === cat.name }]"
+              :class="[
+                'sidebar-menu-item',
+                { active: selectedCategory === cat.name },
+              ]"
             >
               <i :class="['bi', cat.icon, 'me-2']"></i>
-              <span class="flex-grow-1 text-start fw-semibold">{{ cat.name }}</span>
+              <span class="flex-grow-1 text-start fw-semibold">{{
+                cat.name
+              }}</span>
               <span class="sidebar-badge">{{ cat.count }}</span>
             </button>
           </div>
@@ -351,73 +367,109 @@ const formatNumber = (num) => {
       <div class="blog-main-container">
         <!-- Sleek Page Header -->
         <section class="blog-page-header mb-4">
-          <div class="header-text-main" style="max-width: 600px;">
+          <div class="header-text-main" style="max-width: 600px">
             <span class="blog-page-kicker">Engineering Blog</span>
             <h1>Knowledge Base</h1>
             <p class="text-muted text-sm mb-0">
-              Explore technical articles, system design guides, and coding patterns written by engineers, for engineers.
+              Explore technical articles, system design guides, and coding
+              patterns written by engineers, for engineers.
             </p>
             <div class="d-flex gap-2 mt-4">
-              <span class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"><i class="bi bi-journal-text me-1"></i> {{ blogStore.blogs.length }} Articles</span>
-              <span class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"><i class="bi bi-people me-1"></i> Community Driven</span>
-              <span class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"><i class="bi bi-stars me-1"></i> Weekly Updates</span>
+              <span
+                class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"
+                ><i class="bi bi-journal-text me-1"></i>
+                {{ blogStore.blogs.length }} Articles</span
+              >
+              <span
+                class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"
+                ><i class="bi bi-people me-1"></i> Community Driven</span
+              >
+              <span
+                class="badge bg-surface border text-muted py-2 px-3 rounded-pill fw-semibold"
+                ><i class="bi bi-stars me-1"></i> Weekly Updates</span
+              >
             </div>
           </div>
-          
         </section>
 
         <!-- Admin drafts toggle -->
-        <div v-if="authStore.user?.role === 'admin'" class="mb-4 d-flex justify-content-start gap-2 pb-2">
-          <button 
+        <div
+          v-if="authStore.user?.role === 'admin'"
+          class="mb-4 d-flex justify-content-start gap-2 pb-2"
+        >
+          <button
             @click="showDrafts = false"
-            :class="['btn-sm px-4 py-2 fw-bold rounded-pill transition-all', !showDrafts ? 'btn-purple text-white' : 'btn-light text-muted']"
+            :class="[
+              'btn-sm px-4 py-2 fw-bold rounded-pill transition-all',
+              !showDrafts ? 'btn-purple text-white' : 'btn-light text-muted',
+            ]"
           >
-            <i class="bi bi-journal-check me-1"></i> Published ({{ blogStore.blogs.length }})
+            <i class="bi bi-journal-check me-1"></i> Published ({{
+              blogStore.blogs.length
+            }})
           </button>
-          <button 
+          <button
             @click="showDrafts = true"
-            :class="['btn-sm px-4 py-2 fw-bold rounded-pill transition-all', showDrafts ? 'btn-purple text-white' : 'btn-light text-muted']"
+            :class="[
+              'btn-sm px-4 py-2 fw-bold rounded-pill transition-all',
+              showDrafts ? 'btn-purple text-white' : 'btn-light text-muted',
+            ]"
           >
-            <i class="bi bi-journal-richtext me-1"></i> Drafts ({{ blogStore.drafts.length }})
+            <i class="bi bi-journal-richtext me-1"></i> Drafts ({{
+              blogStore.drafts.length
+            }})
           </button>
         </div>
 
         <!-- Blog Grid Section Title -->
-        <div class="mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div
+          class="mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3"
+        >
           <div class="d-flex align-items-center gap-3">
             <h4 class="fw-bold mb-0 text-nowrap">
-              {{ selectedCategory === 'All' ? 'Latest Publications' : selectedCategory + ' Articles' }}
+              {{
+                selectedCategory === "All"
+                  ? "Latest Publications"
+                  : selectedCategory + " Articles"
+              }}
             </h4>
             <span class="text-muted text-sm text-nowrap">
-              {{ initialLoading ? 'Loading articles...' : filteredPosts.length + ' Articles found' }}
+              {{
+                initialLoading
+                  ? "Loading articles..."
+                  : filteredPosts.length + " Articles found"
+              }}
             </span>
           </div>
 
           <!-- Custom Premium Dropdown -->
           <div class="custom-dropdown-container" ref="dropdownRef">
-            <button 
-              type="button" 
-              class="sort-select-trigger" 
+            <button
+              type="button"
+              class="sort-select-trigger"
               @click.stop="isDropdownOpen = !isDropdownOpen"
             >
               <i class="bi bi-arrow-down-up sort-icon-leading"></i>
-              <span>{{ sortBy === 'latest' ? 'Latest' : 'Most Viewed' }}</span>
-              <i class="bi bi-chevron-down chevron-icon" :class="{ 'rotate-180': isDropdownOpen }"></i>
+              <span>{{ sortBy === "latest" ? "Latest" : "Most Viewed" }}</span>
+              <i
+                class="bi bi-chevron-down chevron-icon"
+                :class="{ 'rotate-180': isDropdownOpen }"
+              ></i>
             </button>
             <transition name="dropdown-fade-slide">
               <div v-if="isDropdownOpen" class="custom-dropdown-menu">
-                <button 
-                  type="button" 
-                  class="custom-dropdown-item" 
+                <button
+                  type="button"
+                  class="custom-dropdown-item"
                   :class="{ active: sortBy === 'latest' }"
                   @click="selectSort('latest')"
                 >
                   <i class="bi bi-check2 check-icon"></i>
                   <span>Latest first</span>
                 </button>
-                <button 
-                  type="button" 
-                  class="custom-dropdown-item" 
+                <button
+                  type="button"
+                  class="custom-dropdown-item"
                   :class="{ active: sortBy === 'popular' }"
                   @click="selectSort('popular')"
                 >
@@ -432,59 +484,110 @@ const formatNumber = (num) => {
         <!-- Blog Grid -->
         <div class="blog-grid">
           <template v-if="initialLoading">
-            <article v-for="index in 4" :key="'skeleton-' + index" class="blog-card blog-card-skeleton" aria-hidden="true">
+            <article
+              v-for="index in 4"
+              :key="'skeleton-' + index"
+              class="blog-card blog-card-skeleton"
+              aria-hidden="true"
+            >
               <div class="skeleton-media skeleton-shimmer"></div>
               <div class="skeleton-content">
-                <div class="skeleton-line skeleton-line-sm skeleton-shimmer"></div>
-                <div class="skeleton-line skeleton-line-lg skeleton-shimmer"></div>
-                <div class="skeleton-line skeleton-line-md skeleton-shimmer"></div>
-                <div class="skeleton-line skeleton-line-xs skeleton-shimmer"></div>
+                <div
+                  class="skeleton-line skeleton-line-sm skeleton-shimmer"
+                ></div>
+                <div
+                  class="skeleton-line skeleton-line-lg skeleton-shimmer"
+                ></div>
+                <div
+                  class="skeleton-line skeleton-line-md skeleton-shimmer"
+                ></div>
+                <div
+                  class="skeleton-line skeleton-line-xs skeleton-shimmer"
+                ></div>
                 <div class="skeleton-author">
                   <div class="skeleton-avatar skeleton-shimmer"></div>
-                  <div class="skeleton-line skeleton-line-author skeleton-shimmer"></div>
+                  <div
+                    class="skeleton-line skeleton-line-author skeleton-shimmer"
+                  ></div>
                 </div>
               </div>
             </article>
           </template>
 
-          <div v-else-if="filteredPosts.length === 0" class="blog-empty-state text-center py-5">
+          <div
+            v-else-if="filteredPosts.length === 0"
+            class="blog-empty-state text-center py-5"
+          >
             <div class="empty-state-card">
               <div class="empty-icon-wrap">
                 <i class="bi bi-journal-x"></i>
               </div>
               <h4>No articles found</h4>
-              <p class="text-muted">We couldn't find any articles matching your criteria.</p>
+              <p class="text-muted">
+                We couldn't find any articles matching your criteria.
+              </p>
             </div>
           </div>
-          
+
           <div v-for="post in visiblePosts" :key="post.id" class="blog-card">
-            <router-link :to="'/blog/' + post.id" class="text-decoration-none h-100 d-block">
+            <router-link
+              :to="'/blog/' + post.id"
+              class="text-decoration-none h-100 d-block"
+            >
               <article class="blog-card-surface h-100 transition-up">
-                <div class="post-image-container position-relative overflow-hidden">
-                  <img :src="post.image" @error.once="handleImgError" class="post-img-zoom" alt="Article">
-                  <div class="post-category-tag position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill bg-surface-blur backdrop-blur-sm">
-                    <span class="text-xs fw-bold text-purple text-uppercase">{{ post.category }}</span>
+                <div
+                  class="post-image-container position-relative overflow-hidden"
+                >
+                  <img
+                    :src="post.image"
+                    @error.once="handleImgError"
+                    class="post-img-zoom"
+                    alt="Article"
+                  />
+                  <div
+                    class="post-category-tag position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill bg-surface-blur backdrop-blur-sm"
+                  >
+                    <span class="text-xs fw-bold text-purple text-uppercase">{{
+                      post.category
+                    }}</span>
                   </div>
                 </div>
-                
+
                 <div class="post-content p-4 d-flex flex-column">
-                  <div class="d-flex align-items-center gap-2 text-muted text-xs mb-3 fw-medium">
-                    <i class="bi bi-calendar3"></i> {{ post.date }} 
+                  <div
+                    class="d-flex align-items-center gap-2 text-muted text-xs mb-3 fw-medium"
+                  >
+                    <i class="bi bi-calendar3"></i> {{ post.date }}
                     <!-- <span class="mx-1">•</span> -->
                     <!-- <i class="bi bi-eye"></i> {{ formatNumber(post.views) }} -->
                     <!-- <span class="mx-1">•</span> -->
                     <!-- <i class="bi bi-heart"></i> {{ post.likes }} -->
                   </div>
-                  <h5 class="fw-bold mb-2 blog-title line-clamp-2">{{ post.title }}</h5>
-                  
-                  <p class="text-muted text-sm mb-4 line-clamp-2">{{ post.excerpt || post.description }}</p>
-                  
-                  <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
-                    <div class="author-info d-flex align-items-center gap-2 min-w-0">
-                      <img :src="post.author_avatar" class="author-avatar" width="28" height="28">
-                      <span class="text-sm fw-bold text-truncate">{{ post.author }}</span>
+                  <h5 class="fw-bold mb-2 blog-title line-clamp-2">
+                    {{ post.title }}
+                  </h5>
+
+                  <p class="text-muted text-sm mb-4 line-clamp-2">
+                    {{ post.excerpt || post.description }}
+                  </p>
+
+                  <div
+                    class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto"
+                  >
+                    <div
+                      class="author-info d-flex align-items-center gap-2 min-w-0"
+                    >
+                      <img
+                        :src="post.author_avatar"
+                        class="author-avatar"
+                        width="28"
+                        height="28"
+                      />
+                      <span class="text-sm fw-bold text-truncate">{{
+                        post.author
+                      }}</span>
                     </div>
-                    
+
                     <div class="read-more-link text-purple text-sm fw-bold">
                       Read <i class="bi bi-arrow-right ms-1"></i>
                     </div>
@@ -497,82 +600,156 @@ const formatNumber = (num) => {
 
         <!-- Load More Button -->
         <div v-if="canShowMore" class="d-flex justify-content-center mt-5">
-          <button 
-            @click="loadMorePosts" 
-            :disabled="blogStore.isLoading" 
+          <button
+            @click="loadMorePosts"
+            :disabled="blogStore.isLoading"
             class="btn-purple rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2"
           >
-            <span v-if="blogStore.isLoading" class="spinner-border spinner-border-sm" role="status"></span>
-            <span>{{ blogStore.isLoading ? 'Loading Articles...' : 'Load More Articles' }}</span>
+            <span
+              v-if="blogStore.isLoading"
+              class="spinner-border spinner-border-sm"
+              role="status"
+            ></span>
+            <span>{{
+              blogStore.isLoading ? "Loading Articles..." : "Load More Articles"
+            }}</span>
           </button>
         </div>
-
       </div>
     </div>
 
     <!-- Beautiful Glassmorphism Modal for Create/Edit Blog -->
-    <div v-if="showModal" class="modal-backdrop-blur d-flex align-items-center justify-content-center position-fixed w-100 h-100 top-0 start-0 z-1050 p-3">
-      <div class="modal-card-glassmorphism rounded-5 p-4 p-lg-5 w-100 shadow-2xl border transition-all" style="max-width: 600px;">
+    <div
+      v-if="showModal"
+      class="modal-backdrop-blur d-flex align-items-center justify-content-center position-fixed w-100 h-100 top-0 start-0 z-1050 p-3"
+    >
+      <div
+        class="modal-card-glassmorphism rounded-5 p-4 p-lg-5 w-100 shadow-2xl border transition-all"
+        style="max-width: 600px"
+      >
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h3 class="fw-bold mb-0">
-            {{ isEditing ? 'Edit Blog Article' : 'Create New Article' }}
+            {{ isEditing ? "Edit Blog Article" : "Create New Article" }}
           </h3>
-          <button @click="closeModal" class="btn-close-modal border-0 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <button
+            @click="closeModal"
+            class="btn-close-modal border-0 rounded-circle d-flex align-items-center justify-content-center"
+            style="width: 36px; height: 36px"
+          >
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
-        
+
         <form @submit.prevent="submitForm">
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label small fw-bold">ARTICLE TITLE</label>
-              <input v-model="form.title" type="text" class="form-control rounded-pill px-4 py-2 bg-surface" placeholder="Enter blog title..." required>
+              <input
+                v-model="form.title"
+                type="text"
+                class="form-control rounded-pill px-4 py-2 bg-surface"
+                placeholder="Enter blog title..."
+                required
+              />
             </div>
-            
+
             <div class="col-md-6">
               <label class="form-label small fw-bold">CATEGORY</label>
-              <select v-model="form.category_id" class="form-select rounded-pill px-4 py-2 bg-surface">
-                <option v-for="cat in activeCategories" :key="cat.id" :value="cat.id.toString()">
+              <select
+                v-model="form.category_id"
+                class="form-select rounded-pill px-4 py-2 bg-surface"
+              >
+                <option
+                  v-for="cat in activeCategories"
+                  :key="cat.id"
+                  :value="cat.id.toString()"
+                >
                   {{ cat.name || cat.title }}
                 </option>
               </select>
             </div>
-            
+
             <div class="col-md-6">
               <label class="form-label small fw-bold">STATUS</label>
-              <select v-model="form.status" class="form-select rounded-pill px-4 py-2 bg-surface">
+              <select
+                v-model="form.status"
+                class="form-select rounded-pill px-4 py-2 bg-surface"
+              >
                 <option value="published">Published</option>
                 <option value="draft">Draft</option>
               </select>
             </div>
-            
+
             <div class="col-12">
               <label class="form-label small fw-bold">THUMBNAIL IMAGE</label>
-              <div class="thumbnail-dropzone rounded-4 border-dashed border p-3 text-center position-relative transition-all bg-surface-hover">
-                <input type="file" @change="handleFileChange" accept="image/*" class="position-absolute w-100 h-100 top-0 start-0 opacity-0 cursor-pointer">
-                <div v-if="thumbnailPreview" class="d-flex flex-column align-items-center">
-                  <img :src="thumbnailPreview" class="img-preview rounded-3 mb-2 border" style="max-height: 120px; max-width: 100%; object-fit: cover;">
-                  <span class="text-purple small fw-semibold">Click to replace thumbnail</span>
+              <div
+                class="thumbnail-dropzone rounded-4 border-dashed border p-3 text-center position-relative transition-all bg-surface-hover"
+              >
+                <input
+                  type="file"
+                  @change="handleFileChange"
+                  accept="image/*"
+                  class="position-absolute w-100 h-100 top-0 start-0 opacity-0 cursor-pointer"
+                />
+                <div
+                  v-if="thumbnailPreview"
+                  class="d-flex flex-column align-items-center"
+                >
+                  <img
+                    :src="thumbnailPreview"
+                    class="img-preview rounded-3 mb-2 border"
+                    style="
+                      max-height: 120px;
+                      max-width: 100%;
+                      object-fit: cover;
+                    "
+                  />
+                  <span class="text-purple small fw-semibold"
+                    >Click to replace thumbnail</span
+                  >
                 </div>
                 <div v-else class="text-center py-3">
                   <i class="bi bi-image text-muted display-6 mb-2 d-block"></i>
-                  <span class="text-muted small">Drag & drop or click to upload thumbnail</span>
+                  <span class="text-muted small"
+                    >Drag & drop or click to upload thumbnail</span
+                  >
                 </div>
               </div>
             </div>
 
             <div class="col-12">
-              <label class="form-label small fw-bold">CONTENT / DESCRIPTION</label>
-              <textarea v-model="form.description" class="form-control rounded-4 px-4 py-3 bg-surface" rows="4" placeholder="Enter description/content..." required></textarea>
+              <label class="form-label small fw-bold"
+                >CONTENT / DESCRIPTION</label
+              >
+              <textarea
+                v-model="form.description"
+                class="form-control rounded-4 px-4 py-3 bg-surface"
+                rows="4"
+                placeholder="Enter description/content..."
+                required
+              ></textarea>
             </div>
-            
+
             <div class="col-12 d-flex justify-content-end gap-3 mt-4">
-              <button type="button" @click="closeModal" class="btn-light rounded-pill px-4 py-2 fw-bold border text-muted">
+              <button
+                type="button"
+                @click="closeModal"
+                class="btn-light rounded-pill px-4 py-2 fw-bold border text-muted"
+              >
                 Cancel
               </button>
-              <button type="submit" class="btn-purple rounded-pill px-4 py-2 fw-bold text-white d-flex align-items-center gap-2">
-                <span v-if="blogStore.isLoading" class="spinner-border spinner-border-sm" role="status"></span>
-                <span>{{ isEditing ? 'Save Changes' : 'Publish Article' }}</span>
+              <button
+                type="submit"
+                class="btn-purple rounded-pill px-4 py-2 fw-bold text-white d-flex align-items-center gap-2"
+              >
+                <span
+                  v-if="blogStore.isLoading"
+                  class="spinner-border spinner-border-sm"
+                  role="status"
+                ></span>
+                <span>{{
+                  isEditing ? "Save Changes" : "Publish Article"
+                }}</span>
               </button>
             </div>
           </div>
@@ -646,7 +823,11 @@ const formatNumber = (num) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent 0%, var(--color-shadow, rgba(0,0,0,0.1)) 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-shadow, rgba(0, 0, 0, 0.1)) 100%
+  );
   pointer-events: none;
 }
 
@@ -1075,7 +1256,14 @@ const formatNumber = (num) => {
 
 .blog-card:hover {
   transform: translateY(-4px);
-  filter: drop-shadow(0 18px 28px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.14)) 72%, transparent));
+  filter: drop-shadow(
+    0 18px 28px
+      color-mix(
+        in srgb,
+        var(--color-shadow, rgba(15, 23, 42, 0.14)) 72%,
+        transparent
+      )
+  );
 }
 
 .blog-card-surface {
@@ -1083,11 +1271,20 @@ const formatNumber = (num) => {
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, var(--color-purple) 4%), var(--color-surface));
-  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-surface) 96%, var(--color-purple) 4%),
+    var(--color-surface)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
   border-radius: inherit;
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.12)) 50%, transparent);
+  box-shadow: 0 1px 2px
+    color-mix(
+      in srgb,
+      var(--color-shadow, rgba(15, 23, 42, 0.12)) 50%,
+      transparent
+    );
   transition:
     border-color 260ms ease,
     box-shadow 260ms ease,
@@ -1095,14 +1292,19 @@ const formatNumber = (num) => {
 }
 
 .blog-card:hover .blog-card-surface {
-  border-color: color-mix(in srgb, var(--color-purple) 42%, var(--color-border));
+  border-color: color-mix(
+    in srgb,
+    var(--color-purple) 42%,
+    var(--color-border)
+  );
   box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 42%, transparent);
 }
 
 .post-image-container {
   height: 220px;
   background: var(--color-surface-hover);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--color-border) 82%, transparent);
 }
 
 .post-img-zoom {
@@ -1110,7 +1312,9 @@ const formatNumber = (num) => {
   height: 100%;
   object-fit: cover;
   transform: scale(1);
-  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms ease;
+  transition:
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 300ms ease;
 }
 
 .blog-card:hover .post-img-zoom {
@@ -1120,7 +1324,12 @@ const formatNumber = (num) => {
 
 .post-category-tag {
   border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.12)) 38%, transparent);
+  box-shadow: 0 8px 18px
+    color-mix(
+      in srgb,
+      var(--color-shadow, rgba(15, 23, 42, 0.12)) 38%,
+      transparent
+    );
 }
 
 .post-content {
@@ -1140,7 +1349,9 @@ const formatNumber = (num) => {
 }
 
 .read-more-link {
-  transition: transform 220ms ease, color 220ms ease;
+  transition:
+    transform 220ms ease,
+    color 220ms ease;
 }
 
 .blog-card:hover .read-more-link {
@@ -1151,8 +1362,14 @@ const formatNumber = (num) => {
   overflow: hidden;
   pointer-events: none;
   background: var(--color-surface);
-  border: 1px solid color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow, rgba(15, 23, 42, 0.12)) 50%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
+  box-shadow: 0 1px 2px
+    color-mix(
+      in srgb,
+      var(--color-shadow, rgba(15, 23, 42, 0.12)) 50%,
+      transparent
+    );
 }
 
 .skeleton-media {
@@ -1173,7 +1390,12 @@ const formatNumber = (num) => {
   background: linear-gradient(
     90deg,
     var(--color-surface-hover) 0%,
-    color-mix(in srgb, var(--color-surface-hover) 72%, var(--color-text-muted) 28%) 48%,
+    color-mix(
+        in srgb,
+        var(--color-surface-hover) 72%,
+        var(--color-text-muted) 28%
+      )
+      48%,
     var(--color-surface-hover) 100%
   );
   background-size: 220% 100%;
@@ -1188,11 +1410,23 @@ const formatNumber = (num) => {
   border-radius: 999px;
 }
 
-.skeleton-line-sm { width: 38%; }
-.skeleton-line-lg { width: 88%; height: 22px; }
-.skeleton-line-md { width: 72%; height: 18px; }
-.skeleton-line-xs { width: 52%; }
-.skeleton-line-author { width: 92px; }
+.skeleton-line-sm {
+  width: 38%;
+}
+.skeleton-line-lg {
+  width: 88%;
+  height: 22px;
+}
+.skeleton-line-md {
+  width: 72%;
+  height: 18px;
+}
+.skeleton-line-xs {
+  width: 52%;
+}
+.skeleton-line-author {
+  width: 92px;
+}
 
 .skeleton-author {
   display: flex;
@@ -1241,9 +1475,15 @@ const formatNumber = (num) => {
 }
 
 /* Utility Text Styles */
-.text-xs { font-size: 0.75rem; }
-.text-xxs { font-size: 0.65rem; }
-.text-sm { font-size: 0.875rem; }
+.text-xs {
+  font-size: 0.75rem;
+}
+.text-xxs {
+  font-size: 0.65rem;
+}
+.text-sm {
+  font-size: 0.875rem;
+}
 
 .line-clamp-2 {
   display: -webkit-box;
@@ -1309,7 +1549,8 @@ const formatNumber = (num) => {
   cursor: pointer;
 }
 
-.form-control, .form-select {
+.form-control,
+.form-select {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text);

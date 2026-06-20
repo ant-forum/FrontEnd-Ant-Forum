@@ -1,14 +1,14 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { useForumStore } from '@/stores/ForumStore';
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { useForumStore } from "@/stores/ForumStore";
 
 // Disable automatic attribute inheritance
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 });
 
-const emit = defineEmits(['selectTab']);
+const emit = defineEmits(["selectTab"]);
 
 const router = useRouter();
 const route = useRoute();
@@ -17,20 +17,31 @@ const forumStore = useForumStore();
 const isDrawerMobileOpen = ref(false);
 
 const getCategoryIcon = (category) => {
-  const label = String(category.name || category.label || category.type || '').toLowerCase();
-  if (label.includes('question') || label.includes('answer')) return 'bi-question-circle';
-  if (label.includes('tutorial') || label.includes('guide')) return 'bi-book';
-  if (label.includes('showcase') || label.includes('project')) return 'bi-rocket-takeoff';
-  if (label.includes('announce') || label.includes('news')) return 'bi-megaphone';
-  if (label.includes('resource') || label.includes('link')) return 'bi-link-45deg';
-  if (label.includes('idea') || label.includes('feature')) return 'bi-lightbulb';
-  return 'bi-chat-left-text';
+  const label = String(
+    category.name || category.label || category.type || "",
+  ).toLowerCase();
+  if (label.includes("question") || label.includes("answer"))
+    return "bi-question-circle";
+  if (label.includes("tutorial") || label.includes("guide")) return "bi-book";
+  if (label.includes("showcase") || label.includes("project"))
+    return "bi-rocket-takeoff";
+  if (label.includes("announce") || label.includes("news"))
+    return "bi-megaphone";
+  if (label.includes("resource") || label.includes("link"))
+    return "bi-link-45deg";
+  if (label.includes("idea") || label.includes("feature"))
+    return "bi-lightbulb";
+  return "bi-chat-left-text";
 };
 
 const displayCategories = computed(() => {
   return forumStore.categories.map((category) => ({
     id: String(category.id),
-    label: category.name || category.label || category.type || `Category ${category.id}`,
+    label:
+      category.name ||
+      category.label ||
+      category.type ||
+      `Category ${category.id}`,
     icon: category.icon || getCategoryIcon(category),
   }));
 });
@@ -38,16 +49,18 @@ const displayCategories = computed(() => {
 const handleItemClick = (category, tabId) => {
   isDrawerMobileOpen.value = false;
   const query = {};
-  
+
   if (category) query.category = category;
   if (tabId) query.tab = tabId;
 
   // We are always routing to /forum with these queries for navigation
-  router.push({ path: '/forum', query });
+  router.push({ path: "/forum", query });
 };
 
 // Computed active states
-const isCategoryActive = (cat) => route.query.category === cat || (!route.query.category && !route.query.tab && cat === 'all');
+const isCategoryActive = (cat) =>
+  route.query.category === cat ||
+  (!route.query.category && !route.query.tab && cat === "all");
 const isTabActive = (tab) => route.query.tab === tab;
 
 onMounted(() => {
@@ -59,16 +72,27 @@ onMounted(() => {
 
 <template>
   <!-- Mobile Toggle Button -->
-  <button class="sidebar-mobile-toggle-btn d-lg-none" @click="isDrawerMobileOpen = !isDrawerMobileOpen">
+  <button
+    class="sidebar-mobile-toggle-btn d-lg-none"
+    @click="isDrawerMobileOpen = !isDrawerMobileOpen"
+  >
     <i class="bi bi-grid-fill"></i>
   </button>
 
   <!-- Mobile Backdrop -->
   <transition name="fade">
-    <div v-if="isDrawerMobileOpen" class="sidebar-mobile-backdrop" @click="isDrawerMobileOpen = false"></div>
+    <div
+      v-if="isDrawerMobileOpen"
+      class="sidebar-mobile-backdrop"
+      @click="isDrawerMobileOpen = false"
+    ></div>
   </transition>
 
-  <aside class="left-sidebar-navigation" :class="{ 'mobile-open': isDrawerMobileOpen }" v-bind="$attrs">
+  <aside
+    class="left-sidebar-navigation"
+    :class="{ 'mobile-open': isDrawerMobileOpen }"
+    v-bind="$attrs"
+  >
     <!-- Forum Directory Header -->
     <div class="sidebar-header">
       <h2 class="sidebar-title">Forum Directory</h2>
@@ -87,20 +111,20 @@ onMounted(() => {
     <div class="sidebar-section">
       <h3 class="section-heading">EXPLORE</h3>
       <div class="sidebar-menu">
-        <button 
-          class="sidebar-menu-item" 
-          :class="{ active: isCategoryActive('all') }" 
+        <button
+          class="sidebar-menu-item"
+          :class="{ active: isCategoryActive('all') }"
           @click="handleItemClick('all', null)"
         >
           <i class="bi bi-globe2"></i>
           <span>All Discussions</span>
         </button>
 
-        <button 
+        <button
           v-for="category in displayCategories"
           :key="category.id"
-          class="sidebar-menu-item" 
-          :class="{ active: isCategoryActive(category.id) }" 
+          class="sidebar-menu-item"
+          :class="{ active: isCategoryActive(category.id) }"
           @click="handleItemClick(category.id, null)"
         >
           <i :class="['bi', category.icon]"></i>
@@ -109,27 +133,32 @@ onMounted(() => {
       </div>
     </div>
 
-    <hr class="sidebar-divider">
+    <hr class="sidebar-divider" />
 
     <!-- Your Content Section -->
     <div class="sidebar-section">
       <h3 class="section-heading">YOUR STUFF</h3>
       <div class="sidebar-menu">
-        <button 
-          class="sidebar-menu-item" 
-          :class="{ active: isTabActive('myposts') }" 
+        <button
+          class="sidebar-menu-item"
+          :class="{ active: isTabActive('myposts') }"
           @click="handleItemClick(null, 'myposts')"
         >
           <i class="bi bi-journal-text"></i>
           <span>My Discussions</span>
         </button>
 
-        <button 
-          class="sidebar-menu-item" 
-          :class="{ active: isTabActive('saves') }" 
+        <button
+          class="sidebar-menu-item"
+          :class="{ active: isTabActive('saves') }"
           @click="handleItemClick(null, 'saves')"
         >
-          <i :class="['bi', isTabActive('saves') ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
+          <i
+            :class="[
+              'bi',
+              isTabActive('saves') ? 'bi-bookmark-fill' : 'bi-bookmark',
+            ]"
+          ></i>
           <span>Saved Posts</span>
         </button>
       </div>
@@ -254,7 +283,11 @@ onMounted(() => {
   gap: 8px;
   width: 100%;
   padding: 12px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-purple) 100%
+  );
   color: white;
   border: none;
   border-radius: 10px;
@@ -327,11 +360,13 @@ onMounted(() => {
   z-index: 9996;
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.25s ease;
 }
 
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 
