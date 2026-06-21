@@ -1016,7 +1016,7 @@ export const useForumStore = defineStore("forum", () => {
 
   const deleteComment = async (id) => {
     try {
-      const res = await api.delete(`/api/comments/forum/${id}`);
+      const res = await api.delete(`/api/comments/delete/${id}`);
 
       if (res.data.result) {
         comments.value = comments.value.filter((item) => item.id !== id);

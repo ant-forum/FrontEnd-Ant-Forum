@@ -261,7 +261,7 @@
 
                 <div v-else class="d-flex flex-column gap-3">
                   <div
-                    v-for="act in profile.activity"
+                    v-for="act in visibleActivity"
                     :key="act.id || act.title"
                     class="activity-row-modern p-3 d-flex align-items-center gap-3"
                     style="cursor: pointer"
@@ -283,47 +283,23 @@
                       >
                     </div>
                   </div>
+                  
+                  <button 
+                    v-if="profile.activity.length > activityLimit"
+                    @click="activityLimit += 4"
+                    class="btn btn-light border mt-2 w-100 fw-bold themed-text"
+                    style="border-radius: var(--radius-md);"
+                  >
+                    Load More Activity
+                  </button>
                 </div>
               </div>
             </div>
 
             <!-- Right Info Block -->
-            <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
+            <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4 sticky-sidebar-column">
               <!-- Stack Proficiency -->
               <div class="dashboard-card-modern p-4">
-                <div class="d-flex align-items-center gap-2 mb-4">
-                  <div class="heading-accent"></div>
-                  <h6
-                    class="themed-text fw-bold mb-0"
-                    style="font-size: 0.9rem; letter-spacing: 0.3px"
-                  >
-                    Platform Statistics
-                  </h6>
-                </div>
-
-                <div class="row g-3 mb-4">
-                  <div class="col-6">
-                    <div class="stat-card-mini text-center p-3">
-                      <div class="stat-icon mx-auto mb-2 rep-icon">
-                        <i class="bi bi-award-fill"></i>
-                      </div>
-                      <div class="stat-num">1.2k</div>
-                      <div class="stat-label">REPUTATION</div>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="stat-card-mini text-center p-3">
-                      <div class="stat-icon mx-auto mb-2 engage-icon">
-                        <i class="bi bi-lightning-charge-fill"></i>
-                      </div>
-                      <div class="stat-num">92%</div>
-                      <div class="stat-label">ENGAGEMENT</div>
-                    </div>
-                  </div>
-                </div>
-
-                <hr class="my-3 border-slate" />
-
                 <h6
                   class="text-muted text-uppercase fw-bold mb-3"
                   style="font-size: 0.7rem; letter-spacing: 0.5px"
@@ -603,6 +579,8 @@ const showSendMessageModal = ref(false);
 // Tab state: 'profile' | 'projects'
 const activeTab = ref("profile");
 const isLoading = ref(true);
+const activityLimit = ref(4);
+const visibleActivity = computed(() => profile.activity.slice(0, activityLimit.value));
 const isFollowing = ref(false);
 
 const profile = reactive({
@@ -845,6 +823,13 @@ const handleSendMessage = () => {
   color: var(--color-text) !important;
 }
 
+.sticky-sidebar-column {
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  z-index: 10;
+}
+
 /* Sidebar Styling */
 .sidebar-card-modern {
   background: var(--color-surface) !important;
@@ -855,6 +840,10 @@ const handleSendMessage = () => {
   flex-direction: column;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
   transition: all var(--transition-slow);
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  z-index: 10;
 }
 .sidebar-card-modern:hover {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
