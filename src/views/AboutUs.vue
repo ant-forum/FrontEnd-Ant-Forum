@@ -184,7 +184,7 @@ const stats = [
               <i class="bi bi-award-fill text-purple fs-2"></i>
               <h2
                 class="fw-bold text-purple mb-0 display-6 text-uppercase"
-                style="font-family: &quot;Kantumruy Pro&quot;, sans-serif"
+                style="font-family: sans-serif"
               >
                 សេចក្ដីថ្លែងអំណរគុណ
               </h2>
