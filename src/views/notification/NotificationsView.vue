@@ -4,9 +4,13 @@ import { useRouter } from 'vue-router';
 import Navbar from "../../components/layouts/header.vue";
 import Footer from "../../components/layouts/footer.vue";
 import { useNotificationStore } from "../../stores/NotificationStore";
+import { useToast } from "../../composables/useToast";
+import { useTimeFormat } from "../../composables/useTimeFormat";
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
+const toast = useToast();
+const { formatFullTime } = useTimeFormat();
 
 // Active filter state: 'all' | 'unread' | 'read' | 'reply' | 'like' | 'mention' | 'system'
 const activeFilter = ref('all');
@@ -67,8 +71,17 @@ const getCount = (filterType) => {
 };
 
 // Handlers
+<<<<<<< HEAD
 const handleNotificationClick = async (item) => {
   await notificationStore.routeToNotification(item, router);
+=======
+const handleNotificationClick = async (e, item) => {
+  if (e.target.closest('.actions-wrap')) return;
+  await notificationStore.markAsRead(item.id);
+  if (item.link) {
+    router.push(item.link);
+  }
+>>>>>>> dev
 };
 
 const handleToggleRead = async (e, item) => {
@@ -84,7 +97,12 @@ const handleToggleRead = async (e, item) => {
 
 const handleDeleteClick = async (e, id) => {
   e.stopPropagation();
-  await notificationStore.deleteNotification(id);
+  try {
+    await notificationStore.deleteNotification(id);
+    toast.success("Notification deleted successfully");
+  } catch (error) {
+    toast.error("Failed to delete notification");
+  }
 };
 
 const handleMarkAllRead = async () => {
@@ -94,19 +112,8 @@ const handleMarkAllRead = async () => {
 const handleClearAll = () => {
   if (confirm("Are you sure you want to delete all notifications? This cannot be undone.")) {
     notificationStore.clearNotifications();
+    toast.success("All notifications deleted successfully");
   }
-};
-
-const formatFullTime = (dateStr) => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return date.toLocaleString(undefined, { 
-    weekday: 'short', 
-    month: 'short', 
-    day: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
 };
 
 const getNotificationIcon = (type) => {
@@ -252,7 +259,7 @@ const getNotificationIcon = (type) => {
             <div 
               v-for="item in visibleNotifications" 
               :key="item.id" 
-              @click="handleNotificationClick(item)" 
+              @click="handleNotificationClick($event, item)" 
               class="notification-card-item p-4 rounded-4 shadow-sm d-flex gap-4 align-items-start transition-all cursor-pointer border border-theme"
               :class="{ 'unread': !item.read }"
             >
@@ -301,7 +308,7 @@ const getNotificationIcon = (type) => {
               </div>
 
               <!-- Action Buttons Column -->
-              <div class="actions-wrap flex-shrink-0 dropdown" @click.stop>
+              <div class="actions-wrap flex-shrink-0 dropdown">
                 <button 
                   class="btn btn-circle-action border-0" 
                   type="button" 
@@ -346,18 +353,15 @@ const getNotificationIcon = (type) => {
 </template>
 
 <style scoped>
-/* ╔══════════════════════════════════════════════╗
-   ║  ANT FORUM — PREMIUM NOTIFICATIONS           ║
-   ╚══════════════════════════════════════════════╝ */
 
 .notifications-premium-page {
   min-height: 100vh;
   background: 
     linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
     linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-    #080d18;
+    var(--color-bg);
   background-size: 34px 34px;
-  color: #f8fafc;
+  color: var(--color-text);
   padding-bottom: 60px;
   position: relative;
   overflow-x: clip;
@@ -413,10 +417,10 @@ const getNotificationIcon = (type) => {
 }
 
 .glass-panel {
-  background: rgba(16, 24, 39, 0.65);
+  background: var(--color-glass-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   border-radius: 20px;
 }
 
@@ -429,13 +433,13 @@ const getNotificationIcon = (type) => {
 }
 
 .border-slate {
-  border-color: rgba(148, 163, 184, 0.14) !important;
+  border-color: var(--color-border) !important;
 }
 
 .sidebar-section-title {
   font-size: 0.75rem;
   letter-spacing: 0.8px;
-  color: #9aa5b6 !important;
+  color: var(--color-text-muted) !important;
 }
 
 .sidebar-nav {
@@ -450,7 +454,7 @@ const getNotificationIcon = (type) => {
   padding: 10px 14px !important;
   border: none !important;
   background: transparent !important;
-  color: #9aa5b6 !important;
+  color: var(--color-text-muted) !important;
   font-weight: 600 !important;
   font-size: 0.9rem !important;
   border-radius: 12px !important;
@@ -461,23 +465,23 @@ const getNotificationIcon = (type) => {
 }
 
 .filter-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: #f8fafc !important;
+  background: var(--color-surface-hover) !important;
+  color: var(--color-text) !important;
 }
 
 .filter-nav-btn.active {
-  background: rgba(99, 102, 241, 0.15) !important;
-  color: #818cf8 !important;
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
 }
 
 .sidebar-badge {
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: #9aa5b6 !important;
+  background: var(--color-surface-hover) !important;
+  color: var(--color-text-muted) !important;
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   padding: 2px 8px !important;
   border-radius: 999px !important;
-  border: 1px solid rgba(148, 163, 184, 0.14) !important;
+  border: 1px solid var(--color-border) !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -487,9 +491,9 @@ const getNotificationIcon = (type) => {
 }
 
 .filter-nav-btn.active .sidebar-badge {
-  background: #6366f1 !important;
-  color: white !important;
-  border-color: #6366f1 !important;
+  background: var(--color-primary) !important;
+  color: #fff !important;
+  border-color: var(--color-primary) !important;
 }
 
 /* modern search inputs */
@@ -498,13 +502,13 @@ const getNotificationIcon = (type) => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 1.05rem;
-  color: #9aa5b6 !important;
+  color: var(--color-text-muted) !important;
 }
 
 .form-control {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  color: #f8fafc;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   border-radius: 12px;
   padding: 10px 14px;
   font-weight: 500;
@@ -512,22 +516,22 @@ const getNotificationIcon = (type) => {
 }
 
 .form-control:focus {
-  background: rgba(0, 0, 0, 0.3);
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-  color: #f8fafc;
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+  color: var(--color-text);
 }
 
 .form-control::placeholder {
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 /* Action Buttons Header */
 .btn-action-modern {
-  background: rgba(16, 24, 39, 0.65);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  color: #e2e8f0;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   font-weight: 600;
   font-size: 0.85rem;
   padding: 8px 16px;
@@ -536,9 +540,9 @@ const getNotificationIcon = (type) => {
 }
 
 .btn-action-modern:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f8fafc;
-  border-color: #6366f1;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border-color: var(--color-primary);
 }
 
 .btn-clear-all:hover {
@@ -560,9 +564,9 @@ const getNotificationIcon = (type) => {
 
 /* Notifications feed items */
 .notification-card-item {
-  background: rgba(16, 24, 39, 0.65);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(148, 163, 184, 0.08);
+  border: 1px solid var(--color-border-soft);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 16px;
   position: relative;
@@ -574,22 +578,22 @@ const getNotificationIcon = (type) => {
 .notification-card-item:has(.dropdown-menu.show) {
   z-index: 50;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-  border-color: rgba(99, 102, 241, 0.3) !important;
-  background: rgba(30, 41, 59, 0.7);
+  box-shadow: var(--shadow-lg) !important;
+  border-color: var(--color-primary-light) !important;
+  background: var(--color-surface-hover);
 }
 
 .notification-card-item.unread {
-  background: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.3) !important;
+  background: var(--color-primary-light);
+  border-color: var(--color-primary-light) !important;
 }
 
 .sender-avatar {
-  border: 2px solid rgba(148, 163, 184, 0.2);
+  border: 2px solid var(--color-border);
 }
 
 .fallback-icon-wrap {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface-hover);
 }
 
 .badge-icon-badge {
@@ -597,25 +601,25 @@ const getNotificationIcon = (type) => {
   right: -4px;
   width: 22px;
   height: 22px;
-  background: #1e293b;
-  border: 1.5px solid #0f172a;
+  background: var(--color-surface-elevated);
+  border: 1.5px solid var(--color-bg);
   font-size: 10px;
 }
 
 .title-text {
   font-size: 1.05rem;
-  color: #f8fafc;
+  color: var(--color-text);
 }
 
 .message-text {
   font-size: 0.92rem;
   line-height: 1.5;
-  color: #94a3b8 !important;
+  color: var(--color-text-muted) !important;
 }
 
 .time-text {
   font-size: 0.8rem;
-  color: #64748b !important;
+  color: var(--color-secondary) !important;
 }
 
 .py-1-5 {
@@ -647,38 +651,38 @@ const getNotificationIcon = (type) => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(148, 163, 184, 0.14) !important;
-  color: #9aa5b6;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-muted);
   transition: all 0.3s ease;
 }
 
 .btn-circle-action:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: #6366f1 !important;
-  color: #818cf8;
+  background: var(--color-primary-light);
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary);
 }
 
 .btn-delete:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444 !important;
-  color: #ef4444;
+  background: var(--color-danger-light);
+  border-color: var(--color-danger) !important;
+  color: var(--color-danger);
 }
 
 /* Empty State Card */
 .empty-state-card {
-  background: rgba(16, 24, 39, 0.4);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
-  border: 1px dashed rgba(148, 163, 184, 0.2);
+  border: 1px dashed var(--color-border);
   min-height: 350px;
 }
 
 .empty-icon-wrap {
   width: 72px;
   height: 72px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-surface-hover);
   font-size: 2rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .max-width-p {
@@ -687,15 +691,15 @@ const getNotificationIcon = (type) => {
 
 /* Skeleton Loading animations */
 .skeleton-card {
-  background: rgba(16, 24, 39, 0.65);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   overflow: hidden;
 }
 
 .skeleton-avatar {
   width: 48px;
   height: 48px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background: linear-gradient(90deg, var(--color-border-soft) 25%, var(--color-border) 50%, var(--color-border-soft) 75%);
   background-size: 200% 100%;
   animation: pulse-glow-skel 1.5s infinite;
 }
@@ -704,7 +708,7 @@ const getNotificationIcon = (type) => {
   width: 70%;
   height: 14px;
   border-radius: 4px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background: linear-gradient(90deg, var(--color-border-soft) 25%, var(--color-border) 50%, var(--color-border-soft) 75%);
   background-size: 200% 100%;
   animation: pulse-glow-skel 1.5s infinite;
 }
@@ -713,7 +717,7 @@ const getNotificationIcon = (type) => {
   width: 40%;
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background: linear-gradient(90deg, var(--color-border-soft) 25%, var(--color-border) 50%, var(--color-border-soft) 75%);
   background-size: 200% 100%;
   animation: pulse-glow-skel 1.5s infinite;
 }
@@ -741,64 +745,64 @@ const getNotificationIcon = (type) => {
 }
 
 .badge-type-reply {
-  background: rgba(99, 102, 241, 0.15) !important;
-  color: #a5b4fc !important;
-  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  background: var(--color-tag-indigo-bg) !important;
+  color: var(--color-tag-indigo-text) !important;
+  border: 1px solid var(--color-primary-light) !important;
 }
 
 .badge-type-like {
-  background: rgba(239, 68, 68, 0.15) !important;
-  color: #fca5a5 !important;
-  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  background: var(--color-tag-red-bg) !important;
+  color: var(--color-tag-red-text) !important;
+  border: 1px solid var(--color-danger-light) !important;
 }
 
 .badge-type-mention {
-  background: rgba(245, 158, 11, 0.15) !important;
-  color: #fcd34d !important;
-  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  background: var(--color-warning-light) !important;
+  color: var(--color-warning) !important;
+  border: 1px solid var(--color-warning-light) !important;
 }
 
 .badge-type-system {
-  background: rgba(16, 185, 129, 0.15) !important;
-  color: #6ee7b7 !important;
-  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  background: var(--color-success-light) !important;
+  color: var(--color-success) !important;
+  border: 1px solid var(--color-success-light) !important;
 }
 
 /* Muted badge for old/read items */
 .bg-secondary-subtle {
-  background-color: rgba(148, 163, 184, 0.1) !important;
+  background-color: var(--color-surface-hover) !important;
 }
 .border-secondary-subtle {
-  border-color: rgba(148, 163, 184, 0.2) !important;
+  border-color: var(--color-border) !important;
 }
 
 .bg-primary-subtle {
-  background-color: rgba(99, 102, 241, 0.1) !important;
+  background-color: var(--color-primary-light) !important;
 }
 .border-primary-subtle {
-  border-color: rgba(99, 102, 241, 0.3) !important;
+  border-color: var(--color-primary-light) !important;
 }
 
 .text-adaptive {
-  color: #f8fafc !important;
+  color: var(--color-text) !important;
 }
 
 p.text-muted {
-  color: #94a3b8 !important;
+  color: var(--color-text-muted) !important;
 }
 
 /* Custom Dropdown Menu for 3-dots */
 .custom-dropdown-menu {
-  background: rgba(16, 24, 39, 0.85);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 8px 0;
   min-width: 200px;
 }
 
 .custom-dropdown-menu .dropdown-item {
-  color: #f8fafc;
+  color: var(--color-text);
   padding: 10px 16px;
   font-size: 0.9rem;
   font-weight: 500;
@@ -807,19 +811,19 @@ p.text-muted {
 
 .custom-dropdown-menu .dropdown-item:hover,
 .custom-dropdown-menu .dropdown-item:focus {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f8fafc;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
   outline: none;
 }
 
 .custom-dropdown-menu .dropdown-item.action-delete:hover,
 .custom-dropdown-menu .dropdown-item.action-delete:focus {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444 !important;
+  background: var(--color-danger-light);
+  color: var(--color-danger) !important;
 }
 
 .custom-divider {
-  border-top-color: rgba(148, 163, 184, 0.14);
+  border-top-color: var(--color-border);
   margin: 4px 0;
 }
 </style>
