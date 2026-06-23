@@ -2,7 +2,6 @@
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import { Markdown } from "tiptap-markdown";
@@ -32,7 +31,6 @@ const emit = defineEmits(["update:modelValue", "focus", "blur"]);
 const toast = useToast();
 
 const editor = ref(null);
-const imageInputRef = ref(null);
 const isEditorFocused = ref(false);
 const wordCount = ref(0);
 const charCount = ref(0);
@@ -166,10 +164,6 @@ onMounted(() => {
     extensions: [
       StarterKit,
       Markdown,
-      Image.configure({
-        inline: true,
-        allowBase64: true,
-      }),
       Placeholder.configure({
         placeholder: props.placeholder,
       }),
@@ -250,25 +244,6 @@ const setHorizontalRule = () =>
 const undo = () => editor.value?.chain().focus().undo().run();
 const redo = () => editor.value?.chain().focus().redo().run();
 
-const triggerImageUpload = () => {
-  imageInputRef.value?.click();
-};
-
-const handleImageUpload = async (event) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  const imageUrl = URL.createObjectURL(file);
-  editor.value
-    ?.chain()
-    .focus()
-    .setImage({ src: imageUrl, alt: file.name })
-    .run();
-
-  event.target.value = "";
-  toast.success("Image reference inserted!");
-};
-
 const setLink = () => {
   const previousUrl = editor.value?.getAttributes("link").href;
   const url = window.prompt("URL", previousUrl);
@@ -295,14 +270,6 @@ const showTextMenu = ref(false);
 
 <template>
   <div class="editor-container" :class="{ focused: isEditorFocused }">
-    <input
-      ref="imageInputRef"
-      type="file"
-      accept="image/*"
-      hidden
-      @change="handleImageUpload"
-    />
-
     <div v-if="editor" class="editor-toolbar">
       <div class="toolbar-left">
         <!-- Text Type Dropdown -->
@@ -438,14 +405,6 @@ const showTextMenu = ref(false);
             title="Blockquote"
           >
             <i class="bi bi-quote"></i>
-          </button>
-          <button
-            type="button"
-            @mousedown.prevent="triggerImageUpload"
-            class="toolbar-btn"
-            title="Upload Image"
-          >
-            <i class="bi bi-card-image"></i>
           </button>
         </div>
 

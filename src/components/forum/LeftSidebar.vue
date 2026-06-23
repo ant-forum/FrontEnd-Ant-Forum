@@ -170,10 +170,6 @@ onMounted(() => {
         <i class="bi bi-file-earmark-text"></i>
         <span>Forum Guidelines</span>
       </router-link>
-      <router-link to="/help" class="footer-link">
-        <i class="bi bi-info-circle"></i>
-        <span>Help & Support</span>
-      </router-link>
     </div>
   </aside>
 </template>

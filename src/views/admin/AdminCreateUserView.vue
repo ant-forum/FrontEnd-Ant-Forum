@@ -99,7 +99,8 @@
             <label>Role</label>
             <select v-model="form.role" class="form-select">
               <option value="student">Student</option>
-              <option value="mentor">Mentor</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
         </div>

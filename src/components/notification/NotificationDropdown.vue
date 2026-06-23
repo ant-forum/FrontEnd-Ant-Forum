@@ -34,11 +34,8 @@ const handleOutsideClick = (e) => {
 };
 
 const handleNotificationClick = async (item) => {
-  await notificationStore.markAsRead(item.id);
   emit('close');
-  if (item.link) {
-    router.push(item.link);
-  }
+  await notificationStore.routeToNotification(item, router);
 };
 
 const handleDeleteClick = async (e, id) => {

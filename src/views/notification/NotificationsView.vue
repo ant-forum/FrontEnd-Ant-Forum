@@ -71,12 +71,17 @@ const getCount = (filterType) => {
 };
 
 // Handlers
+<<<<<<< HEAD
+const handleNotificationClick = async (item) => {
+  await notificationStore.routeToNotification(item, router);
+=======
 const handleNotificationClick = async (e, item) => {
   if (e.target.closest('.actions-wrap')) return;
   await notificationStore.markAsRead(item.id);
   if (item.link) {
     router.push(item.link);
   }
+>>>>>>> dev
 };
 
 const handleToggleRead = async (e, item) => {

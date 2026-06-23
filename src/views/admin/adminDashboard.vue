@@ -161,7 +161,6 @@
                     <tr>
                       <th>Item</th>
                       <th>Owner</th>
-                      <th>Status</th>
                       <th class="text-end">Action</th>
                     </tr>
                   </thead>
@@ -181,11 +180,6 @@
                         </div>
                       </td>
                       <td class="text-muted small">{{ item.owner }}</td>
-                      <td>
-                        <span :class="['status-pill', item.statusClass]">{{
-                          item.status
-                        }}</span>
-                      </td>
                       <td class="text-end">
                         <router-link
                           class="btn btn-light btn-sm border"
@@ -281,10 +275,12 @@ import StatCard from "../../components/admin/StatCard.vue";
 import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
 import { useProjectStore } from "../../stores/ProjectStore";
 import { useReportStore } from "../../stores/ReportStore";
+import { useForumStore } from "../../stores/ForumStore";
 
 const adminStore = useAdminOperationsStore();
 const projectStore = useProjectStore();
 const reportStore = useReportStore();
+const forumStore = useForumStore();
 const selectedPeriod = ref("Week");
 const periods = ["Day", "Week", "Month"];
 
@@ -293,6 +289,9 @@ onMounted(() => {
     projectStore.fetchProjects().catch(() => {});
   }
   reportStore.fetchAllReports().catch(() => {});
+  if (forumStore.discussions.length === 0) {
+    forumStore.fetchDiscussions().catch(() => {});
+  }
 });
 
 const metrics = computed(() => {
@@ -333,9 +332,9 @@ const metrics = computed(() => {
     {
       label: "Reports",
       value: reportStore.pendingReports.length,
-      description: `${reportStore.highPriorityReports.length} high priority`,
-      descriptionIcon: "bi-exclamation-triangle",
-      descriptionColorClass: "text-danger",
+      description: `${reportStore.resolvedReports.length} resolved`,
+      descriptionIcon: "bi-check2-circle",
+      descriptionColorClass: "text-success",
       icon: "bi bi-flag",
       iconBgClass: "bg-red-light",
       iconColorClass: "text-red",
@@ -343,33 +342,76 @@ const metrics = computed(() => {
   ];
 });
 
-const chartSets = {
-  Day: [
-    { day: "8AM", discussions: 24, replies: 36, projects: 18 },
-    { day: "10AM", discussions: 44, replies: 52, projects: 26 },
-    { day: "12PM", discussions: 62, replies: 70, projects: 34 },
-    { day: "2PM", discussions: 74, replies: 82, projects: 42 },
-    { day: "4PM", discussions: 58, replies: 64, projects: 30 },
-    { day: "6PM", discussions: 42, replies: 50, projects: 24 },
-  ],
-  Week: [
-    { day: "Mon", discussions: 42, replies: 66, projects: 28 },
-    { day: "Tue", discussions: 54, replies: 72, projects: 34 },
-    { day: "Wed", discussions: 68, replies: 84, projects: 48 },
-    { day: "Thu", discussions: 76, replies: 90, projects: 56 },
-    { day: "Fri", discussions: 62, replies: 78, projects: 42 },
-    { day: "Sat", discussions: 46, replies: 58, projects: 32 },
-    { day: "Sun", discussions: 36, replies: 48, projects: 24 },
-  ],
-  Month: [
-    { day: "W1", discussions: 52, replies: 64, projects: 36 },
-    { day: "W2", discussions: 76, replies: 88, projects: 52 },
-    { day: "W3", discussions: 68, replies: 74, projects: 46 },
-    { day: "W4", discussions: 82, replies: 94, projects: 58 },
-  ],
-};
+const chartSets = computed(() => {
+  const sets = {};
 
-const chartData = computed(() => chartSets[selectedPeriod.value]);
+  const dayLabels = ["8AM", "10AM", "12PM", "2PM", "4PM", "6PM"];
+  const weekLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const monthLabels = ["W1", "W2", "W3", "W4"];
+
+  const dayData = dayLabels.map((day) => ({ day, discussions: 0, replies: 0, projects: 0 }));
+  const weekData = weekLabels.map((day) => ({ day, discussions: 0, replies: 0, projects: 0 }));
+  const monthData = monthLabels.map((day) => ({ day, discussions: 0, replies: 0, projects: 0 }));
+
+  const dayIndexMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 0: 6 };
+
+  const getIndices = (rawDate) => {
+    if (!rawDate) return { dIdx: null, wIdx: null, mIdx: null };
+    const d = new Date(rawDate);
+    if (isNaN(d.getTime())) return { dIdx: null, wIdx: null, mIdx: null };
+    
+    const h = d.getHours();
+    let dIdx = 5;
+    if (h < 10) dIdx = 0;
+    else if (h < 12) dIdx = 1;
+    else if (h < 14) dIdx = 2;
+    else if (h < 16) dIdx = 3;
+    else if (h < 18) dIdx = 4;
+
+    const wIdx = dayIndexMap[d.getDay()];
+
+    const dateNum = d.getDate();
+    let mIdx = 3;
+    if (dateNum <= 7) mIdx = 0;
+    else if (dateNum <= 14) mIdx = 1;
+    else if (dateNum <= 21) mIdx = 2;
+
+    return { dIdx, wIdx, mIdx };
+  };
+
+  forumStore.discussions.forEach((d) => {
+    const rawDate = d.createdAt || d.created_at || d.timestamp;
+    const { dIdx, wIdx, mIdx } = getIndices(rawDate);
+    
+    const increment = (targetData, idx, replies) => {
+      if (idx !== null) {
+        targetData[idx].discussions += 1;
+        targetData[idx].replies += replies;
+      }
+    };
+
+    const replies = Array.isArray(d.replies) ? d.replies.length : Number(d.replies || d.comment_count || 0);
+    increment(dayData, dIdx, replies);
+    increment(weekData, wIdx, replies);
+    increment(monthData, mIdx, replies);
+  });
+
+  projectStore.projects.forEach((p) => {
+    const rawDate = p.createdAt || p.created_at || p.timestamp;
+    const { dIdx, wIdx, mIdx } = getIndices(rawDate);
+
+    if (dIdx !== null) dayData[dIdx].projects += 1;
+    if (wIdx !== null) weekData[wIdx].projects += 1;
+    if (mIdx !== null) monthData[mIdx].projects += 1;
+  });
+
+  sets.Day = dayData;
+  sets.Week = weekData;
+  sets.Month = monthData;
+  return sets;
+});
+
+const chartData = computed(() => chartSets.value[selectedPeriod.value]);
 
 const activitySeries = [
   { key: "discussions", label: "Discussions" },

@@ -76,6 +76,14 @@ export const useUsersStore = defineStore("users", () => {
   const updateUser = async (id, payload) => {
     try {
       isLoading.value = true;
+      
+      if (payload.role) {
+        const roleResponse = await api.put(`/auth/updateRoleByUserID/${id}`, {
+          role: payload.role,
+        });
+        ensureSuccess(roleResponse);
+      }
+
       const response = await api.put(`/api/admin/update-user/${id}`, payload);
       ensureSuccess(response);
       return response.data;

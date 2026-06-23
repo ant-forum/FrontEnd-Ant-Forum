@@ -921,6 +921,73 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  const fetchCommentById = async (id) => {
+    try {
+      const res = await api.get(`/api/comments/getCommentById/${id}`);
+      if (res.data.result) {
+        const c = res.data.data;
+        const bodyContent = c.body || c.description || "";
+        let authorObj = c.author;
+        if (typeof authorObj === "string") {
+          authorObj = {
+            username: authorObj,
+            name: authorObj,
+            profile_pic:
+              c.author_avatar ||
+              c.user_avatar ||
+              c.profile_pic ||
+              c.avatar ||
+              null,
+          };
+        } else if (!authorObj) {
+          const usersStore = useUsersStore();
+          const userObj = usersStore.users.find(
+            (u) => Number(u.id) === Number(c.user_id),
+          );
+          if (userObj) {
+            authorObj = {
+              username: userObj.username,
+              name: userObj.name || userObj.username,
+              profile_pic: userObj.profile_pic || userObj.avatar || null,
+            };
+          } else {
+            authorObj = {
+              username: `user_${c.user_id}`,
+              name: `User ${c.user_id}`,
+              profile_pic:
+                c.author_avatar ||
+                c.user_avatar ||
+                c.profile_pic ||
+                c.avatar ||
+                null,
+            };
+          }
+        } else {
+          authorObj = {
+            ...authorObj,
+            profile_pic:
+              authorObj.profile_pic ||
+              authorObj.avatar ||
+              c.author_avatar ||
+              c.user_avatar ||
+              c.profile_pic ||
+              c.avatar ||
+              null,
+          };
+        }
+        return {
+          ...c,
+          body: bodyContent,
+          description: bodyContent,
+          author: authorObj,
+        };
+      }
+      return null;
+    } catch (err) {
+      throw err.response?.data || err.message;
+    }
+  };
+
   const createComment = async (forumId, description) => {
     try {
       const res = await api.post(`/api/comments/create/${forumId}`, {
@@ -1641,6 +1708,7 @@ export const useForumStore = defineStore("forum", () => {
     deleteDiscussion,
 
     fetchComments,
+    fetchCommentById,
     createComment,
     postReply,
     deleteComment,
