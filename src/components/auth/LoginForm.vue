@@ -8,7 +8,7 @@
 
     <form class="form-stack" @submit.prevent="handleSignIn" novalidate>
       <!-- Alert Banner -->
-      <div v-if="formError" class="alert-banner">
+      <div v-if="displayError" class="alert-banner">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="18"
@@ -25,7 +25,7 @@
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
           />
         </svg>
-        <span>{{ formError }}</span>
+        <span>{{ displayError }}</span>
       </div>
 
       <!-- Email -->
@@ -60,48 +60,9 @@
             class="toggle-eye"
             type="button"
             @click="showPass = !showPass"
+            :aria-label="showPass ? 'Hide password' : 'Show password'"
           >
-            <!-- eye-off -->
-            <svg
-              v-if="showPass"
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M13.875 18.825A10.05 10.05 0 0 1 12 19c-5.523 0-10-6-10-7s1.343-2.878 3.343-4.657M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-.88M9.88 9.88 4 4m5.88 5.88 4.24 4.24M15 12a3 3 0 0 0-3-3m3 3 4.243 4.243M15 12l4.243-4.243M3 3l18 18"
-              />
-            </svg>
-            <!-- eye -->
-            <svg
-              v-else
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M2 12s3.636-7 10-7 10 7 10 7-3.636 7-10 7S2 12 2 12z"
-              />
-              <circle
-                cx="12"
-                cy="12"
-                r="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <i :class="['bi', showPass ? 'bi-eye-slash' : 'bi-eye']"></i>
           </button>
         </div>
         <div
@@ -124,10 +85,22 @@
       </div>
 
       <!-- Sign In -->
-      <button type="submit" class="btn-signin" :disabled="loading">
+      <button
+        type="submit"
+        class="btn-signin"
+        :disabled="loading || isLoginLocked"
+        :title="
+          isLoginLocked
+            ? `Try again in ${remainingLoginLockoutText}`
+            : undefined
+        "
+      >
         <template v-if="loading">
           <div class="spinner"></div>
           <span>Signing in…</span>
+        </template>
+        <template v-else-if="isLoginLocked">
+          <span>Try again in {{ remainingLoginLockoutText }}</span>
         </template>
         <template v-else>
           <span>Sign In</span>
@@ -174,7 +147,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { computed, onBeforeUnmount, ref, reactive } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useToast } from "../../composables/useToast.js";
 import { useAuthStore } from "../../stores/AuthStore.js";
@@ -189,12 +162,171 @@ const toast = useToast();
 
 const form = reactive({ email: "", password: "", remember: false });
 const formError = ref("");
+const loginLockoutExpiresAt = ref(0);
+const lockoutEmail = ref("");
+const lockoutRemainingMs = ref(0);
+let lockoutTimerId = null;
+
+const LOGIN_LOCKOUT_STORAGE_KEY = "ANTForumLoginLockout";
+const DEFAULT_LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
 
 const {
   errors,
   clearError: baseClearError,
   validateField,
 } = useRequiredValidator();
+
+const normalizedEmail = computed(() => form.email.trim().toLowerCase());
+
+const isLoginLocked = computed(() => {
+  if (lockoutRemainingMs.value <= 0) return false;
+  return !lockoutEmail.value || lockoutEmail.value === normalizedEmail.value;
+});
+
+const remainingLoginLockoutText = computed(() => {
+  const totalSeconds = Math.max(Math.ceil(lockoutRemainingMs.value / 1000), 0);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return `${minutes}:${seconds}`;
+});
+
+const displayError = computed(() => {
+  if (isLoginLocked.value) {
+    return `Too many login attempts. Please try again in ${remainingLoginLockoutText.value}.`;
+  }
+  return formError.value;
+});
+
+const saveLockout = () => {
+  try {
+    localStorage.setItem(
+      LOGIN_LOCKOUT_STORAGE_KEY,
+      JSON.stringify({
+        email: lockoutEmail.value,
+        expiresAt: loginLockoutExpiresAt.value,
+      }),
+    );
+  } catch (error) {
+    console.error("Unable to save login lockout state:", error);
+  }
+};
+
+const clearLockout = () => {
+  loginLockoutExpiresAt.value = 0;
+  lockoutEmail.value = "";
+  lockoutRemainingMs.value = 0;
+
+  if (lockoutTimerId !== null) {
+    window.clearInterval(lockoutTimerId);
+    lockoutTimerId = null;
+  }
+
+  try {
+    localStorage.removeItem(LOGIN_LOCKOUT_STORAGE_KEY);
+  } catch (error) {
+    console.error("Unable to clear login lockout state:", error);
+  }
+};
+
+const updateLockoutCountdown = () => {
+  if (!loginLockoutExpiresAt.value) {
+    lockoutRemainingMs.value = 0;
+    return;
+  }
+
+  const remaining = loginLockoutExpiresAt.value - Date.now();
+  if (remaining <= 0) {
+    clearLockout();
+    return;
+  }
+
+  lockoutRemainingMs.value = remaining;
+};
+
+const startLockoutTimer = () => {
+  updateLockoutCountdown();
+  if (!loginLockoutExpiresAt.value || lockoutTimerId !== null) return;
+  lockoutTimerId = window.setInterval(updateLockoutCountdown, 1000);
+};
+
+const loadStoredLockout = () => {
+  try {
+    const savedLockout = JSON.parse(
+      localStorage.getItem(LOGIN_LOCKOUT_STORAGE_KEY) || "null",
+    );
+
+    if (!savedLockout?.expiresAt || savedLockout.expiresAt <= Date.now()) {
+      clearLockout();
+      return;
+    }
+
+    loginLockoutExpiresAt.value = savedLockout.expiresAt;
+    lockoutEmail.value = savedLockout.email || "";
+    startLockoutTimer();
+  } catch (error) {
+    console.error("Unable to read login lockout state:", error);
+    clearLockout();
+  }
+};
+
+const getErrorMessage = (error) =>
+  (
+    error?.message ||
+    error?.msg ||
+    (typeof error === "string" ? error : "") ||
+    ""
+  ).toString();
+
+const isPasswordLengthMessage = (message) => {
+  const normalizedMessage = String(message || "").toLowerCase();
+  return (
+    normalizedMessage.includes("password") &&
+    normalizedMessage.includes("length") &&
+    normalizedMessage.includes("at least")
+  );
+};
+
+const getLockoutDurationMs = (error) => {
+  const retryAfterSeconds = Number(error?.retryAfter || error?.retry_after);
+  if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
+    return retryAfterSeconds * 1000;
+  }
+
+  const minuteMatch = getErrorMessage(error).match(/after\s+(\d+)\s+minutes?/i);
+  if (minuteMatch) {
+    return Number(minuteMatch[1]) * 60 * 1000;
+  }
+
+  return DEFAULT_LOGIN_LOCKOUT_MS;
+};
+
+const isLockoutError = (error) => {
+  const message = getErrorMessage(error).toLowerCase();
+  return (
+    error?.status === 429 ||
+    error?.statusCode === 429 ||
+    message.includes("too many login attempts") ||
+    message.includes("too many requests")
+  );
+};
+
+const startLoginLockout = (error) => {
+  lockoutEmail.value = normalizedEmail.value;
+  loginLockoutExpiresAt.value = Date.now() + getLockoutDurationMs(error);
+  formError.value = "";
+  errors.email = "true";
+  errors.password = "true";
+  saveLockout();
+  startLockoutTimer();
+};
+
+loadStoredLockout();
+
+onBeforeUnmount(() => {
+  if (lockoutTimerId !== null) {
+    window.clearInterval(lockoutTimerId);
+  }
+});
 
 const clearError = (field) => {
   baseClearError(field);
@@ -208,10 +340,6 @@ const validateEmail = () => {
 const validatePassword = () => {
   if (!form.password) {
     return validateField("password", form.password, "Password is required.");
-  }
-  if (form.password.length < 6) {
-    errors.password = "Password must be at least 6 characters.";
-    return false;
   }
   errors.password = "";
   return true;
@@ -241,6 +369,7 @@ const getPostLoginRoute = () => {
 };
 
 async function handleSignIn() {
+  if (isLoginLocked.value) return;
   if (!validateForm()) return;
   loading.value = true;
   formError.value = "";
@@ -255,9 +384,16 @@ async function handleSignIn() {
     router.push(getPostLoginRoute());
   } catch (error) {
     console.error("Login failed:", error);
-    if (error && error.error) {
+    if (isLockoutError(error)) {
+      startLoginLockout(error);
+    } else if (error && error.error) {
       if (Array.isArray(error.error)) {
+        let hasPasswordLengthValidation = false;
         error.error.forEach((errStr) => {
+          if (isPasswordLengthMessage(errStr)) {
+            hasPasswordLengthValidation = true;
+            return;
+          }
           if (errStr.includes("email")) {
             errors.email = errStr.replace(/"/g, ""); // Clean up quotes
           }
@@ -265,9 +401,22 @@ async function handleSignIn() {
             errors.password = errStr.replace(/"/g, ""); // Clean up quotes
           }
         });
+        if (hasPasswordLengthValidation) {
+          formError.value = "Invalid email or password.";
+          errors.email = "true";
+          errors.password = "true";
+        }
       } else if (typeof error.error === "object") {
         if (error.error.email) errors.email = error.error.email;
-        if (error.error.password) errors.password = error.error.password;
+        if (error.error.password) {
+          if (isPasswordLengthMessage(error.error.password)) {
+            formError.value = "Invalid email or password.";
+            errors.email = "true";
+            errors.password = "true";
+          } else {
+            errors.password = error.error.password;
+          }
+        }
       }
     } else if (
       error &&
@@ -341,6 +490,22 @@ h1 {
   color: var(--color-text-muted) !important;
   opacity: 0.6;
 }
+.form-control-custom:-webkit-autofill,
+.form-control-custom:-webkit-autofill:hover,
+.form-control-custom:-webkit-autofill:focus,
+.form-control-custom:-webkit-autofill:active {
+  border-color: var(--color-border) !important;
+  -webkit-text-fill-color: var(--color-text) !important;
+  caret-color: var(--color-text);
+  box-shadow: 0 0 0 1000px var(--color-input-bg) inset !important;
+  transition: background-color 9999s ease-out;
+}
+.form-control-custom:-webkit-autofill:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow:
+    0 0 0 1000px var(--color-input-bg) inset,
+    var(--focus-ring) !important;
+}
 .form-control-custom:focus {
   border-color: var(--color-primary) !important;
   box-shadow: var(--focus-ring) !important;
@@ -366,13 +531,21 @@ h1 {
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
+  width: 22px;
+  height: 22px;
   padding: 0;
   line-height: 1;
   display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
   transition:
     color var(--transition-base),
     box-shadow var(--transition-base);
+}
+.toggle-eye i {
+  font-size: 1.1rem;
+  line-height: 1;
 }
 .toggle-eye:hover,
 .toggle-eye:focus-visible {
@@ -515,7 +688,7 @@ h1 {
 }
 
 @media (hover: hover) {
-  .btn-signin:hover {
+  .btn-signin:not(:disabled):hover {
     background: var(--color-primary-hover);
     transform: translateY(-1px);
     box-shadow: 0 4px 14px var(--color-primary-light);
@@ -525,13 +698,14 @@ h1 {
   outline: none;
   box-shadow: var(--shadow-brand), var(--focus-ring);
 }
-.btn-signin:active {
+.btn-signin:not(:disabled):active {
   transform: translateY(0);
 }
 .btn-signin:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .security-badge-card {
