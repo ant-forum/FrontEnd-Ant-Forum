@@ -55,13 +55,6 @@
             class="dropdown-header-premium d-flex justify-content-between align-items-center"
           >
             <strong>Notifications ({{ unreadCount }})</strong>
-            <button
-              class="btn btn-link btn-sm text-primary p-0 text-decoration-none fw-bold"
-              @click="markAllRead"
-              v-if="unreadCount > 0"
-            >
-              Mark all as read
-            </button>
           </div>
 
           <div class="dropdown-body-premium">

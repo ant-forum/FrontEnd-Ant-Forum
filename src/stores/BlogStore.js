@@ -236,7 +236,8 @@ export const useBlogStore = defineStore("blog", () => {
       readTime:
         item.readTime ||
         `${Math.max(3, Math.ceil(plainDescription.split(" ").length / 200))} min`,
-      views: item.views || 0,
+      views: item.views !== undefined ? item.views : (item.view_count || 0),
+      view_count: item.view_count !== undefined ? item.view_count : (item.views || 0),
       likes: item.likes || 0,
       status: item.status || "published",
       tags: Array.isArray(item.tags)
@@ -346,7 +347,17 @@ export const useBlogStore = defineStore("blog", () => {
       const response = await api.post(`/api/blog/counter-view-post/${id}`, {}, { skipGlobalToast: true });
       ensureSuccess(response);
       if (blog.value && String(blog.value.id) === String(id)) {
-        blog.value.views = (blog.value.views || 0) + 1;
+        const resData = response.data?.data || response.data;
+        if (resData && resData.view_count !== undefined) {
+          blog.value.views = Number(resData.view_count);
+          blog.value.view_count = Number(resData.view_count);
+        } else if (resData && resData.views !== undefined) {
+          blog.value.views = Number(resData.views);
+          blog.value.view_count = Number(resData.views);
+        } else {
+          blog.value.views = (blog.value.views || 0) + 1;
+          blog.value.view_count = (blog.value.view_count || 0) + 1;
+        }
       }
       return response.data;
     } catch (err) {

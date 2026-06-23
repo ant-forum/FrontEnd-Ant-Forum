@@ -63,13 +63,6 @@ const getNotificationIcon = (type) => {
     <!-- Header -->
     <div class="dropdown-header d-flex align-items-center justify-content-between">
       <h5 class="m-0 fw-bold header-title">Notifications</h5>
-      <button 
-        v-if="notificationStore.unreadCount > 0" 
-        @click="handleMarkAllRead" 
-        class="btn-mark-read btn btn-sm bg-transparent border-0 px-2 fw-semibold"
-      >
-        Mark all as read
-      </button>
     </div>
 
     <!-- Scrollable content area -->
