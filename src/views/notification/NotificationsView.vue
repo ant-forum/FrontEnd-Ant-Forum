@@ -71,17 +71,9 @@ const getCount = (filterType) => {
 };
 
 // Handlers
-<<<<<<< HEAD
-const handleNotificationClick = async (item) => {
-  await notificationStore.routeToNotification(item, router);
-=======
 const handleNotificationClick = async (e, item) => {
   if (e.target.closest('.actions-wrap')) return;
-  await notificationStore.markAsRead(item.id);
-  if (item.link) {
-    router.push(item.link);
-  }
->>>>>>> dev
+  await notificationStore.routeToNotification(item, router);
 };
 
 const handleToggleRead = async (e, item) => {
@@ -147,14 +139,6 @@ const getNotificationIcon = (type) => {
         <p class="text-muted small m-0 mt-1">Manage, filter, and track all your school activity alerts.</p>
       </div>
       <div class="col-sm-auto d-flex gap-2">
-        <button 
-          v-if="notificationStore.unreadCount > 0" 
-          @click="handleMarkAllRead" 
-          class="btn btn-action-modern btn-mark-read d-flex align-items-center gap-2"
-        >
-          <i class="bi bi-check2-all"></i>
-          <span>Mark all as read</span>
-        </button>
         <button 
           v-if="notificationStore.notifications.length > 0" 
           @click="handleClearAll" 

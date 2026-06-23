@@ -74,7 +74,14 @@ export const useNotificationStore = defineStore("notification", () => {
              type: type,
              title: title,
              message: message,
-             read: Boolean(n.is_read),
+             read: (() => {
+               const val = n.is_read !== undefined ? n.is_read : (n.isRead !== undefined ? n.isRead : n.read);
+               if (val === undefined || val === null) return false;
+               if (typeof val === 'boolean') return val;
+               if (typeof val === 'number') return val === 1;
+               if (typeof val === 'string') return val === '1' || val.toLowerCase() === 'true';
+               return Boolean(val);
+             })(),
              created_at: n.created_at,
              link: linkUrl,
              sender: {
@@ -93,9 +100,13 @@ export const useNotificationStore = defineStore("notification", () => {
 
   const markAsRead = async (id) => {
     try {
-      await deleteNotification(id);
+      await api.put(`/api/notifications/markasread/${id}`);
+      const found = notifications.value.find((n) => n.id === id);
+      if (found) {
+        found.read = true;
+      }
     } catch (error) {
-      console.error("Failed to delete notification on click:", error);
+      console.error("Failed to mark notification as read:", error);
     }
   };
 

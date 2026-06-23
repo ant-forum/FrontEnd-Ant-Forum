@@ -558,10 +558,8 @@ const formatNumber = (num) => {
                     class="d-flex align-items-center gap-2 text-muted text-xs mb-3 fw-medium"
                   >
                     <i class="bi bi-calendar3"></i> {{ post.date }}
-                    <!-- <span class="mx-1">•</span> -->
-                    <!-- <i class="bi bi-eye"></i> {{ formatNumber(post.views) }} -->
-                    <!-- <span class="mx-1">•</span> -->
-                    <!-- <i class="bi bi-heart"></i> {{ post.likes }} -->
+                    <span class="mx-1">•</span>
+                    <i class="bi bi-eye"></i> {{ formatNumber(post.views) }}
                   </div>
                   <h5 class="fw-bold mb-2 blog-title line-clamp-2">
                     {{ post.title }}
