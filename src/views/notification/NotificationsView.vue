@@ -68,10 +68,7 @@ const getCount = (filterType) => {
 
 // Handlers
 const handleNotificationClick = async (item) => {
-  await notificationStore.markAsRead(item.id);
-  if (item.link) {
-    router.push(item.link);
-  }
+  await notificationStore.routeToNotification(item, router);
 };
 
 const handleToggleRead = async (e, item) => {

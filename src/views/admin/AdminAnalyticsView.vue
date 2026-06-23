@@ -230,6 +230,7 @@ onMounted(() => {
   if (projectStore.projects.length === 0) {
     projectStore.fetchProjects().catch(() => {});
   }
+  adminStore.fetchReports().catch(() => {});
 });
 
 const percentage = (value, total) =>
@@ -281,30 +282,130 @@ const chartSeries = [
   { key: "actions", label: "Admin actions", className: "purple" },
 ];
 
-const chartSets = {
-  "7 Days": [
-    { day: "Mon", reports: 4, projects: 3, actions: 5 },
-    { day: "Tue", reports: 6, projects: 4, actions: 7 },
-    { day: "Wed", reports: 5, projects: 6, actions: 8 },
-    { day: "Thu", reports: 8, projects: 5, actions: 10 },
-    { day: "Fri", reports: 7, projects: 7, actions: 9 },
-    { day: "Sat", reports: 3, projects: 4, actions: 5 },
-    { day: "Sun", reports: 2, projects: 3, actions: 4 },
-  ],
-  "30 Days": [
-    { day: "W1", reports: 22, projects: 14, actions: 28 },
-    { day: "W2", reports: 18, projects: 19, actions: 31 },
-    { day: "W3", reports: 26, projects: 17, actions: 35 },
-    { day: "W4", reports: 20, projects: 22, actions: 38 },
-  ],
-  "90 Days": [
-    { day: "Apr", reports: 62, projects: 48, actions: 92 },
-    { day: "May", reports: 74, projects: 56, actions: 108 },
-    { day: "Jun", reports: 58, projects: 42, actions: 84 },
-  ],
+const get7DaysData = () => {
+  const result = [];
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const startOfDay = new Date(d);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(d);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const dayName = daysOfWeek[d.getDay()];
+    
+    const reportsCount = adminStore.threadReports.filter(r => {
+      const date = new Date(r.createdAt);
+      return date >= startOfDay && date <= endOfDay;
+    }).length;
+    
+    const projectsCount = projectStore.projects.filter(p => {
+      const date = new Date(p.createdAt);
+      return date >= startOfDay && date <= endOfDay;
+    }).length;
+    
+    const actionsCount = adminStore.activityLog.filter(a => {
+      const date = new Date(a.createdAt);
+      return date >= startOfDay && date <= endOfDay;
+    }).length;
+    
+    result.push({
+      day: dayName,
+      reports: reportsCount,
+      projects: projectsCount,
+      actions: actionsCount
+    });
+  }
+  return result;
 };
 
-const chartData = computed(() => chartSets[selectedPeriod.value]);
+const get30DaysData = () => {
+  const result = [];
+  for (let i = 3; i >= 0; i--) {
+    const startOfRange = new Date();
+    startOfRange.setDate(startOfRange.getDate() - (i * 7 + 6));
+    startOfRange.setHours(0, 0, 0, 0);
+    
+    const endOfRange = new Date();
+    endOfRange.setDate(endOfRange.getDate() - (i * 7));
+    endOfRange.setHours(23, 59, 59, 999);
+    
+    const weekLabel = `W${4 - i}`;
+    
+    const reportsCount = adminStore.threadReports.filter(r => {
+      const date = new Date(r.createdAt);
+      return date >= startOfRange && date <= endOfRange;
+    }).length;
+    
+    const projectsCount = projectStore.projects.filter(p => {
+      const date = new Date(p.createdAt);
+      return date >= startOfRange && date <= endOfRange;
+    }).length;
+    
+    const actionsCount = adminStore.activityLog.filter(a => {
+      const date = new Date(a.createdAt);
+      return date >= startOfRange && date <= endOfRange;
+    }).length;
+    
+    result.push({
+      day: weekLabel,
+      reports: reportsCount,
+      projects: projectsCount,
+      actions: actionsCount
+    });
+  }
+  return result;
+};
+
+const get90DaysData = () => {
+  const result = [];
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  for (let i = 2; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const monthIndex = d.getMonth();
+    const monthLabel = monthNames[monthIndex];
+    
+    const startOfMonth = new Date(d.getFullYear(), monthIndex, 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(d.getFullYear(), monthIndex + 1, 0, 23, 59, 59, 999);
+    
+    const reportsCount = adminStore.threadReports.filter(r => {
+      const date = new Date(r.createdAt);
+      return date >= startOfMonth && date <= endOfMonth;
+    }).length;
+    
+    const projectsCount = projectStore.projects.filter(p => {
+      const date = new Date(p.createdAt);
+      return date >= startOfMonth && date <= endOfMonth;
+    }).length;
+    
+    const actionsCount = adminStore.activityLog.filter(a => {
+      const date = new Date(a.createdAt);
+      return date >= startOfMonth && date <= endOfMonth;
+    }).length;
+    
+    result.push({
+      day: monthLabel,
+      reports: reportsCount,
+      projects: projectsCount,
+      actions: actionsCount
+    });
+  }
+  return result;
+};
+
+const chartData = computed(() => {
+  if (selectedPeriod.value === "7 Days") {
+    return get7DaysData();
+  } else if (selectedPeriod.value === "30 Days") {
+    return get30DaysData();
+  } else if (selectedPeriod.value === "90 Days") {
+    return get90DaysData();
+  }
+  return [];
+});
 const chartMaximum = computed(() => {
   const values = chartData.value.flatMap((item) =>
     chartSeries.map((series) => item[series.key]),

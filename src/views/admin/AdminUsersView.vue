@@ -80,7 +80,8 @@
             >
               <option value="">Select Role</option>
               <option value="student">Student</option>
-              <option value="mentor">Mentor</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
             </select>
             <div v-if="errors.role" class="invalid-feedback d-block">
               {{ errors.role }}
@@ -243,11 +244,11 @@ const mappedUsers = computed(() => {
 const metrics = computed(() => {
   const allUsers = usersStore.users || [];
   const total = allUsers.length;
-  const mentors = allUsers.filter((u) => u.role === "mentor").length;
   const students = allUsers.filter(
     (u) => u.role === "user" || u.role === "student",
   ).length;
-  const others = total - mentors - students;
+  const teachers = allUsers.filter((u) => u.role === "teacher").length;
+  const admins = allUsers.filter((u) => u.role === "admin").length;
 
   return [
     {
@@ -265,16 +266,16 @@ const metrics = computed(() => {
       className: "green",
     },
     {
-      label: "Mentors",
-      value: String(mentors),
-      change: "Active mentors",
+      label: "Teachers",
+      value: String(teachers),
+      change: "Active teachers",
       icon: "bi-person-badge",
       className: "purple",
     },
     {
-      label: "Others",
-      value: String(others),
-      change: "Other roles",
+      label: "Admins",
+      value: String(admins),
+      change: "Platform administrators",
       icon: "bi-shield-check",
       className: "orange",
     },

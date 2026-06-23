@@ -99,8 +99,12 @@ const normalizePlain = (value) =>
     .trim()
     .toLowerCase();
 
-const discussionBody = computed(() => {
-  if (!discussion.value) return "";
+const attachedCodeSnippetRegex =
+  /\n{0,2}### Code Snippet\s*\n```[^\n`]*\n([\s\S]*?)\n```\s*$/i;
+
+const extractedCodeData = computed(() => {
+  if (!discussion.value) return { body: "", code: "" };
+  
   const candidates = [
     discussion.value.body,
     discussion.value.description,
@@ -108,18 +112,26 @@ const discussionBody = computed(() => {
   ].filter(Boolean);
 
   const titlePlain = normalizePlain(discussion.value.title);
-  const body = candidates.find(
+  const rawBody = candidates.find(
     (candidate) => normalizePlain(candidate) !== titlePlain,
-  );
-  return body || "";
+  ) || "";
+
+  const match = rawBody.match(attachedCodeSnippetRegex);
+  if (match) {
+    return {
+      body: rawBody.replace(attachedCodeSnippetRegex, "").trim(),
+      code: match[1].trimEnd()
+    };
+  }
+
+  return {
+    body: rawBody,
+    code: discussion.value.hasCode || discussion.value.code ? discussion.value.code : ""
+  };
 });
 
-const separateThreadCode = computed(() => {
-  const code = discussion.value?.code;
-  if (!discussion.value?.hasCode || !code) return "";
-
-  return discussionBody.value.includes(code) ? "" : code;
-});
+const discussionBody = computed(() => extractedCodeData.value.body);
+const separateThreadCode = computed(() => extractedCodeData.value.code);
 
 const replyCount = computed(() => {
   return Array.isArray(discussion.value?.replies)
@@ -196,6 +208,27 @@ onMounted(() => {
   loadDiscussion(route.params.id);
 });
 
+// Utility to handle scrolling to a hash comment
+const scrollToHash = () => {
+  if (route.hash && route.hash.startsWith("#comment-")) {
+    nextTick(() => {
+      // Add a slight delay to ensure DOM layout is complete
+      setTimeout(() => {
+        const el = document.querySelector(route.hash);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Optional: Add a highlight effect
+          el.style.transition = "background-color 1s ease";
+          el.style.backgroundColor = "var(--bs-primary-bg-subtle, rgba(13, 110, 253, 0.15))";
+          setTimeout(() => {
+            el.style.backgroundColor = "";
+          }, 2000);
+        }
+      }, 300);
+    });
+  }
+};
+
 // Watch for route ID changes to correctly trigger skeleton on page transitions
 watch(
   () => route.params.id,
@@ -211,6 +244,7 @@ watch(
   () => forumStore.discussion,
   () => {
     setupCopyButtons();
+    scrollToHash();
   },
   { deep: true },
 );
@@ -605,7 +639,7 @@ function getAvatarUrl(author) {
                   </span>
 
                   <!-- Code indicator -->
-                  <span v-if="discussion.hasCode" class="snippet-badge">
+                  <span v-if="discussion.hasCode || separateThreadCode" class="snippet-badge">
                     <i class="bi bi-code-slash"></i> Snippet
                   </span>
                 </div>
@@ -764,6 +798,7 @@ function getAvatarUrl(author) {
                     reply.id ||
                     `${getAvatarName(reply.author)}-${getCreatedAt(reply)}`
                   "
+                  :id="reply.id ? `comment-${reply.id}` : undefined"
                   :class="[
                     'reply-card',
                     { 'top-reply': topReplyId && reply.id === topReplyId },
@@ -1278,6 +1313,40 @@ function getAvatarUrl(author) {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+.code-lang {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a855f7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.code-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.code-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.code-dots span:nth-child(1) { background: #ef4444; }
+.code-dots span:nth-child(2) { background: #f59e0b; }
+.code-dots span:nth-child(3) { background: #10b981; }
+
 
 .thread-tags-box {
   display: flex;
