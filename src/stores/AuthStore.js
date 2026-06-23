@@ -158,7 +158,13 @@ export const useAuthStore = defineStore("auth", () => {
 
       return res.data;
     } catch (err) {
-      throw err.response?.data || err;
+      if (err.response?.data && typeof err.response.data === "object") {
+        throw { ...err.response.data, status: err.response.status };
+      }
+      if (err.response?.data) {
+        throw { message: err.response.data, status: err.response.status };
+      }
+      throw err;
     }
   };
 
