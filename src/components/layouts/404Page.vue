@@ -87,7 +87,7 @@ import Footer from "./footer.vue";
   right: 20%;
   width: 320px;
   height: 320px;
-  background: var(--color-purple-light);
+  background: var(--color-blue-light);
   animation: float 10s ease-in-out infinite reverse;
 }
 
@@ -132,7 +132,7 @@ import Footer from "./footer.vue";
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -202,7 +202,7 @@ import Footer from "./footer.vue";
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   color: white;
   text-decoration: none;
@@ -217,7 +217,7 @@ import Footer from "./footer.vue";
 
 .home-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 8px 24px rgba(84, 131, 179, 0.35);
   color: white;
 }
 

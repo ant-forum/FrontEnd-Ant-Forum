@@ -501,9 +501,9 @@ const showTextMenu = ref(false);
 <style scoped>
 /* Color variables fallback if not loaded */
 :root {
-  --brand: var(--color-purple);
-  --brand-light: var(--color-purple-light);
-  --brand-hover: var(--color-purple);
+  --brand: var(--color-blue);
+  --brand-light: var(--color-blue-light);
+  --brand-hover: var(--color-blue);
   --text-dark: var(--color-text);
   --shadow-lg: var(--shadow-lg);
 }
@@ -518,7 +518,7 @@ const showTextMenu = ref(false);
 }
 
 .editor-container.focused {
-  border-color: var(--color-purple);
+  border-color: var(--color-blue);
   box-shadow: var(--focus-ring);
 }
 
@@ -572,8 +572,8 @@ const showTextMenu = ref(false);
 }
 
 .toolbar-btn.is-active {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
 }
 
 .toolbar-btn:disabled {
@@ -631,8 +631,8 @@ const showTextMenu = ref(false);
 }
 
 .toolbar-dropdown button.is-active {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
 }
 
 /* Workspace panes */
@@ -701,9 +701,9 @@ const showTextMenu = ref(false);
 }
 
 :deep(.tiptap blockquote) {
-  border-left: 4px solid var(--color-purple);
+  border-left: 4px solid var(--color-blue);
   padding: 8px 16px;
-  background: var(--color-purple-light);
+  background: var(--color-blue-light);
   color: var(--color-text-muted);
   border-radius: 0 8px 8px 0;
   margin: 16px 0;
@@ -724,7 +724,7 @@ const showTextMenu = ref(false);
   color: #f4efff;
   padding: 18px 22px;
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-purple) 54%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-blue) 54%, transparent);
   overflow-x: auto;
   margin: 16px 0;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
@@ -740,10 +740,10 @@ const showTextMenu = ref(false);
 }
 
 :deep(.tiptap a) {
-  color: var(--color-purple);
+  color: var(--color-blue);
   text-decoration: none;
   font-weight: 600;
-  border-bottom: 1.5px solid var(--color-purple-light);
+  border-bottom: 1.5px solid var(--color-blue-light);
   cursor: pointer;
 }
 

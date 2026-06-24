@@ -578,7 +578,7 @@ watch(
 .settings-kicker {
   display: block;
   margin-bottom: 8px;
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -612,8 +612,8 @@ watch(
 }
 .role-badge,
 .preview-badge {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
 }
 .backend-badge {
   color: var(--color-warning);
@@ -657,8 +657,8 @@ watch(
   background: var(--color-surface-hover);
 }
 .settings-section-nav button.active {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
 }
 .section-icon {
   display: inline-flex;
@@ -816,7 +816,7 @@ watch(
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   border-color: var(--color-primary);
 }
@@ -839,7 +839,7 @@ watch(
   line-height: 1.5;
 }
 .integration-note i {
-  color: var(--color-purple);
+  color: var(--color-blue);
 }
 .settings-actions {
   justify-content: flex-end;
@@ -862,8 +862,8 @@ watch(
 }
 .btn-primary-action {
   color: #ffffff;
-  background: var(--color-purple);
-  border: 1px solid var(--color-purple);
+  background: var(--color-blue);
+  border: 1px solid var(--color-blue);
 }
 .btn-secondary-action,
 .account-support-card button {
@@ -907,8 +907,8 @@ watch(
   flex-shrink: 0;
   width: 42px;
   height: 42px;
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
   border-radius: 9px;
   font-size: 1.05rem;
 }
@@ -921,9 +921,9 @@ watch(
   background: var(--color-warning-light);
 }
 .inline-action {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
-  border: 1px solid var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
+  border: 1px solid var(--color-blue-light);
 }
 .section-heading {
   align-items: flex-end;

@@ -157,6 +157,8 @@ const getNotificationIcon = (type) => {
   transform: translateX(-50%);
   width: 380px;
   background: var(--color-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   z-index: 1050;
@@ -167,10 +169,19 @@ const getNotificationIcon = (type) => {
   box-shadow: var(--shadow-lg);
 }
 
+[data-theme="dark"] .notification-dropdown {
+  background: rgba(2, 16, 36, 1);
+  border-color: rgba(125, 160, 202, 0.2);
+}
+
 .dropdown-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-hover);
+}
+
+[data-theme="dark"] .dropdown-header {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .header-title {
@@ -180,7 +191,7 @@ const getNotificationIcon = (type) => {
 
 .btn-mark-read {
   font-size: 12px;
-  color: var(--color-primary, #7c3aed) !important;
+  color: var(--color-primary, #5483B3) !important;
   transition: all 0.2s;
 }
 
@@ -193,6 +204,10 @@ const getNotificationIcon = (type) => {
   background: var(--color-surface-hover);
   text-align: center;
   border-top: 1px solid var(--color-border);
+}
+
+[data-theme="dark"] .dropdown-footer {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .view-all-btn {
@@ -233,7 +248,7 @@ const getNotificationIcon = (type) => {
 }
 
 .notification-item.unread {
-  background: var(--color-purple-light, rgba(124, 58, 237, 0.04));
+  background: var(--color-primary-light, rgba(84, 131, 179, 0.04));
 }
 
 .item-avatar-wrap {
@@ -295,7 +310,7 @@ const getNotificationIcon = (type) => {
 .unread-dot {
   width: 8px;
   height: 8px;
-  background: var(--color-primary, #7c3aed);
+  background: var(--color-primary, #5483B3);
   box-shadow: 0 0 8px var(--color-primary);
   display: inline-block;
   transition: opacity 0.2s ease;

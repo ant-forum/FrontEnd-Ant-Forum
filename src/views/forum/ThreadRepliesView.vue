@@ -22,13 +22,14 @@ const authStore = useAuthStore();
 const toast = useToast();
 
 const loading = ref(true);
+const isPostingReply = ref(false);
 const newReplyText = ref("");
 const repliesEnd = ref(null);
 
 const categoryGradients = [
   "linear-gradient(135deg, #3b82f6, #1d4ed8)",
   "linear-gradient(135deg, #10b981, #047857)",
-  "linear-gradient(135deg, #a855f7, #6d28d9)",
+  "linear-gradient(135deg, #5483B3, #052659)",
   "linear-gradient(135deg, #f59e0b, #b45309)",
   "linear-gradient(135deg, #0d9488, #0f766e)",
   "linear-gradient(135deg, #ef4444, #b91c1c)",
@@ -300,8 +301,9 @@ const handleLikeReply = (reply) => {
 };
 
 const postReply = async () => {
-  if (!newReplyText.value.trim()) return;
+  if (!newReplyText.value.trim() || isPostingReply.value) return;
 
+  isPostingReply.value = true;
   const replyData = {
     body: newReplyText.value.trim(),
   };
@@ -319,6 +321,8 @@ const postReply = async () => {
   } catch (err) {
     console.error("Failed to post reply:", err);
     toast.error("Failed to post reply.");
+  } finally {
+    isPostingReply.value = false;
   }
 };
 
@@ -455,8 +459,8 @@ function getAvatarStyle(author) {
     "linear-gradient(135deg, #3b82f6, #2563eb)", // Blue
     "linear-gradient(135deg, #10b981, #059669)", // Emerald
     "linear-gradient(135deg, #f59e0b, #d97706)", // Amber
-    "linear-gradient(135deg, #ec4899, #db2777)", // Pink
-    "linear-gradient(135deg, #8b5cf6, #7c3aed)", // Purple
+    "linear-gradient(135deg, #ef4444, #b91c1c)", // Red
+    "linear-gradient(135deg, #5483B3, #052659)", // blue
     "linear-gradient(135deg, #06b6d4, #0891b2)", // Cyan
   ];
   let sum = 0;
@@ -915,10 +919,11 @@ function getAvatarUrl(author) {
               <div class="reply-footer">
                 <button
                   class="post-btn"
-                  :disabled="!newReplyText.trim()"
+                  :disabled="!newReplyText.trim() || isPostingReply"
                   @click="postReply"
                 >
-                  Post Reply
+                  <span v-if="isPostingReply" class="spinner-border spinner-border-sm" style="margin-right: 8px;" role="status" aria-hidden="true"></span>
+                  {{ isPostingReply ? 'Posting...' : 'Post Reply' }}
                 </button>
               </div>
             </div>
@@ -1050,13 +1055,13 @@ function getAvatarUrl(author) {
 .main-thread {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-surface) 96%, var(--color-purple) 4%),
+    color-mix(in srgb, var(--color-surface) 96%, var(--color-blue) 4%),
     var(--color-surface)
   );
   border-radius: 18px;
   padding: 34px;
   border: 1px solid
-    color-mix(in srgb, var(--color-border) 86%, var(--color-purple) 14%);
+    color-mix(in srgb, var(--color-border) 86%, var(--color-blue) 14%);
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
@@ -1086,12 +1091,12 @@ function getAvatarUrl(author) {
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
   font-size: 11px;
   font-weight: 700;
   border-radius: 100px;
-  border: 1px solid var(--color-purple-light);
+  border: 1px solid var(--color-blue-light);
 }
 
 .thread-title {
@@ -1202,7 +1207,7 @@ function getAvatarUrl(author) {
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   margin: 18px 0;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(84, 131, 179, 0.1);
 }
 
 .thread-body :deep(pre code),
@@ -1226,7 +1231,7 @@ function getAvatarUrl(author) {
   right: 10px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #c084fc;
+  color: var(--color-blue);
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 700;
@@ -1250,8 +1255,8 @@ function getAvatarUrl(author) {
 
 .thread-body :deep(blockquote),
 .reply-body :deep(blockquote) {
-  border-left: 4px solid var(--color-purple) !important;
-  background: var(--color-purple-light);
+  border-left: 4px solid var(--color-blue) !important;
+  background: var(--color-blue-light);
   margin: 18px 0 !important;
   padding: 10px 18px !important;
   border-radius: 0 10px 10px 0;
@@ -1292,7 +1297,7 @@ function getAvatarUrl(author) {
   border-radius: 14px;
   overflow: hidden;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(84, 131, 179, 0.1);
   margin-bottom: 24px;
 }
 
@@ -1320,13 +1325,13 @@ function getAvatarUrl(author) {
   justify-content: space-between;
   padding: 10px 18px;
   background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+  border-bottom: 1px solid rgba(84, 131, 179, 0.1);
 }
 
 .code-lang {
   font-size: 11px;
   font-weight: 700;
-  color: #a855f7;
+  color: #5483B3;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1358,8 +1363,8 @@ function getAvatarUrl(author) {
 .tag-badge {
   font-size: 12.5px;
   font-weight: 700;
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
   padding: 4px 12px;
   border-radius: 8px;
   cursor: pointer;
@@ -1367,7 +1372,7 @@ function getAvatarUrl(author) {
 }
 
 .tag-badge:hover {
-  background: var(--color-purple);
+  background: var(--color-blue);
   color: white;
   transform: translateY(-1px);
 }
@@ -1533,7 +1538,7 @@ function getAvatarUrl(author) {
 .reply-card {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-surface) 97%, var(--color-purple) 3%),
+    color-mix(in srgb, var(--color-surface) 97%, var(--color-blue) 3%),
     var(--color-surface)
   );
   border-radius: 16px;

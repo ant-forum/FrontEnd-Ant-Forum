@@ -345,7 +345,7 @@ const handleSubmit = async () => {
                 <div
                   class="section-header d-flex align-items-center gap-3 mb-4"
                 >
-                  <div class="section-icon bg-purple-light text-purple">
+                  <div class="section-icon bg-blue-light text-blue">
                     <i class="bi bi-code-slash"></i>
                   </div>
                   <h5 class="fw-bold mb-0 text-adaptive">Links & Resources</h5>
@@ -591,7 +591,7 @@ const handleSubmit = async () => {
   height: 400px;
   background: radial-gradient(
     circle,
-    rgba(99, 102, 241, 0.15),
+    rgba(84, 131, 179, 0.15),
     transparent 70%
   );
   top: -100px;
@@ -603,7 +603,7 @@ const handleSubmit = async () => {
   height: 350px;
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.12),
+    rgba(84, 131, 179, 0.12),
     transparent 70%
   );
   bottom: -80px;
@@ -643,7 +643,7 @@ const handleSubmit = async () => {
   justify-content: center;
   font-size: 1.25rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 4px 12px rgba(84, 131, 179, 0.1);
 }
 
 .form-label-custom {
@@ -729,9 +729,9 @@ textarea.form-control-modern {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 10px rgba(84, 131, 179, 0.2);
 }
 
 .tag-btn-pill {

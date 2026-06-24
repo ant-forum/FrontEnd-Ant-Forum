@@ -23,7 +23,7 @@ const getTagColor = (tag) => {
     lower.includes("architecture") ||
     lower.includes("system")
   )
-    return "purple";
+    return "blue";
   if (lower.includes("html")) return "orange";
   if (lower.includes("mongo") || lower.includes("sql") || lower.includes("db"))
     return "pink";
@@ -1295,7 +1295,7 @@ export const useForumStore = defineStore("forum", () => {
       isLoading.value = true;
       const res = await api.get("/api/categories/getAllCategories");
       if (res.data.result !== false) {
-        const CATEGORY_COLORS = ["blue", "green", "purple", "orange"];
+        const CATEGORY_COLORS = ["blue", "green", "blue", "orange"];
         const mapped = (res.data.data || []).map((item, index) => ({
           ...item,
           colorClass: CATEGORY_COLORS[index % CATEGORY_COLORS.length],

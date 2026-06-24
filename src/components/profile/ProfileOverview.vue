@@ -68,7 +68,7 @@
       <!-- Featured Projects -->
       <div class="featured-projects-section">
         <div class="d-flex align-items-center gap-2 mb-3">
-          <i class="bi bi-rocket-takeoff text-primary-purple fs-4"></i>
+          <i class="bi bi-rocket-takeoff text-primary-blue fs-4"></i>
           <h5 class="mb-0 fw-bold header-title themed-text">
             Featured Projects
           </h5>
@@ -136,7 +136,7 @@
       <!-- Recent Activity -->
       <div class="recent-activity-section">
         <div class="d-flex align-items-center gap-2 mb-3">
-          <i class="bi bi-clock-history text-primary-purple fs-4"></i>
+          <i class="bi bi-clock-history text-primary-blue fs-4"></i>
           <h5 class="mb-0 fw-bold header-title themed-text">Recent Activity</h5>
         </div>
 
@@ -149,7 +149,7 @@
             @click="activity.link ? router.push(activity.link) : null"
           >
             <div class="activity-icon-container">
-              <i :class="['bi', activity.icon, 'text-primary-purple']"></i>
+              <i :class="['bi', activity.icon, 'text-primary-blue']"></i>
             </div>
             <div class="overflow-hidden">
               <h6 class="mb-1 fw-bold themed-text text-truncate small-title">
@@ -314,17 +314,17 @@ const displayedActivities = computed(() => {
 .social-icon-btn {
   width: 40px;
   height: 40px;
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
   font-size: 1.1rem;
   transition: all var(--transition-base);
 }
 
 .social-icon-btn:hover {
-  background: var(--color-purple);
+  background: var(--color-blue);
   color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px -2px var(--color-purple-light);
+  box-shadow: 0 4px 12px -2px var(--color-blue-light);
 }
 
 .dashboard-card-modern {
@@ -356,14 +356,14 @@ const displayedActivities = computed(() => {
   height: 4px;
   background: linear-gradient(
     90deg,
-    var(--color-purple) 0%,
+    var(--color-blue) 0%,
     var(--color-primary) 100%
   );
 }
 
 .profile-avatar-wrapper img {
   border: 3px solid var(--color-surface) !important;
-  box-shadow: 0 8px 20px -6px var(--color-purple-light);
+  box-shadow: 0 8px 20px -6px var(--color-blue-light);
   transition: all var(--transition-base);
 }
 
@@ -376,18 +376,18 @@ const displayedActivities = computed(() => {
   color: #ffffff;
   background: linear-gradient(
     135deg,
-    var(--color-purple) 0%,
+    var(--color-blue) 0%,
     var(--color-primary) 100%
   );
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.05em;
-  box-shadow: 0 8px 20px -6px var(--color-purple-light);
+  box-shadow: 0 8px 20px -6px var(--color-blue-light);
 }
 
 .profile-avatar-wrapper:hover img {
   transform: scale(1.02);
-  box-shadow: 0 12px 24px -4px var(--color-purple-light);
+  box-shadow: 0 12px 24px -4px var(--color-blue-light);
 }
 
 .status-indicator-dot {
@@ -410,15 +410,15 @@ const displayedActivities = computed(() => {
 
 .role-badge-overview {
   display: inline-block;
-  background: var(--color-purple-light) !important;
-  color: var(--color-purple) !important;
+  background: var(--color-blue-light) !important;
+  color: var(--color-blue) !important;
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   padding: 0.3rem 0.8rem;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--color-purple-light) !important;
+  border: 1px solid var(--color-blue-light) !important;
 }
 
 .btn-edit-profile {
@@ -426,9 +426,9 @@ const displayedActivities = computed(() => {
   align-items: center;
   gap: 7px;
   padding: 9px 12px;
-  color: var(--color-purple);
-  background: var(--color-purple-light);
-  border: 1px solid var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
+  border: 1px solid var(--color-blue-light);
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 800;
@@ -438,13 +438,13 @@ const displayedActivities = computed(() => {
 
 .btn-edit-profile:hover {
   color: #ffffff;
-  background: var(--color-purple);
-  border-color: var(--color-purple);
+  background: var(--color-blue);
+  border-color: var(--color-blue);
   transform: translateY(-1px);
 }
 
-.text-primary-purple {
-  color: var(--color-purple) !important;
+.text-primary-blue {
+  color: var(--color-blue) !important;
 }
 
 .bio-text {
@@ -472,7 +472,7 @@ const displayedActivities = computed(() => {
 .project-card-modern-v2:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md) !important;
-  border-color: var(--color-purple-light) !important;
+  border-color: var(--color-blue-light) !important;
 }
 
 .project-title-v2 {
@@ -482,7 +482,7 @@ const displayedActivities = computed(() => {
 }
 
 .project-card-modern-v2:hover .project-title-v2 {
-  color: var(--color-purple) !important;
+  color: var(--color-blue) !important;
 }
 
 .tag-badge-v2 {
@@ -515,8 +515,8 @@ const displayedActivities = computed(() => {
   color: var(--color-tag-red-text) !important;
 }
 .tag-badge-v2.grpc {
-  background: var(--color-tag-purple-bg) !important;
-  color: var(--color-tag-purple-text) !important;
+  background: var(--color-tag-blue-bg) !important;
+  color: var(--color-tag-blue-text) !important;
 }
 
 /* Timeline Activity */
@@ -530,7 +530,7 @@ const displayedActivities = computed(() => {
 }
 
 .activity-row-modern:hover {
-  border-color: var(--color-purple-light) !important;
+  border-color: var(--color-blue-light) !important;
   transform: translateX(4px);
   box-shadow: var(--shadow-md);
 }
@@ -538,7 +538,7 @@ const displayedActivities = computed(() => {
 .activity-icon-container {
   width: 38px;
   height: 38px;
-  background: var(--color-purple-light) !important;
+  background: var(--color-blue-light) !important;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -577,7 +577,7 @@ const displayedActivities = computed(() => {
 }
 
 .snapshot-item strong {
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 1.1rem;
 }
 
@@ -613,7 +613,7 @@ const displayedActivities = computed(() => {
 
 .empty-state-card i {
   flex-shrink: 0;
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 1.35rem;
 }
 
@@ -635,7 +635,7 @@ const displayedActivities = computed(() => {
 
 .empty-state-card a {
   margin-left: auto;
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 0.8rem;
   font-weight: 700;
   text-decoration: none;

@@ -619,13 +619,13 @@ h1 {
 .custom-check input[type="checkbox"]:hover {
   border-color: var(--color-primary);
   background: var(--color-surface);
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 10px rgba(84, 131, 179, 0.2);
 }
 /* Checked State */
 .custom-check input[type="checkbox"]:checked {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 0 12px rgba(84, 131, 179, 0.35);
 }
 /* Center Checkmark Symbol */
 .custom-check input[type="checkbox"]:checked::after {

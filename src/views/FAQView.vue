@@ -357,7 +357,7 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
   height: 400px;
   background: radial-gradient(
     circle,
-    rgba(99, 102, 241, 0.15),
+    rgba(84, 131, 179, 0.15),
     transparent 70%
   );
   top: -100px;
@@ -369,7 +369,7 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
   height: 350px;
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.12),
+    rgba(84, 131, 179, 0.12),
     transparent 70%
   );
   bottom: -80px;
@@ -410,7 +410,7 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
   inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(99, 102, 241, 0.08),
+    rgba(84, 131, 179, 0.08),
     transparent 50%,
     rgba(167, 139, 250, 0.08)
   );
@@ -430,7 +430,7 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
   height: 8px;
   border-radius: 999px;
   background: var(--color-primary);
-  box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 5px rgba(84, 131, 179, 0.2);
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
@@ -443,7 +443,7 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -485,7 +485,7 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
 .lang-btn.active {
   background: var(--color-primary);
   color: var(--color-text-on-primary, #ffffff);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(84, 131, 179, 0.3);
 }
 
 /* Search bar */
@@ -585,7 +585,7 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
 
 .nav-link.active {
   background: var(--color-primary-light);
-  border-color: rgba(99, 102, 241, 0.15);
+  border-color: rgba(84, 131, 179, 0.15);
   color: var(--color-primary);
 }
 
@@ -603,7 +603,7 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   color: white;
 }
@@ -624,7 +624,7 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
 .content-glow {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), transparent);
+  background: linear-gradient(135deg, rgba(84, 131, 179, 0.03), transparent);
   pointer-events: none;
 }
 
@@ -637,12 +637,12 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
 }
 
 .faq-item:hover {
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(84, 131, 179, 0.3);
   box-shadow: var(--shadow-sm);
 }
 
 .faq-item.open {
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: rgba(84, 131, 179, 0.4);
   box-shadow: var(--shadow-md);
 }
 
@@ -700,12 +700,12 @@ const isFaqOpen = (id) => openFaqIds.value.has(id);
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 4px rgba(84, 131, 179, 0.15);
   }
   50% {
     box-shadow:
-      0 0 0 8px rgba(99, 102, 241, 0.05),
-      0 0 15px rgba(99, 102, 241, 0.2);
+      0 0 0 8px rgba(84, 131, 179, 0.05),
+      0 0 15px rgba(84, 131, 179, 0.2);
   }
 }
 </style>

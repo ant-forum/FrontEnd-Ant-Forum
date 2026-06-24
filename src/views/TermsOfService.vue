@@ -377,7 +377,7 @@ onUnmounted(() => {
                       'bi-hand-thumbs-down text-orange': idx === 1,
                       'bi-person-x text-pink': idx === 2,
                       'bi-bolt text-yellow': idx === 3,
-                      'bi-robot text-purple': idx === 4,
+                      'bi-robot text-blue': idx === 4,
                       'bi-person-lock text-cyan': idx === 5,
                       'bi-virus text-red-intense': idx === 6,
                     }"
@@ -496,7 +496,7 @@ onUnmounted(() => {
   height: 400px;
   background: radial-gradient(
     circle,
-    rgba(99, 102, 241, 0.15),
+    rgba(84, 131, 179, 0.15),
     transparent 70%
   );
   top: -100px;
@@ -508,7 +508,7 @@ onUnmounted(() => {
   height: 350px;
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.12),
+    rgba(84, 131, 179, 0.12),
     transparent 70%
   );
   bottom: -80px;
@@ -541,7 +541,7 @@ onUnmounted(() => {
   inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(99, 102, 241, 0.08),
+    rgba(84, 131, 179, 0.08),
     transparent 50%,
     rgba(167, 139, 250, 0.08)
   );
@@ -561,7 +561,7 @@ onUnmounted(() => {
   height: 8px;
   border-radius: 999px;
   background: var(--color-primary);
-  box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 5px rgba(84, 131, 179, 0.2);
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
@@ -574,7 +574,7 @@ onUnmounted(() => {
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -616,7 +616,7 @@ onUnmounted(() => {
 .lang-btn.active {
   background: var(--color-primary);
   color: var(--color-text-on-primary, #ffffff);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(84, 131, 179, 0.3);
 }
 
 /* Sidebar styling */
@@ -683,7 +683,7 @@ onUnmounted(() => {
 
 .nav-link.active {
   background: var(--color-primary-light);
-  border-color: rgba(99, 102, 241, 0.15);
+  border-color: rgba(84, 131, 179, 0.15);
   color: var(--color-primary);
 }
 
@@ -702,7 +702,7 @@ onUnmounted(() => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   color: white;
 }
@@ -723,7 +723,7 @@ onUnmounted(() => {
 .content-glow {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), transparent);
+  background: linear-gradient(135deg, rgba(84, 131, 179, 0.03), transparent);
   pointer-events: none;
 }
 
@@ -762,7 +762,7 @@ onUnmounted(() => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   display: inline-flex;
   align-items: center;
@@ -770,7 +770,7 @@ onUnmounted(() => {
   color: white;
   font-weight: 700;
   font-size: 0.95rem;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 12px rgba(84, 131, 179, 0.2);
 }
 
 .tos-text {
@@ -802,7 +802,7 @@ onUnmounted(() => {
 
 /* Custom icon colors */
 .text-indigo {
-  color: #6366f1;
+  color: #5483B3;
 }
 .text-amber {
   color: #f59e0b;
@@ -822,9 +822,7 @@ onUnmounted(() => {
 .text-yellow {
   color: #facc15;
 }
-.text-purple {
-  color: #c084fc;
-}
+
 .text-cyan {
   color: #22d3ee;
 }
@@ -835,12 +833,12 @@ onUnmounted(() => {
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 4px rgba(84, 131, 179, 0.15);
   }
   50% {
     box-shadow:
-      0 0 0 8px rgba(99, 102, 241, 0.05),
-      0 0 15px rgba(99, 102, 241, 0.2);
+      0 0 0 8px rgba(84, 131, 179, 0.05),
+      0 0 15px rgba(84, 131, 179, 0.2);
   }
 }
 </style>

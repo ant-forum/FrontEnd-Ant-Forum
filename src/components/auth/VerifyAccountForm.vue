@@ -956,7 +956,7 @@ h1 {
 }
 
 .eye-toggle-btn:hover {
-  color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #5483B3);
 }
 
 .eye-icon {

@@ -402,7 +402,7 @@ onMounted(() => {
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
-  background: var(--color-primary, #7c3aed);
+  background: var(--color-primary, #052659);
   border: 2px solid var(--color-surface, #1e1e30);
   color: white;
   font-size: 9px;
@@ -453,9 +453,9 @@ onMounted(() => {
 }
 
 .mobile-nav-link.active {
-  background: #6366f1;
+  background: #5483B3;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 12px rgba(84, 131, 179, 0.2);
 }
 
 /* Transition */

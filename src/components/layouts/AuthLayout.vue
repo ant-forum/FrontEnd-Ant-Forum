@@ -17,7 +17,7 @@ import Navbar from "../layouts/header.vue";
   font-family: "Sora", sans-serif;
   background-color: var(--color-bg);
   background-image:
-    radial-gradient(at 0% 0%, var(--glow-purple) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, var(--glow-blue) 0px, transparent 50%),
     radial-gradient(at 100% 100%, var(--glow-pink) 0px, transparent 50%),
     linear-gradient(var(--color-border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);

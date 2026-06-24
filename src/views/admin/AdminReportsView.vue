@@ -611,7 +611,7 @@ const formatDateTime = (date) =>
   padding: 0.25rem 0.5rem;
   color: var(--color-primary);
   background: var(--color-primary-light);
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  border: 1px solid rgba(84, 131, 179, 0.22);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 800;
@@ -766,9 +766,9 @@ const formatDateTime = (date) =>
   color: var(--color-warning);
   background: var(--color-warning-light);
 }
-.insight-icon.purple {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+.insight-icon.blue {
+  color: var(--color-blue);
+  background: var(--color-blue-light);
 }
 .review-content {
   display: grid;

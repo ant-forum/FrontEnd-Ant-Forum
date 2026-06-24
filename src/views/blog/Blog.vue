@@ -401,7 +401,7 @@ const formatNumber = (num) => {
             @click="showDrafts = false"
             :class="[
               'btn-sm px-4 py-2 fw-bold rounded-pill transition-all',
-              !showDrafts ? 'btn-purple text-white' : 'btn-light text-muted',
+              !showDrafts ? 'btn-blue text-white' : 'btn-light text-muted',
             ]"
           >
             <i class="bi bi-journal-check me-1"></i> Published ({{
@@ -412,7 +412,7 @@ const formatNumber = (num) => {
             @click="showDrafts = true"
             :class="[
               'btn-sm px-4 py-2 fw-bold rounded-pill transition-all',
-              showDrafts ? 'btn-purple text-white' : 'btn-light text-muted',
+              showDrafts ? 'btn-blue text-white' : 'btn-light text-muted',
             ]"
           >
             <i class="bi bi-journal-richtext me-1"></i> Drafts ({{
@@ -547,7 +547,7 @@ const formatNumber = (num) => {
                   <div
                     class="post-category-tag position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill bg-surface-blur backdrop-blur-sm"
                   >
-                    <span class="text-xs fw-bold text-purple text-uppercase">{{
+                    <span class="text-xs fw-bold text-blue text-uppercase">{{
                       post.category
                     }}</span>
                   </div>
@@ -586,7 +586,7 @@ const formatNumber = (num) => {
                       }}</span>
                     </div>
 
-                    <div class="read-more-link text-purple text-sm fw-bold">
+                    <div class="read-more-link text-blue text-sm fw-bold">
                       Read <i class="bi bi-arrow-right ms-1"></i>
                     </div>
                   </div>
@@ -601,7 +601,7 @@ const formatNumber = (num) => {
           <button
             @click="loadMorePosts"
             :disabled="blogStore.isLoading"
-            class="btn-purple rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2"
+            class="btn-blue rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2"
           >
             <span
               v-if="blogStore.isLoading"
@@ -702,7 +702,7 @@ const formatNumber = (num) => {
                       object-fit: cover;
                     "
                   />
-                  <span class="text-purple small fw-semibold"
+                  <span class="text-blue small fw-semibold"
                     >Click to replace thumbnail</span
                   >
                 </div>
@@ -738,7 +738,7 @@ const formatNumber = (num) => {
               </button>
               <button
                 type="submit"
-                class="btn-purple rounded-pill px-4 py-2 fw-bold text-white d-flex align-items-center gap-2"
+                class="btn-blue rounded-pill px-4 py-2 fw-bold text-white d-flex align-items-center gap-2"
               >
                 <span
                   v-if="blogStore.isLoading"
@@ -837,8 +837,8 @@ const formatNumber = (num) => {
 }
 
 .category-badge {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
   padding: 6px 16px;
   border-radius: 100px;
   font-size: 0.7rem;
@@ -877,15 +877,15 @@ const formatNumber = (num) => {
 }
 
 /* Pills & Filters */
-.btn-purple {
-  background-color: var(--color-purple);
+.btn-blue {
+  background-color: var(--color-blue);
   color: white;
   border: none;
   transition: all 0.3s ease;
 }
 
-.btn-purple:hover {
-  background-color: var(--color-purple-hover, #6d28d9);
+.btn-blue:hover {
+  background-color: var(--color-blue-hover, #052659);
 }
 
 .btn-light {
@@ -920,9 +920,9 @@ const formatNumber = (num) => {
   color: var(--color-text-muted);
 }
 
-.btn-purple-light {
-  background-color: var(--color-purple-light);
-  color: var(--color-purple);
+.btn-blue-light {
+  background-color: var(--color-blue-light);
+  color: var(--color-blue);
 }
 
 .transition-all {
@@ -933,8 +933,8 @@ const formatNumber = (num) => {
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-.text-purple {
-  color: var(--color-purple);
+.text-blue {
+  color: var(--color-blue);
 }
 
 /* Sidebar Styles */
@@ -965,8 +965,8 @@ const formatNumber = (num) => {
 }
 
 .sidebar-search-wrapper:focus-within {
-  border-color: var(--color-purple);
-  box-shadow: 0 0 0 3px var(--color-purple-light);
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px var(--color-blue-light);
 }
 
 .search-icon {
@@ -1023,8 +1023,8 @@ const formatNumber = (num) => {
 }
 
 .sidebar-menu-item.active {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
   font-weight: 700;
 }
 
@@ -1048,14 +1048,14 @@ const formatNumber = (num) => {
 
 .sidebar-tag-pill:hover {
   background: var(--color-surface-hover);
-  border-color: var(--color-purple);
-  color: var(--color-purple);
+  border-color: var(--color-blue);
+  color: var(--color-blue);
 }
 
 .sidebar-tag-pill.active {
-  background: var(--color-purple-light);
-  border-color: var(--color-purple);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  border-color: var(--color-blue);
+  color: var(--color-blue);
 }
 
 .sidebar-badge {
@@ -1071,7 +1071,7 @@ const formatNumber = (num) => {
 .sidebar-menu-item.active .sidebar-badge {
   background: rgba(255, 255, 255, 0.2);
   border-color: transparent;
-  color: var(--color-purple);
+  color: var(--color-blue);
 }
 
 /* Page Header */
@@ -1091,7 +1091,7 @@ const formatNumber = (num) => {
 .blog-page-kicker {
   display: block;
   margin-bottom: 6px;
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -1137,24 +1137,24 @@ const formatNumber = (num) => {
 }
 
 .sort-select-trigger:hover {
-  border-color: var(--color-purple);
+  border-color: var(--color-blue);
   background-color: var(--color-surface-hover);
   transform: translateY(-1px);
 }
 
 .sort-select-trigger:focus-visible {
-  border-color: var(--color-purple);
-  box-shadow: 0 0 0 3px var(--color-purple-light);
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px var(--color-blue-light);
 }
 
 .sort-icon-leading {
   font-size: 13px;
-  color: var(--color-purple);
+  color: var(--color-blue);
 }
 
 .chevron-icon {
   font-size: 12px;
-  color: var(--color-purple);
+  color: var(--color-blue);
   transition: transform 0.25s ease;
 }
 
@@ -1198,19 +1198,19 @@ const formatNumber = (num) => {
 
 .custom-dropdown-item:hover {
   background-color: var(--color-surface-hover);
-  color: var(--color-purple);
+  color: var(--color-blue);
 }
 
 .custom-dropdown-item.active {
-  background-color: var(--color-purple-light);
-  color: var(--color-purple);
+  background-color: var(--color-blue-light);
+  color: var(--color-blue);
   font-weight: 700;
 }
 
 .check-icon {
   font-size: 14px;
   opacity: 0;
-  color: var(--color-purple);
+  color: var(--color-blue);
   transition: opacity 0.2s ease;
 }
 
@@ -1271,11 +1271,11 @@ const formatNumber = (num) => {
   overflow: hidden;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-surface) 96%, var(--color-purple) 4%),
+    color-mix(in srgb, var(--color-surface) 96%, var(--color-blue) 4%),
     var(--color-surface)
   );
   border: 1px solid
-    color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
+    color-mix(in srgb, var(--color-border) 88%, var(--color-blue) 12%);
   border-radius: inherit;
   box-shadow: 0 1px 2px
     color-mix(
@@ -1292,7 +1292,7 @@ const formatNumber = (num) => {
 .blog-card:hover .blog-card-surface {
   border-color: color-mix(
     in srgb,
-    var(--color-purple) 42%,
+    var(--color-blue) 42%,
     var(--color-border)
   );
   box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 42%, transparent);
@@ -1343,7 +1343,7 @@ const formatNumber = (num) => {
 }
 
 .blog-card:hover .blog-title {
-  color: var(--color-purple);
+  color: var(--color-blue);
 }
 
 .read-more-link {
@@ -1361,7 +1361,7 @@ const formatNumber = (num) => {
   pointer-events: none;
   background: var(--color-surface);
   border: 1px solid
-    color-mix(in srgb, var(--color-border) 88%, var(--color-purple) 12%);
+    color-mix(in srgb, var(--color-border) 88%, var(--color-blue) 12%);
   box-shadow: 0 1px 2px
     color-mix(
       in srgb,

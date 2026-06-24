@@ -248,7 +248,7 @@
             <div class="d-flex align-items-center gap-3">
               <i
                 :class="getPlatformIcon(link.platform)"
-                class="fs-4 text-primary-purple"
+                class="fs-4 text-primary-blue"
               ></i>
               <div>
                 <strong class="d-block themed-text">{{ link.platform }}</strong>
@@ -798,7 +798,7 @@ const getPlatformIcon = (platformStr) => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   border-color: transparent;
   box-shadow: 0 10px 22px -18px var(--color-primary);
@@ -828,12 +828,12 @@ const getPlatformIcon = (platformStr) => {
   gap: 0.35rem;
   color: #5b21b6;
   background: #ede9fe;
-  border: 1px solid #c4b5fd;
+  border: 1px solid #C1E8FF;
   border-radius: var(--radius-pill);
   padding: 0 0.42rem 0 0.75rem;
   font-size: 0.78rem;
   font-weight: 900;
-  box-shadow: 0 8px 18px -18px #7c3aed;
+  box-shadow: 0 8px 18px -18px #052659;
 }
 
 .selected-skill-chip button {
@@ -842,7 +842,7 @@ const getPlatformIcon = (platformStr) => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #6d28d9;
+  color: #052659;
   background: #ffffff;
   border: 1px solid #ddd6fe;
   border-radius: 50%;
@@ -860,10 +860,10 @@ const getPlatformIcon = (platformStr) => {
 }
 
 [data-theme="dark"] .selected-skill-chip {
-  color: #f5f3ff;
-  background: color-mix(in srgb, var(--color-purple) 72%, #111827);
-  border-color: color-mix(in srgb, var(--color-purple) 72%, #ffffff);
-  box-shadow: 0 8px 18px -16px var(--color-purple);
+  color: #eff6ff;
+  background: color-mix(in srgb, var(--color-blue) 72%, #111827);
+  border-color: color-mix(in srgb, var(--color-blue) 72%, #ffffff);
+  box-shadow: 0 8px 18px -16px var(--color-blue);
 }
 
 [data-theme="dark"] .selected-skill-chip button {
@@ -898,7 +898,7 @@ const getPlatformIcon = (platformStr) => {
 
 .avatar-preview-container img {
   border: 3px solid var(--color-surface) !important;
-  box-shadow: 0 8px 20px -6px var(--color-purple-light);
+  box-shadow: 0 8px 20px -6px var(--color-blue-light);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -980,7 +980,7 @@ const getPlatformIcon = (platformStr) => {
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   color: #ffffff;
   border: none;
@@ -994,7 +994,7 @@ const getPlatformIcon = (platformStr) => {
   background: linear-gradient(
     135deg,
     var(--color-primary-hover) 0%,
-    var(--color-purple-hover, #6d28d9) 100%
+    var(--color-blue-hover, #052659) 100%
   );
   transform: translateY(-1px);
   box-shadow: 0 6px 16px -2px var(--color-primary-light);

@@ -600,9 +600,9 @@ onBeforeUnmount(() => {
   color: var(--color-warning);
 }
 
-.taxonomy-icon.purple {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+.taxonomy-icon.blue {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
 }
 
 .taxonomy-card h3 {

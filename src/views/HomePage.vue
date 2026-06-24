@@ -703,19 +703,19 @@ const goToThread = (id) => {
     var(--page-bg);
   background-size: 34px 34px;
   overflow-x: clip;
-  --page-bg: #080d18;
-  --panel-bg: #101827;
-  --panel-soft: #172131;
-  --panel-strong: #0b1120;
-  --grid-line: rgba(148, 163, 184, 0.06);
-  --landing-border: rgba(148, 163, 184, 0.14);
-  --muted: #9aa5b6;
-  --accent: #6d6af7;
-  --cyan: #28b7d7;
+  --page-bg: var(--color-bg);
+  --panel-bg: var(--color-surface);
+  --panel-soft: var(--color-surface-hover);
+  --panel-strong: var(--color-surface-elevated);
+  --grid-line: var(--color-border-soft);
+  --landing-border: var(--color-border);
+  --muted: var(--color-text-muted);
+  --accent: var(--color-primary);
+  --cyan: #7DA0CA;
   --green: #21b982;
-  --glow-1: rgba(99, 102, 241, 0.35);
-  --glow-2: rgba(139, 92, 246, 0.25);
-  --glow-3: rgba(40, 183, 215, 0.2);
+  --glow-1: rgba(84, 131, 179, 0.35);
+  --glow-2: rgba(125, 160, 202, 0.25);
+  --glow-3: rgba(193, 232, 255, 0.2);
 }
 
 /* ── HERO BACKGROUND EFFECTS ── */
@@ -738,12 +738,12 @@ const goToThread = (id) => {
   background:
     radial-gradient(
       ellipse 80% 50% at 50% -20%,
-      rgba(99, 102, 241, 0.12),
+      rgba(84, 131, 179, 0.12),
       transparent
     ),
     radial-gradient(
       ellipse 60% 40% at 80% 80%,
-      rgba(139, 92, 246, 0.08),
+      rgba(84, 131, 179, 0.08),
       transparent
     );
 }
@@ -754,8 +754,8 @@ const goToThread = (id) => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: rgba(139, 92, 246, 0.6);
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+  background: rgba(125, 160, 202, 0.6);
+  box-shadow: 0 0 8px rgba(125, 160, 202, 0.4);
   animation: float-particle linear infinite;
 }
 
@@ -774,7 +774,7 @@ const goToThread = (id) => {
   height: 5px;
   animation-duration: 22s;
   animation-delay: -3s;
-  background: rgba(99, 102, 241, 0.5);
+  background: rgba(84, 131, 179, 0.5);
 }
 .p3 {
   left: 45%;
@@ -791,7 +791,7 @@ const goToThread = (id) => {
   height: 4px;
   animation-duration: 16s;
   animation-delay: -2s;
-  background: rgba(40, 183, 215, 0.5);
+  background: rgba(193, 232, 255, 0.5);
 }
 .p5 {
   left: 80%;
@@ -808,7 +808,7 @@ const goToThread = (id) => {
   height: 3px;
   animation-duration: 19s;
   animation-delay: -8s;
-  background: rgba(40, 183, 215, 0.4);
+  background: rgba(193, 232, 255, 0.4);
 }
 .p7 {
   left: 55%;
@@ -825,7 +825,7 @@ const goToThread = (id) => {
   height: 3px;
   animation-duration: 17s;
   animation-delay: -4s;
-  background: rgba(99, 102, 241, 0.4);
+  background: rgba(84, 131, 179, 0.4);
 }
 
 @keyframes float-particle {
@@ -864,7 +864,7 @@ const goToThread = (id) => {
   top: -10%;
   background: radial-gradient(
     circle,
-    rgba(99, 102, 241, 0.18),
+    rgba(84, 131, 179, 0.18),
     transparent 70%
   );
   animation-duration: 12s;
@@ -877,7 +877,7 @@ const goToThread = (id) => {
   top: 30%;
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.14),
+    rgba(125, 160, 202, 0.14),
     transparent 70%
   );
   animation-duration: 16s;
@@ -891,7 +891,7 @@ const goToThread = (id) => {
   bottom: -10%;
   background: radial-gradient(
     circle,
-    rgba(40, 183, 215, 0.12),
+    rgba(193, 232, 255, 0.12),
     transparent 70%
   );
   animation-duration: 14s;
@@ -950,7 +950,7 @@ const goToThread = (id) => {
   height: 140%;
   background: radial-gradient(
     ellipse at 30% 20%,
-    rgba(99, 102, 241, 0.08),
+    rgba(84, 131, 179, 0.08),
     transparent 60%
   );
   pointer-events: none;
@@ -961,7 +961,7 @@ const goToThread = (id) => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #b9b7ff;
+  color: #7DA0CA;
   font-size: 0.76rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -1005,14 +1005,14 @@ const goToThread = (id) => {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #a78bfa 100%);
+  background: linear-gradient(135deg, #5483B3 0%, #7DA0CA 40%, #C1E8FF 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .gradient-text-alt {
-  background: linear-gradient(135deg, #c4b5fd 0%, #e0e7ff 50%, #a5b4fc 100%);
+  background: linear-gradient(135deg, #C1E8FF 0%, #ffffff 50%, #7DA0CA 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1034,12 +1034,12 @@ const goToThread = (id) => {
 }
 
 .typed-text {
-  color: #a5b4fc;
+  color: #7DA0CA;
   font-weight: 700;
 }
 
 .typing-cursor {
-  color: #6366f1;
+  color: #5483B3;
   font-weight: 300;
   animation: blink 1s step-end infinite;
 }
@@ -1081,19 +1081,19 @@ const goToThread = (id) => {
 
 .glow-btn {
   color: #fff;
-  background: linear-gradient(135deg, #625df5, #7c3aed);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #052659, #5483B3);
+  border: 1px solid rgba(125, 160, 202, 0.2);
   box-shadow:
-    0 0 20px rgba(98, 93, 245, 0.3),
+    0 0 20px rgba(84, 131, 179, 0.3),
     0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .glow-btn:hover {
   transform: translateY(-3px) scale(1.02);
   box-shadow:
-    0 0 30px rgba(98, 93, 245, 0.5),
+    0 0 30px rgba(84, 131, 179, 0.5),
     0 8px 24px rgba(0, 0, 0, 0.25);
-  background: linear-gradient(135deg, #7c78f8, #8b5cf6);
+  background: linear-gradient(135deg, #5483B3, #7DA0CA);
 }
 
 .glass-btn {
@@ -1106,7 +1106,7 @@ const goToThread = (id) => {
 .glass-btn:hover {
   transform: translateY(-3px);
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(139, 92, 246, 0.4);
+  border-color: rgba(84, 131, 179, 0.4);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
@@ -1137,10 +1137,10 @@ const goToThread = (id) => {
 }
 
 .feature-pill:hover {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(84, 131, 179, 0.12);
+  border-color: rgba(84, 131, 179, 0.3);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 4px 16px rgba(84, 131, 179, 0.15);
 }
 
 .floating-pill {
@@ -1186,7 +1186,7 @@ const goToThread = (id) => {
   right: -60px;
   width: 200px;
   height: 200px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.1), transparent 70%);
+  background: radial-gradient(circle, rgba(84, 131, 179, 0.1), transparent 70%);
   pointer-events: none;
 }
 
@@ -1269,7 +1269,7 @@ const goToThread = (id) => {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), transparent);
+  background: linear-gradient(135deg, rgba(84, 131, 179, 0.05), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
@@ -1278,7 +1278,7 @@ const goToThread = (id) => {
 .featured-card:hover {
   transform: translateY(-3px);
   border-color: rgba(109, 106, 247, 0.45);
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 32px rgba(84, 131, 179, 0.15);
 }
 
 .featured-card:hover::before {
@@ -1358,7 +1358,7 @@ const goToThread = (id) => {
 }
 
 .stat-card:hover {
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: rgba(84, 131, 179, 0.25);
   background: rgba(23, 33, 49, 0.9);
 }
 
@@ -1409,8 +1409,8 @@ const goToThread = (id) => {
 }
 
 .cat-tag:hover {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.25);
+  background: rgba(84, 131, 179, 0.12);
+  border-color: rgba(84, 131, 179, 0.25);
 }
 
 .preview-categories b {
@@ -1467,7 +1467,7 @@ const goToThread = (id) => {
 .capability-card.violet .card-glow {
   background: radial-gradient(
     ellipse at 50% 100%,
-    rgba(99, 102, 241, 0.1),
+    rgba(84, 131, 179, 0.1),
     transparent 70%
   );
 }
@@ -1510,7 +1510,7 @@ const goToThread = (id) => {
 }
 
 .capability-card.violet .card-icon-wrap {
-  background: linear-gradient(135deg, #625df5, #7c3aed);
+  background: linear-gradient(135deg, #052659, #052659);
   box-shadow: 0 4px 16px rgba(98, 93, 245, 0.3);
 }
 .capability-card.blue .card-icon-wrap {
@@ -1587,7 +1587,7 @@ const goToThread = (id) => {
 }
 
 .text-link:hover {
-  color: #c4b5fd;
+  color: #C1E8FF;
   gap: 12px;
 }
 
@@ -1657,7 +1657,7 @@ const goToThread = (id) => {
   height: 36px;
   border-radius: 999px;
   object-fit: cover;
-  border: 2px solid rgba(99, 102, 241, 0.2);
+  border: 2px solid rgba(84, 131, 179, 0.2);
 }
 
 .tag-list {
@@ -1732,7 +1732,7 @@ const goToThread = (id) => {
   background: linear-gradient(
     135deg,
     rgba(109, 106, 247, 0.2),
-    rgba(139, 92, 246, 0.15)
+    rgba(84, 131, 179, 0.15)
   );
   border: 1px solid rgba(109, 106, 247, 0.25);
   font-weight: 950;
@@ -1776,7 +1776,7 @@ const goToThread = (id) => {
 }
 
 .workflow-steps article:hover {
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: rgba(84, 131, 179, 0.25);
   background: rgba(17, 26, 43, 0.8);
 }
 
@@ -1788,7 +1788,7 @@ const goToThread = (id) => {
   place-items: center;
   border-radius: 999px;
   color: #fff;
-  background: linear-gradient(135deg, #625df5, #7c3aed);
+  background: linear-gradient(135deg, #052659, #052659);
   font-weight: 950;
   box-shadow: 0 4px 12px rgba(98, 93, 245, 0.3);
 }
@@ -1824,7 +1824,7 @@ const goToThread = (id) => {
   inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(99, 102, 241, 0.06),
+    rgba(84, 131, 179, 0.06),
     transparent 60%
   );
   pointer-events: none;
@@ -1862,7 +1862,7 @@ const goToThread = (id) => {
   --panel-bg: #ffffff;
   --panel-soft: #f1f5f9;
   --panel-strong: #ffffff;
-  --grid-line: rgba(99, 102, 241, 0.07);
+  --grid-line: rgba(84, 131, 179, 0.07);
   --landing-border: #dde5ef;
   --muted: #637083;
 }
@@ -1884,7 +1884,7 @@ const goToThread = (id) => {
 }
 
 [data-theme="light"] .hero-title .gradient-text {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #5483B3 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1930,33 +1930,33 @@ const goToThread = (id) => {
 }
 
 [data-theme="light"] .feature-pill {
-  background: rgba(99, 102, 241, 0.06);
-  border-color: rgba(99, 102, 241, 0.15);
+  background: rgba(84, 131, 179, 0.06);
+  border-color: rgba(84, 131, 179, 0.15);
   color: #475569;
 }
 
 [data-theme="light"] .cat-tag {
-  background: rgba(99, 102, 241, 0.06);
-  border-color: rgba(99, 102, 241, 0.12);
+  background: rgba(84, 131, 179, 0.06);
+  border-color: rgba(84, 131, 179, 0.12);
   color: #475569;
 }
 
 [data-theme="light"] .particle {
-  background: rgba(99, 102, 241, 0.25);
-  box-shadow: 0 0 6px rgba(99, 102, 241, 0.15);
+  background: rgba(84, 131, 179, 0.25);
+  box-shadow: 0 0 6px rgba(84, 131, 179, 0.15);
 }
 
 [data-theme="light"] .orb-1 {
   background: radial-gradient(
     circle,
-    rgba(99, 102, 241, 0.08),
+    rgba(84, 131, 179, 0.08),
     transparent 70%
   );
 }
 [data-theme="light"] .orb-2 {
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.06),
+    rgba(84, 131, 179, 0.06),
     transparent 70%
   );
 }

@@ -290,7 +290,7 @@ const metrics = computed(() => {
       value: String(teachers),
       change: "Active teachers",
       icon: "bi-person-badge",
-      className: "purple",
+      className: "blue",
     },
     {
       label: "Admins",

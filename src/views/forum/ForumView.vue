@@ -526,6 +526,11 @@ const clearFilters = () => {
 <style scoped>
 .forum-page {
   min-height: 100vh;
+  background-color: var(--color-bg);
+  background-image:
+    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .forum-global-grid {
@@ -610,7 +615,7 @@ const clearFilters = () => {
 }
 
 .search-btn:hover {
-  color: #7c3aed;
+  color: #052659;
 }
 
 .forum-tabs-section {
@@ -910,7 +915,7 @@ const clearFilters = () => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   border: none;
   border-radius: 10px;
@@ -963,8 +968,8 @@ const clearFilters = () => {
 .btn-spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(109, 40, 217, 0.2);
-  border-top-color: #6d28d9;
+  border: 2px solid rgba(5, 38, 89, 0.2);
+  border-top-color: #052659;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -1055,8 +1060,8 @@ const clearFilters = () => {
 }
 
 .suggestion-item:hover {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
-  border-color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+  border-color: var(--color-blue);
 }
 </style>

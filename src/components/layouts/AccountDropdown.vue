@@ -156,13 +156,13 @@ onUnmounted(() => {
 }
 
 .account-card:hover {
-  border-color: var(--color-purple-light);
+  border-color: var(--color-blue-light);
 }
 
 .account-card img {
   flex-shrink: 0;
   object-fit: cover;
-  border: 2px solid var(--color-purple-light);
+  border: 2px solid var(--color-blue-light);
   border-radius: 50%;
 }
 

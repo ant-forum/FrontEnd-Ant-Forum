@@ -56,7 +56,7 @@ import PerfCard from "./PerfCard.vue";
   height: 280px;
   background: radial-gradient(
     circle,
-    var(--color-purple-light) 0%,
+    var(--color-blue-light) 0%,
     transparent 70%
   );
   top: -60px;

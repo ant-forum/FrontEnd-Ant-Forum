@@ -86,9 +86,9 @@ const tagColorMap = {
     bg: "var(--color-tag-cyan-bg)",
     color: "var(--color-tag-cyan-text)",
   },
-  purple: {
-    bg: "var(--color-tag-purple-bg)",
-    color: "var(--color-tag-purple-text)",
+  blue: {
+    bg: "var(--color-tag-blue-bg)",
+    color: "var(--color-tag-blue-text)",
   },
   pink: { bg: "var(--color-tag-pink-bg)", color: "var(--color-tag-pink-text)" },
   teal: { bg: "var(--color-tag-cyan-bg)", color: "var(--color-tag-cyan-text)" },
@@ -103,8 +103,8 @@ const tagStyles = {
     color: "var(--color-tag-blue-text)",
   },
   Performance: {
-    bg: "var(--color-tag-purple-bg)",
-    color: "var(--color-tag-purple-text)",
+    bg: "var(--color-tag-blue-bg)",
+    color: "var(--color-tag-blue-text)",
   },
   "System Design": {
     bg: "var(--color-tag-pink-bg)",
@@ -124,12 +124,12 @@ const tagStyles = {
     color: "var(--color-tag-blue-text)",
   },
   "Node.js": {
-    bg: "var(--color-tag-purple-bg)",
-    color: "var(--color-tag-purple-text)",
+    bg: "var(--color-tag-blue-bg)",
+    color: "var(--color-tag-blue-text)",
   },
   DevOps: {
-    bg: "var(--color-tag-purple-bg)",
-    color: "var(--color-tag-purple-text)",
+    bg: "var(--color-tag-blue-bg)",
+    color: "var(--color-tag-blue-text)",
   },
   "Vue 3": {
     bg: "var(--color-tag-cyan-bg)",
@@ -206,7 +206,7 @@ function handleVote(id, direction) {
 const categoryGradients = [
   "linear-gradient(135deg, #3b82f6, #1d4ed8)",
   "linear-gradient(135deg, #10b981, #047857)",
-  "linear-gradient(135deg, #a855f7, #6d28d9)",
+  "linear-gradient(135deg, #5483B3, #052659)",
   "linear-gradient(135deg, #f59e0b, #b45309)",
   "linear-gradient(135deg, #0d9488, #0f766e)",
   "linear-gradient(135deg, #ef4444, #b91c1c)",
@@ -377,23 +377,48 @@ function selectTag(tagName) {
 
 .thread-card {
   display: flex;
-  background: var(--color-surface);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 18px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-md), inset 0 1px 1px rgba(255, 255, 255, 0.15);
   overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-sm);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.thread-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: 
+   radial-gradient( var(--glow-hover-secondary) 0%, transparent 10%);
+    /* radial-gradient(circle at top right, var(--glow-hover-primary) 0%, transparent 10%), 
+    radial-gradient(circle at bottom left, var(--glow-hover-secondary) 0%, transparent 10%); */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.thread-card:hover::before {
+  opacity: 1;
+}
+
+.thread-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .thread-card:hover {
-  border-color: color-mix(
-    in srgb,
-    var(--color-primary) 52%,
-    var(--color-border)
-  );
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md), inset 0 0 20px rgba(84, 131, 179,0.25);
+  border-color: rgba(84, 131, 179, 0.5);
+  z-index: 50;
 }
 
 /* Vote Column (Clean layout matching reference) */
@@ -495,7 +520,7 @@ function selectTag(tagName) {
   color: #ffffff;
   background: linear-gradient(
     135deg,
-    var(--color-purple),
+    var(--color-blue),
     var(--color-primary)
   );
   border: 2px solid var(--color-border);

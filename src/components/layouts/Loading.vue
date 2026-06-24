@@ -179,7 +179,7 @@ onMounted(async () => {
 }
 
 .glow-accent {
-  background: var(--color-purple);
+  background: var(--color-blue);
   bottom: -10%;
   right: -10%;
   animation: pulse-glow 8s ease-in-out infinite 4s;
@@ -229,7 +229,7 @@ onMounted(async () => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   color: white;
   display: flex;
@@ -289,7 +289,7 @@ onMounted(async () => {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(90deg, var(--color-primary), var(--color-blue));
   border-radius: var(--radius-pill);
   transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 0 8px var(--color-primary);
