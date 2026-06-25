@@ -14,7 +14,9 @@ export const looksLikeMarkdown = (value = "") => {
     /\|.+\|\n\s*\|?\s*:?-{3,}/.test(text) ||
     /!\[[^\]]*]\([^)]+\)/.test(text) ||
     /\[[^\]]+]\([^)]+\)/.test(text) ||
-    /[*_~`]/.test(text)
+    /[*_~`]/.test(text) ||
+    // Facebook / Telegram export format: backslash + space used as line-break marker
+    /\\ /.test(text)
   );
 };
 
@@ -27,7 +29,8 @@ const escapeHtml = (text = "") =>
     .replaceAll("'", "&#039;");
 
 const renderInlineMarkdown = (text = "") => {
-  let html = escapeHtml(text);
+  // Strip trailing CommonMark hard-break marker (backslash) that tiptap-markdown emits
+  let html = escapeHtml(String(text).replace(/\\\s*$/, ""));
 
   html = html.replace(/!\[([^\]]*)]\(([^)]+)\)/g, (_, alt, url) => {
     return `<img class="markdown-image" src="${url}" alt="${alt}" loading="lazy">`;
@@ -74,7 +77,19 @@ const isSpecialMarkdownLine = (line = "", nextLine = "") => {
 };
 
 export const markdownToHtml = (markdown = "") => {
-  const lines = String(markdown).replace(/\r\n/g, "\n").split("\n");
+  const lines = String(markdown)
+    .replace(/\r\n/g, "\n")
+    // 1. CommonMark hard line break: backslash (+ optional space) before a real newline
+    //    → emitted by tiptap-markdown for hard breaks inside paragraphs
+    .replace(/\\ ?\n/g, "\n")
+    // 2. Facebook / Telegram export format: "backslash + space" used as an inline
+    //    line-break marker (e.g. "text\ \ next para" or "text\ next line")
+    //    Double occurrence = paragraph break, single = line break
+    .replace(/(\\ ){2,}/g, "\n\n")   // \ \ → blank line (paragraph separator)
+    .replace(/\\ /g, "\n")           // remaining \ → line break
+    // 3. Two trailing spaces (classic markdown hard break)
+    .replace(/  \n/g, "\n")
+    .split("\n");
   const output = [];
   let i = 0;
 

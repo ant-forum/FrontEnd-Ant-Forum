@@ -408,6 +408,13 @@ router.afterEach((to) => {
     document.body.classList.remove("admin-route");
   }
 
+  // Handle auth route class on body
+  if (to.name === "login" || to.name === "forgot-password" || to.name === "verify") {
+    document.body.classList.add("auth-route");
+  } else {
+    document.body.classList.remove("auth-route");
+  }
+
   // Ensure theme is applied based on localStorage or system preference
   const saved = localStorage.getItem("theme");
   const prefersDark =

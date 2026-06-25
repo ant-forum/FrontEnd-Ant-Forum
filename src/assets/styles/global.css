@@ -31,6 +31,8 @@ body {
     radial-gradient(circle, var(--glow-color-2) 0%, transparent 70%),
     radial-gradient(ellipse 80% 50% at 50% -10%, var(--glow-top) 0%, transparent 60%),
     radial-gradient(ellipse 80% 50% at 50% 110%, var(--glow-bottom) 0%, transparent 60%),
+    linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px),
     var(--page-linear-bg);
   background-position: 
     10% 15%,
@@ -40,6 +42,8 @@ body {
     15% 90%,
     50% 0,
     50% 100%,
+    0 0,
+    0 0,
     0 0;
   background-size: 
     600px 600px, 
@@ -49,8 +53,20 @@ body {
     500px 500px, 
     100% 1000px,
     100% 1000px,
+    48px 48px,
+    48px 48px,
     100% 100%;
-  background-repeat: no-repeat;
+  background-repeat: 
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    repeat,
+    repeat,
+    no-repeat;
   background-attachment: scroll;
   color: var(--color-text);
   overflow-x: hidden;
@@ -61,8 +77,9 @@ body {
   padding-top: 90px; /* Account for fixed header */
 }
 
-body.admin-route {
-  padding-top: 0; /* Admin uses its own sticky topbar, no fixed public header */
+body.admin-route,
+body.auth-route {
+  padding-top: 0; /* Admin and auth routes use their own spacing, no fixed public header offset */
 }
 
 /* Global Bootstrap Overrides */

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
@@ -129,7 +129,18 @@ const articleContent = computed(() => {
   const rawContent = post.value?.content || post.value?.description || "";
   const normalizedContent =
     typeof rawContent === "string" ? rawContent.replace(/\r\n/g, "\n") : "";
-  return renderStoredContent(normalizedContent);
+  const rendered = renderStoredContent(normalizedContent);
+  
+  let headingCount = 0;
+  return rendered.replace(/<h([2-4])([^>]*)>(.*?)<\/h\1>/gi, (match, level, attrs, content) => {
+    if (attrs.includes("id=")) return match;
+    const textContent = content.replace(/<[^>]*>/g, "").trim();
+    const slug = textContent
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || `heading-${headingCount++}`;
+    return `<h${level}${attrs} id="${slug}">${content}</h${level}>`;
+  });
 });
 
 const relatedPosts = computed(() => {
@@ -137,20 +148,18 @@ const relatedPosts = computed(() => {
   const list = blogStore.blogs.filter((b) => b.id != post.value.id);
   const sameCategory = list.filter((b) => b.category === post.value.category);
   const remaining = list.filter((b) => b.category !== post.value.category);
-  return [...sameCategory, ...remaining].slice(0, 2);
+  return [...sameCategory, ...remaining].slice(0, 3);
 });
 
 const headings = computed(() => {
   const list = [];
-  if (!post.value) return list;
-
-  const bodyText = post.value.content || post.value.description || "";
-  const regex = /<h[2-4][^>]*id="([^"]+)"[^>]*>(.*?)<\/h[2-4]>/gi;
+  const bodyText = articleContent.value || "";
+  const regex = /<h([2-4])[^>]*id="([^"]+)"[^>]*>(.*?)<\/h\1>/gi;
   let match;
   while ((match = regex.exec(bodyText)) !== null) {
     list.push({
-      id: match[1],
-      label: match[2].replace(/<[^>]*>/g, ""),
+      id: match[2],
+      label: match[3].replace(/<[^>]*>/g, ""),
     });
   }
   return list;
@@ -167,14 +176,70 @@ const updateScrollProgress = () => {
 const scrollTo = (id) => {
   const el = document.getElementById(id);
   if (el) {
-    el.scrollIntoView({ behavior: "smooth" });
+    // scroll with offset for the sticky navbar
+    const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
+    const offsetPosition = elementPosition - 90;
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: "smooth"
+    });
     activeSection.value = id;
+    activeHeadingId.value = id;
   }
+};
+
+const copied = ref(false);
+const activeHeadingId = ref("");
+
+const copyArticleLink = () => {
+  navigator.clipboard.writeText(window.location.href);
+  copied.value = true;
+  setTimeout(() => {
+    copied.value = false;
+  }, 2000);
+};
+
+const shareOnTwitter = () => {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent(post.value?.title || "");
+  window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, "_blank");
+};
+
+const shareOnLinkedin = () => {
+  const url = encodeURIComponent(window.location.href);
+  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank");
+};
+
+const shareOnFacebook = () => {
+  const url = encodeURIComponent(window.location.href);
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, "_blank");
+};
+
+let tocObserver = null;
+const setupTocObserver = () => {
+  if (typeof window === "undefined" || !("IntersectionObserver" in window)) return;
+  if (tocObserver) tocObserver.disconnect();
+
+  tocObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          activeHeadingId.value = entry.target.id;
+          activeSection.value = entry.target.id;
+        }
+      });
+    },
+    { rootMargin: "-90px 0px -50% 0px" }
+  );
+
+  headings.value.forEach((h) => {
+    const el = document.getElementById(h.id);
+    if (el) tocObserver.observe(el);
+  });
 };
 
 const loadBlogData = async (id) => {
   try {
-    // Ensure categories are loaded so normalizeBlog can resolve category names
     if (blogStore.categories.length === 0) {
       await blogStore.fetchCategories().catch(() => {});
     }
@@ -187,7 +252,6 @@ const loadBlogData = async (id) => {
     if (blogStore.blogs.length === 0) {
       await blogStore.fetchBlogs();
     }
-    // Increment view count
     blogStore.incrementBlogView(id).catch((err) => {
       console.warn("Failed to increment blog view count:", err);
     });
@@ -205,17 +269,30 @@ watch(
     if (newId) {
       localLoading.value = true;
       await loadBlogData(newId);
+      nextTick(() => {
+        setupTocObserver();
+      });
     }
   },
 );
 
+watch(headings, () => {
+  nextTick(() => {
+    setupTocObserver();
+  });
+});
+
 onMounted(async () => {
   window.addEventListener("scroll", updateScrollProgress);
   await loadBlogData(route.params.id);
+  nextTick(() => {
+    setupTocObserver();
+  });
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", updateScrollProgress);
+  if (tocObserver) tocObserver.disconnect();
   ttsStop();
 });
 
@@ -238,367 +315,275 @@ const handleImgError = (e) => {
     <Navbar />
 
     <div class="blog-detail-global-grid">
-      <!-- Main Content -->
-      <div class="blog-detail-wrapper">
-        <!-- Back Button -->
-        <div class="mb-4">
-          <router-link
-            to="/blog"
-            class="btn-back-soft text-decoration-none d-inline-flex align-items-center gap-2"
-          >
-            <i class="bi bi-arrow-left"></i>
-            <span>Back to Articles</span>
-          </router-link>
-        </div>
+      <!-- Back Button -->
+      <div class="mb-4">
+        <router-link
+          to="/blog"
+          class="btn-back-soft text-decoration-none d-inline-flex align-items-center gap-2"
+        >
+          <i class="bi bi-arrow-left"></i>
+          <span>Back to Articles</span>
+        </router-link>
+      </div>
 
-        <!-- Loading State: Beautiful skeletons matching standard layout dimensions -->
-        <div v-if="localLoading" class="blog-detail-content">
-          <div class="row py-5">
-            <article class="col-12">
-              <div class="mb-4">
-                <SkeletonLoader
-                  variant="text"
-                  height="20px"
-                  width="100px"
-                  class="d-inline-block me-2"
-                />
-                <SkeletonLoader
-                  variant="text"
-                  height="20px"
-                  width="120px"
-                  class="d-inline-block"
-                />
-              </div>
+      <!-- Loading State: Beautiful skeletons matching standard layout dimensions -->
+      <div v-if="localLoading" class="blog-detail-content">
+        <div class="row py-5">
+          <!-- Main Content Skeleton -->
+          <div class="col-12 col-xl-10 mx-auto">
+            <div class="mb-4">
               <SkeletonLoader
                 variant="text"
+                height="20px"
+                width="100px"
+                class="d-inline-block me-2"
+              />
+              <SkeletonLoader
+                variant="text"
+                height="20px"
+                width="120px"
+                class="d-inline-block"
+              />
+            </div>
+            <SkeletonLoader
+              variant="text"
+              height="48px"
+              width="90%"
+              class="mb-4"
+            />
+
+            <div class="d-flex align-items-center mb-5">
+              <SkeletonLoader
+                variant="avatar"
+                width="48px"
                 height="48px"
-                width="90%"
-                class="mb-4"
+                class="me-3"
+                round
               />
-
-              <div class="d-flex align-items-center mb-5">
+              <div class="w-50">
                 <SkeletonLoader
-                  variant="avatar"
-                  width="48px"
-                  height="48px"
-                  class="me-3"
-                  round
+                  variant="text"
+                  height="20px"
+                  width="40%"
+                  class="mb-2"
                 />
-                <div class="w-50">
-                  <SkeletonLoader
-                    variant="text"
-                    height="20px"
-                    width="40%"
-                    class="mb-2"
-                  />
-                  <SkeletonLoader variant="text" height="16px" width="25%" />
-                </div>
+                <SkeletonLoader variant="text" height="16px" width="25%" />
               </div>
+            </div>
 
-              <SkeletonLoader variant="image" height="350px" class="mb-5" />
-              <SkeletonLoader
-                variant="text"
-                height="20px"
-                width="100%"
-                class="mb-3"
-              />
-              <SkeletonLoader
-                variant="text"
-                height="20px"
-                width="95%"
-                class="mb-3"
-              />
-            </article>
+            <SkeletonLoader variant="image" height="350px" class="mb-5" />
+            <SkeletonLoader
+              variant="text"
+              height="20px"
+              width="100%"
+              class="mb-3"
+            />
+            <SkeletonLoader
+              variant="text"
+              height="20px"
+              width="95%"
+              class="mb-3"
+            />
           </div>
         </div>
+      </div>
 
-        <!-- Loaded State -->
-        <div v-else-if="post" class="blog-detail-content position-relative">
-          <div class="row position-relative">
-            <!-- Main Content -->
-            <article class="col-12">
-              <div
-                class="blog-main-card p-4 p-md-5 rounded-4 mb-5 border border-theme bg-surface shadow-sm"
-              >
-                <div class="blog-author-row d-flex align-items-center mb-4">
-                  <img
-                    :src="post.author_avatar"
-                    class="rounded-circle me-3 border border-theme object-fit-cover"
-                    width="48"
-                    height="48"
-                    alt="Author"
-                  />
-                  <div class="min-w-0">
-                    <h6 class="mb-0 fw-bold text-adaptive byline-title">
-                      {{ post.author }}
-                    </h6>
-                    <div
-                      class="text-muted font-sm d-flex align-items-center mt-1 blog-post-meta"
-                    >
-                      <span class="d-inline-flex align-items-center gap-1">
-                        <i class="bi bi-clock-history"></i>
-                        {{ post.postedAt || post.date }}
-                      </span>
-                      <span class="mx-2">•</span>
-                      <span class="d-inline-flex align-items-center gap-1">
-                        <i class="bi bi-eye"></i>
-                        {{ post.views || 0 }} views
-                      </span>
-                    </div>
+      <!-- Loaded State -->
+      <div v-else-if="post" class="blog-detail-content position-relative">
+        <div class="row">
+          <!-- Main Article & Related Publications -->
+          <div class="col-12 col-xl-10 mx-auto">
+            <article
+              class="blog-main-card p-4 p-md-5 rounded-4 mb-4 border border-theme bg-surface shadow-sm"
+            >
+              <!-- Author row -->
+              <div class="blog-author-row d-flex align-items-center mb-4">
+                <img
+                  :src="post.author_avatar"
+                  class="rounded-circle me-3 border border-theme object-fit-cover"
+                  width="48"
+                  height="48"
+                  alt="Author"
+                />
+                <div class="min-w-0">
+                  <h6 class="mb-0 fw-bold text-adaptive byline-title">
+                    {{ post.author }}
+                  </h6>
+                  <div
+                    class="text-muted font-sm d-flex align-items-center mt-1 blog-post-meta"
+                  >
+                    <span class="d-inline-flex align-items-center gap-1">
+                      <i class="bi bi-clock-history"></i>
+                      {{ post.postedAt || post.date }}
+                    </span>
+                    <span class="mx-2">•</span>
+                    <span class="d-inline-flex align-items-center gap-1">
+                      <i class="bi bi-eye"></i>
+                      {{ post.views || 0 }} views
+                    </span>
                   </div>
                 </div>
+              </div>
 
-                <!-- Metadata -->
-                <div class="mb-4">
-                  <span
-                    v-for="tag in post.tags"
-                    :key="tag"
-                    class="badge bg-blue-light text-blue px-3 py-2 rounded-pill fw-semibold font-xs mb-3 me-2 text-uppercase"
-                  >
-                    {{ tag }}
-                  </span>
-                  <span
-                    class="badge bg-blue-light text-blue px-3 py-2 rounded-pill fw-semibold font-xs mb-3 text-uppercase"
-                  >
-                    {{ post.category }}
-                  </span>
-                </div>
+              <!-- Metadata -->
+              <div class="mb-4">
+                <span
+                  v-for="tag in post.tags"
+                  :key="tag"
+                  class="badge bg-blue-light text-blue px-3 py-2 rounded-pill fw-semibold font-xs mb-3 me-2 text-uppercase"
+                >
+                  {{ tag }}
+                </span>
+                <span
+                  class="badge bg-blue-light text-blue px-3 py-2 rounded-pill fw-semibold font-xs mb-3 text-uppercase"
+                >
+                  {{ post.category }}
+                </span>
+              </div>
 
-                <h1 class="display-4 fw-bold text-adaptive mb-4 article-title">
-                  {{ post.title }}
-                </h1>
+              <h1 class="display-4 fw-bold text-adaptive mb-4 article-title">
+                {{ post.title }}
+              </h1>
 
-                <!-- Hero Image -->
+              <!-- Hero Image -->
+              <div class="article-hero-wrapper mb-5 position-relative overflow-hidden rounded-4 border border-theme shadow-sm">
                 <img
                   :src="post.image"
                   @error.once="handleImgError"
-                  class="img-fluid rounded-4 mb-5 w-100 object-fit-cover border border-theme"
-                  style="max-height: 400px"
+                  class="img-fluid w-100 object-fit-cover article-hero-img"
+                  style="max-height: 420px; min-height: 240px;"
                   alt="Hero Image"
                 />
+              </div>
 
-                <!-- ── Read Article bar ── -->
-                <div class="read-article-bar mb-4">
-                  <!-- Row 1: label + controls + status -->
-                  <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <!-- Wave + label -->
-                    <div class="d-flex align-items-center gap-2">
-                      <span
-                        class="tts-wave-icon"
-                        :class="{ active: ttsState === 'playing' }"
-                      >
-                        <span></span><span></span><span></span><span></span>
-                      </span>
-                      <span
-                        class="fw-bold text-adaptive"
-                        style="font-size: 0.9rem"
-                        >Read Article</span
-                      >
-                      <span
-                        v-if="!isTTSSupported"
-                        class="text-muted"
-                        style="font-size: 0.75rem"
-                        >(unsupported)</span
-                      >
-                    </div>
+              <!-- ── Clean & Minimal TTS player bar ── -->
+              <div class="minimal-tts-player d-flex align-items-center justify-content-between flex-wrap gap-3 py-2 px-3 rounded-pill border border-theme bg-surface-hover mb-4 shadow-sm">
+                <div class="d-flex align-items-center gap-3">
+                  <!-- Play / Pause Button -->
+                  <button
+                    id="tts-play-pause-btn"
+                    @click="ttsState === 'playing' ? ttsPause() : ttsPlay()"
+                    :disabled="!isTTSSupported"
+                    class="tts-min-btn play-pause-btn"
+                    :class="{ active: ttsState === 'playing' }"
+                    :title="ttsState === 'playing' ? 'Pause' : 'Play'"
+                  >
+                    <i :class="['bi', ttsState === 'playing' ? 'bi-pause-fill' : 'bi-play-fill']"></i>
+                  </button>
 
-                    <!-- Play / Pause -->
-                    <button
-                      id="tts-play-pause-btn"
-                      @click="ttsState === 'playing' ? ttsPause() : ttsPlay()"
-                      :disabled="!isTTSSupported"
-                      :class="[
-                        'tts-btn',
-                        ttsState === 'playing' ? 'tts-btn-active' : '',
-                      ]"
-                      :title="ttsState === 'playing' ? 'Pause' : 'Play'"
-                    >
-                      <i
-                        :class="[
-                          'bi',
-                          ttsState === 'playing'
-                            ? 'bi-pause-fill'
-                            : 'bi-play-fill',
-                        ]"
-                      ></i>
-                    </button>
+                  <!-- Stop Button (only active/visible when playing/paused) -->
+                  <button
+                    v-if="ttsState !== 'idle'"
+                    id="tts-stop-btn"
+                    @click="ttsStop"
+                    class="tts-min-btn stop-btn"
+                    title="Stop"
+                  >
+                    <i class="bi bi-stop-fill"></i>
+                  </button>
 
-                    <!-- Stop -->
-                    <button
-                      id="tts-stop-btn"
-                      @click="ttsStop"
-                      :disabled="!isTTSSupported || ttsState === 'idle'"
-                      class="tts-btn"
-                      title="Stop"
-                    >
-                      <i class="bi bi-stop-fill"></i>
-                    </button>
-
-                    <!-- Progress (only while active) -->
-                    <div
-                      v-if="ttsState !== 'idle'"
-                      class="tts-progress-wrap flex-grow-1"
-                    >
-                      <div class="tts-progress-track">
-                        <div
-                          class="tts-progress-fill"
-                          :style="{ width: ttsProgress + '%' }"
-                        ></div>
-                      </div>
-                    </div>
-
+                  <!-- Text label -->
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="text-adaptive fw-semibold font-sm">Listen to article</span>
                     <span
-                      v-if="ttsState !== 'idle'"
-                      class="tts-status-badge"
-                      :class="ttsState"
+                      class="tts-wave-icon"
+                      :class="{ active: ttsState === 'playing' }"
                     >
-                      {{ ttsState === "playing" ? "Reading…" : "Paused" }}
+                      <span></span><span></span><span></span><span></span>
                     </span>
                   </div>
-
-                  <!-- Row 2: Voice + Speed settings -->
-                  <div
-                    class="tts-settings-row d-flex align-items-center gap-3 flex-wrap mt-2"
-                  >
-                    <!-- Voice selector -->
-                    <div
-                      class="d-flex align-items-center gap-2"
-                      v-if="ttsVoices.length"
-                    >
-                      <i
-                        class="bi bi-mic-fill text-muted"
-                        style="font-size: 0.8rem"
-                      ></i>
-                      <select
-                        id="tts-voice-select"
-                        class="tts-select"
-                        :disabled="ttsState === 'playing'"
-                        :value="ttsVoice?.name"
-                        @change="
-                          (e) =>
-                            (ttsVoice = ttsVoices.find(
-                              (v) => v.name === e.target.value,
-                            ))
-                        "
-                      >
-                        <option
-                          v-for="v in ttsVoices"
-                          :key="v.name"
-                          :value="v.name"
-                        >
-                          {{
-                            v.name
-                              .replace("Google ", "")
-                              .replace(" Online (Natural)", "")
-                          }}
-                          {{ v.localService ? "" : "(Online)" }}
-                        </option>
-                      </select>
-                    </div>
-
-                    <!-- Speed slider -->
-                    <div class="d-flex align-items-center gap-2">
-                      <i
-                        class="bi bi-speedometer2 text-muted"
-                        style="font-size: 0.8rem"
-                      ></i>
-                      <span class="tts-speed-label">{{ ttsSpeedLabel }}</span>
-                      <input
-                        id="tts-speed-slider"
-                        type="range"
-                        class="tts-slider"
-                        min="0.5"
-                        max="1.5"
-                        step="0.05"
-                        :disabled="ttsState === 'playing'"
-                        v-model.number="ttsRate"
-                      />
-                    </div>
-                  </div>
                 </div>
 
-                <!-- Article Body -->
+                <!-- TTS Settings & Controls (Dropdowns & progress) -->
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                  <!-- Progress bar (shown while reading) -->
+                  <div v-if="isTTSSupported && ttsState !== 'idle'" class="tts-min-progress d-flex align-items-center gap-2 me-2">
+                    <div class="tts-progress-track" style="width: 80px;">
+                      <div class="tts-progress-fill" :style="{ width: ttsProgress + '%' }"></div>
+                    </div>
+                    <span class="text-muted font-xs">{{ ttsProgress }}%</span>
+                  </div>
+
+                  <!-- Voice Selection Dropdown -->
+                  <div v-if="isTTSSupported && ttsVoices.length" class="tts-dropdown-wrap">
+                    <i class="bi bi-mic text-muted font-xs me-1"></i>
+                    <select
+                      id="tts-voice-select"
+                      class="tts-borderless-select font-xs text-adaptive"
+                      :disabled="ttsState === 'playing'"
+                      :value="ttsVoice?.name"
+                      @change="(e) => ttsVoice = ttsVoices.find((v) => v.name === e.target.value)"
+                    >
+                      <option v-for="v in ttsVoices" :key="v.name" :value="v.name">
+                        {{ v.name.replace("Google ", "").replace(" Online (Natural)", "") }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Speed Selector -->
+                  <div v-if="isTTSSupported" class="tts-dropdown-wrap">
+                    <i class="bi bi-speedometer2 text-muted font-xs me-1"></i>
+                    <select
+                      id="tts-speed-select"
+                      class="tts-borderless-select font-xs text-adaptive"
+                      :disabled="ttsState === 'playing'"
+                      v-model.number="ttsRate"
+                    >
+                      <option :value="0.7">0.7x (Slow)</option>
+                      <option :value="0.9">0.9x (Normal)</option>
+                      <option :value="1.1">1.1x (Fast)</option>
+                      <option :value="1.3">1.3x (Very Fast)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Article Body -->
+              <div
+                class="article-body text-adaptive lh-lg"
+                v-html="articleContent"
+              ></div>
+            </article>
+
+
+            <hr class="my-5 border-theme" />
+
+            <!-- Related Publications -->
+            <div v-if="relatedPosts.length > 0" class="mb-5">
+              <h5 class="fw-bold mb-4 text-adaptive text-uppercase tracking-wide font-sm">
+                Related Publications
+              </h5>
+              <div class="row g-4">
                 <div
-                  class="article-body text-adaptive lh-lg"
-                  v-html="articleContent"
-                ></div>
-              </div>
-
-              <!-- Newsletter -->
-              <!-- <div class="newsletter-section mt-5 p-5 rounded-4 text-center position-relative overflow-hidden border">
-              <div class="newsletter-gradient position-absolute top-0 start-0 w-100 h-100"></div>
-              <div class="position-relative z-3">
-                <div class="d-flex justify-content-center mb-3">
-                  <div class="bg-surface rounded-3 p-2 shadow-sm text-blue border">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-envelope-paper-heart-fill" viewBox="0 0 16 16">
-                      <path fill-rule="evenodd" d="M8 3a1 1 0 0 1 1 1v1h-2V4a1 1 0 0 1 1-1zm1 3v2h2v-2h-2zm-3 0v2H4v-2h2z"/>
-                      <path d="M4 8.5v4.5A1.5 1.5 0 0 0 5.5 14.5h5a1.5 1.5 0 0 0 1.5-1.5v-4.5h-9z"/>
-                      <path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h9A1.5 1.5 0 0 1 14 5.5v1.884L8 10.3l-6-2.916V5.5zm6 5.86-6-2.915v.85c0 .762.58 1.396 1.328 1.488A1.5 1.5 0 0 0 4.5 12h7a1.5 1.5 0 0 0 1.172-1.217C13.42 10.686 14 10.052 14 9.29v-.85L8 11.36z"/>
-                      <path d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
-                    </svg>
-                  </div>
-                </div>
-                <h3 class="fw-bold mb-3 text-adaptive">Join the DevEcosystem Weekly</h3>
-                <p class="text-muted mb-4 mx-auto" style="max-width: 400px;">
-                  Get deep-dive tutorials and architecture patterns sent straight to your inbox every Wednesday.
-                </p>
-                <form class="d-flex justify-content-center mx-auto" style="max-width: 450px;">
-                  <input type="email" class="form-control form-control-lg rounded-pill-start border-end-0 shadow-sm bg-surface" placeholder="Enter your email address">
-                  <button class="btn btn-dark btn-lg rounded-pill-end px-4 shadow-sm" type="button">Subscribe</button>
-                </form>
-              </div>
-            </div> -->
-
-              <hr class="my-5 border-theme" />
-
-              <!-- Related Publications -->
-              <div v-if="relatedPosts.length > 0">
-                <h5
-                  class="fw-bold mb-4 text-adaptive text-uppercase tracking-wide font-sm"
+                  v-for="related in relatedPosts"
+                  :key="related.id"
+                  class="col-md-4"
                 >
-                  Related Publications
-                </h5>
-                <div class="row g-4">
-                  <div
-                    v-for="related in relatedPosts"
-                    :key="related.id"
-                    class="col-md-6"
-                  >
-                    <router-link
-                      :to="'/blog/' + related.id"
-                      class="text-decoration-none"
-                    >
-                      <div
-                        class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden related-card bg-surface"
-                      >
-                        <img
-                          :src="related.image"
-                          @error.once="handleImgError"
-                          class="card-img-top object-fit-cover"
-                          height="140"
-                          alt="Related post"
-                        />
-                        <div class="card-body p-3">
-                          <div
-                            class="text-blue fw-semibold font-xs mb-1 text-uppercase"
-                          >
-                            {{ related.category }}
-                          </div>
-                          <h6
-                            class="fw-bold text-adaptive mb-1 lh-base line-clamp-2"
-                          >
-                            {{ related.title }}
-                          </h6>
-                          <div class="text-muted font-xs">
-                            {{ related.readTime }} read
-                          </div>
+                  <router-link :to="'/blog/' + related.id" class="text-decoration-none">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden related-card bg-surface">
+                      <img
+                        :src="related.image"
+                        @error.once="handleImgError"
+                        class="card-img-top object-fit-cover"
+                        height="140"
+                        alt="Related post"
+                      />
+                      <div class="card-body p-3">
+                        <div class="text-blue fw-semibold font-xs mb-1 text-uppercase">
+                          {{ related.category }}
+                        </div>
+                        <h6 class="fw-bold text-adaptive mb-1 lh-base line-clamp-2">
+                          {{ related.title }}
+                        </h6>
+                        <div class="text-muted font-xs">
+                          {{ related.readTime || '5 min' }} read
                         </div>
                       </div>
-                    </router-link>
-                  </div>
+                    </div>
+                  </router-link>
                 </div>
               </div>
-            </article>
+            </div>
           </div>
         </div>
       </div>
@@ -613,35 +598,11 @@ const handleImgError = (e) => {
 .text-blue {
   color: var(--color-blue);
 }
-.bg-blue {
-  background-color: var(--color-blue);
-}
 .bg-blue-light {
   background-color: var(--color-blue-light);
 }
 .bg-surface-hover {
   background-color: var(--color-surface-hover);
-}
-.bg-darker {
-  background-color: #0a0e17;
-}
-.text-cyan {
-  color: #0891b2;
-}
-.text-green {
-  color: #10b981;
-}
-.text-blue {
-  color: #60a5fa;
-}
-.text-warning {
-  color: #fbbf24;
-}
-.text-red {
-  color: #ef4444;
-}
-.text-yellow {
-  color: #fbbf24;
 }
 .font-xs {
   font-size: 0.75rem;
@@ -652,231 +613,25 @@ const handleImgError = (e) => {
 .tracking-wide {
   letter-spacing: 0.05em;
 }
+.tracking-wider {
+  letter-spacing: 0.08em;
+}
 .lh-lg {
-  line-height: 1.8;
+  line-height: 1.9;
 }
 
-/* ── Read Article / TTS ──────────────────────────────────────────── */
-.read-article-bar {
-  background: var(--color-glass-bg, rgba(255, 255, 255, 0.06));
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--color-glass-border, rgba(255, 255, 255, 0.1));
-  border-radius: 999px;
-  padding: 0.6rem 1.1rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
-}
-
-/* Wave icon animation */
-.tts-wave-icon {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 18px;
-}
-.tts-wave-icon span {
-  display: block;
-  width: 3px;
-  height: 6px;
-  background: var(--color-primary);
-  border-radius: 4px;
-  transition: height 0.2s ease;
-}
-.tts-wave-icon.active span:nth-child(1) {
-  animation: tts-wave 1s ease-in-out infinite 0s;
-}
-.tts-wave-icon.active span:nth-child(2) {
-  animation: tts-wave 1s ease-in-out infinite 0.15s;
-}
-.tts-wave-icon.active span:nth-child(3) {
-  animation: tts-wave 1s ease-in-out infinite 0.3s;
-}
-.tts-wave-icon.active span:nth-child(4) {
-  animation: tts-wave 1s ease-in-out infinite 0.45s;
-}
-@keyframes tts-wave {
-  0%,
-  100% {
-    height: 6px;
-  }
-  50% {
-    height: 16px;
-  }
-}
-
-/* Control buttons */
-.tts-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-.tts-btn:hover:not(:disabled) {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
-  transform: scale(1.08);
-}
-.tts-btn-active {
-  background: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-  color: #fff !important;
-}
-.tts-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Progress track */
-.tts-progress-wrap {
-  min-width: 80px;
-}
-.tts-progress-track {
-  height: 4px;
-  background: var(--color-border);
-  border-radius: 999px;
-  overflow: hidden;
-}
-.tts-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-blue));
-  border-radius: 999px;
-  transition: width 0.3s linear;
-}
-
-/* Status badge */
-.tts-status-badge {
-  font-size: 0.7rem;
-  font-weight: 800;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  letter-spacing: 0.04em;
-}
-.tts-status-badge.playing {
-  background: rgba(84, 131, 179, 0.12);
-  color: var(--color-primary);
-}
-.tts-status-badge.paused {
-  background: rgba(217, 119, 6, 0.12);
-  color: #d97706;
-}
-
-/* Voice selector */
-.tts-select {
-  max-width: 200px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.3rem 0.65rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-  cursor: pointer;
-  outline: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.65rem center;
-  padding-right: 1.8rem;
-  transition: border-color 0.2s;
-}
-.tts-select:focus {
-  border-color: var(--color-primary);
-}
-.tts-select:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* Speed label */
-.tts-speed-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  min-width: 56px;
-}
-
-/* Speed slider */
-.tts-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--color-border);
-  outline: none;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.tts-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-.tts-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-}
-.tts-slider:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Settings row divider */
-.tts-settings-row {
-  border-top: 1px solid var(--color-border);
-  padding-top: 0.5rem;
-  margin-top: 0.25rem !important;
-}
-/* ──────────────────────────────────────────────────────────────── */
-
-.text-adaptive {
-  color: var(--color-text) !important;
-}
-
-.border-theme {
-  border-color: var(--color-border) !important;
-}
-
-.bg-surface {
-  background-color: var(--color-surface) !important;
-}
-
-/* Global Grid */
-.blog-detail-global-grid {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 32px 24px 80px;
-}
-
-.blog-detail-wrapper {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.blog-detail-content {
-  width: 100%;
-}
-
+/* Global Page Layout & Grid */
 .blog-detail-page {
   min-height: 100vh;
-  font-family: "Sora", sans-serif;
+  font-family: var(--font-family-display, "Sora", sans-serif);
   color: var(--color-text);
+  background: var(--page-linear-bg);
+}
+
+.blog-detail-global-grid {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 32px 80px;
 }
 
 /* Reading Progress */
@@ -892,7 +647,7 @@ const handleImgError = (e) => {
 
 .reading-progress-bar {
   height: 100%;
-  background: var(--color-blue);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-blue));
   transition: width 0.1s ease-out;
 }
 
@@ -901,31 +656,26 @@ const handleImgError = (e) => {
   color: var(--color-text-muted);
   font-weight: 600;
   font-size: 0.9rem;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 8px 16px;
+  border-radius: 99px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .btn-back-soft:hover {
-  color: var(--color-blue);
-  transform: translateX(-3px);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: translateX(-4px);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Typography Overrides */
-.article-title {
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  hyphens: auto;
-}
-
+/* Main Article Card */
 .blog-main-card {
   background-color: var(--color-surface) !important;
   border: 1px solid var(--color-border) !important;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-base);
-  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
 }
 
 .blog-author-row {
@@ -942,20 +692,216 @@ const handleImgError = (e) => {
   gap: 0.25rem 0.45rem;
 }
 
-.meta-dot {
-  color: var(--color-text-muted);
+.article-title {
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
-/* Article Body */
+/* Hero Image Section */
+.article-hero-wrapper {
+  background-color: var(--color-surface-hover);
+  border-radius: 20px;
+}
+
+.article-hero-img {
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.article-hero-wrapper:hover .article-hero-img {
+  transform: scale(1.02);
+}
+
+/* ── Clean & Minimal TTS player bar ───────────────────────────────── */
+.minimal-tts-player {
+  background: var(--color-glass-bg, rgba(255, 255, 255, 0.65));
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-glass-border, var(--color-border)) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 100%;
+}
+
+[data-theme="dark"] .minimal-tts-player {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* TTS Animated Soundwaves */
+.tts-wave-icon {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
+  width: 24px;
+}
+
+.tts-wave-icon span {
+  display: block;
+  width: 3px;
+  height: 6px;
+  background: var(--color-primary);
+  border-radius: 4px;
+  transition: height 0.2s ease;
+}
+
+.tts-wave-icon.active span:nth-child(1) {
+  animation: tts-wave 0.8s ease-in-out infinite 0s;
+}
+.tts-wave-icon.active span:nth-child(2) {
+  animation: tts-wave 0.8s ease-in-out infinite 0.15s;
+}
+.tts-wave-icon.active span:nth-child(3) {
+  animation: tts-wave 0.8s ease-in-out infinite 0.3s;
+}
+.tts-wave-icon.active span:nth-child(4) {
+  animation: tts-wave 0.8s ease-in-out infinite 0.45s;
+}
+
+@keyframes tts-wave {
+  0%, 100% {
+    height: 6px;
+  }
+  50% {
+    height: 18px;
+  }
+}
+
+/* Minimal Player buttons */
+.tts-min-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.tts-min-btn:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: #fff;
+  transform: scale(1.08);
+}
+
+.tts-min-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.tts-min-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Borderless selectors */
+.tts-borderless-select {
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.tts-borderless-select:hover:not(:disabled) {
+  color: var(--color-primary);
+  background-color: var(--color-surface-hover);
+}
+
+.tts-dropdown-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--color-border);
+}
+
+.tts-min-progress {
+  min-width: 120px;
+}
+
+/* Progress bar inside TTS */
+.tts-progress-track {
+  height: 6px;
+  background: var(--color-border-soft, var(--color-border));
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.tts-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-blue));
+  border-radius: 99px;
+  transition: width 0.25s linear;
+}
+
+/* ── Article Content Body typography ───────────────────────────────── */
 .article-body {
-  font-size: 1.05rem;
-  line-height: 1.9;
-  max-width: 72ch;
+  font-size: 1.08rem;
+  line-height: 1.95;
+  color: var(--color-text);
 }
 
+.article-body :deep(p) {
+  margin-bottom: 1.75rem;
+}
+
+.article-body :deep(h2) {
+  margin-top: 2.75rem;
+  margin-bottom: 1.25rem;
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+  scroll-margin-top: 100px;
+}
+
+.article-body :deep(h3) {
+  margin-top: 2.25rem;
+  margin-bottom: 1rem;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--color-text);
+  scroll-margin-top: 100px;
+}
+
+.article-body :deep(h4) {
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-text);
+  scroll-margin-top: 100px;
+}
+
+/* List element enhancements */
+.article-body :deep(ul),
+.article-body :deep(ol) {
+  margin-bottom: 1.75rem;
+  padding-left: 1.75rem;
+}
+
+.article-body :deep(li) {
+  margin-bottom: 0.65rem;
+}
+
+/* Interactive tables */
 .article-body :deep(table) {
   width: 100%;
-  margin: 2rem 0;
+  margin: 2.5rem 0;
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--color-border);
@@ -967,12 +913,10 @@ const handleImgError = (e) => {
 
 .article-body :deep(th),
 .article-body :deep(td) {
-  padding: 0.85rem 1.25rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
   border-right: 1px solid var(--color-border);
   font-size: 0.95rem;
-  line-height: 1.5;
-  text-align: left;
 }
 
 .article-body :deep(th:last-child),
@@ -993,196 +937,148 @@ const handleImgError = (e) => {
   letter-spacing: 0.05em;
 }
 
-.article-body :deep(td) {
-  color: var(--color-text-muted);
-}
-
 .article-body :deep(tr:hover) td {
   background-color: var(--color-surface-hover);
-  color: var(--color-text);
 }
 
-.article-body :deep(tr:nth-child(even)) {
-  background-color: rgba(255, 255, 255, 0.015);
-}
-
-[data-theme="dark"] .article-body :deep(tr:nth-child(even)) {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-.article-body :deep(p) {
-  margin-bottom: 1.5rem;
-}
-
-.article-body :deep(h2) {
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
-  font-size: 1.75rem;
-  font-weight: 700;
-}
-
-.article-body :deep(h3) {
-  margin-top: 2rem;
-  margin-bottom: 0.75rem;
-  font-size: 1.4rem;
-  font-weight: 600;
-}
-
-.article-body :deep(ul),
-.article-body :deep(ol) {
-  margin-bottom: 1.5rem;
-  padding-left: 1.5rem;
-}
-
-.article-body :deep(li) {
-  margin-bottom: 0.5rem;
-}
-
-/* Sticky Sidebar */
+/* ── Sticky Right Sidebar ────────────────────────────────────────── */
 .sticky-sidebar-container {
   position: sticky;
-  top: 100px;
+  top: 95px;
+}
+
+.toc-card {
+  border: 1px solid var(--color-border);
 }
 
 .toc-nav {
   border-left: 2px solid var(--color-border);
-  padding-left: 1rem;
-}
-
-/* Share Buttons */
-.share-card {
-  border: 1px solid var(--color-border) !important;
-}
-
-.share-btn {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted);
-  background-color: var(--color-surface-hover);
-  transition: all 0.2s ease;
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  font-size: 1.25rem;
-}
-
-.share-btn:hover {
-  background-color: var(--color-blue-light);
-  color: var(--color-blue);
-  border-color: var(--color-blue);
-  transform: translateY(-2px);
+  padding-left: 0.5rem;
 }
 
 .toc-link {
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.toc-link::before {
-  content: "";
-  position: absolute;
-  left: -18px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 0;
-  background-color: var(--color-blue);
-  transition: height 0.2s ease;
-  border-radius: 4px;
-}
-
-.toc-link.active::before {
-  height: 100%;
+  color: var(--color-text-muted) !important;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 6px 12px;
+  border-left: 2px solid transparent;
+  margin-left: -2px;
 }
 
 .toc-link:hover {
-  color: var(--color-blue) !important;
+  color: var(--color-primary) !important;
+  background-color: var(--color-surface-hover);
 }
 
-/* Code Block */
-.code-block-wrapper {
-  border: 1px solid var(--color-border);
-  border-radius: 1rem !important;
+.toc-link.active {
+  color: var(--color-primary) !important;
+  border-left-color: var(--color-primary);
+  background-color: var(--color-primary-light);
 }
 
-.code-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dot {
-  font-size: 24px;
-  line-height: 10px;
-  margin-right: 4px;
-}
-
-.code-block-wrapper pre {
-  overflow-x: auto;
-}
-
-/* Takeaways */
-.takeaways-box {
-  border-left: 4px solid var(--color-blue);
-}
-
-.takeaways-icon {
-  width: 32px;
-  height: 32px;
-  top: -16px;
-  left: 32px;
-  box-shadow: 0 4px 6px var(--color-shadow);
-}
-
-/* Newsletter */
-.newsletter-section {
+/* Author widget & cards */
+.author-widget-card,
+.share-widget-card {
   border: 1px solid var(--color-border);
 }
 
-.newsletter-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--color-surface-hover) 0%,
-    var(--color-surface) 100%
-  );
-  z-index: 1;
+/* Custom Share Buttons */
+.share-btn-round {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
-.rounded-pill-start {
-  border-top-left-radius: 50rem;
-  border-bottom-left-radius: 50rem;
-  padding-left: 1.5rem;
+.share-btn-round:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
-.rounded-pill-end {
-  border-top-right-radius: 50rem;
-  border-bottom-right-radius: 50rem;
+/* Social media colors on hover */
+.twitter-btn:hover {
+  background-color: #000 !important;
+  border-color: #000 !important;
+  color: #fff !important;
 }
 
-/* Related Cards */
+.linkedin-btn:hover {
+  background-color: #0077b5 !important;
+  border-color: #0077b5 !important;
+  color: #fff !important;
+}
+
+.facebook-btn:hover {
+  background-color: #1877f2 !important;
+  border-color: #1877f2 !important;
+  color: #fff !important;
+}
+
+.copy-btn:hover {
+  background-color: var(--color-primary-light) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Transition animation */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Related cards */
 .related-card {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid var(--color-border) !important;
 }
 
 .related-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md) !important;
+  border-color: var(--color-primary) !important;
 }
 
+/* Responsive configurations */
 @media (max-width: 991px) {
   .blog-detail-global-grid {
-    padding: 20px 16px 40px;
+    padding: 24px 16px 40px;
+  }
+
+  .blog-main-card {
+    padding: 1.5rem !important;
   }
 
   .article-title {
-    font-size: clamp(1.75rem, 5vw, 2.25rem);
+    font-size: clamp(1.8rem, 5vw, 2.25rem);
   }
 
   .article-body {
     font-size: 1rem;
+  }
+
+  /* Style mobile share pills nicely */
+  .d-lg-none .share-btn-round {
+    width: auto;
+    height: auto;
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    gap: 8px;
   }
 }
 </style>
