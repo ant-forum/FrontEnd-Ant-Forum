@@ -780,7 +780,7 @@ onUnmounted(() => {
 }
 
 .notification-item-premium.unread {
-  background-color: rgba(99, 102, 241, 0.03);
+  background-color: rgba(84, 131, 179, 0.03);
 }
 
 .avatar-sm {

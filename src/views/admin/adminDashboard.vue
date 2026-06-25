@@ -306,8 +306,8 @@ const metrics = computed(() => {
       descriptionIcon: "bi-activity",
       descriptionColorClass: "text-muted",
       icon: "bi bi-activity",
-      iconBgClass: "bg-purple-light",
-      iconColorClass: "text-purple",
+      iconBgClass: "bg-blue-light",
+      iconColorClass: "text-blue",
     },
     {
       label: "Projects",
@@ -478,7 +478,7 @@ const quickActions = [
     label: "Create User",
     description: "Add a new student or admin",
     icon: "bi-person-plus",
-    colorClass: "purple",
+    colorClass: "blue",
     to: "/admin/users/create",
   },
   {
@@ -863,7 +863,7 @@ const healthItems = computed(() => [
 
 .quick-action:hover {
   color: var(--color-primary);
-  border-color: rgba(99, 102, 241, 0.28);
+  border-color: rgba(84, 131, 179, 0.28);
 }
 
 .quick-action strong,
@@ -882,9 +882,9 @@ const healthItems = computed(() => [
   font-size: 1rem;
 }
 
-.quick-action-icon.purple {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+.quick-action-icon.blue {
+  color: var(--color-blue);
+  background: var(--color-blue-light);
 }
 
 .quick-action-icon.teal {

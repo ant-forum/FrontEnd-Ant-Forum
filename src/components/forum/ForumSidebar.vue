@@ -79,9 +79,12 @@ const stats = computed(() => [
 
 /* Restored metrics layout */
 .stats-panel {
-  background: color-mix(in srgb, var(--color-surface-hover) 62%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-border) 86%, transparent);
-  border-radius: 14px;
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-sm), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
   padding: 16px;
 }
 
@@ -100,13 +103,13 @@ const stats = computed(() => [
   gap: 5px;
   padding: 8px;
   color: var(--color-text);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
   border-radius: 12px;
 }
 
 .stat-card i {
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 1rem;
 }
 

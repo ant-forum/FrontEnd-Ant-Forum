@@ -108,7 +108,7 @@ const props = defineProps({
 .project-card-modern-v2:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md) !important;
-  border-color: var(--color-purple-light) !important;
+  border-color: var(--color-blue-light) !important;
 }
 
 .project-title-v2 {
@@ -118,7 +118,7 @@ const props = defineProps({
 }
 
 .project-card-modern-v2:hover .project-title-v2 {
-  color: var(--color-purple) !important;
+  color: var(--color-blue) !important;
 }
 
 .tag-badge-v2 {
@@ -151,8 +151,8 @@ const props = defineProps({
   color: var(--color-tag-red-text);
 }
 .tag-badge-v2.grpc {
-  background: var(--color-tag-purple-bg);
-  color: var(--color-tag-purple-text);
+  background: var(--color-tag-blue-bg);
+  color: var(--color-tag-blue-text);
 }
 .tag-badge-v2.node\.js {
   background: var(--color-tag-green-bg);
@@ -188,7 +188,7 @@ const props = defineProps({
 }
 
 .empty-projects-card i {
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 2rem;
 }
 
@@ -208,7 +208,7 @@ const props = defineProps({
   display: inline-flex;
   padding: 9px 14px;
   color: #ffffff;
-  background: var(--color-purple);
+  background: var(--color-blue);
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 700;

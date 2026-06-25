@@ -825,11 +825,7 @@ onMounted(async () => {
 <style scoped>
 .minimal-detail-page {
   min-height: 100vh;
-  background: var(--color-bg);
-  background-image:
-    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
-  background-size: 34px 34px;
+  background: transparent;
   color: var(--color-text);
   position: relative;
   overflow: hidden;
@@ -875,7 +871,7 @@ onMounted(async () => {
   height: 72px;
   border-radius: var(--radius-md);
   font-size: 2rem;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 4px 16px rgba(84, 131, 179, 0.15);
 }
 
 .project-title {

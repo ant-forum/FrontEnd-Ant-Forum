@@ -15,7 +15,7 @@ const teamMembers = [
     image: new URL("../assets/DSC_5424.JPG", import.meta.url).href,
     bio: "I'm a leader of ANT-Forum Team.",
     skills: ["Project Management", "Agile", "Architecture", "System Design"],
-    accent: "purple",
+    accent: "blue",
     github: "PhearomDev",
     linkedin: "vathana-ant",
     email: "phearom@antforum.io",
@@ -90,7 +90,7 @@ const stats = [
 
         <div class="position-relative z-1 py-4">
           <span
-            class="badge bg-purple-subtle text-purple mb-3 px-3 py-2 rounded-pill fw-bold text-uppercase"
+            class="badge bg-blue-subtle text-blue mb-3 px-3 py-2 rounded-pill fw-bold text-uppercase"
             style="font-size: 0.75rem; letter-spacing: 1.5px"
           >
             Meet The Creators
@@ -121,7 +121,7 @@ const stats = [
                 style="font-size: 0.93rem; line-height: 1.6"
               >
                 <div>
-                  <strong class="text-purple fw-bold"
+                  <strong class="text-blue fw-bold"
                     >Portfolio Building (ការកសាងប្រវត្តិរូបឌីជីថល):</strong
                   >
                   <span>
@@ -131,7 +131,7 @@ const stats = [
                   >
                 </div>
                 <div>
-                  <strong class="text-purple fw-bold"
+                  <strong class="text-blue fw-bold"
                     >Knowledge Exchange (ការផ្លាស់ប្តូរចំណេះដឹង):</strong
                   >
 
@@ -142,7 +142,7 @@ const stats = [
                   >
                 </div>
                 <div>
-                  <strong class="text-purple fw-bold"
+                  <strong class="text-blue fw-bold"
                     >Tech Blog Post (អត្ថបទបច្ចេកវិទ្យា):</strong
                   >
                   <span>
@@ -181,14 +181,14 @@ const stats = [
             <div
               class="d-flex align-items-center justify-content-center gap-3 mb-4"
             >
-              <i class="bi bi-award-fill text-purple fs-2"></i>
+              <i class="bi bi-award-fill text-blue fs-2"></i>
               <h2
-                class="fw-bold text-purple mb-0 display-6 text-uppercase"
+                class="fw-bold text-blue mb-0 display-6 text-uppercase"
                 style="font-family: sans-serif"
               >
                 សេចក្ដីថ្លែងអំណរគុណ
               </h2>
-              <i class="bi bi-award-fill text-purple fs-2"></i>
+              <i class="bi bi-award-fill text-blue fs-2"></i>
             </div>
             <p
               class="text-white fs-5 mb-5 text-lead mx-auto"
@@ -375,7 +375,7 @@ const stats = [
 
         <div class="position-relative z-1 py-4">
           <span
-            class="badge bg-purple-subtle text-purple mb-3 px-3 py-2 rounded-pill fw-bold text-uppercase"
+            class="badge bg-blue-subtle text-blue mb-3 px-3 py-2 rounded-pill fw-bold text-uppercase"
             style="font-size: 0.75rem; letter-spacing: 1.5px"
           >
             Ecosystem
@@ -431,11 +431,7 @@ const stats = [
 
 .about-us-layout {
   font-family: "Kantumruy Pro", var(--font-family-base, "Inter", sans-serif);
-  background:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
-    var(--color-bg);
-  background-size: 34px 34px;
+  background: transparent;
   transition: background-color var(--transition-slow);
 }
 
@@ -456,7 +452,7 @@ const stats = [
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -482,7 +478,7 @@ const stats = [
   height: 250px;
   top: -50px;
   left: -50px;
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(84, 131, 179, 0.08);
 }
 
 .hero-glow-2 {
@@ -490,7 +486,7 @@ const stats = [
   height: 250px;
   bottom: -50px;
   right: -50px;
-  background: rgba(139, 92, 246, 0.08);
+  background: rgba(84, 131, 179, 0.08);
 }
 
 /* Section Labels */
@@ -569,8 +565,8 @@ const stats = [
   z-index: 0;
 }
 
-.text-purple {
-  color: #a855f7 !important;
+.text-blue {
+  color: #5483B3 !important;
 }
 
 .logo-box,
@@ -605,15 +601,15 @@ const stats = [
 .logo-1:hover,
 .logo-2:hover {
   transform: translateY(-5px);
-  box-shadow: 0 12px 24px rgba(168, 85, 247, 0.2);
-  border-color: #a855f7;
+  box-shadow: 0 12px 24px rgba(84, 131, 179, 0.2);
+  border-color: #5483B3;
 }
 
 .text-gradient {
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -700,13 +696,13 @@ const stats = [
 }
 
 /* Card Accent border glows on hover */
-.flip-card-container:hover .flip-card-inner.purple {
-  border-color: var(--color-purple) !important;
-  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.25) !important;
+.flip-card-container:hover .flip-card-inner.blue {
+  border-color: var(--color-blue) !important;
+  box-shadow: 0 10px 30px rgba(84, 131, 179, 0.25) !important;
 }
 .flip-card-container:hover .flip-card-inner.indigo {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.25) !important;
+  box-shadow: 0 10px 30px rgba(84, 131, 179, 0.25) !important;
 }
 .flip-card-container:hover .flip-card-inner.cyan {
   border-color: var(--color-info) !important;
@@ -729,18 +725,18 @@ const stats = [
   font-weight: 600;
 }
 
-.bg-purple-subtle {
-  background-color: rgba(139, 92, 246, 0.1);
+.bg-blue-subtle {
+  background-color: rgba(84, 131, 179, 0.1);
 }
-.text-purple {
-  color: #8b5cf6;
+.text-blue {
+  color: #5483B3;
 }
 
 .bg-indigo-subtle {
-  background-color: rgba(99, 102, 241, 0.1);
+  background-color: rgba(84, 131, 179, 0.1);
 }
 .text-indigo {
-  color: #6366f1;
+  color: #5483B3;
 }
 
 .bg-cyan-subtle {
@@ -800,7 +796,7 @@ const stats = [
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   color: white;
   border: none;
@@ -822,7 +818,7 @@ const stats = [
   transform: translateX(-50%);
   background: radial-gradient(
     circle,
-    rgba(99, 102, 241, 0.08),
+    rgba(84, 131, 179, 0.08),
     transparent 70%
   );
   z-index: 0;

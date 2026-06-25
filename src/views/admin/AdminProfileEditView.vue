@@ -578,7 +578,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   border: 0;
   box-shadow: 0 14px 30px -24px var(--color-primary);
@@ -618,7 +618,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   border: 3px solid var(--color-border);
   border-radius: 50%;

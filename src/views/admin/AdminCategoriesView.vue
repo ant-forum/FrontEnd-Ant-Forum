@@ -92,7 +92,7 @@
               <router-link
                 :to="'/blog/' + b.id"
                 target="_blank"
-                class="btn btn-sm btn-link p-0 text-decoration-none text-purple fw-bold flex-shrink-0"
+                class="btn btn-sm btn-link p-0 text-decoration-none text-blue fw-bold flex-shrink-0"
                 style="font-size: 0.76rem"
                 @click="closeDetailModal"
               >
@@ -281,7 +281,7 @@ const metrics = computed(() => [
     value: categories.value.filter((category) => category.description).length,
     change: "Ready to use",
     icon: "bi-card-text",
-    className: "purple",
+    className: "blue",
   },
   {
     label: "Needs Copy",
@@ -683,7 +683,7 @@ const handleCategoryClick = (category) => {
 }
 
 .modal-blog-item:hover {
-  border-color: var(--color-purple) !important;
+  border-color: var(--color-blue) !important;
   transform: translateY(-1px);
 }
 </style>

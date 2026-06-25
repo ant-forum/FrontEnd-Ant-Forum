@@ -353,12 +353,12 @@ const handleImgError = (e) => {
                   <span
                     v-for="tag in post.tags"
                     :key="tag"
-                    class="badge bg-purple-light text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3 me-2 text-uppercase"
+                    class="badge bg-blue-light text-blue px-3 py-2 rounded-pill fw-semibold font-xs mb-3 me-2 text-uppercase"
                   >
                     {{ tag }}
                   </span>
                   <span
-                    class="badge bg-purple-light text-purple px-3 py-2 rounded-pill fw-semibold font-xs mb-3 text-uppercase"
+                    class="badge bg-blue-light text-blue px-3 py-2 rounded-pill fw-semibold font-xs mb-3 text-uppercase"
                   >
                     {{ post.category }}
                   </span>
@@ -529,7 +529,7 @@ const handleImgError = (e) => {
               <div class="newsletter-gradient position-absolute top-0 start-0 w-100 h-100"></div>
               <div class="position-relative z-3">
                 <div class="d-flex justify-content-center mb-3">
-                  <div class="bg-surface rounded-3 p-2 shadow-sm text-purple border">
+                  <div class="bg-surface rounded-3 p-2 shadow-sm text-blue border">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-envelope-paper-heart-fill" viewBox="0 0 16 16">
                       <path fill-rule="evenodd" d="M8 3a1 1 0 0 1 1 1v1h-2V4a1 1 0 0 1 1-1zm1 3v2h2v-2h-2zm-3 0v2H4v-2h2z"/>
                       <path d="M4 8.5v4.5A1.5 1.5 0 0 0 5.5 14.5h5a1.5 1.5 0 0 0 1.5-1.5v-4.5h-9z"/>
@@ -580,7 +580,7 @@ const handleImgError = (e) => {
                         />
                         <div class="card-body p-3">
                           <div
-                            class="text-purple fw-semibold font-xs mb-1 text-uppercase"
+                            class="text-blue fw-semibold font-xs mb-1 text-uppercase"
                           >
                             {{ related.category }}
                           </div>
@@ -610,14 +610,14 @@ const handleImgError = (e) => {
 
 <style scoped>
 /* Typography & Colors */
-.text-purple {
-  color: var(--color-purple);
+.text-blue {
+  color: var(--color-blue);
 }
-.bg-purple {
-  background-color: var(--color-purple);
+.bg-blue {
+  background-color: var(--color-blue);
 }
-.bg-purple-light {
-  background-color: var(--color-purple-light);
+.bg-blue-light {
+  background-color: var(--color-blue-light);
 }
 .bg-surface-hover {
   background-color: var(--color-surface-hover);
@@ -625,8 +625,8 @@ const handleImgError = (e) => {
 .bg-darker {
   background-color: #0a0e17;
 }
-.text-pink {
-  color: #ec4899;
+.text-cyan {
+  color: #0891b2;
 }
 .text-green {
   color: #10b981;
@@ -750,7 +750,7 @@ const handleImgError = (e) => {
 }
 .tts-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-purple));
+  background: linear-gradient(90deg, var(--color-primary), var(--color-blue));
   border-radius: 999px;
   transition: width 0.3s linear;
 }
@@ -764,7 +764,7 @@ const handleImgError = (e) => {
   letter-spacing: 0.04em;
 }
 .tts-status-badge.playing {
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(84, 131, 179, 0.12);
   color: var(--color-primary);
 }
 .tts-status-badge.paused {
@@ -892,7 +892,7 @@ const handleImgError = (e) => {
 
 .reading-progress-bar {
   height: 100%;
-  background: var(--color-purple);
+  background: var(--color-blue);
   transition: width 0.1s ease-out;
 }
 
@@ -905,7 +905,7 @@ const handleImgError = (e) => {
 }
 
 .btn-back-soft:hover {
-  color: var(--color-purple);
+  color: var(--color-blue);
   transform: translateX(-3px);
 }
 
@@ -1069,9 +1069,9 @@ const handleImgError = (e) => {
 }
 
 .share-btn:hover {
-  background-color: var(--color-purple-light);
-  color: var(--color-purple);
-  border-color: var(--color-purple);
+  background-color: var(--color-blue-light);
+  color: var(--color-blue);
+  border-color: var(--color-blue);
   transform: translateY(-2px);
 }
 
@@ -1088,7 +1088,7 @@ const handleImgError = (e) => {
   transform: translateY(-50%);
   width: 4px;
   height: 0;
-  background-color: var(--color-purple);
+  background-color: var(--color-blue);
   transition: height 0.2s ease;
   border-radius: 4px;
 }
@@ -1098,7 +1098,7 @@ const handleImgError = (e) => {
 }
 
 .toc-link:hover {
-  color: var(--color-purple) !important;
+  color: var(--color-blue) !important;
 }
 
 /* Code Block */
@@ -1123,7 +1123,7 @@ const handleImgError = (e) => {
 
 /* Takeaways */
 .takeaways-box {
-  border-left: 4px solid var(--color-purple);
+  border-left: 4px solid var(--color-blue);
 }
 
 .takeaways-icon {

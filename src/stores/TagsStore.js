@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/api.js";
 
-const TAG_COLORS = ["green", "blue", "orange", "purple"];
+const TAG_COLORS = ["green", "blue", "orange", "blue"];
 
 const tagPayload = (tag) => {
   const payload = {

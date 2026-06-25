@@ -213,7 +213,7 @@ export const useBlogStore = defineStore("blog", () => {
       ) {
         authorAvatar = "/charles_leclerc.png";
       } else {
-        authorAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=7c3aed&color=fff&rounded=true&bold=true`;
+        authorAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=5483B3&color=fff&rounded=true&bold=true`;
       }
     }
 

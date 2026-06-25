@@ -189,9 +189,9 @@ const resourceLinks = [
 }
 
 [data-theme="dark"] .silhouette-item {
-  color: var(--color-purple);
+  color: var(--color-blue);
   opacity: 0.5;
-  filter: drop-shadow(0 0 15px var(--color-purple-light));
+  filter: drop-shadow(0 0 15px var(--color-blue-light));
 }
 
 .item-1 {
@@ -298,12 +298,12 @@ const resourceLinks = [
 
 .newsletter-form .form-control:focus {
   background-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 3px var(--color-purple-light);
-  border-color: var(--color-purple);
+  box-shadow: 0 0 0 3px var(--color-blue-light);
+  border-color: var(--color-blue);
 }
 
 .btn-subscribe {
-  background: linear-gradient(135deg, var(--color-purple) 0%, #d946ef 100%);
+  background: linear-gradient(135deg, var(--color-blue) 0%, var(--color-primary-hover) 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -314,7 +314,7 @@ const resourceLinks = [
 
 .btn-subscribe:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 20px -5px var(--color-purple-light);
+  box-shadow: 0 10px 20px -5px var(--color-blue-light);
 }
 
 .footer-bottom {
@@ -327,7 +327,7 @@ const resourceLinks = [
 }
 
 .social-links a:hover {
-  color: var(--color-purple) !important;
+  color: var(--color-blue) !important;
   transform: translateY(-3px);
 }
 

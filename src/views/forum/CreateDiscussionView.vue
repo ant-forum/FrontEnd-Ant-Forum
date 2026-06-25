@@ -77,11 +77,11 @@ const getTagColor = (tag) => {
     lower.includes("architecture") ||
     lower.includes("system")
   )
-    return "purple";
+    return "blue";
   if (lower.includes("html")) return "orange";
   if (lower.includes("mongo") || lower.includes("sql") || lower.includes("db"))
     return "pink";
-  return ["blue", "purple", "green", "orange", "pink", "teal"][
+  return ["blue", "blue", "green", "orange", "pink", "teal"][
     Math.floor(Math.random() * 6)
   ];
 };
@@ -96,9 +96,9 @@ const tagColorMap = {
     bg: "var(--color-tag-cyan-bg)",
     color: "var(--color-tag-cyan-text)",
   },
-  purple: {
-    bg: "var(--color-tag-purple-bg)",
-    color: "var(--color-tag-purple-text)",
+  blue: {
+    bg: "var(--color-tag-blue-bg)",
+    color: "var(--color-tag-blue-text)",
   },
   pink: { bg: "var(--color-tag-pink-bg)", color: "var(--color-tag-pink-text)" },
   teal: { bg: "var(--color-tag-cyan-bg)", color: "var(--color-tag-cyan-text)" },
@@ -223,7 +223,7 @@ const categories = [
     id: "discussion",
     label: "Discussion",
     icon: "bi-chat-dots",
-    color: "purple",
+    color: "blue",
     desc: "Share ideas, ask open questions, or debate",
   },
   {
@@ -269,7 +269,7 @@ const staticCategoryMeta = {
   },
   discussion: {
     icon: "bi-chat-dots",
-    color: "purple",
+    color: "blue",
     desc: "Share ideas, ask open questions, or debate",
   },
   tutorial: {
@@ -284,7 +284,7 @@ const staticCategoryMeta = {
   },
   showcase: {
     icon: "bi-rocket-takeoff",
-    color: "purple",
+    color: "blue",
     desc: "Show off your cool projects",
   },
 };
@@ -303,7 +303,7 @@ const getCategoryMeta = (type) => {
     return {
       idType: "showcase",
       icon: "bi-rocket-takeoff",
-      color: "purple",
+      color: "blue",
       desc: "Show off your cool projects",
     };
   } else if (t.includes("tutorial") || t.includes("guide")) {
@@ -339,7 +339,7 @@ const getCategoryMeta = (type) => {
   return {
     idType: "discussion",
     icon: "bi-chat-dots",
-    color: "purple",
+    color: "blue",
     desc: "General forum discussions",
   };
 };
@@ -978,7 +978,7 @@ const handleSubmit = async () => {
                   width: 100%;
                 "
               >
-                <i class="bi bi-stars text-gradient-purple"></i>
+                <i class="bi bi-stars text-gradient-blue"></i>
                 <strong>Post Readiness</strong>
                 <i
                   class="bi ms-auto chevron-toggle"
@@ -1147,11 +1147,7 @@ const handleSubmit = async () => {
 <style scoped>
 .create-page {
   min-height: 100vh;
-  background-color: var(--color-bg);
-  background-image:
-    linear-gradient(to right, rgba(128, 128, 128, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(128, 128, 128, 0.08) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background-color: transparent;
   padding-bottom: 80px;
 }
 
@@ -1239,18 +1235,18 @@ const handleSubmit = async () => {
   justify-content: center;
   width: 56px;
   height: 56px;
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
   border-radius: 16px;
   font-size: 24px;
 }
 
 /* Draft banner recovery card */
 .draft-banner {
-  background: var(--color-purple-light);
+  background: var(--color-blue-light);
   backdrop-filter: blur(8px);
-  border: 1px solid var(--color-purple);
-  border-left: 5px solid var(--color-purple);
+  border: 1px solid var(--color-blue);
+  border-left: 5px solid var(--color-blue);
   border-radius: 16px;
   padding: 16px 24px;
   display: flex;
@@ -1272,7 +1268,7 @@ const handleSubmit = async () => {
   height: 40px;
   border-radius: 50%;
   background: var(--color-surface);
-  color: var(--color-purple);
+  color: var(--color-blue);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1298,7 +1294,7 @@ const handleSubmit = async () => {
 }
 
 .btn-restore {
-  background: var(--color-purple);
+  background: var(--color-blue);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -1411,10 +1407,10 @@ const handleSubmit = async () => {
 
 .form-input:focus {
   background: var(--color-surface);
-  border-color: var(--color-purple, var(--color-primary));
+  border-color: var(--color-blue, var(--color-primary));
   box-shadow:
-    0 0 0 3px rgba(139, 92, 246, 0.15),
-    0 0 16px rgba(139, 92, 246, 0.1);
+    0 0 0 3px rgba(84, 131, 179, 0.15),
+    0 0 16px rgba(84, 131, 179, 0.1);
   outline: none;
 }
 
@@ -1512,14 +1508,14 @@ const handleSubmit = async () => {
 }
 
 .category-card.active.discussion {
-  border-color: #8b5cf6;
+  border-color: #5483B3;
   box-shadow:
-    0 0 0 3px rgba(139, 92, 246, 0.12),
-    0 4px 12px rgba(139, 92, 246, 0.08);
+    0 0 0 3px rgba(84, 131, 179, 0.12),
+    0 4px 12px rgba(84, 131, 179, 0.08);
 }
 .category-card.active.discussion .category-icon-wrapper {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
 }
 
 .category-card.active.showcase {
@@ -1545,10 +1541,10 @@ const handleSubmit = async () => {
 }
 
 .category-card.active.idea {
-  border-color: #ec4899;
+  border-color: #ef4444;
   box-shadow:
-    0 0 0 3px rgba(236, 72, 153, 0.12),
-    0 4px 12px rgba(236, 72, 153, 0.08);
+    0 0 0 3px rgba(239, 68, 68, 0.12),
+    0 4px 12px rgba(239, 68, 68, 0.08);
 }
 .category-card.active.idea .category-icon-wrapper {
   background: var(--color-danger-light);
@@ -1592,10 +1588,10 @@ const handleSubmit = async () => {
 
 .tags-input-container.focused {
   background: var(--color-surface);
-  border-color: var(--color-purple, var(--color-primary));
+  border-color: var(--color-blue, var(--color-primary));
   box-shadow:
-    0 0 0 3px rgba(139, 92, 246, 0.15),
-    0 0 16px rgba(139, 92, 246, 0.1);
+    0 0 0 3px rgba(84, 131, 179, 0.15),
+    0 0 16px rgba(84, 131, 179, 0.1);
 }
 
 .tags-list {
@@ -1669,11 +1665,11 @@ const handleSubmit = async () => {
 }
 
 .suggestion-pill:hover {
-  background: rgba(139, 92, 246, 0.08);
-  color: var(--color-purple, var(--color-primary));
-  border-color: var(--color-purple, var(--color-primary));
+  background: rgba(84, 131, 179, 0.08);
+  color: var(--color-blue, var(--color-primary));
+  border-color: var(--color-blue, var(--color-primary));
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 4px 12px rgba(84, 131, 179, 0.1);
 }
 
 /* Editor container alignment styling */
@@ -2005,16 +2001,16 @@ const handleSubmit = async () => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   border: none;
   color: white;
-  box-shadow: 0 4px 18px rgba(109, 40, 217, 0.2);
+  box-shadow: 0 4px 18px rgba(5, 38, 89, 0.2);
 }
 
 .btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(109, 40, 217, 0.35);
+  box-shadow: 0 8px 24px rgba(5, 38, 89, 0.35);
 }
 
 .btn-submit:disabled {
@@ -2172,7 +2168,7 @@ const handleSubmit = async () => {
   height: 100%;
   background: linear-gradient(
     90deg,
-    var(--color-purple, #8b5cf6),
+    var(--color-blue, #5483B3),
     var(--color-primary)
   );
   border-radius: 3px;

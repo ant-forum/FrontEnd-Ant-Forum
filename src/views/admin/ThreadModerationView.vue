@@ -52,7 +52,7 @@ const metrics = computed(() => [
     value: String(tagsStore.tags.length),
     change: "Usable keywords",
     icon: "bi-tags",
-    className: "purple",
+    className: "blue",
   },
   {
     label: "Create Forum",

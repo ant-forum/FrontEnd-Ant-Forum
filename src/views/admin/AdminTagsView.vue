@@ -207,7 +207,7 @@ const metrics = computed(() => [
     value: "API",
     change: "Live tag records",
     icon: "bi-cloud-check",
-    className: "purple",
+    className: "blue",
   },
 ]);
 

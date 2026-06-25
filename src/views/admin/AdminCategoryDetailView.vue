@@ -137,7 +137,7 @@
       <section
         :class="[
           'category-hero-banner mb-4 border rounded-4 overflow-hidden position-relative p-4 p-sm-5',
-          category.colorClass || 'purple',
+          category.colorClass || 'blue',
         ]"
       >
         <div
@@ -441,7 +441,7 @@ const metrics = computed(() => {
       value: draftCount.toString(),
       change: "In progress",
       icon: "bi-pencil",
-      className: "purple",
+      className: "blue",
     },
     {
       label: "Category Group",
@@ -609,14 +609,14 @@ const saveCategory = async () => {
   box-shadow: var(--shadow-sm);
 }
 
-.category-hero-banner.purple {
+.category-hero-banner.blue {
   --hero-gradient: linear-gradient(
     135deg,
-    rgba(139, 92, 246, 0.18) 0%,
+    rgba(84, 131, 179, 0.18) 0%,
     var(--color-surface) 100%
   );
-  --hero-border-color: rgba(139, 92, 246, 0.3);
-  --hero-accent: #a78bfa;
+  --hero-border-color: rgba(84, 131, 179, 0.3);
+  --hero-accent: #7DA0CA;
 }
 
 .category-hero-banner.blue {
@@ -757,7 +757,7 @@ const saveCategory = async () => {
 .search-box:focus {
   border-color: var(--color-primary);
   box-shadow:
-    0 0 0 3px rgba(99, 102, 241, 0.15),
+    0 0 0 3px rgba(84, 131, 179, 0.15),
     var(--shadow-sm);
   background: var(--color-surface);
 }
@@ -810,7 +810,7 @@ const saveCategory = async () => {
 .tab-btn.active {
   background: var(--color-primary);
   color: #fff !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.22);
+  box-shadow: 0 4px 12px rgba(84, 131, 179, 0.22);
 }
 
 .tab-badge {
@@ -854,10 +854,10 @@ const saveCategory = async () => {
 
 .post-card:hover {
   transform: translateY(-5px);
-  border-color: rgba(99, 102, 241, 0.3) !important;
+  border-color: rgba(84, 131, 179, 0.3) !important;
   box-shadow:
     var(--shadow-lg),
-    0 0 20px rgba(99, 102, 241, 0.05) !important;
+    0 0 20px rgba(84, 131, 179, 0.05) !important;
 }
 
 .card-image-wrap {
@@ -971,7 +971,7 @@ const saveCategory = async () => {
 }
 
 .post-card:hover .author-avatar {
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: rgba(84, 131, 179, 0.25);
 }
 
 .btn-view-article {
@@ -984,7 +984,7 @@ const saveCategory = async () => {
 .btn-view-article:hover {
   background: var(--color-primary);
   color: #fff !important;
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 10px rgba(84, 131, 179, 0.25);
 }
 
 .btn-view-article i {

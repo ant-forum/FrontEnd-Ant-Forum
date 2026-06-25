@@ -1,63 +1,52 @@
 <template>
-  <div class="left-panel">
-    <h1>Reset Password</h1>
-    <p class="subtitle">
-      Enter your email address and we'll send you a link to reset<br />
-      your password. Your access remains uninterrupted and secure.
-    </p>
+  <div class="login-badge">
+    <div class="badge-content">
+      <h1 class="welcome-title">Reset Password</h1>
+      <p class="subtitle">
+        Enter your email address and we'll send you a link to reset<br />
+        your password. Your access remains uninterrupted and secure.
+      </p>
 
-    <form class="form-stack" @submit.prevent="handleReset" novalidate>
-      <!-- Email -->
-      <div>
-        <label class="input-label">EMAIL ADDRESS</label>
-        <input
-          v-model="form.email"
-          type="email"
-          class="form-control-custom"
-          :class="{
-            error: errors.email,
-            success: isEmailValid && !errors.email,
-          }"
-          placeholder="name@company.com"
-          autocomplete="email"
-          @focus="onEmailInput"
-          @input="onEmailInput"
-        />
-        <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
-        <div v-if="successMsg" class="success-msg">{{ successMsg }}</div>
+      <form class="form-stack" @submit.prevent="handleReset" novalidate>
+        <!-- Email -->
+        <div class="form-group">
+          <label class="field-label">Email address</label>
+          <input
+            v-model="form.email"
+            type="email"
+            class="form-control-custom"
+            :class="{
+              error: errors.email,
+              success: isEmailValid && !errors.email,
+            }"
+            placeholder="name@company.com"
+            autocomplete="email"
+            @focus="onEmailInput"
+            @input="onEmailInput"
+          />
+          <div v-if="errors.email" class="error-msg">{{ errors.email }}</div>
+          <div v-if="successMsg" class="success-msg">{{ successMsg }}</div>
+        </div>
+
+        <!-- Submit -->
+        <div class="action-row">
+          <button type="submit" class="btn-signin" :disabled="loading">
+            <template v-if="loading">
+              <div class="spinner"></div>
+              <span>Sending link…</span>
+            </template>
+            <template v-else>
+              <span>Reset Password</span>
+              <i class="bi bi-arrow-right"></i>
+            </template>
+          </button>
+        </div>
+      </form>
+
+      <!-- Back to Login -->
+      <div class="bottom-links" style="margin-top: 1.5rem;">
+        <p>Remember your password? <router-link to="/login">Back to Login</router-link></p>
       </div>
-
-      <!-- Submit -->
-      <button type="submit" class="btn-signin mt-2" :disabled="loading">
-        <template v-if="loading">
-          <div class="spinner"></div>
-          <span>Sending link…</span>
-        </template>
-        <template v-else>
-          <span>Reset Password</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2.5"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M5 12h14M13 6l6 6-6 6"
-            />
-          </svg>
-        </template>
-      </button>
-    </form>
-
-    <!-- Back to Login -->
-    <div class="back-link text-center mt-4">
-      Remember your password?
-      <router-link to="/login">Back to Login</router-link>
     </div>
   </div>
 </template>
@@ -170,156 +159,256 @@ async function handleReset() {
 </script>
 
 <style scoped>
-.left-panel {
-  padding: var(--spacing-xl) var(--spacing-2xl) var(--spacing-2xl);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
-  background: var(--color-surface) !important;
+.login-badge {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 28px;
+  padding: 44px 32px 32px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  margin: 0 auto;
+  transition: all 0.3s ease;
 }
 
-h1 {
-  font-size: 2rem;
+[data-theme="dark"] .login-badge {
+  background: rgba(2, 16, 36, 0.9);
+  border: 1px solid rgba(125, 160, 202, 0.25);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.login-badge::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 22px;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.02);
+  z-index: 10;
+}
+
+[data-theme="dark"] .login-badge::before {
+  background: linear-gradient(180deg, #021024 0%, #052659 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.login-badge::after {
+  content: "";
+  position: absolute;
+  top: -30%;
+  right: -30%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.15), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  transform: rotate(-15deg);
+}
+
+[data-theme="dark"] .login-badge::after {
+  background: radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.35), transparent 50%);
+}
+
+.badge-content {
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-title {
+  font-size: 1.8rem;
   font-weight: 700;
-  color: var(--color-text) !important;
-  letter-spacing: 0;
+  color: var(--color-text, #0f172a) !important;
+  text-align: center;
   margin-bottom: 0.5rem;
-  line-height: var(--line-height-heading);
+  letter-spacing: -0.02em;
+}
+
+[data-theme="dark"] .welcome-title {
+  color: #ffffff !important;
 }
 
 .subtitle {
-  color: var(--color-text-muted) !important;
-  font-size: 0.93rem;
-  line-height: 1.55;
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.6);
   margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+[data-theme="dark"] .subtitle {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .form-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 1.25rem;
 }
 
-.input-label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-muted) !important;
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(15, 23, 42, 0.8);
+}
+
+[data-theme="dark"] .field-label {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .form-control-custom {
   width: 100%;
-  padding: 0.75rem var(--spacing-md);
-  border: 1.5px solid var(--color-border) !important;
-  border-radius: var(--radius-md);
-  font-family: "Sora", sans-serif;
-  font-size: 0.9rem;
-  color: var(--color-text) !important;
-  background: var(--color-input-bg) !important;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--color-text, #0f172a) !important;
+  background: #ffffff !important;
   outline: none;
-  transition:
-    border-color var(--transition-base),
-    box-shadow var(--transition-base),
-    background-color var(--transition-base);
+  transition: all 0.2s ease;
 }
-.form-control-custom::placeholder {
-  color: var(--color-text-muted) !important;
-  opacity: 0.6;
+
+[data-theme="dark"] .form-control-custom {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  background: rgba(0, 0, 0, 0.4) !important;
 }
+
+.form-control-custom:-webkit-autofill,
+.form-control-custom:-webkit-autofill:hover,
+.form-control-custom:-webkit-autofill:focus,
+.form-control-custom:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-text, #0f172a) !important;
+  box-shadow: inset 0 0 0 1000px #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+[data-theme="dark"] .form-control-custom:-webkit-autofill,
+[data-theme="dark"] .form-control-custom:-webkit-autofill:hover,
+[data-theme="dark"] .form-control-custom:-webkit-autofill:focus,
+[data-theme="dark"] .form-control-custom:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: inset 0 0 0 1000px #061121 !important;
+}
+
 .form-control-custom:focus {
-  border-color: var(--color-primary) !important;
-  box-shadow: var(--focus-ring) !important;
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
 }
+
+[data-theme="dark"] .form-control-custom:focus {
+  border-color: rgba(99, 102, 241, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
 .form-control-custom.error {
-  border-color: var(--color-danger) !important;
-  box-shadow: 0 0 0 3px var(--color-danger-light) !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
+
 .form-control-custom.success {
-  border-color: var(--color-success, #10b981) !important;
+  border-color: #10b981 !important;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
 }
 
 .error-msg {
   font-size: 0.78rem;
-  color: var(--color-danger);
-  margin-top: 4px;
-}
-.success-msg {
-  font-size: 0.78rem;
-  color: var(--color-success, #10b981);
+  color: #ef4444;
   margin-top: 4px;
 }
 
-.btn-signin {
-  width: 100%;
-  padding: 0.8rem;
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
-  border: none;
-  border-radius: var(--radius-md);
-  font-family: "Sora", sans-serif;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
+.success-msg {
+  font-size: 0.78rem;
+  color: #10b981;
+  margin-top: 4px;
+}
+
+.action-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  transition:
-    background var(--transition-base),
-    transform var(--transition-fast),
-    box-shadow var(--transition-base);
-  box-shadow: 0 4px 14px var(--color-primary-light);
+  margin-top: 0.5rem;
 }
 
-@media (hover: hover) {
-  .btn-signin:hover {
-    background: var(--color-primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px var(--color-primary-light);
-  }
+.btn-signin {
+  padding: 0.75rem 1.5rem;
+  width: 100%;
+  background: linear-gradient(90deg, #6366f1, #3b82f6);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
-.btn-signin:focus-visible {
-  outline: none;
-  box-shadow:
-    0 4px 14px var(--color-primary-light),
-    var(--focus-ring);
+
+.btn-signin:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(90deg, #4f46e5, #2563eb);
 }
-.btn-signin:active {
-  transform: translateY(0);
-}
+
 .btn-signin:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
 }
 
-.back-link {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
+.bottom-links {
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.6);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
 }
-.back-link a {
-  color: var(--color-primary);
-  text-decoration: none;
+
+[data-theme="dark"] .bottom-links {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.bottom-links a {
+  color: var(--color-primary, #6366f1);
   font-weight: 600;
-  border-radius: var(--radius-sm);
-  transition: color var(--transition-base);
+  text-decoration: none;
 }
-.back-link a:hover,
-.back-link a:focus-visible {
-  color: var(--color-primary-hover);
+
+[data-theme="dark"] .bottom-links a {
+  color: #fff;
+}
+
+.bottom-links a:hover {
   text-decoration: underline;
 }
 
 .spinner {
   width: 18px;
   height: 18px;
-  border: 2.5px solid var(--color-primary-light);
-  border-top-color: var(--color-text-on-primary);
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -330,17 +419,8 @@ h1 {
 }
 
 @media (max-width: 768px) {
-  .left-panel {
-    padding: var(--spacing-2xl) var(--spacing-lg);
-    border-radius: var(--radius-lg);
-  }
   h1 {
     font-size: 1.6rem;
-  }
-}
-@media (max-width: 420px) {
-  .left-panel {
-    padding: var(--spacing-lg) var(--spacing-md);
   }
 }
 </style>

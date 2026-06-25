@@ -402,8 +402,8 @@ const formatDate = (date) =>
 .project-sort-tabs button.active {
   color: var(--color-primary-hover);
   background: var(--color-primary-light);
-  border-color: rgba(99, 102, 241, 0.38);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.08);
+  border-color: rgba(84, 131, 179, 0.38);
+  box-shadow: 0 0 0 2px rgba(84, 131, 179, 0.08);
 }
 .project-sort-tabs small {
   min-width: 18px;
@@ -434,7 +434,7 @@ const formatDate = (date) =>
   padding: 0.25rem 0.5rem;
   color: var(--color-primary);
   background: var(--color-primary-light);
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  border: 1px solid rgba(84, 131, 179, 0.22);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 800;

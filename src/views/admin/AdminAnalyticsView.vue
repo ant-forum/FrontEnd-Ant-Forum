@@ -271,7 +271,7 @@ const metrics = computed(() => {
       value: String(adminStore.activityLog.length),
       change: "Recorded locally",
       icon: "bi-activity",
-      className: "purple",
+      className: "blue",
     },
   ];
 });
@@ -279,7 +279,7 @@ const metrics = computed(() => {
 const chartSeries = [
   { key: "reports", label: "Reports", className: "orange" },
   { key: "projects", label: "Project reviews", className: "blue" },
-  { key: "actions", label: "Admin actions", className: "purple" },
+  { key: "actions", label: "Admin actions", className: "blue" },
 ];
 
 const get7DaysData = () => {
@@ -446,7 +446,7 @@ const signals = computed(() => {
     {
       label: `${adminStore.lockedThreads.length} threads are locked`,
       detail: "Check whether locked discussions need follow-up.",
-      className: adminStore.lockedThreads.length ? "purple" : "green",
+      className: adminStore.lockedThreads.length ? "blue" : "green",
       icon: "bi-lock",
       to: "/admin/threads",
       action: "View threads",
@@ -489,7 +489,7 @@ const breakdown = computed(() => {
       value: pendingProjectsCount,
       className: "blue",
     },
-    { label: "Published Projects", value: publishedCount, className: "purple" },
+    { label: "Published Projects", value: publishedCount, className: "blue" },
   ];
 });
 const breakdownMaximum = computed(() =>
@@ -857,11 +857,11 @@ const exportCsv = () => {
   background: var(--color-info);
 }
 
-.bar-fill.purple,
-.series-dot.purple,
-.breakdown-fill.purple,
-.breakdown-dot.purple {
-  background: var(--color-purple);
+.bar-fill.blue,
+.series-dot.blue,
+.breakdown-fill.blue,
+.breakdown-dot.blue {
+  background: var(--color-blue);
 }
 
 .series-dot.green,
@@ -906,9 +906,9 @@ const exportCsv = () => {
   background: var(--color-info-light);
 }
 
-.signal-icon.purple {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+.signal-icon.blue {
+  color: var(--color-blue);
+  background: var(--color-blue-light);
 }
 
 .signal-icon.green {

@@ -95,12 +95,12 @@ const isRouteActive = (itemPath) => {
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 10px rgba(84, 131, 179, 0.3);
   flex-shrink: 0;
 }
 

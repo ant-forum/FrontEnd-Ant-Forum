@@ -402,7 +402,7 @@ onMounted(() => {
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
-  background: var(--color-primary, #7c3aed);
+  background: var(--color-primary, #052659);
   border: 2px solid var(--color-surface, #1e1e30);
   color: white;
   font-size: 9px;
@@ -429,8 +429,7 @@ onMounted(() => {
   top: 100%;
   left: 0;
   right: 0;
-  background: var(--color-glass-bg);
-  backdrop-filter: blur(16px);
+  background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow-lg);
   z-index: 999;
@@ -440,7 +439,7 @@ onMounted(() => {
   padding: 12px 20px;
   border-radius: 12px;
   text-decoration: none;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 600;
   font-size: 1rem;
   transition: all 0.2s ease;
@@ -448,14 +447,14 @@ onMounted(() => {
 }
 
 .mobile-nav-link:hover {
-  color: #1e293b;
-  background: #f1f5f9;
+  color: var(--color-text);
+  background: var(--color-surface-hover);
 }
 
 .mobile-nav-link.active {
-  background: #6366f1;
+  background: #5483B3;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 12px rgba(84, 131, 179, 0.2);
 }
 
 /* Transition */

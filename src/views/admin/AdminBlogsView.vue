@@ -73,7 +73,7 @@
       <!-- Premium Category Filter Indicator -->
       <div v-if="route.query.category_id" class="category-filter-alert mb-4">
         <span class="alert-info-text">
-          <i class="bi bi-funnel-fill text-purple"></i>
+          <i class="bi bi-funnel-fill text-blue"></i>
           <span
             >Showing articles in category:
             <strong>{{
@@ -423,7 +423,7 @@ const metrics = computed(() => {
       value: blogStore.drafts.length.toString(),
       change: "Needs editing",
       icon: "bi-pencil",
-      className: "purple",
+      className: "blue",
     },
     {
       label: "Total Reads",
@@ -728,9 +728,9 @@ const confirmDelete = async () => {
 
 .tab-btn.active {
   background: var(--color-primary-light);
-  border-color: rgba(99, 102, 241, 0.38);
+  border-color: rgba(84, 131, 179, 0.38);
   color: var(--color-primary-hover);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.08);
+  box-shadow: 0 0 0 2px rgba(84, 131, 179, 0.08);
 }
 
 .tab-badge {
@@ -768,7 +768,7 @@ const confirmDelete = async () => {
   padding: 0.25rem 0.5rem;
   color: var(--color-primary);
   background: var(--color-primary-light);
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  border: 1px solid rgba(84, 131, 179, 0.22);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 800;
@@ -1110,7 +1110,7 @@ const confirmDelete = async () => {
   gap: 1rem;
   padding: 0.75rem 1rem;
   background: var(--color-primary-light);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(84, 131, 179, 0.2);
   border-radius: 8px;
   font-size: 0.86rem;
   color: var(--color-primary);

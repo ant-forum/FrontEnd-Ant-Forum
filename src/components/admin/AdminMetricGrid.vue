@@ -126,9 +126,9 @@ defineProps({
   color: var(--color-warning);
 }
 
-.metric-icon.purple {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+.metric-icon.blue {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
 }
 
 .metric-label {

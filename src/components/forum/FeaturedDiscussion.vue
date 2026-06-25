@@ -257,8 +257,8 @@ const openTag = (tag) => {
 }
 
 .featured-badge {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
   padding: 0 12px;
 }
 
@@ -324,7 +324,7 @@ const openTag = (tag) => {
 
 .primary-action {
   color: #ffffff;
-  background: var(--color-purple);
+  background: var(--color-blue);
   border: 1px solid transparent;
 }
 
@@ -367,7 +367,7 @@ const openTag = (tag) => {
 }
 
 .stat-card i {
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 1rem;
 }
 
@@ -408,10 +408,10 @@ const openTag = (tag) => {
 }
 
 .tag-chip:hover {
-  color: var(--color-purple);
+  color: var(--color-blue);
   border-color: color-mix(
     in srgb,
-    var(--color-purple) 48%,
+    var(--color-blue) 48%,
     var(--color-border)
   );
 }

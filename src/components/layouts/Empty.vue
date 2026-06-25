@@ -73,7 +73,7 @@ defineProps({
 
 .empty-container:hover .empty-icon-wrapper {
   transform: scale(1.05) rotate(2deg);
-  color: #8b5cf6;
+  color: #5483B3;
 }
 
 .empty-title {
