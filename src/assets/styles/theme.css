@@ -20,6 +20,15 @@
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
   --color-surface-hover: #f1f5f9;
+  --page-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+
+  /* GLOW BACKGROUNDS */
+  --glow-color-1: rgba(84, 131, 179, 0.04);
+  --glow-color-2: rgba(125, 160, 202, 0.03);
+  --glow-color-3: rgba(193, 232, 255, 0.02);
+  --glow-top: rgba(84, 131, 179, 0.05);
+  --glow-bottom: rgba(125, 160, 202, 0.03);
+  --page-linear-bg: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%);
 
   /* TEXT */
   --color-text: #0f172a;
@@ -124,10 +133,22 @@
 
 [data-theme="dark"] {
   /* DARK MODE SURFACES */
-  --color-bg: #021024;
+  --color-bg: #02040a;
   --color-surface: rgba(255, 255, 255, 0.02);
   --color-surface-elevated: rgba(255, 255, 255, 0.04);
   --color-surface-hover: rgba(255, 255, 255, 0.08);
+  --page-gradient: 
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.28) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 50% 110%, rgba(139, 92, 246, 0.35) 0%, transparent 60%),
+    linear-gradient(to bottom, #02040a 0%, #05070f 100%);
+
+  /* GLOW BACKGROUNDS */
+  --glow-color-1: rgba(99, 102, 241, 0.16);
+  --glow-color-2: rgba(139, 92, 246, 0.14);
+  --glow-color-3: rgba(84, 131, 179, 0.12);
+  --glow-top: rgba(99, 102, 241, 0.28);
+  --glow-bottom: rgba(139, 92, 246, 0.35);
+  --page-linear-bg: linear-gradient(to bottom, #02040a 0%, #05070f 100%);
 
   /* TEXT */
   --color-text: #f9fafb;
@@ -188,4 +209,13 @@
 
   --admin-active-card-bg: rgba(255, 255, 255, 0.04);
   --admin-active-card-border: rgba(84, 131, 179, 0.35);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --font-size-xl: 1.65rem;
+    --spacing-md: 12px;
+    --spacing-lg: 18px;
+    --spacing-2xl: 24px;
+  }
 }

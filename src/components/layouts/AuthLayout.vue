@@ -1,7 +1,7 @@
 <template>
   <Navbar />
   <div class="auth-container">
-    <div class="auth-card">
+    <div :class="customCard ? 'auth-custom-wrap' : 'auth-card'">
       <slot />
     </div>
   </div>
@@ -9,23 +9,18 @@
 
 <script setup>
 import Navbar from "../layouts/header.vue";
-// Shared layout wrapper for all auth pages (Login, ForgotPassword, Verify)
+defineProps({
+  customCard: {
+    type: Boolean,
+    default: false
+  }
+});
 </script>
 
 <style scoped>
 .auth-container {
   font-family: "Sora", sans-serif;
-  background-color: var(--color-bg);
-  background-image:
-    radial-gradient(at 0% 0%, var(--glow-blue) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, var(--glow-pink) 0px, transparent 50%),
-    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
-  background-size:
-    100% 100%,
-    100% 100%,
-    40px 40px,
-    40px 40px;
+  background: transparent;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -86,6 +81,16 @@ import Navbar from "../layouts/header.vue";
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+.auth-custom-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 768px) {

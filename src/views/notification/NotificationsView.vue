@@ -340,7 +340,7 @@ const getNotificationIcon = (type) => {
 
 .notifications-premium-page {
   min-height: 100vh;
-  background: var(--color-space-gradient, var(--color-bg));
+  background: transparent;
   color: var(--color-text);
   padding-bottom: 60px;
   position: relative;

@@ -431,11 +431,7 @@ const stats = [
 
 .about-us-layout {
   font-family: "Kantumruy Pro", var(--font-family-base, "Inter", sans-serif);
-  background:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
-    var(--color-bg);
-  background-size: 34px 34px;
+  background: transparent;
   transition: background-color var(--transition-slow);
 }
 

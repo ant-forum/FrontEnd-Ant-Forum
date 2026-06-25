@@ -1,147 +1,99 @@
 <template>
-  <div class="left-panel">
-    <h1>Welcome back</h1>
-    <p class="subtitle">
-      Log in to your ANT-Forum account to access<br />
-      the developer community and resources.
-    </p>
-
-    <form class="form-stack" @submit.prevent="handleSignIn" novalidate>
-      <!-- Alert Banner -->
-      <div v-if="displayError" class="alert-banner">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-          class="alert-icon"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
-        <span>{{ displayError }}</span>
-      </div>
-
-      <!-- Email -->
-      <div>
-        <input
-          v-model="form.email"
-          type="email"
-          class="form-control-custom"
-          :class="{ error: errors.email }"
-          placeholder="Email"
-          autocomplete="email"
-          @focus="clearError('email')"
-        />
-        <div v-if="errors.email && errors.email !== 'true'" class="error-msg">
-          {{ errors.email }}
+  <div class="login-badge">
+    <div class="badge-content">
+      <h1 class="welcome-title">Welcome back</h1>
+      
+      <form class="form-stack" @submit.prevent="handleSignIn" novalidate>
+        <!-- Alert Banner -->
+        <div v-if="displayError" class="alert-banner">
+          <i class="bi bi-exclamation-triangle-fill alert-icon"></i>
+          <span>{{ displayError }}</span>
         </div>
-      </div>
 
-      <!-- Password -->
-      <div>
-        <div class="input-wrap">
+        <!-- Email -->
+        <div class="form-group">
+          <label class="field-label">Email address</label>
           <input
-            v-model="form.password"
-            :type="showPass ? 'text' : 'password'"
+            v-model="form.email"
+            type="email"
             class="form-control-custom"
-            :class="{ error: errors.password }"
-            placeholder="Password"
-            autocomplete="current-password"
-            @focus="clearError('password')"
+            :class="{ error: errors.email }"
+            autocomplete="email"
+            @focus="clearError('email')"
           />
+          <div v-if="errors.email && errors.email !== 'true'" class="error-msg">
+            {{ errors.email }}
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="field-label">Password</label>
+          <div class="input-wrap">
+            <input
+              v-model="form.password"
+              :type="showPass ? 'text' : 'password'"
+              class="form-control-custom"
+              :class="{ error: errors.password }"
+              autocomplete="current-password"
+              @focus="clearError('password')"
+            />
+            <button
+              class="toggle-eye"
+              type="button"
+              @click="showPass = !showPass"
+              :aria-label="showPass ? 'Hide password' : 'Show password'"
+            >
+              <i :class="['bi', showPass ? 'bi-eye-slash' : 'bi-eye']"></i>
+            </button>
+          </div>
+          <div v-if="errors.password && errors.password !== 'true'" class="error-msg">
+            {{ errors.password }}
+          </div>
+        </div>
+
+        <!-- Remember Me & Forgot Password Row -->
+        <div class="remember-forgot-row">
+          <label class="remember-me-label">
+            <input type="checkbox" v-model="form.remember" class="remember-checkbox" />
+            <span>Remember me</span>
+          </label>
+          <router-link to="/forgot-password" class="plans-link">Forgot Password?</router-link>
+        </div>
+
+        <!-- Action Row -->
+        <div class="action-row">
           <button
-            class="toggle-eye"
-            type="button"
-            @click="showPass = !showPass"
-            :aria-label="showPass ? 'Hide password' : 'Show password'"
+            type="submit"
+            class="btn-signin"
+            :disabled="loading || isLoginLocked"
+            :title="isLoginLocked ? `Try again in ${remainingLoginLockoutText}` : undefined"
           >
-            <i :class="['bi', showPass ? 'bi-eye-slash' : 'bi-eye']"></i>
+            <template v-if="loading">
+              <div class="spinner"></div>
+              <span>Signing in</span>
+            </template>
+            <template v-else-if="isLoginLocked">
+              <span>Wait {{ remainingLoginLockoutText }}</span>
+            </template>
+            <template v-else>
+              <span>Sign In</span>
+              <i class="bi bi-arrow-right"></i>
+            </template>
           </button>
         </div>
-        <div
-          v-if="errors.password && errors.password !== 'true'"
-          class="error-msg"
-        >
-          {{ errors.password }}
-        </div>
-      </div>
+      </form>
 
-      <!-- Remember + Forgot -->
-      <div class="d-flex align-items-center justify-content-between">
-        <label class="custom-check">
-          <input type="checkbox" v-model="form.remember" />
-          <span>Remember me</span>
-        </label>
-        <router-link to="/forgot-password" class="forgot-link"
-          >Forgot Password?</router-link
-        >
-      </div>
 
-      <!-- Sign In -->
-      <button
-        type="submit"
-        class="btn-signin"
-        :disabled="loading || isLoginLocked"
-        :title="
-          isLoginLocked
-            ? `Try again in ${remainingLoginLockoutText}`
-            : undefined
-        "
-      >
-        <template v-if="loading">
-          <div class="spinner"></div>
-          <span>Signing in…</span>
-        </template>
-        <template v-else-if="isLoginLocked">
-          <span>Try again in {{ remainingLoginLockoutText }}</span>
-        </template>
-        <template v-else>
-          <span>Sign In</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2.5"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M5 12h14M13 6l6 6-6 6"
-            />
-          </svg>
-        </template>
-      </button>
-    </form>
 
-    <!-- Security Portal Verification Status -->
-    <div class="security-badge-card">
-      <div class="badge-header">
-        <i class="bi bi-shield-fill-check text-success"></i>
-        <span>ANT Security Portal</span>
+      <div class="bottom-links">
+        <p>Don't have an account? <router-link to="">Contact Admin</router-link></p>
       </div>
-      <p class="badge-text">
-        Authenticated sessions are protected by enterprise-grade token
-        encryption and automatic session cycling.
-      </p>
-      <div class="system-status-indicator">
-        <span class="status-dot"></span>
-        <span class="status-text">All Gateway Services Operational</span>
+      
+      <div class="terms-text">
+        <p>By signing in, you agree to the <strong>Terms of Service</strong>.</p>
+        <p>This app is to receive our emails.</p>
       </div>
-    </div>
-
-    <!-- Register -->
-    <div class="register-link text-center mt-4">
-      Don't have an account? <router-link to="">Contact ANT Admin</router-link>
     </div>
   </div>
 </template>
@@ -440,371 +392,248 @@ async function handleSignIn() {
 </script>
 
 <style scoped>
-.left-panel {
-  padding: var(--spacing-xl) var(--spacing-2xl) var(--spacing-2xl);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
-  background: var(--color-surface) !important;
+.login-badge {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 28px;
+  padding: 44px 32px 32px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  margin: 0 auto;
+  transition: all 0.3s ease;
 }
 
-h1 {
-  font-size: 2rem;
+[data-theme="dark"] .login-badge {
+  background: rgba(2, 16, 36, 0.9);
+  border: 1px solid rgba(125, 160, 202, 0.25);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.login-badge::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 22px;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.02);
+  z-index: 10;
+}
+
+[data-theme="dark"] .login-badge::before {
+  background: linear-gradient(180deg, #021024 0%, #052659 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.login-badge::after {
+  content: "";
+  position: absolute;
+  top: -30%;
+  right: -30%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.15), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  transform: rotate(-15deg);
+}
+
+[data-theme="dark"] .login-badge::after {
+  background: radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.35), transparent 50%);
+}
+
+.badge-content {
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-title {
+  font-size: 1.8rem;
   font-weight: 700;
-  color: var(--color-text) !important;
-  letter-spacing: 0;
-  margin-bottom: 0.5rem;
-  line-height: var(--line-height-heading);
+  color: var(--color-text, #0f172a) !important;
+  text-align: center;
+  margin-bottom: 2rem;
+  letter-spacing: -0.02em;
 }
 
-.subtitle {
-  color: var(--color-text-muted) !important;
-  font-size: 0.93rem;
-  line-height: 1.55;
-  margin-bottom: 2rem;
+[data-theme="dark"] .welcome-title {
+  color: #ffffff !important;
 }
 
 .form-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.field-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(15, 23, 42, 0.8);
+  margin-bottom: 0;
+}
+
+[data-theme="dark"] .field-label {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .form-control-custom {
   width: 100%;
-  padding: 0.75rem var(--spacing-md);
-  border: 1.5px solid var(--color-border) !important;
-  border-radius: var(--radius-md);
-  font-family: "Sora", sans-serif;
-  font-size: 0.9rem;
-  color: var(--color-text) !important;
-  background: var(--color-input-bg) !important;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--color-text, #0f172a) !important;
+  background: #ffffff !important;
   outline: none;
-  transition:
-    border-color var(--transition-base),
-    box-shadow var(--transition-base),
-    background-color var(--transition-base);
+  transition: all 0.2s ease;
 }
-.form-control-custom::placeholder {
-  color: var(--color-text-muted) !important;
-  opacity: 0.6;
+
+[data-theme="dark"] .form-control-custom {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  background: rgba(0, 0, 0, 0.4) !important;
 }
+
 .form-control-custom:-webkit-autofill,
 .form-control-custom:-webkit-autofill:hover,
 .form-control-custom:-webkit-autofill:focus,
 .form-control-custom:-webkit-autofill:active {
-  border-color: var(--color-border) !important;
-  -webkit-text-fill-color: var(--color-text) !important;
-  caret-color: var(--color-text);
-  box-shadow: 0 0 0 1000px var(--color-input-bg) inset !important;
-  transition: background-color 9999s ease-out;
+  -webkit-text-fill-color: var(--color-text, #0f172a) !important;
+  box-shadow: inset 0 0 0 1000px #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
-.form-control-custom:-webkit-autofill:focus {
-  border-color: var(--color-primary) !important;
-  box-shadow:
-    0 0 0 1000px var(--color-input-bg) inset,
-    var(--focus-ring) !important;
+
+[data-theme="dark"] .form-control-custom:-webkit-autofill,
+[data-theme="dark"] .form-control-custom:-webkit-autofill:hover,
+[data-theme="dark"] .form-control-custom:-webkit-autofill:focus,
+[data-theme="dark"] .form-control-custom:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: inset 0 0 0 1000px #061121 !important;
 }
+
 .form-control-custom:focus {
-  border-color: var(--color-primary) !important;
-  box-shadow: var(--focus-ring) !important;
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
 }
+
+[data-theme="dark"] .form-control-custom:focus {
+  border-color: rgba(99, 102, 241, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
 .form-control-custom.error {
-  border-color: var(--color-danger) !important;
-  box-shadow: 0 0 0 3px var(--color-danger-light) !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
 
 .input-wrap {
   position: relative;
 }
+
 .input-wrap .form-control-custom {
   padding-right: 2.8rem;
 }
 
 .toggle-eye {
   position: absolute;
-  right: 14px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--color-text-muted);
+  color: rgba(15, 23, 42, 0.4);
   cursor: pointer;
-  width: 22px;
-  height: 22px;
   padding: 0;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
-  transition:
-    color var(--transition-base),
-    box-shadow var(--transition-base);
+  transition: color 0.2s ease;
 }
-.toggle-eye i {
-  font-size: 1.1rem;
-  line-height: 1;
+
+[data-theme="dark"] .toggle-eye {
+  color: rgba(255, 255, 255, 0.4);
 }
-.toggle-eye:hover,
-.toggle-eye:focus-visible {
-  color: var(--color-primary);
+
+.toggle-eye:hover {
+  color: rgba(15, 23, 42, 0.8);
 }
-.toggle-eye:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+
+[data-theme="dark"] .toggle-eye:hover {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .error-msg {
   font-size: 0.78rem;
-  color: var(--color-danger);
+  color: #ef4444;
   margin-top: 4px;
 }
 
-.alert-banner {
+.action-row {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: 0.8rem 1rem;
-  background-color: var(--color-danger-light) !important;
-  border: 1px solid var(--color-danger) !important;
-  border-radius: var(--radius-md);
-  color: var(--color-danger) !important;
-  font-size: 0.88rem;
-  font-weight: 500;
-  margin-bottom: var(--spacing-md);
-  animation: slideDown 0.3s ease-out;
-}
-
-.alert-icon {
-  flex-shrink: 0;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.custom-check {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  cursor: pointer;
-  user-select: none;
-}
-.custom-check input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-hover);
-  cursor: pointer;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-base);
-  margin: 0;
-}
-/* Hover State */
-.custom-check input[type="checkbox"]:hover {
-  border-color: var(--color-primary);
-  background: var(--color-surface);
-  box-shadow: 0 0 10px rgba(84, 131, 179, 0.2);
-}
-/* Checked State */
-.custom-check input[type="checkbox"]:checked {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 12px rgba(84, 131, 179, 0.35);
-}
-/* Center Checkmark Symbol */
-.custom-check input[type="checkbox"]:checked::after {
-  content: "";
-  width: 5px;
-  height: 9px;
-  border: solid #ffffff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg) translate(-0.5px, -0.5px);
-}
-/* Keyboard Focus Accessibility */
-.custom-check input[type="checkbox"]:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-.custom-check span {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  transition: color var(--transition-base);
-}
-.custom-check:hover span {
-  color: var(--color-text);
-}
-
-.forgot-link {
-  font-size: 0.875rem;
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 500;
-  border-radius: var(--radius-sm);
-  transition:
-    color var(--transition-base),
-    box-shadow var(--transition-base);
-}
-.forgot-link:hover,
-.forgot-link:focus-visible {
-  color: var(--color-primary-hover);
+  flex-direction: column;
+  margin-top: 0.5rem;
 }
 
 .btn-signin {
   width: 100%;
-  padding: 0.8rem;
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(90deg, #6366f1, #3b82f6);
+  color: #fff;
   border: none;
-  border-radius: var(--radius-md);
-  font-family: "Sora", sans-serif;
+  border-radius: 999px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition:
-    background var(--transition-base),
-    transform var(--transition-fast),
-    box-shadow var(--transition-base);
-  box-shadow: 0 4px 14px var(--color-primary-light);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-@media (hover: hover) {
-  .btn-signin:not(:disabled):hover {
-    background: var(--color-primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px var(--color-primary-light);
-  }
+.btn-signin:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(90deg, #4f46e5, #2563eb);
 }
-.btn-signin:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-brand), var(--focus-ring);
-}
-.btn-signin:not(:disabled):active {
-  transform: translateY(0);
-}
+
 .btn-signin:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.security-badge-card {
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
-  margin-top: var(--spacing-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  transition: all var(--transition-base);
-}
-
-.security-badge-card:hover {
-  border-color: var(--color-primary-light);
-  box-shadow: 0 4px 12px var(--color-shadow);
-}
-
-.badge-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  font-weight: 700;
-  font-size: 0.88rem;
-  color: var(--color-text);
-}
-
-.badge-header i {
-  font-size: 1.1rem;
-}
-
-.badge-text {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  line-height: 1.45;
-  margin: 0;
-}
-
-.system-status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-  border-top: 1px solid var(--color-border);
-  padding-top: 8px;
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  background-color: var(--color-success);
-  border-radius: 50%;
-  display: inline-block;
-  animation: pulse-ring 1.8s infinite;
-}
-
-.status-text {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--color-success);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
-}
-
-.register-link {
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-}
-.register-link a {
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 600;
-  transition: color var(--transition-base);
-}
-.register-link a:hover {
-  color: var(--color-primary-hover);
 }
 
 .spinner {
-  width: 18px;
-  height: 18px;
-  border: 2.5px solid var(--color-primary-light);
-  border-top-color: var(--color-text-on-primary);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -814,18 +643,168 @@ h1 {
   }
 }
 
-@media (max-width: 768px) {
-  .left-panel {
-    padding: var(--spacing-2xl) var(--spacing-lg);
-    border-radius: var(--radius-lg);
-  }
-  h1 {
-    font-size: 1.6rem;
-  }
+.plans-link {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-primary, #6366f1);
+  text-decoration: none;
+  transition: color 0.2s;
 }
-@media (max-width: 420px) {
-  .left-panel {
-    padding: var(--spacing-lg) var(--spacing-md);
-  }
+
+[data-theme="dark"] .plans-link {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.plans-link:hover {
+  color: var(--color-primary-hover, #4f46e5);
+  text-decoration: underline;
+}
+
+[data-theme="dark"] .plans-link:hover {
+  color: #ffffff;
+}
+
+.remember-forgot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: -0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(15, 23, 42, 0.7);
+  cursor: pointer;
+  user-select: none;
+}
+
+[data-theme="dark"] .remember-me-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.remember-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px;
+  background: #ffffff !important;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .remember-checkbox {
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.remember-checkbox:hover {
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  background: rgba(99, 102, 241, 0.02) !important;
+}
+
+[data-theme="dark"] .remember-checkbox:hover {
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.remember-checkbox:checked {
+  background: linear-gradient(135deg, #6366f1, #3b82f6) !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+}
+
+.remember-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 3px;
+  width: 5px;
+  height: 9px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.remember-checkbox:focus-visible {
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.bottom-links {
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.6);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+[data-theme="dark"] .bottom-links {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.bottom-links a {
+  color: var(--color-primary, #6366f1);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+[data-theme="dark"] .bottom-links a {
+  color: #fff;
+}
+
+.bottom-links a:hover {
+  text-decoration: underline;
+}
+
+.terms-text {
+  text-align: center;
+  font-size: 0.72rem;
+  color: rgba(15, 23, 42, 0.4);
+  line-height: 1.5;
+}
+
+[data-theme="dark"] .terms-text {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.terms-text strong {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+[data-theme="dark"] .terms-text strong {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Alert banner */
+.alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 12px;
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: slideDown 0.3s ease-out;
+}
+
+[data-theme="dark"] .alert-banner {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

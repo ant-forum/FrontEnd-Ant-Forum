@@ -526,11 +526,7 @@ const clearFilters = () => {
 <style scoped>
 .forum-page {
   min-height: 100vh;
-  background-color: var(--color-bg);
-  background-image:
-    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-color: transparent;
 }
 
 .forum-global-grid {

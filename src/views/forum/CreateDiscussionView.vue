@@ -1147,11 +1147,7 @@ const handleSubmit = async () => {
 <style scoped>
 .create-page {
   min-height: 100vh;
-  background-color: var(--color-bg);
-  background-image:
-    linear-gradient(to right, rgba(128, 128, 128, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(128, 128, 128, 0.08) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background-color: transparent;
   padding-bottom: 80px;
 }
 

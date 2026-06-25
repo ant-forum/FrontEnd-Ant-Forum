@@ -52,12 +52,12 @@ onUnmounted(() => {
 <template>
   <aside ref="dropdownRef" class="account-dropdown" aria-label="Account menu">
     <router-link to="/profile" class="account-card" @click="emit('close')">
-      <img :src="avatar" width="44" height="44" alt="User avatar" />
+      <img :src="avatar" width="46" height="46" alt="User avatar" class="avatar-img" />
       <span class="account-identity">
         <strong>{{ displayName }}</strong>
-        <small>{{ role }} profile</small>
+        <small>{{ props.user?.email || 'developer@antforum.com' }}</small>
       </span>
-      <i class="bi bi-chevron-right account-card-chevron"></i>
+      <span class="role-badge">{{ role }}</span>
     </router-link>
 
     <div class="account-menu-divider"></div>
@@ -124,107 +124,104 @@ onUnmounted(() => {
 <style scoped>
 .account-dropdown {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 16px);
   right: 0;
-  width: min(330px, calc(100vw - 32px));
-  padding: 10px;
+  width: min(340px, calc(100vw - 32px));
+  padding: 16px;
   color: var(--color-text);
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-lg);
+  border-radius: 28px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.1);
   z-index: 1050;
 }
 
 .account-card {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   padding: 8px;
   color: var(--color-text);
   text-decoration: none;
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 18px;
   transition: all var(--transition-base);
-}
-
-.account-card:hover,
-.account-menu-item:hover {
-  color: var(--color-text);
-  background: var(--color-surface-hover);
+  margin-bottom: 12px;
 }
 
 .account-card:hover {
-  border-color: var(--color-blue-light);
+  background: var(--color-surface-hover);
 }
 
-.account-card img {
+.avatar-img {
   flex-shrink: 0;
   object-fit: cover;
-  border: 2px solid var(--color-blue-light);
   border-radius: 50%;
-}
-
-.account-identity,
-.account-menu-copy {
-  min-width: 0;
-  text-align: left;
 }
 
 .account-identity {
   flex: 1;
+  min-width: 0;
 }
 
-.account-identity strong,
-.account-identity small,
-.account-menu-copy strong,
-.account-menu-copy small {
+.account-identity strong {
   display: block;
-}
-
-.account-identity strong,
-.account-menu-copy strong {
-  overflow: hidden;
   color: var(--color-text);
-  font-size: 0.84rem;
-  font-weight: 800;
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.account-identity small,
-.account-menu-copy small {
+.account-identity small {
+  display: block;
   margin-top: 2px;
   color: var(--color-text-muted);
-  font-size: 0.68rem;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.account-card-chevron,
-.account-menu-chevron {
-  flex-shrink: 0;
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
+.role-badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(40, 183, 215, 0.15);
+  color: #28b7d7;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .account-menu-divider {
   height: 1px;
-  margin: 9px 4px;
+  margin: 12px 0;
   background: var(--color-border);
 }
 
 .account-menu-item {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 14px;
   width: 100%;
-  padding: 8px 6px;
+  padding: 12px 14px;
   color: var(--color-text);
   text-decoration: none;
   background: transparent;
   border: 0;
-  border-radius: 10px;
-  transition: background var(--transition-base);
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.account-menu-item:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
 }
 
 .account-menu-icon {
@@ -232,35 +229,57 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  width: 24px;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  transition: color 0.2s ease;
+}
+
+.account-menu-item:hover .account-menu-icon {
   color: var(--color-text);
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  font-size: 0.9rem;
 }
 
 .account-menu-copy {
   flex: 1;
+  text-align: left;
+}
+
+.account-menu-copy strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.account-menu-copy small {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.account-menu-chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
 }
 
 .account-menu-footer {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 10px 6px 2px;
+  gap: 8px;
+  padding: 16px 14px 4px;
   color: var(--color-text-muted);
-  font-size: 0.66rem;
+  font-size: 0.7rem;
 }
 
 .account-menu-footer a {
   color: inherit;
   text-decoration: none;
+  transition: color 0.2s;
 }
 
 .account-menu-footer a:hover {
-  text-decoration: underline;
+  color: var(--color-text);
 }
 
 @media (max-width: 480px) {
@@ -271,5 +290,13 @@ onUnmounted(() => {
     left: 16px;
     width: auto;
   }
+}
+</style>
+
+<style>
+[data-theme="dark"] .account-dropdown {
+  background: rgba(2, 16, 36, 1) !important;
+  border-color: rgba(125, 160, 202, 0.2) !important;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 </style>

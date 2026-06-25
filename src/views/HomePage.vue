@@ -111,16 +111,16 @@ const capabilityCards = [
     accent: "violet",
   },
   {
-    title: "Discuss Better",
-    desc: "Replies, saves, votes, and clean author details make every thread easier to follow.",
-    icon: "bi-command",
-    accent: "blue",
-  },
-  {
     title: "Show The Work",
     desc: "Showcase projects, screenshots, and tags turn finished builds into public proof.",
     icon: "bi-window-stack",
     accent: "green",
+  },
+  {
+    title: "Discuss Better",
+    desc: "Replies, saves, votes, and clean author details make every thread easier to follow.",
+    icon: "bi-command",
+    accent: "blue",
   },
 ];
 
@@ -407,10 +407,6 @@ const goToThread = (id) => {
         <div class="particle p6"></div>
         <div class="particle p7"></div>
         <div class="particle p8"></div>
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-        <div class="grid-overlay"></div>
       </div>
 
       <div class="container">
@@ -690,18 +686,13 @@ const goToThread = (id) => {
 
 <style scoped>
 /* ╔══════════════════════════════════════════════╗
-   ║  ANT FORUM — PREMIUM LANDING PAGE STYLES    ║
+   ║  ANT FORUM — PREMIUM LANDING PAGE STYLES     ║
    ╚══════════════════════════════════════════════╝ */
 
 /* ── Design tokens ── */
 .landing-page {
   min-height: 100vh;
   color: var(--color-text);
-  background:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
-    var(--page-bg);
-  background-size: 34px 34px;
   overflow-x: clip;
   --page-bg: var(--color-bg);
   --panel-bg: var(--color-surface);
@@ -731,23 +722,6 @@ const goToThread = (id) => {
   pointer-events: none;
   z-index: 0;
 }
-
-.grid-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      ellipse 80% 50% at 50% -20%,
-      rgba(84, 131, 179, 0.12),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 60% 40% at 80% 80%,
-      rgba(84, 131, 179, 0.08),
-      transparent
-    );
-}
-
 /* Floating particles */
 .particle {
   position: absolute;
@@ -849,54 +823,7 @@ const goToThread = (id) => {
   }
 }
 
-/* Glowing orbs */
-.orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  animation: drift ease-in-out infinite;
-}
 
-.orb-1 {
-  width: 320px;
-  height: 320px;
-  left: -5%;
-  top: -10%;
-  background: radial-gradient(
-    circle,
-    rgba(84, 131, 179, 0.18),
-    transparent 70%
-  );
-  animation-duration: 12s;
-}
-
-.orb-2 {
-  width: 260px;
-  height: 260px;
-  right: 5%;
-  top: 30%;
-  background: radial-gradient(
-    circle,
-    rgba(125, 160, 202, 0.14),
-    transparent 70%
-  );
-  animation-duration: 16s;
-  animation-delay: -4s;
-}
-
-.orb-3 {
-  width: 200px;
-  height: 200px;
-  left: 35%;
-  bottom: -10%;
-  background: radial-gradient(
-    circle,
-    rgba(193, 232, 255, 0.12),
-    transparent 70%
-  );
-  animation-duration: 14s;
-  animation-delay: -8s;
-}
 
 @keyframes drift {
   0%,
@@ -1443,10 +1370,18 @@ const goToThread = (id) => {
 
 .capability-card {
   min-height: 220px;
-  padding: 28px;
-  border-radius: 22px;
+  padding: 32px 24px;
+  border-radius: 24px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(16, 24, 39, 0.65);
+  backdrop-filter: blur(16px);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .capability-card:hover {
@@ -1454,7 +1389,51 @@ const goToThread = (id) => {
   box-shadow: 0 32px 60px rgba(0, 0, 0, 0.3);
 }
 
-/* Per-accent hover glow */
+/* Glowing bottom border effect */
+.capability-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  opacity: 0.8;
+  transition: all 0.4s ease;
+}
+
+.capability-card:hover::after {
+  opacity: 1;
+  height: 6px;
+}
+
+/* Violet / Pink */
+.capability-card.violet {
+  border-bottom: 1px solid rgba(255, 0, 128, 0.2);
+}
+.capability-card.violet::after {
+  background: linear-gradient(90deg, #ff007f, #ff4d4d);
+  box-shadow: 0 -4px 24px rgba(255, 0, 127, 0.6);
+}
+
+/* Green */
+.capability-card.green {
+  border-bottom: 1px solid rgba(168, 255, 0, 0.2);
+}
+.capability-card.green::after {
+  background: linear-gradient(90deg, #a8ff00, #4ade80);
+  box-shadow: 0 -4px 24px rgba(168, 255, 0, 0.6);
+}
+
+/* Blue */
+.capability-card.blue {
+  border-bottom: 1px solid rgba(0, 210, 255, 0.2);
+}
+.capability-card.blue::after {
+  background: linear-gradient(90deg, #00d2ff, #3b82f6);
+  box-shadow: 0 -4px 24px rgba(0, 210, 255, 0.6);
+}
+
+/* Per-accent hover inner glow (optional, kept for depth) */
 .capability-card .card-glow {
   position: absolute;
   inset: 0;
@@ -1465,25 +1444,13 @@ const goToThread = (id) => {
 }
 
 .capability-card.violet .card-glow {
-  background: radial-gradient(
-    ellipse at 50% 100%,
-    rgba(84, 131, 179, 0.1),
-    transparent 70%
-  );
-}
-.capability-card.blue .card-glow {
-  background: radial-gradient(
-    ellipse at 50% 100%,
-    rgba(40, 183, 215, 0.1),
-    transparent 70%
-  );
+  background: radial-gradient(ellipse at 50% 100%, rgba(255, 0, 127, 0.15), transparent 60%);
 }
 .capability-card.green .card-glow {
-  background: radial-gradient(
-    ellipse at 50% 100%,
-    rgba(33, 185, 130, 0.1),
-    transparent 70%
-  );
+  background: radial-gradient(ellipse at 50% 100%, rgba(168, 255, 0, 0.15), transparent 60%);
+}
+.capability-card.blue .card-glow {
+  background: radial-gradient(ellipse at 50% 100%, rgba(0, 210, 255, 0.15), transparent 60%);
 }
 
 .capability-card:hover .card-glow {
@@ -1491,45 +1458,43 @@ const goToThread = (id) => {
 }
 
 .card-icon-wrap {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  margin-bottom: 22px;
+  border-radius: 16px;
+  margin-bottom: 24px;
   color: #fff;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .capability-card:hover .card-icon-wrap {
-  transform: scale(1.1);
+  transform: scale(1.1) translateY(-4px);
 }
 
-.capability-card.violet .card-icon-wrap {
-  background: linear-gradient(135deg, #052659, #052659);
-  box-shadow: 0 4px 16px rgba(98, 93, 245, 0.3);
+.capability-card.violet .card-icon-wrap i {
+  background: linear-gradient(135deg, #ff007f, #ff758c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgba(255, 0, 127, 0.6));
 }
-.capability-card.blue .card-icon-wrap {
-  background: linear-gradient(135deg, var(--cyan), #0ea5e9);
-  box-shadow: 0 4px 16px rgba(40, 183, 215, 0.3);
+.capability-card.green .card-icon-wrap i {
+  background: linear-gradient(135deg, #a8ff00, #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgba(168, 255, 0, 0.6));
 }
-.capability-card.green .card-icon-wrap {
-  background: linear-gradient(135deg, var(--green), #059669);
-  box-shadow: 0 4px 16px rgba(33, 185, 130, 0.3);
-}
-
-.capability-card:hover.violet .card-icon-wrap {
-  box-shadow: 0 8px 24px rgba(98, 93, 245, 0.45);
-}
-.capability-card:hover.blue .card-icon-wrap {
-  box-shadow: 0 8px 24px rgba(40, 183, 215, 0.45);
-}
-.capability-card:hover.green .card-icon-wrap {
-  box-shadow: 0 8px 24px rgba(33, 185, 130, 0.45);
+.capability-card.blue .card-icon-wrap i {
+  background: linear-gradient(135deg, #00d2ff, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.6));
 }
 
 .capability-card h2,
@@ -1945,28 +1910,7 @@ const goToThread = (id) => {
   background: rgba(84, 131, 179, 0.25);
   box-shadow: 0 0 6px rgba(84, 131, 179, 0.15);
 }
-
-[data-theme="light"] .orb-1 {
-  background: radial-gradient(
-    circle,
-    rgba(84, 131, 179, 0.08),
-    transparent 70%
-  );
-}
-[data-theme="light"] .orb-2 {
-  background: radial-gradient(
-    circle,
-    rgba(84, 131, 179, 0.06),
-    transparent 70%
-  );
-}
-[data-theme="light"] .orb-3 {
-  background: radial-gradient(
-    circle,
-    rgba(40, 183, 215, 0.06),
-    transparent 70%
-  );
-}
+/* ══════════════════════════════════════ */
 
 /* ══════════════════════════════════════
    RESPONSIVE
@@ -1985,15 +1929,15 @@ const goToThread = (id) => {
 
 @media (max-width: 760px) {
   .landing-hero {
-    padding: 42px 0 22px;
+    padding: 24px 0 12px;
   }
 
   .hero-copy,
   .activity-feed,
   .workflow-panel,
   .cta-panel {
-    border-radius: 20px;
-    padding: 22px;
+    border-radius: 16px;
+    padding: 16px;
   }
 
   .hero-grid,
@@ -2022,7 +1966,7 @@ const goToThread = (id) => {
   }
 
   .project-spotlight img {
-    height: 220px;
+    height: 180px;
   }
 
   .thread-row {
@@ -2034,15 +1978,12 @@ const goToThread = (id) => {
   }
 
   .hero-title {
-    font-size: clamp(2.6rem, 10vw, 4rem);
+    font-size: clamp(2.2rem, 8vw, 3.2rem);
   }
 
   /* Reduce particle effects on mobile for performance */
   .particle {
     display: none;
-  }
-  .orb {
-    filter: blur(40px);
   }
 }
 </style>

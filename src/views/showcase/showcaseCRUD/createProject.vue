@@ -557,11 +557,7 @@ const handleSubmit = async () => {
 <style scoped>
 .create-project-page {
   min-height: 100vh;
-  background: var(--color-bg);
-  background-image:
-    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
-  background-size: 34px 34px;
+  background: transparent;
   color: var(--color-text);
   position: relative;
   overflow: hidden;

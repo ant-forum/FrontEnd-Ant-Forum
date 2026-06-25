@@ -155,7 +155,7 @@ const getNotificationIcon = (type) => {
   top: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%);
-  width: 380px;
+  width: 340px;
   background: var(--color-surface);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -163,7 +163,7 @@ const getNotificationIcon = (type) => {
   border-radius: 16px;
   z-index: 1050;
   overflow: hidden;
-  max-height: 500px;
+  max-height: 460px;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-lg);
@@ -175,7 +175,7 @@ const getNotificationIcon = (type) => {
 }
 
 .dropdown-header {
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-hover);
 }
@@ -200,7 +200,7 @@ const getNotificationIcon = (type) => {
 }
 
 .dropdown-footer {
-  padding: 14px 20px;
+  padding: 10px 16px;
   background: var(--color-surface-hover);
   text-align: center;
   border-top: 1px solid var(--color-border);
@@ -231,7 +231,7 @@ const getNotificationIcon = (type) => {
 }
 
 .notification-item {
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -397,6 +397,7 @@ const getNotificationIcon = (type) => {
     right: 16px;
     width: auto;
     max-height: calc(100vh - 100px);
+    transform: none;
   }
 }
 </style>
