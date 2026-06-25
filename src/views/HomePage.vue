@@ -1879,6 +1879,11 @@ const goToThread = (id) => {
   border-color: var(--landing-border);
 }
 
+[data-theme="light"] .featured-badge {
+  color: #4f46e5;
+  background: rgba(109, 106, 247, 0.12);
+}
+
 [data-theme="light"] .featured-card strong,
 [data-theme="light"] .feed-header strong,
 [data-theme="light"] .stat-card strong,

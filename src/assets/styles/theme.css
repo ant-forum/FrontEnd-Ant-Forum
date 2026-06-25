@@ -12,8 +12,8 @@
   --color-warning-light: rgba(245, 158, 11, 0.1);
   --color-info: #0ea5e9;
   --color-info-light: rgba(14, 165, 233, 0.1);
-  --color-blue: #7DA0CA;
-  --color-blue-light: rgba(125, 160, 202, 0.1);
+  --color-blue: #2563eb;
+  --color-blue-light: rgba(37, 99, 235, 0.08);
 
   /* LIGHT MODE SURFACES */
   --color-bg: #f8fafc;
@@ -209,6 +209,10 @@
 
   --admin-active-card-bg: rgba(255, 255, 255, 0.04);
   --admin-active-card-border: rgba(84, 131, 179, 0.35);
+
+  /* DARK MODE BLUE COLOR */
+  --color-blue: #7DA0CA;
+  --color-blue-light: rgba(125, 160, 202, 0.15);
 }
 
 @media (max-width: 768px) {
