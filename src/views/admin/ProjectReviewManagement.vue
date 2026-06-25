@@ -1171,10 +1171,10 @@ const handleDeleteProject = async () => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   color: #fff !important;
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 10px rgba(84, 131, 179, 0.2);
 }
 
 .tag-btn-pill {

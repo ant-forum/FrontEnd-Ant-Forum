@@ -269,7 +269,7 @@ const activityFeed = computed(() => {
 .profile-page-kicker {
   display: block;
   margin-bottom: 6px;
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -344,8 +344,8 @@ const activityFeed = computed(() => {
 }
 
 .profile-tab.active {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
 }
 
 .profile-tab-content {

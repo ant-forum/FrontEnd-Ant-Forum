@@ -377,7 +377,7 @@ const responsibilityCards = computed(() => {
       value: adminStore.lockedThreads.length,
       helper: "Moderation state",
       icon: "bi-lock",
-      tone: "purple",
+      tone: "blue",
       to: "/admin/threads",
     },
   ];
@@ -447,7 +447,7 @@ const formatActivityDate = (value) =>
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 8% 0%, rgba(99, 102, 241, 0.26), transparent 34%),
+    radial-gradient(circle at 8% 0%, rgba(84, 131, 179, 0.26), transparent 34%),
     radial-gradient(
       circle at 100% 12%,
       rgba(16, 185, 129, 0.13),
@@ -487,7 +487,7 @@ const formatActivityDate = (value) =>
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   border: 3px solid color-mix(in srgb, var(--color-surface) 82%, #ffffff 18%);
   border-radius: 32px;
@@ -547,7 +547,7 @@ const formatActivityDate = (value) =>
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   box-shadow: 0 10px 28px -20px var(--color-primary);
 }
@@ -680,9 +680,9 @@ const formatActivityDate = (value) =>
   background: var(--color-warning-light);
 }
 
-.responsibility-card.purple .responsibility-icon {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+.responsibility-card.blue .responsibility-icon {
+  color: var(--color-blue);
+  background: var(--color-blue-light);
 }
 
 .responsibility-card strong,
@@ -806,8 +806,8 @@ const formatActivityDate = (value) =>
 
 .card-edit-profile-btn:hover {
   color: #ffffff;
-  background: var(--color-purple);
-  border-color: var(--color-purple);
+  background: var(--color-blue);
+  border-color: var(--color-blue);
   transform: translateY(-1px);
 }
 
@@ -822,7 +822,7 @@ const formatActivityDate = (value) =>
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   font-size: 1.5rem;
   margin: 0 auto 0.85rem;

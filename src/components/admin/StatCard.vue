@@ -2,7 +2,7 @@
   <div
     :class="[
       'metric-card p-4 rounded-4 border bg-surface shadow-sm d-flex justify-content-between align-items-start h-100 transition-all',
-      active ? 'border-purple active-card' : '',
+      active ? 'border-blue active-card' : '',
     ]"
   >
     <div class="d-flex flex-column justify-content-between h-100">
@@ -164,12 +164,12 @@ watch(() => props.value, animateValue);
 }
 
 /* Shared utility classes for the stat cards */
-:deep(.bg-light-purple),
-:deep(.bg-purple-light) {
-  background-color: var(--color-purple-light);
+:deep(.bg-light-blue),
+:deep(.bg-blue-light) {
+  background-color: var(--color-blue-light);
 }
-:deep(.text-purple) {
-  color: var(--color-purple);
+:deep(.text-blue) {
+  color: var(--color-blue);
 }
 
 :deep(.bg-light-orange),
@@ -203,11 +203,11 @@ watch(() => props.value, animateValue);
 }
 
 :deep(.mini-chart .bar.active) {
-  background-color: var(--color-purple);
+  background-color: var(--color-blue);
 }
 
-:deep(.text-purple-light) {
-  color: var(--color-purple);
+:deep(.text-blue-light) {
+  color: var(--color-blue);
   opacity: 0.8;
 }
 

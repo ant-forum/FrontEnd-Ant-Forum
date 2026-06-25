@@ -164,7 +164,7 @@
                 >
                   <div class="d-flex align-items-center gap-2">
                     <i
-                      class="bi bi-rocket-takeoff text-primary-purple fs-4"
+                      class="bi bi-rocket-takeoff text-primary-blue fs-4"
                     ></i>
                     <h5 class="mb-0 fw-bold header-title themed-text">
                       Showcase Projects
@@ -209,7 +209,7 @@
                         >
                           <div class="project-icon-box">
                             <i
-                              class="bi bi-folder2-open text-primary-purple"
+                              class="bi bi-folder2-open text-primary-blue"
                             ></i>
                           </div>
                           <span class="star-badge"
@@ -243,7 +243,7 @@
               <!-- Recent Activities -->
               <div class="recent-activity-section">
                 <div class="d-flex align-items-center gap-2 mb-3">
-                  <i class="bi bi-clock-history text-primary-purple fs-4"></i>
+                  <i class="bi bi-clock-history text-primary-blue fs-4"></i>
                   <h5 class="mb-0 fw-bold header-title themed-text">
                     Recent Feed Activity
                   </h5>
@@ -261,14 +261,14 @@
 
                 <div v-else class="d-flex flex-column gap-3">
                   <div
-                    v-for="act in profile.activity"
+                    v-for="act in visibleActivity"
                     :key="act.id || act.title"
                     class="activity-row-modern p-3 d-flex align-items-center gap-3"
                     style="cursor: pointer"
                     @click="act.link ? router.push(act.link) : null"
                   >
                     <div class="activity-icon-container">
-                      <i :class="['bi', act.icon, 'text-primary-purple']"></i>
+                      <i :class="['bi', act.icon, 'text-primary-blue']"></i>
                     </div>
                     <div class="overflow-hidden">
                       <h6
@@ -283,47 +283,23 @@
                       >
                     </div>
                   </div>
+                  
+                  <button 
+                    v-if="profile.activity.length > activityLimit"
+                    @click="activityLimit += 4"
+                    class="btn btn-light border mt-2 w-100 fw-bold themed-text"
+                    style="border-radius: var(--radius-md);"
+                  >
+                    Load More Activity
+                  </button>
                 </div>
               </div>
             </div>
 
             <!-- Right Info Block -->
-            <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4">
+            <div class="col-xl-4 col-lg-5 d-flex flex-column gap-4 sticky-sidebar-column">
               <!-- Stack Proficiency -->
               <div class="dashboard-card-modern p-4">
-                <div class="d-flex align-items-center gap-2 mb-4">
-                  <div class="heading-accent"></div>
-                  <h6
-                    class="themed-text fw-bold mb-0"
-                    style="font-size: 0.9rem; letter-spacing: 0.3px"
-                  >
-                    Platform Statistics
-                  </h6>
-                </div>
-
-                <div class="row g-3 mb-4">
-                  <div class="col-6">
-                    <div class="stat-card-mini text-center p-3">
-                      <div class="stat-icon mx-auto mb-2 rep-icon">
-                        <i class="bi bi-award-fill"></i>
-                      </div>
-                      <div class="stat-num">1.2k</div>
-                      <div class="stat-label">REPUTATION</div>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="stat-card-mini text-center p-3">
-                      <div class="stat-icon mx-auto mb-2 engage-icon">
-                        <i class="bi bi-lightning-charge-fill"></i>
-                      </div>
-                      <div class="stat-num">92%</div>
-                      <div class="stat-label">ENGAGEMENT</div>
-                    </div>
-                  </div>
-                </div>
-
-                <hr class="my-3 border-slate" />
-
                 <h6
                   class="text-muted text-uppercase fw-bold mb-3"
                   style="font-size: 0.7rem; letter-spacing: 0.5px"
@@ -354,7 +330,7 @@
                   <button
                     v-if="isOwnProfile"
                     @click="showSocialModal = true"
-                    class="btn btn-sm btn-link text-primary-purple p-0 text-decoration-none"
+                    class="btn btn-sm btn-link text-primary-blue p-0 text-decoration-none"
                     style="font-size: 0.8rem"
                   >
                     <i class="bi bi-pencil-square"></i> Manage
@@ -420,7 +396,7 @@
                     class="d-flex justify-content-between align-items-start mb-3"
                   >
                     <div class="project-icon-box">
-                      <i class="bi bi-folder2-open text-primary-purple"></i>
+                      <i class="bi bi-folder2-open text-primary-blue"></i>
                     </div>
                     <span class="star-badge"
                       ><i class="bi bi-star-fill text-warning"></i>
@@ -479,7 +455,7 @@
       </div>
       <button
         class="btn btn-primary w-100"
-        style="background: var(--color-primary-purple); border: none"
+        style="background: var(--color-primary-blue); border: none"
         :disabled="!newSocialPlatform || !newSocialUrl || isAddingSocial"
         @click="addSocialLink"
       >
@@ -502,7 +478,7 @@
         <div class="d-flex align-items-center gap-3">
           <i
             :class="getPlatformIcon(link.platform)"
-            class="fs-4 text-primary-purple"
+            class="fs-4 text-primary-blue"
           ></i>
           <div>
             <strong class="d-block themed-text">{{ link.platform }}</strong>
@@ -603,6 +579,8 @@ const showSendMessageModal = ref(false);
 // Tab state: 'profile' | 'projects'
 const activeTab = ref("profile");
 const isLoading = ref(true);
+const activityLimit = ref(4);
+const visibleActivity = computed(() => profile.activity.slice(0, activityLimit.value));
 const isFollowing = ref(false);
 
 const profile = reactive({
@@ -845,6 +823,13 @@ const handleSendMessage = () => {
   color: var(--color-text) !important;
 }
 
+.sticky-sidebar-column {
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  z-index: 10;
+}
+
 /* Sidebar Styling */
 .sidebar-card-modern {
   background: var(--color-surface) !important;
@@ -855,6 +840,10 @@ const handleSendMessage = () => {
   flex-direction: column;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
   transition: all var(--transition-slow);
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  z-index: 10;
 }
 .sidebar-card-modern:hover {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
@@ -867,11 +856,11 @@ const handleSendMessage = () => {
   padding: 3px;
   background: linear-gradient(
     135deg,
-    var(--color-purple) 0%,
+    var(--color-blue) 0%,
     var(--color-primary) 100%
   );
   border-radius: 50%;
-  box-shadow: 0 8px 20px -6px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 8px 20px -6px rgba(84, 131, 179, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -916,16 +905,16 @@ const handleSendMessage = () => {
 
 .role-badge-sidebar {
   display: inline-block;
-  background: var(--color-purple-light) !important;
-  color: var(--color-purple) !important;
+  background: var(--color-blue-light) !important;
+  color: var(--color-blue) !important;
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.8px;
   text-transform: uppercase;
   padding: 0.3rem 0.85rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(139, 92, 246, 0.15) !important;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.05);
+  border: 1px solid rgba(84, 131, 179, 0.15) !important;
+  box-shadow: 0 2px 8px rgba(84, 131, 179, 0.05);
 }
 
 .sidebar-nav {
@@ -988,17 +977,17 @@ const handleSendMessage = () => {
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   color: #ffffff !important;
   border: none;
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 15px -3px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 4px 15px -3px rgba(84, 131, 179, 0.4);
   transition: all var(--transition-base);
 }
 .btn-follow:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px -3px rgba(139, 92, 246, 0.5);
+  box-shadow: 0 8px 20px -3px rgba(84, 131, 179, 0.5);
   filter: brightness(1.1);
 }
 
@@ -1026,9 +1015,9 @@ const handleSendMessage = () => {
 .btn-message:hover {
   background: var(--color-surface-hover);
   color: var(--color-text);
-  border-color: var(--color-purple);
+  border-color: var(--color-blue);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 6px 12px rgba(84, 131, 179, 0.1);
 }
 
 /* Main Cards */
@@ -1069,7 +1058,7 @@ const handleSendMessage = () => {
   height: 5px;
   background: linear-gradient(
     90deg,
-    var(--color-purple) 0%,
+    var(--color-blue) 0%,
     var(--color-primary) 100%
   );
 }
@@ -1119,7 +1108,7 @@ const handleSendMessage = () => {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--color-purple),
+    var(--color-blue),
     transparent
   );
   opacity: 0;
@@ -1127,8 +1116,8 @@ const handleSendMessage = () => {
 }
 .project-card-modern-v2:hover {
   transform: translateY(-6px);
-  box-shadow: 0 16px 36px rgba(139, 92, 246, 0.12) !important;
-  border-color: rgba(139, 92, 246, 0.25) !important;
+  box-shadow: 0 16px 36px rgba(84, 131, 179, 0.12) !important;
+  border-color: rgba(84, 131, 179, 0.25) !important;
 }
 .project-card-modern-v2:hover::after {
   opacity: 1;
@@ -1140,20 +1129,20 @@ const handleSendMessage = () => {
   transition: color var(--transition-base);
 }
 .project-card-modern-v2:hover .project-title-v2 {
-  color: var(--color-purple) !important;
+  color: var(--color-blue) !important;
 }
 
 .project-icon-box {
   width: 42px;
   height: 42px;
-  background: var(--color-purple-light);
+  background: var(--color-blue-light);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.05);
+  border: 1px solid rgba(84, 131, 179, 0.1);
+  box-shadow: 0 2px 8px rgba(84, 131, 179, 0.05);
 }
 
 .star-badge {
@@ -1178,8 +1167,8 @@ const handleSendMessage = () => {
 }
 .stat-card-mini:hover {
   transform: translateY(-2px);
-  border-color: rgba(139, 92, 246, 0.2);
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.05);
+  border-color: rgba(84, 131, 179, 0.2);
+  box-shadow: 0 4px 15px rgba(84, 131, 179, 0.05);
 }
 .stat-icon {
   width: 38px;
@@ -1195,8 +1184,8 @@ const handleSendMessage = () => {
   color: #f59e0b;
 }
 .engage-icon {
-  background: rgba(139, 92, 246, 0.1);
-  color: var(--color-purple);
+  background: rgba(84, 131, 179, 0.1);
+  color: var(--color-blue);
 }
 .stat-num {
   font-size: 1.3rem;
@@ -1228,7 +1217,7 @@ const handleSendMessage = () => {
   height: 18px;
   background: linear-gradient(
     180deg,
-    var(--color-purple) 0%,
+    var(--color-blue) 0%,
     var(--color-primary) 100%
   );
   border-radius: var(--radius-pill);
@@ -1307,16 +1296,16 @@ const handleSendMessage = () => {
   color: var(--color-tag-red-text) !important;
 }
 .tag-badge-v2.grpc {
-  background: var(--color-tag-purple-bg) !important;
-  color: var(--color-tag-purple-text) !important;
+  background: var(--color-tag-blue-bg) !important;
+  color: var(--color-tag-blue-text) !important;
 }
 .tag-badge-v2.docker {
   background: var(--color-tag-blue-bg) !important;
   color: var(--color-tag-blue-text) !important;
 }
 .tag-badge-v2.devops {
-  background: var(--color-tag-purple-bg) !important;
-  color: var(--color-tag-purple-text) !important;
+  background: var(--color-tag-blue-bg) !important;
+  color: var(--color-tag-blue-text) !important;
 }
 .tag-badge-v2.node\.js {
   background: var(--color-tag-cyan-bg) !important;
@@ -1333,14 +1322,14 @@ const handleSendMessage = () => {
   color: var(--color-text);
 }
 .activity-row-modern:hover {
-  border-color: var(--color-purple-light) !important;
+  border-color: var(--color-blue-light) !important;
   transform: translateX(4px);
   box-shadow: var(--shadow-md);
 }
 .activity-icon-container {
   width: 36px;
   height: 36px;
-  background: var(--color-purple-light) !important;
+  background: var(--color-blue-light) !important;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1361,7 +1350,7 @@ const handleSendMessage = () => {
 .proficiency-percentage {
   font-size: 0.72rem;
   font-weight: 800;
-  color: var(--color-purple);
+  color: var(--color-blue);
 }
 .proficiency-progress {
   height: 6px;
@@ -1373,7 +1362,7 @@ const handleSendMessage = () => {
   height: 100%;
   background: linear-gradient(
     90deg,
-    var(--color-purple) 0%,
+    var(--color-blue) 0%,
     var(--color-primary) 100%
   );
   border-radius: var(--radius-pill);

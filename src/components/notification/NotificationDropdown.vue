@@ -34,11 +34,8 @@ const handleOutsideClick = (e) => {
 };
 
 const handleNotificationClick = async (item) => {
-  await notificationStore.markAsRead(item.id);
   emit('close');
-  if (item.link) {
-    router.push(item.link);
-  }
+  await notificationStore.routeToNotification(item, router);
 };
 
 const handleDeleteClick = async (e, id) => {
@@ -66,13 +63,6 @@ const getNotificationIcon = (type) => {
     <!-- Header -->
     <div class="dropdown-header d-flex align-items-center justify-content-between">
       <h5 class="m-0 fw-bold header-title">Notifications</h5>
-      <button 
-        v-if="notificationStore.unreadCount > 0" 
-        @click="handleMarkAllRead" 
-        class="btn-mark-read btn btn-sm bg-transparent border-0 px-2 fw-semibold"
-      >
-        Mark all as read
-      </button>
     </div>
 
     <!-- Scrollable content area -->
@@ -165,22 +155,33 @@ const getNotificationIcon = (type) => {
   top: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%);
-  width: 380px;
+  width: 340px;
   background: var(--color-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   z-index: 1050;
   overflow: hidden;
-  max-height: 500px;
+  max-height: 460px;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-lg);
 }
 
+[data-theme="dark"] .notification-dropdown {
+  background: rgba(2, 16, 36, 1);
+  border-color: rgba(125, 160, 202, 0.2);
+}
+
 .dropdown-header {
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-hover);
+}
+
+[data-theme="dark"] .dropdown-header {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .header-title {
@@ -190,7 +191,7 @@ const getNotificationIcon = (type) => {
 
 .btn-mark-read {
   font-size: 12px;
-  color: var(--color-primary, #7c3aed) !important;
+  color: var(--color-primary, #5483B3) !important;
   transition: all 0.2s;
 }
 
@@ -199,10 +200,14 @@ const getNotificationIcon = (type) => {
 }
 
 .dropdown-footer {
-  padding: 14px 20px;
+  padding: 10px 16px;
   background: var(--color-surface-hover);
   text-align: center;
   border-top: 1px solid var(--color-border);
+}
+
+[data-theme="dark"] .dropdown-footer {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .view-all-btn {
@@ -226,7 +231,7 @@ const getNotificationIcon = (type) => {
 }
 
 .notification-item {
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -243,7 +248,7 @@ const getNotificationIcon = (type) => {
 }
 
 .notification-item.unread {
-  background: var(--color-purple-light, rgba(124, 58, 237, 0.04));
+  background: var(--color-primary-light, rgba(84, 131, 179, 0.04));
 }
 
 .item-avatar-wrap {
@@ -305,7 +310,7 @@ const getNotificationIcon = (type) => {
 .unread-dot {
   width: 8px;
   height: 8px;
-  background: var(--color-primary, #7c3aed);
+  background: var(--color-primary, #5483B3);
   box-shadow: 0 0 8px var(--color-primary);
   display: inline-block;
   transition: opacity 0.2s ease;
@@ -392,6 +397,7 @@ const getNotificationIcon = (type) => {
     right: 16px;
     width: auto;
     max-height: calc(100vh - 100px);
+    transform: none;
   }
 }
 </style>

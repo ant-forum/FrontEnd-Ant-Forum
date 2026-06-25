@@ -20,6 +20,7 @@ export const useUsersStore = defineStore("users", () => {
       isLoading.value = true;
       const response = await api.post("/auth/createUsers", {
         username: payload.username,
+        fullname: payload.fullname,
         email: payload.email,
         password: payload.password,
         role: payload.role,
@@ -35,6 +36,7 @@ export const useUsersStore = defineStore("users", () => {
           response.data.data?._id ||
           String(Date.now()),
         username: payload.username,
+        fullname: payload.fullname,
         email: payload.email,
         role: payload.role,
         gender: payload.gender,
@@ -76,6 +78,14 @@ export const useUsersStore = defineStore("users", () => {
   const updateUser = async (id, payload) => {
     try {
       isLoading.value = true;
+      
+      if (payload.role) {
+        const roleResponse = await api.put(`/auth/updateRoleByUserID/${id}`, {
+          role: payload.role,
+        });
+        ensureSuccess(roleResponse);
+      }
+
       const response = await api.put(`/api/admin/update-user/${id}`, payload);
       ensureSuccess(response);
       return response.data;

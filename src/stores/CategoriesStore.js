@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/api.js";
 
-const CATEGORY_COLORS = ["blue", "green", "purple", "orange"];
+const CATEGORY_COLORS = ["blue", "green", "blue", "orange"];
 
 const categoryPayload = (category) => {
   const payload = {

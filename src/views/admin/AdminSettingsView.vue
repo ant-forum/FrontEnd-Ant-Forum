@@ -601,7 +601,7 @@ const metrics = computed(() => [
     value: form.requireFirstPostReview ? "On" : "Off",
     change: "New member guardrail",
     icon: "bi-shield-check",
-    className: "purple",
+    className: "blue",
   },
   {
     label: "Auto-lock",
@@ -674,9 +674,9 @@ const save = () => {
 }
 .settings-tabs button.active {
   color: #a5b4fc;
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(84, 131, 179, 0.12);
   border-color: rgba(129, 140, 248, 0.42);
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(84, 131, 179, 0.08);
 }
 .settings-tabs i {
   font-size: 1rem;
@@ -725,8 +725,8 @@ const save = () => {
 :deep(.metric-icon.green) {
   background: rgba(16, 185, 129, 0.12);
 }
-:deep(.metric-icon.purple) {
-  background: rgba(139, 92, 246, 0.13);
+:deep(.metric-icon.blue) {
+  background: rgba(84, 131, 179, 0.13);
 }
 :deep(.metric-icon.blue) {
   background: rgba(14, 165, 233, 0.12);
@@ -833,7 +833,7 @@ const save = () => {
 }
 .toggle-row:hover {
   background: color-mix(in srgb, var(--color-surface-hover) 92%, transparent);
-  border-color: rgba(99, 102, 241, 0.28);
+  border-color: rgba(84, 131, 179, 0.28);
 }
 .toggle-row strong,
 .toggle-row small {
@@ -860,7 +860,7 @@ const save = () => {
 }
 .notification-row:hover {
   background: color-mix(in srgb, var(--color-surface-hover) 92%, transparent);
-  border-color: rgba(99, 102, 241, 0.28);
+  border-color: rgba(84, 131, 179, 0.28);
 }
 .notification-icon {
   width: 38px;
@@ -943,7 +943,7 @@ const save = () => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   border-color: var(--color-primary);
 }

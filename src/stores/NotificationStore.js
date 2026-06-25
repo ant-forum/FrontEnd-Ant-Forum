@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "../api/api.js";
+import { useForumStore } from "./ForumStore";
 
 export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref([]);
@@ -45,14 +46,44 @@ export const useNotificationStore = defineStore("notification", () => {
           
           const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
           
+          const targetId = n.forum_id || n.forumId || n.forum?.id || 
+                           n.post_id || n.postId || n.post?.id || 
+                           n.discussion_id || n.discussionId || n.discussion?.id || 
+                           n.reference_id || n.referenceId || 
+                           n.target_id || n.targetId || 
+                           n.related_id || n.relatedId || 
+                           n.item_id || n.itemId || 
+                           n.parent_id || n.parentId ||
+                           n.data?.forum_id || n.data?.post_id || n.data?.discussion_id || n.data?.id ||
+                           n.metadata?.forum_id || n.metadata?.post_id || n.meta?.forum_id || n.meta?.post_id;
+          let linkUrl = "#";
+          
+          if (n.type === "comment" && (n.forum_id || n.forumId || targetId)) {
+            linkUrl = `/forum/${n.forum_id || n.forumId || targetId}`;
+          } else if ((n.link && n.link !== "#") || (n.url && n.url !== "#")) {
+            linkUrl = (n.link && n.link !== "#") ? n.link : n.url;
+          } else if (targetId) {
+            linkUrl = `/forum/${targetId}`;
+            if (n.type === "comment" && n.entity_id) {
+               linkUrl += `#comment-${n.entity_id}`;
+            }
+          }
+
           return {
              id: n.id,
              type: type,
              title: title,
              message: message,
-             read: Boolean(n.is_read),
+             read: (() => {
+               const val = n.is_read !== undefined ? n.is_read : (n.isRead !== undefined ? n.isRead : n.read);
+               if (val === undefined || val === null) return false;
+               if (typeof val === 'boolean') return val;
+               if (typeof val === 'number') return val === 1;
+               if (typeof val === 'string') return val === '1' || val.toLowerCase() === 'true';
+               return Boolean(val);
+             })(),
              created_at: n.created_at,
-             link: "#",
+             link: linkUrl,
              sender: {
                 name: n.sender_username,
                 avatar: n.sender_profile_pic ? `${baseUrl}${n.sender_profile_pic}` : null
@@ -67,10 +98,15 @@ export const useNotificationStore = defineStore("notification", () => {
     }
   };
 
-  const markAsRead = (id) => {
-    const item = notifications.value.find((n) => n.id === id);
-    if (item) {
-      item.read = true;
+  const markAsRead = async (id) => {
+    try {
+      await api.put(`/api/notifications/markasread/${id}`);
+      const found = notifications.value.find((n) => n.id === id);
+      if (found) {
+        found.read = true;
+      }
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
     }
   };
 
@@ -103,6 +139,23 @@ export const useNotificationStore = defineStore("notification", () => {
     notifications.value = [];
   };
 
+  const routeToNotification = async (item, router) => {
+    await markAsRead(item.id);
+    if (item.link && item.link !== "#") {
+      // As requested, fetch forum detail before routing if it's a forum link
+      if (item.link.startsWith("/forum/")) {
+        const targetId = item.link.split("/")[2];
+        try {
+          const forumStore = useForumStore();
+          await forumStore.fetchDiscussion(targetId);
+        } catch (error) {
+          console.error("Failed to fetch forum details:", error);
+        }
+      }
+      router.push(item.link);
+    }
+  };
+
   return {
     notifications,
     loading,
@@ -114,5 +167,6 @@ export const useNotificationStore = defineStore("notification", () => {
     deleteNotification,
     addNotification,
     clearNotifications,
+    routeToNotification,
   };
 });

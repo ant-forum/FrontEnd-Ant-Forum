@@ -149,7 +149,7 @@ const metrics = computed(() => [
     value: String(countByType("settings")),
     change: "Forum changes",
     icon: "bi-gear",
-    className: "purple",
+    className: "blue",
   },
 ]);
 

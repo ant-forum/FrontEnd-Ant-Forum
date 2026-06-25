@@ -55,13 +55,6 @@
             class="dropdown-header-premium d-flex justify-content-between align-items-center"
           >
             <strong>Notifications ({{ unreadCount }})</strong>
-            <button
-              class="btn btn-link btn-sm text-primary p-0 text-decoration-none fw-bold"
-              @click="markAllRead"
-              v-if="unreadCount > 0"
-            >
-              Mark all as read
-            </button>
           </div>
 
           <div class="dropdown-body-premium">
@@ -787,7 +780,7 @@ onUnmounted(() => {
 }
 
 .notification-item-premium.unread {
-  background-color: rgba(99, 102, 241, 0.03);
+  background-color: rgba(84, 131, 179, 0.03);
 }
 
 .avatar-sm {

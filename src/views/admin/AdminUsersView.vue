@@ -40,6 +40,21 @@
         novalidate
       >
         <div class="field-block">
+          <label>Full Name</label>
+          <input
+            v-model="mEdit.data.fullname"
+            class="form-control"
+            :class="{ 'is-invalid': errors.fullname }"
+            type="text"
+            placeholder="Enter full name"
+            @input="handleEditInput('fullname')"
+          />
+          <div v-if="errors.fullname" class="invalid-feedback d-block">
+            {{ errors.fullname }}
+          </div>
+        </div>
+
+        <div class="field-block">
           <label>Username</label>
           <input
             v-model="mEdit.data.username"
@@ -80,7 +95,8 @@
             >
               <option value="">Select Role</option>
               <option value="student">Student</option>
-              <option value="mentor">Mentor</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
             </select>
             <div v-if="errors.role" class="invalid-feedback d-block">
               {{ errors.role }}
@@ -189,6 +205,8 @@ const { errors, clearError, validateUsername, validateEmail, validateField } =
 const handleEditInput = (field) => {
   if (isEditSubmitted.value) {
     if (field === "username") validateUsername(mEdit.data.username);
+    if (field === "fullname")
+      validateField("fullname", mEdit.data.fullname, "Full name is required.");
     if (field === "email") validateEmail(mEdit.data.email);
     if (field === "role")
       validateField("role", mEdit.data.role, "Role is required.");
@@ -222,8 +240,8 @@ const formatJoinedDate = (value) => {
 const mappedUsers = computed(() => {
   return (usersStore.users || []).map((u) => ({
     id: u.id || u._id,
-    name: u.username || "No Username",
-    detail: u.email || "No email",
+    name: u.fullname || u.username || "No Username",
+    detail: (u.fullname && u.username ? '@' + u.username + ' · ' : '') + u.email,
     role:
       u.role === "user" || u.role === "student"
         ? "Student"
@@ -237,17 +255,20 @@ const mappedUsers = computed(() => {
     avatar: u.profile_pic || u.avatar || u.avatarUrl || "",
     gender: u.gender || "male",
     rawRole: u.role || "student",
+    rawUsername: u.username || "",
+    rawFullname: u.fullname || "",
+    rawEmail: u.email || "",
   }));
 });
 
 const metrics = computed(() => {
   const allUsers = usersStore.users || [];
   const total = allUsers.length;
-  const mentors = allUsers.filter((u) => u.role === "mentor").length;
   const students = allUsers.filter(
     (u) => u.role === "user" || u.role === "student",
   ).length;
-  const others = total - mentors - students;
+  const teachers = allUsers.filter((u) => u.role === "teacher").length;
+  const admins = allUsers.filter((u) => u.role === "admin").length;
 
   return [
     {
@@ -265,16 +286,16 @@ const metrics = computed(() => {
       className: "green",
     },
     {
-      label: "Mentors",
-      value: String(mentors),
-      change: "Active mentors",
+      label: "Teachers",
+      value: String(teachers),
+      change: "Active teachers",
       icon: "bi-person-badge",
-      className: "purple",
+      className: "blue",
     },
     {
-      label: "Others",
-      value: String(others),
-      change: "Other roles",
+      label: "Admins",
+      value: String(admins),
+      change: "Platform administrators",
       icon: "bi-shield-check",
       className: "orange",
     },
@@ -299,6 +320,7 @@ const mEdit = reactive({
   item: null,
   data: {
     username: "",
+    fullname: "",
     email: "",
     role: "student",
     gender: "male",
@@ -309,23 +331,26 @@ const isSaveDisabled = computed(() => {
   if (!mEdit.item) return true;
 
   const currentUsername = (mEdit.data.username || "").trim();
+  const currentFullname = (mEdit.data.fullname || "").trim();
   const currentEmail = (mEdit.data.email || "").trim();
   const currentRole = mEdit.data.role;
   const currentGender = mEdit.data.gender;
 
   // Disable if any required fields are empty
-  if (!currentUsername || !currentEmail || !currentRole || !currentGender) {
+  if (!currentUsername || !currentFullname || !currentEmail || !currentRole || !currentGender) {
     return true;
   }
 
   // Disable if fields are completely unmodified from their original states
-  const originalUsername = (mEdit.item.name || "").trim();
-  const originalEmail = (mEdit.item.detail || "").trim();
+  const originalUsername = (mEdit.item.rawUsername || "").trim();
+  const originalFullname = (mEdit.item.rawFullname || "").trim();
+  const originalEmail = (mEdit.item.rawEmail || "").trim();
   const originalRole = mEdit.item.rawRole || "";
   const originalGender = mEdit.item.gender || "";
 
   const isUnchanged =
     currentUsername === originalUsername &&
+    currentFullname === originalFullname &&
     currentEmail === originalEmail &&
     currentRole === originalRole &&
     currentGender === originalGender;
@@ -336,13 +361,15 @@ const isSaveDisabled = computed(() => {
 const openEditModal = (mappedUser) => {
   isEditSubmitted.value = false;
   clearError("username");
+  clearError("fullname");
   clearError("email");
   clearError("role");
   clearError("gender");
   mEdit.item = mappedUser;
   mEdit.data = {
-    username: mappedUser.name,
-    email: mappedUser.detail,
+    username: mappedUser.rawUsername,
+    fullname: mappedUser.rawFullname,
+    email: mappedUser.rawEmail,
     role: mappedUser.rawRole || "",
     gender: mappedUser.gender || "",
   };
@@ -358,6 +385,11 @@ const handleUpdateUser = async () => {
   isEditSubmitted.value = true;
 
   const isUsernameValid = validateUsername(mEdit.data.username);
+  const isFullnameValid = validateField(
+    "fullname",
+    mEdit.data.fullname,
+    "Full name is required.",
+  );
   const isEmailValid = validateEmail(mEdit.data.email);
   const isRoleValid = validateField(
     "role",
@@ -370,7 +402,7 @@ const handleUpdateUser = async () => {
     "Gender is required.",
   );
 
-  if (!isUsernameValid || !isEmailValid || !isRoleValid || !isGenderValid) {
+  if (!isUsernameValid || !isFullnameValid || !isEmailValid || !isRoleValid || !isGenderValid) {
     toast.error("Please fix the validation errors before saving.");
     return;
   }
@@ -378,6 +410,7 @@ const handleUpdateUser = async () => {
   try {
     await usersStore.updateUser(mEdit.item.id, {
       username: mEdit.data.username,
+      fullname: mEdit.data.fullname,
       email: mEdit.data.email,
       role: mEdit.data.role,
       gender: mEdit.data.gender,

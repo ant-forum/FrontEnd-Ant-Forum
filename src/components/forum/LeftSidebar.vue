@@ -170,10 +170,6 @@ onMounted(() => {
         <i class="bi bi-file-earmark-text"></i>
         <span>Forum Guidelines</span>
       </router-link>
-      <router-link to="/help" class="footer-link">
-        <i class="bi bi-info-circle"></i>
-        <span>Help & Support</span>
-      </router-link>
     </div>
   </aside>
 </template>
@@ -182,11 +178,13 @@ onMounted(() => {
 .left-sidebar-navigation {
   display: flex;
   flex-direction: column;
-  background: var(--color-surface);
-  border-radius: 12px;
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
   padding: 24px;
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-sm), inset 0 1px 1px rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
   height: fit-content;
   user-select: none;
@@ -260,8 +258,8 @@ onMounted(() => {
 }
 
 .sidebar-menu-item.active {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
   font-weight: 700;
 }
 
@@ -286,7 +284,7 @@ onMounted(() => {
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   color: white;
   border: none;

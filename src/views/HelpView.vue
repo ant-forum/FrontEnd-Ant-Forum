@@ -16,7 +16,7 @@ const quickLinks = [
     icon: "bi-chat-text-fill",
     label: "Go to Forum",
     to: "/forum",
-    color: "purple",
+    color: "blue",
   },
   {
     icon: "bi-plus-circle-fill",
@@ -47,7 +47,7 @@ const studentSteps = [
     desc: "Navigate to the forum and select the category that best fits your question. Use <strong>Questions</strong> for help-seeking &amp; debugging, <strong>Showcase</strong> to share projects, and <strong>General</strong> for broad discussions. Posting in the correct category increases visibility by 60%.",
     tip: "Tip: When in doubt, use the <em>Questions</em> category.",
     icon: "bi-tag-fill",
-    color: "purple",
+    color: "blue",
   },
   {
     title: "Write a Specific Title",
@@ -127,7 +127,7 @@ const teacherSteps = [
     desc: "When a correct, high-quality answer is posted, pin it or mark it as the accepted solution. This helps future students searching the thread immediately find the best resolution without reading every reply.",
     tip: "Pin the accepted reply to put it at the top of the thread.",
     icon: "bi-pin-angle-fill",
-    color: "purple",
+    color: "blue",
   },
 ];
 
@@ -233,7 +233,7 @@ const studentDonts = [
           <div v-if="activeRole === 'student'" key="student">
             <!-- Section header -->
             <div class="section-header mb-4">
-              <div class="section-icon-box bg-purple-subtle text-purple">
+              <div class="section-icon-box bg-blue-subtle text-blue">
                 <i class="bi bi-mortarboard"></i>
               </div>
               <div>
@@ -353,10 +353,10 @@ const studentDonts = [
                           style="font-size: 0.8rem; line-height: 1.6"
                         >Here is my Vue code:
 
-<span style="color:#818cf8;">```javascript</span>
+<span style="color:#5483B3;">```javascript</span>
 <span style="color:#f43f5e;">const</span> app = createApp(App);
 app.mount(<span style="color:#34d399;">'#app'</span>);
-<span style="color:#818cf8;">```</span></pre>
+<span style="color:#5483B3;">```</span></pre>
                       </div>
                     </div>
                   </div>
@@ -402,7 +402,7 @@ app.mount(<span style="color:#34d399;">'#app'</span>);
                               line-height: 1.6;
                               color: #a5b4fc;
                             "
-                          ><span style="color:#c084fc;">const</span> app = <span style="color:#60a5fa;">createApp</span>(App);
+                          ><span style="color:#60a5fa;">const</span> app = <span style="color:#60a5fa;">createApp</span>(App);
 app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app'</span>);</pre>
                         </div>
                       </div>
@@ -537,11 +537,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
 /* ── PAGE SHELL ─────────────────────────────────────── */
 .help-page {
   min-height: 100vh;
-  background: var(--color-bg);
-  background-image:
-    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px);
-  background-size: 34px 34px;
+  background: transparent;
   color: var(--color-text);
   position: relative;
   overflow-x: hidden;
@@ -567,7 +563,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   height: 480px;
   background: radial-gradient(
     circle,
-    rgba(99, 102, 241, 0.14),
+    rgba(84, 131, 179, 0.14),
     transparent 70%
   );
   top: -120px;
@@ -578,7 +574,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   height: 400px;
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.12),
+    rgba(84, 131, 179, 0.12),
     transparent 70%
   );
   bottom: -80px;
@@ -627,7 +623,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   pointer-events: none;
   background: linear-gradient(
     135deg,
-    rgba(99, 102, 241, 0.08),
+    rgba(84, 131, 179, 0.08),
     transparent 50%,
     rgba(167, 139, 250, 0.08)
   );
@@ -640,7 +636,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -663,7 +659,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   height: 8px;
   border-radius: 999px;
   background: var(--color-primary);
-  box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 5px rgba(84, 131, 179, 0.2);
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
@@ -690,9 +686,9 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   transform: scale(0.96);
 }
 
-.quick-link-btn.color-purple {
+.quick-link-btn.color-blue {
   background: rgba(124, 58, 237, 0.1);
-  color: #7c3aed;
+  color: #052659;
   border-color: rgba(124, 58, 237, 0.2);
 }
 .quick-link-btn.color-blue {
@@ -788,10 +784,10 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   color: white;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 15px rgba(84, 131, 179, 0.25);
 }
 
 /* ── SECTION HEADER ─────────────────────────────────── */
@@ -845,7 +841,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
 }
 
 /* Category-specific hover glows */
-.step-glow-purple:hover {
+.step-glow-blue:hover {
   border-color: rgba(124, 58, 237, 0.4) !important;
   box-shadow: 0 14px 32px rgba(124, 58, 237, 0.12) !important;
 }
@@ -901,9 +897,9 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   border-radius: var(--radius-sm);
   line-height: 1.4;
 }
-.tip-purple {
+.tip-blue {
   background: rgba(124, 58, 237, 0.1);
-  color: #7c3aed;
+  color: #052659;
 }
 .tip-blue {
   background: rgba(37, 99, 235, 0.1);
@@ -1000,7 +996,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   inset: 0;
   background: radial-gradient(
     circle at 100% 0%,
-    rgba(99, 102, 241, 0.15),
+    rgba(84, 131, 179, 0.15),
     transparent 50%
   );
   pointer-events: none;
@@ -1029,8 +1025,8 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   letter-spacing: 0.06em;
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  color: #818cf8;
+  border: 1px solid rgba(84, 131, 179, 0.3);
+  color: #5483B3;
 }
 .code-preview-box {
   background: transparent;
@@ -1044,7 +1040,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
     rgba(238, 242, 255, 0.5),
     rgba(224, 231, 255, 0.5)
   );
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(84, 131, 179, 0.2);
   border-left: 4px solid var(--color-primary);
   border-radius: var(--radius-md);
   padding: 1.75rem;
@@ -1056,8 +1052,8 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
     rgba(30, 27, 75, 0.4),
     rgba(49, 46, 129, 0.4)
   );
-  border-color: rgba(139, 92, 246, 0.25);
-  border-left-color: var(--color-purple);
+  border-color: rgba(84, 131, 179, 0.25);
+  border-left-color: var(--color-blue);
 }
 .teacher-tip-icon {
   width: 48px;
@@ -1067,7 +1063,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   display: flex;
   align-items: center;
@@ -1089,7 +1085,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   height: 130px;
   background: radial-gradient(
     circle,
-    rgba(99, 102, 241, 0.15),
+    rgba(84, 131, 179, 0.15),
     transparent 70%
   );
   pointer-events: none;
@@ -1097,7 +1093,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
 .btn-primary-gradient {
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(135deg, #7c3aed, #6366f1);
+  background: linear-gradient(135deg, #052659, #5483B3);
   color: white;
   border: none;
   border-radius: 50px;
@@ -1108,7 +1104,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   cursor: pointer;
 }
 .btn-primary-gradient:hover {
-  background: linear-gradient(135deg, #6d28d9, #4f46e5);
+  background: linear-gradient(135deg, #052659, #4f46e5);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
   color: white;
@@ -1133,11 +1129,11 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
 }
 
 /* ── SUBTLE COLORS ──────────────────────────────────── */
-.bg-purple-subtle {
+.bg-blue-subtle {
   background-color: #f3e8ff;
 }
-.text-purple {
-  color: #7c3aed;
+.text-blue {
+  color: #052659;
 }
 .bg-blue-subtle {
   background-color: #dbeafe;
@@ -1164,7 +1160,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   color: #e11d48;
 }
 .bg-indigo-subtle {
-  background-color: #e0e7ff;
+  background-color: #C1E8FF;
 }
 .text-indigo {
   color: #4f46e5;
@@ -1182,7 +1178,7 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
   color: #0d9488;
 }
 
-[data-theme="dark"] .bg-purple-subtle {
+[data-theme="dark"] .bg-blue-subtle {
   background-color: rgba(124, 58, 237, 0.15);
 }
 [data-theme="dark"] .bg-blue-subtle {
@@ -1211,12 +1207,12 @@ app.<span style="color:#60a5fa;">mount</span>(<span style="color:#34d399;">'#app
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 4px rgba(84, 131, 179, 0.15);
   }
   50% {
     box-shadow:
-      0 0 0 8px rgba(99, 102, 241, 0.05),
-      0 0 15px rgba(99, 102, 241, 0.2);
+      0 0 0 8px rgba(84, 131, 179, 0.05),
+      0 0 15px rgba(84, 131, 179, 0.2);
   }
 }
 .fade-slide-enter-active,

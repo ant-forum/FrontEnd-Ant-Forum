@@ -8,6 +8,7 @@ export const useReportStore = defineStore("report", () => {
   const report = ref(null);
   const myReports = ref([]);
   const isLoading = ref(false);
+  const deletedReportCount = ref(0);
 
   // Computeds for admin views compatibility
   const threadReports = computed(() => reports.value);
@@ -243,6 +244,7 @@ export const useReportStore = defineStore("report", () => {
       ensureSuccess(res);
       reports.value = reports.value.filter((r) => r.id != id);
       myReports.value = myReports.value.filter((r) => r.id != id);
+      deletedReportCount.value++;
       if (report.value && report.value.id == id) {
         report.value = null;
       }
@@ -307,6 +309,7 @@ export const useReportStore = defineStore("report", () => {
     report,
     myReports,
     isLoading,
+    deletedReportCount,
     threadReports,
     pendingReports,
     resolvedReports,

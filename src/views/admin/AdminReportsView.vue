@@ -28,19 +28,9 @@
             class="form-select compact-select"
             aria-label="Filter reports by status"
           >
-            <option value="all">All statuses</option>
+            <option value="Open">All Report</option>
             <option value="Resolved">Resolved</option>
             <option value="Dismissed">Dismissed</option>
-          </select>
-          <select
-            v-model="priorityFilter"
-            class="form-select compact-select"
-            aria-label="Filter reports by priority"
-          >
-            <option value="all">All priorities</option>
-            <option value="High">High priority</option>
-            <option value="Medium">Medium priority</option>
-            <option value="Low">Low priority</option>
           </select>
         </div>
       </div>
@@ -84,11 +74,9 @@
         <table class="table clean-table align-middle mb-0">
           <thead>
             <tr>
-              <th>Case</th>
+              <th>Report No.</th>
               <th>Reported Content</th>
-              <th>Priority</th>
               <th>Reporters</th>
-              <th>Status</th>
               <th>Submitted</th>
               <th class="text-end">Action</th>
             </tr>
@@ -110,26 +98,10 @@
                 </div>
               </td>
               <td>
-                <span
-                  :class="['status-pill', priorityClass(report.priority)]"
-                  >{{ report.priority }}</span
-                >
-              </td>
-              <td>
                 <span class="report-count">
                   <i class="bi bi-people"></i>
                   {{ report.reports }}
                 </span>
-              </td>
-              <td>
-                <span :class="['status-pill', statusClass(report.status)]">{{
-                  report.status
-                }}</span>
-                <i
-                  v-if="report.locked"
-                  class="bi bi-lock-fill lock-icon ms-2"
-                  title="Thread locked"
-                ></i>
               </td>
               <td class="date-cell">{{ formatDate(report.createdAt) }}</td>
               <td class="text-end">
@@ -146,7 +118,7 @@
           </tbody>
           <tbody v-else>
             <tr>
-              <td colspan="7" class="empty-state">
+              <td colspan="5" class="empty-state">
                 <i class="bi bi-inbox"></i>
                 <strong>{{ emptyStateTitle }}</strong>
                 <span>{{ emptyStateMessage }}</span>
@@ -172,32 +144,7 @@
       </footer>
     </section>
 
-    <section class="insight-grid">
-      <article class="insight-card">
-        <span class="insight-icon orange"
-          ><i class="bi bi-exclamation-triangle"></i
-        ></span>
-        <div>
-          <strong>Review high-priority cases first</strong>
-          <p>
-            {{ reportStore.highPriorityReports.length }} open case requires
-            immediate attention.
-          </p>
-        </div>
-      </article>
-      <article class="insight-card">
-        <span class="insight-icon purple"
-          ><i class="bi bi-journal-check"></i
-        ></span>
-        <div>
-          <strong>Document each decision</strong>
-          <p>
-            Resolve and dismiss actions require an admin note for a clearer
-            future audit log.
-          </p>
-        </div>
-      </article>
-    </section>
+
   </AdminPageShell>
 
   <BaseModal
@@ -211,34 +158,20 @@
       <div class="case-heading">
         <div>
           <span class="case-number"
-            >CASE #{{ paddedId(selectedReport.id) }}</span
+            >Report #{{ paddedId(selectedReport.id) }}</span
           >
           <h3>{{ selectedReport.title }}</h3>
           <p>{{ selectedReport.detail }} · by {{ selectedReport.author }}</p>
         </div>
-        <span
-          :class="['status-pill', priorityClass(selectedReport.priority)]"
-          >{{ selectedReport.priority }}</span
-        >
       </div>
-
-
-
       <div class="detail-grid">
         <div>
-          <small>Reports</small><strong>{{ selectedReport.reports }}</strong>
-        </div>
-        <div>
-          <small>Status</small><strong>{{ selectedReport.status }}</strong>
-        </div>
-        <div>
-          <small>Thread State</small
-          ><strong>{{ selectedReport.locked ? "Locked" : "Open" }}</strong>
+          <small>Reports</small><strong>{{ sameForumReportsCount }}</strong>
         </div>
       </div>
 
       <div>
-        <h4>Report Reasons</h4>
+        <h4>{{ selectedReport.reasons.length === 1 ? 'Report Reason' : 'Report Reasons' }}</h4>
         <div class="reason-list">
           <span v-for="reason in selectedReport.reasons" :key="reason">{{
             reason
@@ -280,14 +213,6 @@
       </label>
 
       <div class="modal-actions">
-        <button
-          class="btn btn-outline-warning"
-          type="button"
-          @click="handleWarn"
-        >
-          <i class="bi bi-exclamation-triangle"></i>
-          Warn User
-        </button>
         <button
           class="btn btn-outline-secondary"
           type="button"
@@ -346,8 +271,7 @@ const adminStore = useAdminOperationsStore();
 const reportStore = useReportStore();
 const toast = useToast();
 const query = ref("");
-const statusFilter = ref("all");
-const priorityFilter = ref("all");
+const statusFilter = ref("Open");
 const selectedId = ref(null);
 const decisionNote = ref("");
 const showDeleteConfirm = ref(false);
@@ -359,12 +283,27 @@ onMounted(async () => {
 const selectedReport = computed(() =>
   reportStore.threadReports.find((report) => report.id === selectedId.value),
 );
+
+const reportsForSameForum = computed(() => {
+  if (!selectedReport.value) return [];
+  const current = selectedReport.value;
+  return reportStore.threadReports.filter((r) => {
+    if (current.threadId && r.threadId === current.threadId) return true;
+    if (current.projectId && r.projectId === current.projectId) return true;
+    return r.id === current.id;
+  });
+});
+
+const sameForumReportsCount = computed(() => {
+  return reportsForSameForum.value.reduce((total, r) => total + (r.reports || 1), 0);
+});
+
 const totalReporterCount = computed(() =>
   reportStore.threadReports.reduce((total, report) => total + report.reports, 0),
 );
 const metrics = computed(() => [
   {
-    label: "Open Cases",
+    label: "Cases Report",
     value: String(reportStore.pendingReports.length),
     change: "Needs a decision",
     icon: "bi-inbox",
@@ -377,13 +316,7 @@ const metrics = computed(() => [
     icon: "bi-flag",
     className: "blue",
   },
-  {
-    label: "High Priority",
-    value: String(reportStore.highPriorityReports.length),
-    change: "Review first",
-    icon: "bi-exclamation-triangle",
-    className: "purple",
-  },
+
   {
     label: "Closed Cases",
     value: String(reportStore.resolvedReports.length),
@@ -393,7 +326,7 @@ const metrics = computed(() => [
   },
 ]);
 const statusTabs = computed(() => [
-  { label: "All Cases", value: "all", count: reportStore.threadReports.length },
+  { label: "All Report", value: "Open", count: reportStore.pendingReports.length },
   {
     label: "Resolved",
     value: "Resolved",
@@ -413,27 +346,19 @@ const visibleReports = computed(() => {
   return reportStore.threadReports.filter((report) => {
     const matchesQuery =
       !needle || JSON.stringify(report).toLowerCase().includes(needle);
-    const matchesStatus =
-      statusFilter.value === "all" || report.status === statusFilter.value;
-    const matchesPriority =
-      priorityFilter.value === "all" ||
-      report.priority === priorityFilter.value;
-    return matchesQuery && matchesStatus && matchesPriority;
+    const matchesStatus = report.status === statusFilter.value;
+    return matchesQuery && matchesStatus;
   });
 });
 const hasActiveFilters = computed(
   () =>
     Boolean(query.value) ||
-    statusFilter.value !== "all" ||
-    priorityFilter.value !== "all",
+    statusFilter.value !== "Open",
 );
 const activeFilterChips = computed(() => [
   ...(query.value ? [{ key: "query", label: `Search: ${query.value}` }] : []),
-  ...(statusFilter.value !== "all"
+  ...(statusFilter.value !== "Open"
     ? [{ key: "status", label: `Status: ${statusFilter.value}` }]
-    : []),
-  ...(priorityFilter.value !== "all"
-    ? [{ key: "priority", label: `Priority: ${priorityFilter.value}` }]
     : []),
 ]);
 const emptyStateTitle = computed(() =>
@@ -448,13 +373,11 @@ const emptyStateMessage = computed(() =>
 );
 const clearFilters = () => {
   query.value = "";
-  statusFilter.value = "all";
-  priorityFilter.value = "all";
+  statusFilter.value = "Open";
 };
 const removeFilter = (key) => {
   if (key === "query") query.value = "";
-  if (key === "status") statusFilter.value = "all";
-  if (key === "priority") priorityFilter.value = "all";
+  if (key === "status") statusFilter.value = "Open";
 };
 
 const openReport = (report) => {
@@ -474,7 +397,9 @@ const requireNote = () => {
 const handleResolve = async () => {
   if (!requireNote()) return;
   try {
-    await reportStore.resolveReport(selectedReport.value.id, decisionNote.value);
+    for (const r of reportsForSameForum.value) {
+      await reportStore.resolveReport(r.id, decisionNote.value);
+    }
     toast.success("Report case resolved and recorded.");
     closeReport();
   } catch (err) {
@@ -485,7 +410,9 @@ const handleResolve = async () => {
 const handleDismiss = async () => {
   if (!requireNote()) return;
   try {
-    await reportStore.dismissReport(selectedReport.value.id, decisionNote.value);
+    for (const r of reportsForSameForum.value) {
+      await reportStore.dismissReport(r.id, decisionNote.value);
+    }
     toast.success("Report case dismissed with an admin note.");
     closeReport();
   } catch (err) {
@@ -496,7 +423,9 @@ const handleDismiss = async () => {
 const handleWarn = async () => {
   if (!requireNote()) return;
   try {
-    await reportStore.warnThreadAuthor(selectedReport.value.id, decisionNote.value);
+    for (const r of reportsForSameForum.value) {
+      await reportStore.warnThreadAuthor(r.id, decisionNote.value);
+    }
     toast.success("Warning recorded for the thread author.");
     decisionNote.value = "";
   } catch (err) {
@@ -506,9 +435,13 @@ const handleWarn = async () => {
 };
 const handleLock = async () => {
   try {
-    await reportStore.toggleThreadLock(selectedReport.value.id, decisionNote.value);
+    const targetLockState = !selectedReport.value.locked;
+    for (const r of reportsForSameForum.value) {
+      await reportStore.toggleThreadLock(r.id, decisionNote.value);
+      r.locked = targetLockState;
+    }
     toast.success(
-      selectedReport.value.locked ? "Thread locked." : "Thread unlocked.",
+      targetLockState ? "Thread locked." : "Thread unlocked.",
     );
     decisionNote.value = "";
   } catch (err) {
@@ -522,7 +455,9 @@ const requestDelete = () => {
 const confirmDelete = async () => {
   showDeleteConfirm.value = false;
   try {
-    await reportStore.deleteReport(selectedReport.value.id);
+    for (const r of reportsForSameForum.value) {
+      await reportStore.deleteReport(r.id);
+    }
     toast.success("Report deleted successfully.");
     closeReport();
   } catch (err) {
@@ -676,7 +611,7 @@ const formatDateTime = (date) =>
   padding: 0.25rem 0.5rem;
   color: var(--color-primary);
   background: var(--color-primary-light);
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  border: 1px solid rgba(84, 131, 179, 0.22);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 800;
@@ -831,9 +766,9 @@ const formatDateTime = (date) =>
   color: var(--color-warning);
   background: var(--color-warning-light);
 }
-.insight-icon.purple {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+.insight-icon.blue {
+  color: var(--color-blue);
+  background: var(--color-blue-light);
 }
 .review-content {
   display: grid;

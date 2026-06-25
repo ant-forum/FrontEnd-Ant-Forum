@@ -60,7 +60,7 @@
       <div class="loader-content">
         <div class="d-flex gap-2 justify-content-center">
           <div class="spinner-grow text-primary" role="status"></div>
-          <div class="spinner-grow text-purple" role="status"></div>
+          <div class="spinner-grow text-blue" role="status"></div>
           <div class="spinner-grow text-info" role="status"></div>
         </div>
         <p class="loading-text">Loading your draft workspace...</p>
@@ -648,35 +648,35 @@ onBeforeUnmount(releaseThumbnailPreview);
   text-decoration: none !important;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border-color: rgba(139, 92, 246, 0.3) !important;
+  border-color: rgba(84, 131, 179, 0.3) !important;
   background: linear-gradient(
     90deg,
-    rgba(139, 92, 246, 0.08) 0%,
+    rgba(84, 131, 179, 0.08) 0%,
     var(--color-surface) 100%
   ) !important;
 }
 
 .clickable-toolbar-banner:hover {
   transform: translateY(-2px);
-  border-color: var(--color-purple) !important;
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15) !important;
+  border-color: var(--color-blue) !important;
+  box-shadow: 0 6px 20px rgba(84, 131, 179, 0.15) !important;
   background: linear-gradient(
     90deg,
-    rgba(139, 92, 246, 0.12) 0%,
+    rgba(84, 131, 179, 0.12) 0%,
     var(--color-surface-hover) 100%
   ) !important;
 }
 
 .clickable-toolbar-banner .state-message strong {
-  color: var(--color-purple);
-  background: rgba(139, 92, 246, 0.15);
+  color: var(--color-blue);
+  background: rgba(84, 131, 179, 0.15);
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
   margin: 0 0.15rem;
 }
 
 .action-hint {
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-weight: 800;
   display: inline-flex;
   align-items: center;
@@ -750,8 +750,8 @@ onBeforeUnmount(releaseThumbnailPreview);
   animation-duration: 0.75s;
 }
 
-.text-purple {
-  color: var(--color-purple) !important;
+.text-blue {
+  color: var(--color-blue) !important;
 }
 
 .loading-text {
@@ -984,8 +984,8 @@ onBeforeUnmount(releaseThumbnailPreview);
 }
 
 .status-badge.draft {
-  color: var(--color-purple);
-  background: var(--color-purple-light);
+  color: var(--color-blue);
+  background: var(--color-blue-light);
 }
 
 .status-badge.published {

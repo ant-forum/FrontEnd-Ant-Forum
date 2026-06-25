@@ -492,7 +492,7 @@ const handleImageDrop = (event) => {
 }
 
 .rich-editor.focused {
-  border-color: var(--color-purple);
+  border-color: var(--color-blue);
   box-shadow: var(--focus-ring);
 }
 

@@ -836,7 +836,7 @@ defineExpose({
   padding: 0.25rem 0.5rem;
   color: var(--color-primary);
   background: var(--color-primary-light);
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  border: 1px solid rgba(84, 131, 179, 0.22);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 800;
@@ -955,9 +955,9 @@ defineExpose({
   background: var(--color-warning-light);
   color: var(--color-warning);
 }
-.tag-pill-badge.purple {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+.tag-pill-badge.blue {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
 }
 .tag-pill-badge.gray {
   background: var(--color-surface-hover);

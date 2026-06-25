@@ -180,3 +180,13 @@ defineEmits(["closeModal"]);
   transform: scale(0.96) translateY(-12px);
 }
 </style>
+
+<style>
+[data-theme="dark"] .modal-content {
+  background: rgba(2, 16, 36, 1) !important;
+  border: 1px solid rgba(125, 160, 202, 0.2) !important;
+}
+[data-theme="dark"] .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+</style>

@@ -132,9 +132,9 @@ const networkStatus = computed(() => [
   justify-content: center;
   width: 22px;
   height: 22px;
-  background: var(--color-purple-light);
+  background: var(--color-blue-light);
   border-radius: 6px;
-  color: var(--color-purple);
+  color: var(--color-blue);
   flex-shrink: 0;
 }
 
@@ -149,8 +149,10 @@ const networkStatus = computed(() => [
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--color-glass-border);
   border-radius: 8px;
   padding: 8px 4px;
   transition: all 0.2s ease;

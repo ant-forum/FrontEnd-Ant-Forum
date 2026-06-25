@@ -73,10 +73,7 @@ const getCount = (filterType) => {
 // Handlers
 const handleNotificationClick = async (e, item) => {
   if (e.target.closest('.actions-wrap')) return;
-  await notificationStore.markAsRead(item.id);
-  if (item.link) {
-    router.push(item.link);
-  }
+  await notificationStore.routeToNotification(item, router);
 };
 
 const handleToggleRead = async (e, item) => {
@@ -142,14 +139,6 @@ const getNotificationIcon = (type) => {
         <p class="text-muted small m-0 mt-1">Manage, filter, and track all your school activity alerts.</p>
       </div>
       <div class="col-sm-auto d-flex gap-2">
-        <button 
-          v-if="notificationStore.unreadCount > 0" 
-          @click="handleMarkAllRead" 
-          class="btn btn-action-modern btn-mark-read d-flex align-items-center gap-2"
-        >
-          <i class="bi bi-check2-all"></i>
-          <span>Mark all as read</span>
-        </button>
         <button 
           v-if="notificationStore.notifications.length > 0" 
           @click="handleClearAll" 
@@ -351,11 +340,7 @@ const getNotificationIcon = (type) => {
 
 .notifications-premium-page {
   min-height: 100vh;
-  background: 
-    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-    var(--color-bg);
-  background-size: 34px 34px;
+  background: transparent;
   color: var(--color-text);
   padding-bottom: 60px;
   position: relative;
@@ -379,14 +364,14 @@ const getNotificationIcon = (type) => {
 .orb-1 {
   width: 400px; height: 400px;
   left: -10%; top: -10%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+  background: radial-gradient(circle, rgba(84, 131, 179, 0.15), transparent 70%);
   animation-duration: 12s;
 }
 
 .orb-2 {
   width: 300px; height: 300px;
   right: 0%; top: 40%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 70%);
+  background: radial-gradient(circle, rgba(125, 160, 202, 0.12), transparent 70%);
   animation-duration: 16s;
   animation-delay: -4s;
 }
@@ -406,7 +391,7 @@ const getNotificationIcon = (type) => {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #a78bfa 100%);
+  background: var(--color-brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -546,7 +531,7 @@ const getNotificationIcon = (type) => {
 }
 
 .btn-primary-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: var(--color-brand-gradient);
   color: white;
   border: none;
   transition: all 0.3s ease;
@@ -554,7 +539,7 @@ const getNotificationIcon = (type) => {
 
 .btn-primary-gradient:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 15px rgba(84, 131, 179, 0.4);
 }
 
 /* Notifications feed items */
@@ -562,8 +547,35 @@ const getNotificationIcon = (type) => {
   background: var(--color-surface-elevated);
   backdrop-filter: blur(20px);
   border: 1px solid var(--color-border-soft);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 0 20px rgba(84, 131, 179, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.notification-card-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: 
+    radial-gradient(circle at top right, var(--glow-hover-primary) 0%, transparent 50%), 
+    radial-gradient(circle at bottom left, var(--glow-hover-secondary) 0%, transparent 50%),
+    var(--color-surface-hover);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.notification-card-item:hover::before,
+.notification-card-item:focus-within::before,
+.notification-card-item:has(.dropdown-menu.show)::before {
+  opacity: 1;
+}
+
+.notification-card-item > * {
   position: relative;
   z-index: 1;
 }
@@ -573,9 +585,9 @@ const getNotificationIcon = (type) => {
 .notification-card-item:has(.dropdown-menu.show) {
   z-index: 50;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg) !important;
-  border-color: var(--color-primary-light) !important;
-  background: var(--color-surface-hover);
+  box-shadow: var(--shadow-lg), inset 0 0 20px rgba(84, 131, 179, 0.25) !important;
+  border-color: rgba(84, 131, 179, 0.5) !important;
+  /* background color is handled by the ::before pseudo-element fading in */
 }
 
 .notification-card-item.unread {
@@ -626,16 +638,16 @@ const getNotificationIcon = (type) => {
 .pulse-dot {
   width: 7px;
   height: 7px;
-  background-color: #818cf8;
+  background-color: var(--color-primary);
   border-radius: 50%;
   display: inline-block;
   animation: pulse-ring 1.8s infinite;
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(129, 140, 248, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(129, 140, 248, 0); }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(84, 131, 179, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(84, 131, 179, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(84, 131, 179, 0); }
 }
 
 /* Feed item circle button actions */
@@ -669,6 +681,7 @@ const getNotificationIcon = (type) => {
   background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
   border: 1px dashed var(--color-border);
+  box-shadow: inset 0 0 20px rgba(84, 131, 179, 0.05);
   min-height: 350px;
 }
 

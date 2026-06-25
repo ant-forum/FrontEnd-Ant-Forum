@@ -385,7 +385,7 @@ onMounted(() => {
 .showcase-page-kicker {
   display: block;
   margin-bottom: 6px;
-  color: var(--color-purple);
+  color: var(--color-blue);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -416,8 +416,8 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
   border-radius: 99px;
   font-size: 13px;
   font-weight: 700;
@@ -481,7 +481,7 @@ onMounted(() => {
 }
 
 .search-btn:hover {
-  color: #7c3aed;
+  color: #052659;
 }
 
 .showcase-tabs-section {
@@ -713,8 +713,8 @@ onMounted(() => {
 
 .project-tag {
   padding: 4px 10px;
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
   border-radius: 6px;
   font-size: 10px;
   font-weight: 700;
@@ -995,7 +995,7 @@ onMounted(() => {
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    var(--color-purple)
+    var(--color-blue)
   );
   border: none;
   border-radius: 10px;

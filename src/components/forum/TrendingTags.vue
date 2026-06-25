@@ -136,9 +136,9 @@ const selectTag = (tagName) => {
   justify-content: center;
   width: 22px;
   height: 22px;
-  background: var(--color-purple-light);
+  background: var(--color-blue-light);
   border-radius: 6px;
-  color: var(--color-purple);
+  color: var(--color-blue);
   flex-shrink: 0;
 }
 
@@ -163,9 +163,9 @@ const selectTag = (tagName) => {
 }
 
 .tag-btn:hover {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
-  border-color: var(--color-purple);
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+  border-color: var(--color-blue);
 }
 
 .collapse-btn {

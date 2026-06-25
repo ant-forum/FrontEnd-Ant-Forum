@@ -33,6 +33,22 @@
 
         <div class="form-row">
           <div class="field-block">
+            <label>Full Name</label>
+            <input
+              v-model="form.fullname"
+              class="form-control"
+              :class="{ 'is-invalid': errors.fullname }"
+              type="text"
+              placeholder="Enter full name"
+              autocomplete="name"
+              @input="handleInput('fullname')"
+            />
+            <div v-if="errors.fullname" class="invalid-feedback d-block">
+              {{ errors.fullname }}
+            </div>
+          </div>
+
+          <div class="field-block">
             <label>Username</label>
             <input
               v-model="form.username"
@@ -47,7 +63,9 @@
               {{ errors.username }}
             </div>
           </div>
+        </div>
 
+        <div class="form-row">
           <div class="field-block">
             <label>Email Address</label>
             <input
@@ -63,9 +81,7 @@
               {{ errors.email }}
             </div>
           </div>
-        </div>
 
-        <div class="form-row">
           <div class="field-block">
             <label>Password</label>
             <div class="password-wrapper">
@@ -94,17 +110,18 @@
               {{ errors.password }}
             </div>
           </div>
+        </div>
 
+        <div class="form-row">
           <div class="field-block">
             <label>Role</label>
             <select v-model="form.role" class="form-select">
               <option value="student">Student</option>
-              <option value="mentor">Mentor</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
-        </div>
 
-        <div class="form-row">
           <div class="field-block">
             <label>Gender</label>
             <select v-model="form.gender" class="form-select">
@@ -135,7 +152,8 @@
       <aside class="side-stack">
         <div class="admin-panel preview-panel">
           <div class="preview-avatar">{{ initials }}</div>
-          <h2>{{ form.username || "New User" }}</h2>
+          <h2>{{ form.fullname || form.username || "New User" }}</h2>
+          <p v-if="form.fullname && form.username" class="text-secondary small mb-2">@{{ form.username }}</p>
           <p>{{ form.email || "No email added" }}</p>
           <div class="preview-meta">
             <span class="text-capitalize">{{
@@ -185,6 +203,7 @@ const toast = useToast();
 const {
   errors,
   clearError,
+  validateField,
   validateUsername,
   validateEmail,
   validatePassword,
@@ -193,6 +212,7 @@ const {
 const handleInput = (field) => {
   if (isSubmitted.value) {
     if (field === "username") validateUsername(form.username);
+    if (field === "fullname") validateField("fullname", form.fullname, "Full name is required.");
     if (field === "email") validateEmail(form.email);
     if (field === "password") validatePassword(form.password);
   } else {
@@ -202,6 +222,7 @@ const handleInput = (field) => {
 
 const form = reactive({
   username: "",
+  fullname: "",
   email: "",
   password: "",
   role: "student",
@@ -209,10 +230,10 @@ const form = reactive({
 });
 
 const initials = computed(() => {
-  const username = form.username.trim();
-  if (!username) return "NU";
+  const name = form.fullname.trim() || form.username.trim();
+  if (!name) return "NU";
 
-  return username
+  return name
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
@@ -225,10 +246,11 @@ const handleCreateUser = async () => {
   isSubmitted.value = true;
 
   const isUsernameValid = validateUsername(form.username);
+  const isFullnameValid = validateField("fullname", form.fullname, "Full name is required.");
   const isEmailValid = validateEmail(form.email);
   const isPasswordValid = validatePassword(form.password);
 
-  if (!isUsernameValid || !isEmailValid || !isPasswordValid) {
+  if (!isUsernameValid || !isFullnameValid || !isEmailValid || !isPasswordValid) {
     toast.error("Please fix the form errors before submitting.");
     return;
   }
@@ -236,6 +258,7 @@ const handleCreateUser = async () => {
   try {
     const res = await usersStore.createUser({
       username: form.username,
+      fullname: form.fullname,
       email: form.email,
       password: form.password,
       role: form.role,

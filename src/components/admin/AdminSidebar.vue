@@ -28,9 +28,6 @@
             >
               <i :class="[item.icon, 'me-3']"></i>
               <span class="nav-text">{{ item.label }}</span>
-              <span v-if="badgeFor(item.path)" class="nav-count ms-auto">{{
-                badgeFor(item.path)
-              }}</span>
             </router-link>
           </li>
         </ul>
@@ -40,20 +37,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { useRoute } from "vue-router";
-import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
-import { useProjectStore } from "../../stores/ProjectStore";
 
 const route = useRoute();
-const adminStore = useAdminOperationsStore();
-const projectStore = useProjectStore();
-
-onMounted(() => {
-  if (projectStore.projects.length === 0) {
-    projectStore.fetchProjects().catch(() => {});
-  }
-});
 
 const navigationCategories = ref([
   {
@@ -80,15 +67,6 @@ const isRouteActive = (itemPath) => {
     return route.path === "/admin";
   }
   return route.path.startsWith(itemPath);
-};
-
-const badgeFor = (itemPath) => {
-  if (itemPath === "/admin/projects") {
-    return projectStore.projects.filter(
-      (p) => String(p.status || "").toLowerCase() === "in review",
-    ).length;
-  }
-  return adminStore.sidebarBadges[itemPath] || 0;
 };
 </script>
 
@@ -117,12 +95,12 @@ const badgeFor = (itemPath) => {
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,
-    var(--color-purple) 100%
+    var(--color-blue) 100%
   );
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 10px rgba(84, 131, 179, 0.3);
   flex-shrink: 0;
 }
 
@@ -175,20 +153,6 @@ const badgeFor = (itemPath) => {
 
 .nav-link:hover i {
   opacity: 1;
-}
-
-.nav-count {
-  min-width: 22px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0.35rem;
-  color: var(--color-danger);
-  background: var(--color-danger-light);
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 800;
 }
 
 @media (max-width: 991.98px) {
