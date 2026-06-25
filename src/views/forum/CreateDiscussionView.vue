@@ -1350,7 +1350,26 @@ const handleSubmit = async () => {
 .create-form {
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  gap: 28px;
+}
+
+@media (max-width: 768px) {
+  .category-grid,
+  .input-glow-container,
+  .tags-input-container,
+  .tag-suggestions,
+  .editor-container {
+    margin-left: 0 !important;
+  }
+  .section-desc {
+    margin-left: 0 !important;
+  }
+  .form-card {
+    padding: 24px !important;
+  }
+  .create-form {
+    gap: 20px !important;
+  }
 }
 
 /* Section styling inside form */

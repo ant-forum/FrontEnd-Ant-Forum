@@ -12,6 +12,9 @@ import { resolveMediaUrl } from "@/utils/mediaUrl";
 import BaseModal from "@/components/base/BaseModal.vue";
 import { useToast } from "vue-toastification";
 import ReportModal from "@/components/base/ReportModal.vue";
+import hljs from "highlight.js";
+import "highlight.js/styles/atom-one-dark.css";
+
 
 const showReportModal = ref(false);
 
@@ -486,8 +489,20 @@ function goToProfile(item) {
 // Search and inject copy buttons in pre tags dynamically
 const setupCopyButtons = () => {
   nextTick(() => {
+    // 1. Syntax highlight using highlight.js
+    const codeBlocks = document.querySelectorAll(
+      ".thread-body pre code, .reply-body pre code, .thread-code-block code"
+    );
+    codeBlocks.forEach((block) => {
+      // Avoid highlighting already highlighted elements if any
+      if (!block.classList.contains("hljs")) {
+        hljs.highlightElement(block);
+      }
+    });
+
+    // 2. Add copy buttons to all pre elements
     const preBlocks = document.querySelectorAll(
-      ".thread-body pre, .reply-body pre",
+      ".thread-body pre, .reply-body pre, .thread-code-block pre",
     );
     preBlocks.forEach((pre) => {
       if (pre.querySelector(".copy-code-btn")) return;
@@ -1197,31 +1212,31 @@ function getAvatarUrl(author) {
 
 .thread-body :deep(pre),
 .reply-body :deep(pre) {
-  background: #110e1a !important;
-  padding: 18px 112px 18px 22px !important;
-  border-radius: 14px !important;
-  overflow-x: hidden !important;
-  white-space: pre-wrap !important;
-  overflow-wrap: anywhere !important;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  position: relative !important;
+  background: #1e1e24 !important;
+  border-radius: 12px !important;
   margin: 18px 0;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(84, 131, 179, 0.1);
+  border: 1px solid rgba(84, 131, 179, 0.15);
+  padding: 0 !important;
 }
 
 .thread-body :deep(pre code),
 .reply-body :deep(pre code) {
+  display: block !important;
   background: transparent !important;
-  color: #e9d5ff !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
+  color: #abb2bf !important;
+  padding: 16px 20px !important;
+  padding-right: 90px !important;
+  border-radius: 12px !important;
   border: none !important;
-  font-size: 13px !important;
-  line-height: 1.7 !important;
-  white-space: pre-wrap !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  overflow-x: auto !important;
+  white-space: pre !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
 }
 
 /* Floating copy code buttons inside pre blocks */
@@ -1293,30 +1308,32 @@ function getAvatarUrl(author) {
 }
 
 .thread-code-block {
-  background: #110e1a;
-  border-radius: 14px;
+  background: #1e1e24;
+  border-radius: 12px;
   overflow: hidden;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(84, 131, 179, 0.1);
+  border: 1px solid rgba(84, 131, 179, 0.15);
   margin-bottom: 24px;
 }
 
 .thread-code-block pre {
   margin: 0;
-  padding: 14px 18px 18px;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  padding: 0 !important;
+  position: relative !important;
 }
 
 .thread-code-block code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-  font-size: 13px;
-  line-height: 1.7;
-  color: #e9d5ff;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  display: block !important;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #abb2bf;
+  padding: 16px 20px !important;
+  padding-right: 90px !important;
+  overflow-x: auto !important;
+  white-space: pre !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
 }
 
 .code-header {
