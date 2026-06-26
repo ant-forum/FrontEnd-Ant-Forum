@@ -173,7 +173,7 @@ onMounted(() => {
               alt="User"
             />
             <span class="small fw-bold d-none d-xl-block">{{
-              authStore.user?.username
+              authStore.user?.fullname
             }}</span>
             <!-- <i :class="['bi', isAccountMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down', 'account-toggle-chevron']"></i> -->
           </button>

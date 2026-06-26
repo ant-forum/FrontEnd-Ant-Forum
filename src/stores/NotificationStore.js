@@ -44,7 +44,7 @@ export const useNotificationStore = defineStore("notification", () => {
              message = `${n.sender_username} mentioned you.`;
           }
           
-          const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+          const baseUrl = import.meta.env.VITE_API_BASE_URL || "https://ant-forum.khei.work.gd";
           
           const targetId = n.forum_id || n.forumId || n.forum?.id || 
                            n.post_id || n.postId || n.post?.id || 

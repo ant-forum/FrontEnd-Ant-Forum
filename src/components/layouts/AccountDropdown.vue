@@ -15,7 +15,7 @@ const avatar = computed(
   () => props.user?.profile_pic || "/charles_leclerc.png",
 );
 const displayName = computed(
-  () => props.user?.username || props.user?.name || "ANT Developer",
+  () => props.user?.fullname || props.user?.name || props.user?.username || "ANT Developer",
 );
 const role = computed(() => {
   const value = props.user?.role || "Member";
