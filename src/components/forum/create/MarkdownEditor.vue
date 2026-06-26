@@ -1,11 +1,12 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import { Markdown } from "tiptap-markdown";
 import { useToast } from "@/composables/useToast.js";
+import BaseModal from "@/components/base/BaseModal.vue";
 
 const props = defineProps({
   modelValue: {
@@ -34,6 +35,12 @@ const editor = ref(null);
 const isEditorFocused = ref(false);
 const wordCount = ref(0);
 const charCount = ref(0);
+const editorStateTrigger = ref(0);
+
+const isOptionActive = (name, attributes = {}) => {
+  const _ = editorStateTrigger.value;
+  return editor.value ? editor.value.isActive(name, attributes) : false;
+};
 
 const updateWordAndCharCount = (text) => {
   const plainText = text || "";
@@ -134,21 +141,20 @@ const setMarkdown = (markdown = "", options = {}) => {
 
   const content = String(markdown || "");
   try {
-    if (content.includes("```")) {
+    // Try using the editor's standard markdown parsing command first
+    editor.value.commands.setContent(content, { emitUpdate: false });
+  } catch (error) {
+    console.warn(
+      "[MarkdownEditor] Failed parsing markdown with standard parser, trying fallback:",
+      error,
+    );
+    try {
       editor.value.commands.setContent(markdownWithCodeToDoc(content), {
         emitUpdate: false,
       });
-    } else {
-      editor.value.commands.setContent(content, { emitUpdate: false });
+    } catch (fallbackError) {
+      console.error("[MarkdownEditor] Fallback markdown parsing failed:", fallbackError);
     }
-  } catch (error) {
-    console.warn(
-      "[MarkdownEditor] Failed to parse markdown, falling back to plain text:",
-      error,
-    );
-    editor.value.commands.setContent(markdownWithCodeToDoc(content), {
-      emitUpdate: false,
-    });
   }
 
   updateWordAndCharCount(editor.value.getText() || content);
@@ -180,14 +186,20 @@ onMounted(() => {
       const markdown = getMarkdown();
       emit("update:modelValue", markdown);
       updateWordAndCharCount(editor.value?.getText() || "");
+      editorStateTrigger.value++;
+    },
+    onSelectionUpdate: () => {
+      editorStateTrigger.value++;
     },
     onFocus: () => {
       isEditorFocused.value = true;
       emit("focus");
+      editorStateTrigger.value++;
     },
     onBlur: () => {
       isEditorFocused.value = false;
       emit("blur");
+      editorStateTrigger.value++;
     },
   });
 
@@ -244,25 +256,65 @@ const setHorizontalRule = () =>
 const undo = () => editor.value?.chain().focus().undo().run();
 const redo = () => editor.value?.chain().focus().redo().run();
 
-const setLink = () => {
-  const previousUrl = editor.value?.getAttributes("link").href;
-  const url = window.prompt("URL", previousUrl);
+const showLinkModal = ref(false);
+const linkUrl = ref("");
+const linkText = ref("");
+const linkUrlInputRef = ref(null);
+const linkTextInputRef = ref(null);
 
-  if (url === null) {
-    return;
+const openLinkModal = () => {
+  const previousUrl = editor.value?.getAttributes("link").href;
+  linkUrl.value = previousUrl || "";
+
+  if (editor.value) {
+    const { from, to } = editor.value.state.selection;
+    linkText.value = editor.value.state.doc.textBetween(from, to, " ") || "";
+  } else {
+    linkText.value = "";
   }
+
+  showLinkModal.value = true;
+  nextTick(() => {
+    if (linkText.value) {
+      linkUrlInputRef.value?.focus();
+    } else {
+      linkTextInputRef.value?.focus();
+    }
+  });
+};
+
+const saveLink = () => {
+  const url = linkUrl.value.trim();
+  const text = linkText.value.trim();
+  showLinkModal.value = false;
 
   if (url === "") {
     editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
     return;
   }
 
+  const normalizedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  const displayText = text || url;
+
   editor.value
     ?.chain()
     .focus()
-    .extendMarkRange("link")
-    .setLink({ href: url })
+    .insertContent({
+      type: "text",
+      text: displayText,
+      marks: [
+        {
+          type: "link",
+          attrs: { href: normalizedUrl },
+        },
+      ],
+    })
     .run();
+};
+
+const removeLink = () => {
+  showLinkModal.value = false;
+  editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
 };
 
 const showTextMenu = ref(false);
@@ -277,6 +329,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             class="toolbar-btn text-icon"
+            :class="{ 'is-active': isOptionActive('heading') }"
             title="Text Formatting"
             @mousedown.prevent="showTextMenu = !showTextMenu"
           >
@@ -291,7 +344,7 @@ const showTextMenu = ref(false);
                 toggleHeading(1);
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+              :class="{ 'is-active': isOptionActive('heading', { level: 1 }) }"
             >
               <i class="bi bi-type-h1"></i> Heading 1
             </button>
@@ -301,7 +354,7 @@ const showTextMenu = ref(false);
                 toggleHeading(2);
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+              :class="{ 'is-active': isOptionActive('heading', { level: 2 }) }"
             >
               <i class="bi bi-type-h2"></i> Heading 2
             </button>
@@ -311,7 +364,7 @@ const showTextMenu = ref(false);
                 toggleHeading(3);
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+              :class="{ 'is-active': isOptionActive('heading', { level: 3 }) }"
             >
               <i class="bi bi-type-h3"></i> Heading 3
             </button>
@@ -321,7 +374,7 @@ const showTextMenu = ref(false);
                 setParagraph();
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('paragraph') }"
+              :class="{ 'is-active': isOptionActive('paragraph') }"
             >
               <i class="bi bi-paragraph"></i> Paragraph
             </button>
@@ -335,7 +388,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleBold"
-            :class="{ 'is-active': editor.isActive('bold') }"
+            :class="{ 'is-active': isOptionActive('bold') }"
             class="toolbar-btn"
             title="Bold"
           >
@@ -344,7 +397,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleItalic"
-            :class="{ 'is-active': editor.isActive('italic') }"
+            :class="{ 'is-active': isOptionActive('italic') }"
             class="toolbar-btn"
             title="Italic"
           >
@@ -353,7 +406,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleStrike"
-            :class="{ 'is-active': editor.isActive('strike') }"
+            :class="{ 'is-active': isOptionActive('strike') }"
             class="toolbar-btn"
             title="Strikethrough"
           >
@@ -367,7 +420,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleCode"
-            :class="{ 'is-active': editor.isActive('code') }"
+            :class="{ 'is-active': isOptionActive('code') }"
             class="toolbar-btn"
             title="Inline code"
           >
@@ -376,7 +429,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleCodeBlock"
-            :class="{ 'is-active': editor.isActive('codeBlock') }"
+            :class="{ 'is-active': isOptionActive('codeBlock') }"
             class="toolbar-btn"
             title="Code block"
           >
@@ -390,8 +443,8 @@ const showTextMenu = ref(false);
         <div class="toolbar-group">
           <button
             type="button"
-            @mousedown.prevent="setLink"
-            :class="{ 'is-active': editor.isActive('link') }"
+            @mousedown.prevent="openLinkModal"
+            :class="{ 'is-active': isOptionActive('link') }"
             class="toolbar-btn"
             title="Link"
           >
@@ -400,7 +453,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleBlockquote"
-            :class="{ 'is-active': editor.isActive('blockquote') }"
+            :class="{ 'is-active': isOptionActive('blockquote') }"
             class="toolbar-btn"
             title="Blockquote"
           >
@@ -415,7 +468,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleOrderedList"
-            :class="{ 'is-active': editor.isActive('orderedList') }"
+            :class="{ 'is-active': isOptionActive('orderedList') }"
             class="toolbar-btn"
             title="Numbered list"
           >
@@ -424,7 +477,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleBulletList"
-            :class="{ 'is-active': editor.isActive('bulletList') }"
+            :class="{ 'is-active': isOptionActive('bulletList') }"
             class="toolbar-btn"
             title="Bulleted list"
           >
@@ -496,6 +549,65 @@ const showTextMenu = ref(false);
       </div>
     </div>
   </div>
+
+  <BaseModal
+    v-if="showLinkModal"
+    title="Insert Link"
+    icon="bi bi-link-45deg"
+    theme="primary"
+    @closeModal="showLinkModal = false"
+  >
+    <div class="link-modal-body">
+      <div class="form-group mb-3">
+        <label for="link-text-input" class="form-label small fw-bold text-muted">Link Text</label>
+        <input
+          id="link-text-input"
+          ref="linkTextInputRef"
+          v-model="linkText"
+          type="text"
+          class="form-control"
+          placeholder="e.g. Google"
+          @keydown.enter.prevent="saveLink"
+        />
+      </div>
+      <div class="form-group mb-3">
+        <label for="link-url-input" class="form-label small fw-bold text-muted">URL</label>
+        <input
+          id="link-url-input"
+          ref="linkUrlInputRef"
+          v-model="linkUrl"
+          type="text"
+          class="form-control"
+          placeholder="https://example.com"
+          @keydown.enter.prevent="saveLink"
+        />
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button
+          type="button"
+          class="btn btn-light btn-sm fw-bold border"
+          @click="showLinkModal = false"
+        >
+          Cancel
+        </button>
+        <button
+          v-if="editor?.getAttributes('link').href"
+          type="button"
+          class="btn btn-outline-danger btn-sm fw-bold"
+          @click="removeLink"
+        >
+          Remove Link
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm fw-bold"
+          @click="saveLink"
+        >
+          Insert
+        </button>
+      </div>
+    </div>
+  </BaseModal>
 </template>
 
 <style scoped>
@@ -574,6 +686,13 @@ const showTextMenu = ref(false);
 .toolbar-btn.is-active {
   background: var(--color-blue-light);
   color: var(--color-blue);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="dark"] .toolbar-btn.is-active {
+  background: rgba(125, 160, 202, 0.18);
+  color: var(--color-blue);
+  box-shadow: inset 0 0 0 1px rgba(125, 160, 202, 0.35);
 }
 
 .toolbar-btn:disabled {
@@ -633,6 +752,13 @@ const showTextMenu = ref(false);
 .toolbar-dropdown button.is-active {
   background: var(--color-blue-light);
   color: var(--color-blue);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="dark"] .toolbar-dropdown button.is-active {
+  background: rgba(125, 160, 202, 0.18);
+  color: var(--color-blue);
+  box-shadow: inset 0 0 0 1px rgba(125, 160, 202, 0.35);
 }
 
 /* Workspace panes */

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, nextTick, watch, computed } from "vue";
+import { onMounted, onBeforeUnmount, ref, nextTick, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Navbar from "@/components/layouts/header.vue";
 import LeftSidebar from "@/components/forum/LeftSidebar.vue";
@@ -17,6 +17,13 @@ import "highlight.js/styles/atom-one-dark.css";
 
 
 const showReportModal = ref(false);
+const showMoreActionsDropdown = ref(false);
+
+const closeDropdown = (e) => {
+  if (!e.target.closest(".more-actions-container")) {
+    showMoreActionsDropdown.value = false;
+  }
+};
 
 const route = useRoute();
 const router = useRouter();
@@ -210,6 +217,11 @@ const loadDiscussion = async (id) => {
 
 onMounted(() => {
   loadDiscussion(route.params.id);
+  document.addEventListener("click", closeDropdown);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", closeDropdown);
 });
 
 // Utility to handle scrolling to a hash comment
@@ -633,55 +645,50 @@ function getAvatarUrl(author) {
           <!-- Main Thread Card -->
           <div class="main-thread">
             <div class="thread-header">
-              <div
-                class="thread-header-top-row"
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: flex-start;
-                  margin-bottom: 14px;
-                  gap: 12px;
-                  flex-wrap: wrap;
-                "
-              >
-                <div class="thread-header-meta" style="margin-bottom: 0">
-                  <!-- Styled Category badge -->
-                  <span
-                    v-if="getCategoryMeta(discussion)"
-                    class="category-badge"
-                    :style="{
-                      background: getCategoryMeta(discussion).gradient,
-                    }"
-                  >
-                    <i :class="['bi', getCategoryMeta(discussion).icon]"></i>
-                    {{ getCategoryMeta(discussion).label }}
-                  </span>
+              <!-- Title -->
+              <h1 class="thread-title">{{ discussion.title }}</h1>
 
-                  <!-- Code indicator -->
-                  <span v-if="discussion.hasCode || separateThreadCode" class="snippet-badge">
-                    <i class="bi bi-code-slash"></i> Snippet
-                  </span>
-                </div>
+              <!-- Meta/badges stacked on the right -->
+              <div class="thread-meta-right">
+                <!-- Styled Category badge -->
+                <span
+                  v-if="getCategoryMeta(discussion)"
+                  class="category-badge"
+                  :style="{
+                    background: getCategoryMeta(discussion).gradient,
+                    margin: 0
+                  }"
+                >
+                  <i :class="['bi', getCategoryMeta(discussion).icon]"></i>
+                  {{ getCategoryMeta(discussion).label }}
+                </span>
 
-                <!-- Custom tags section moved to top right -->
+                <!-- Custom tags section -->
                 <div
                   v-if="discussion.tags && discussion.tags.length > 0"
                   class="thread-tags-box"
-                  style="margin-bottom: 0"
+                  style="margin: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px;"
                 >
                   <span
                     v-for="t in discussion.tags"
                     :key="t.label"
                     class="tag-badge"
                     @click="selectTag(t.label)"
-                    style="cursor: pointer"
+                    style="cursor: pointer; margin: 0;"
                   >
                     #{{ t.label }}
                   </span>
                 </div>
-              </div>
 
-              <h1 class="thread-title">{{ discussion.title }}</h1>
+                <!-- Code indicator -->
+                <span
+                  v-if="discussion.hasCode || separateThreadCode"
+                  class="snippet-badge"
+                  style="margin: 0;"
+                >
+                  <i class="bi bi-code-slash"></i> Snippet
+                </span>
+              </div>
 
               <div class="thread-meta">
                 <div
@@ -767,31 +774,63 @@ function getAvatarUrl(author) {
                       discussion.saved ? 'bi-bookmark-fill' : 'bi-bookmark',
                     ]"
                   ></i>
-                  <span>{{ discussion.saved ? "Saved" : "Save" }}</span>
+                  <!-- <span>{{ discussion.saved ? "Saved" : "Save" }}</span> -->
                 </button>
-                <button
-                  v-if="canDeleteDiscussion"
-                  class="action-btn edit-btn"
-                  @click="editDiscussion"
-                >
-                  <i class="bi bi-pencil-square"></i>
-                  Edit
-                </button>
-                <button
-                  v-if="canDeleteDiscussion"
-                  class="action-btn delete-btn"
-                  @click="confirmDeleteDiscussion"
-                >
-                  <i class="bi bi-trash"></i>
-                  Delete
-                </button>
-                <button class="action-btn report-btn text-danger" @click="showReportModal = true">
-                  <i class="bi bi-flag"></i>
-                  Report
-                </button>
+
+                <!-- More Actions Dropdown -->
+                <div class="more-actions-container">
+                  <button
+                    class="action-btn more-btn"
+                    @click.stop="showMoreActionsDropdown = !showMoreActionsDropdown"
+                    title="More actions"
+                  >
+                    <i class="bi bi-three-dots"></i>
+                  </button>
+
+                  <transition name="fade">
+                    <div
+                      v-if="showMoreActionsDropdown"
+                      class="more-dropdown-menu"
+                    >
+                      <button
+                        v-if="canDeleteDiscussion"
+                        class="dropdown-item edit-item"
+                        @click="
+                          editDiscussion();
+                          showMoreActionsDropdown = false;
+                        "
+                      >
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        v-if="canDeleteDiscussion"
+                        class="dropdown-item delete-item text-danger"
+                        @click="
+                          confirmDeleteDiscussion();
+                          showMoreActionsDropdown = false;
+                        "
+                      >
+                        <i class="bi bi-trash"></i>
+                        <span>Delete</span>
+                      </button>
+                      <button
+                        class="dropdown-item report-item text-danger"
+                        @click="
+                          showReportModal = true;
+                          showMoreActionsDropdown = false;
+                        "
+                      >
+                        <i class="bi bi-flag"></i>
+                        <span>Report</span>
+                      </button>
+                    </div>
+                  </transition>
+                </div>
+
                 <button class="action-btn" @click="scrollToBottom">
                   <i class="bi bi-chat-square-text"></i>
-                  {{ replyCount }} {{ replyCount === 1 ? "Reply" : "Replies" }}
+                  {{ replyCount }}
                 </button>
               </div>
             </div>
@@ -1079,7 +1118,7 @@ function getAvatarUrl(author) {
     color-mix(in srgb, var(--color-border) 86%, var(--color-blue) 14%);
   box-shadow: var(--shadow-sm);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .thread-header-meta {
@@ -1114,25 +1153,66 @@ function getAvatarUrl(author) {
   border: 1px solid var(--color-blue-light);
 }
 
+.thread-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "title badges"
+    "meta badges";
+  gap: 12px 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 24px;
+  align-items: start;
+}
+
 .thread-title {
+  grid-area: title;
   font-size: clamp(1.8rem, 4vw, 2.55rem);
   font-weight: 900;
   color: var(--color-text);
-  margin: 0 0 20px;
+  margin: 0;
   line-height: 1.12;
   overflow-wrap: anywhere;
 }
 
-.thread-header {
-  margin-bottom: 24px;
+.thread-meta-right {
+  grid-area: badges;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: 6px;
 }
 
 .thread-meta {
+  grid-area: meta;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .thread-header {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "title"
+      "badges"
+      "meta";
+    gap: 12px;
+  }
+  
+  .thread-meta-right {
+    align-items: flex-start;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0;
+  }
 }
 
 .thread-avatar {
@@ -2126,5 +2206,63 @@ function getAvatarUrl(author) {
 .reply-avatar,
 .thread-avatar {
   overflow: hidden;
+}
+
+/* More Actions Dropdown Styling */
+.more-actions-container {
+  position: relative;
+  display: inline-block;
+}
+
+.more-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 140px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.dropdown-item i {
+  font-size: 14px;
+}
+
+.dropdown-item.delete-item:hover,
+.dropdown-item.report-item:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.more-btn {
+  padding: 8px 12px;
 }
 </style>
