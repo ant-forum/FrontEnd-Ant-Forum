@@ -645,51 +645,7 @@ function getAvatarUrl(author) {
           <!-- Main Thread Card -->
           <div class="main-thread">
             <div class="thread-header">
-              <!-- Title -->
-              <h1 class="thread-title">{{ discussion.title }}</h1>
-
-              <!-- Meta/badges stacked on the right -->
-              <div class="thread-meta-right">
-                <!-- Styled Category badge -->
-                <span
-                  v-if="getCategoryMeta(discussion)"
-                  class="category-badge"
-                  :style="{
-                    background: getCategoryMeta(discussion).gradient,
-                    margin: 0
-                  }"
-                >
-                  <i :class="['bi', getCategoryMeta(discussion).icon]"></i>
-                  {{ getCategoryMeta(discussion).label }}
-                </span>
-
-                <!-- Custom tags section -->
-                <div
-                  v-if="discussion.tags && discussion.tags.length > 0"
-                  class="thread-tags-box"
-                  style="margin: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px;"
-                >
-                  <span
-                    v-for="t in discussion.tags"
-                    :key="t.label"
-                    class="tag-badge"
-                    @click="selectTag(t.label)"
-                    style="cursor: pointer; margin: 0;"
-                  >
-                    #{{ t.label }}
-                  </span>
-                </div>
-
-                <!-- Code indicator -->
-                <span
-                  v-if="discussion.hasCode || separateThreadCode"
-                  class="snippet-badge"
-                  style="margin: 0;"
-                >
-                  <i class="bi bi-code-slash"></i> Snippet
-                </span>
-              </div>
-
+              <!-- Profile Info -->
               <div class="thread-meta">
                 <div
                   class="thread-avatar"
@@ -712,6 +668,51 @@ function getAvatarUrl(author) {
                     >Created {{ getCreatedAt(discussion) }}</span
                   >
                 </div>
+              </div>
+
+              <!-- Title -->
+              <h1 class="thread-title">{{ discussion.title }}</h1>
+
+              <!-- Badges under title in the same row -->
+              <div class="thread-meta-right">
+                <!-- Styled Category badge -->
+                <span
+                  v-if="getCategoryMeta(discussion)"
+                  class="category-badge"
+                  :style="{
+                    background: getCategoryMeta(discussion).gradient,
+                    margin: 0
+                  }"
+                >
+                  <i :class="['bi', getCategoryMeta(discussion).icon]"></i>
+                  {{ getCategoryMeta(discussion).label }}
+                </span>
+
+                <!-- Custom tags section -->
+                <div
+                  v-if="discussion.tags && discussion.tags.length > 0"
+                  class="thread-tags-box"
+                  style="margin: 0; display: flex; flex-wrap: wrap; gap: 4px;"
+                >
+                  <span
+                    v-for="t in discussion.tags"
+                    :key="t.label"
+                    class="tag-badge"
+                    @click="selectTag(t.label)"
+                    style="cursor: pointer; margin: 0;"
+                  >
+                    #{{ t.label }}
+                  </span>
+                </div>
+
+                <!-- Code indicator -->
+                <span
+                  v-if="discussion.hasCode || separateThreadCode"
+                  class="snippet-badge"
+                  style="margin: 0;"
+                >
+                  <i class="bi bi-code-slash"></i> Snippet
+                </span>
               </div>
             </div>
 
@@ -1154,77 +1155,48 @@ function getAvatarUrl(author) {
 }
 
 .thread-header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "title badges"
-    "meta badges";
-  gap: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding-bottom: 22px;
   border-bottom: 1px solid var(--color-border);
   margin-bottom: 24px;
-  align-items: start;
 }
 
 .thread-title {
-  grid-area: title;
-  font-size: clamp(1.8rem, 4vw, 2.55rem);
-  font-weight: 900;
+  font-size: clamp(1.4rem, 3.2vw, 2.0rem);
+  font-weight: 800;
   color: var(--color-text);
-  margin: 0;
-  line-height: 1.12;
+  margin: 4px 0 0 0;
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
 .thread-meta-right {
-  grid-area: badges;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-  margin-top: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
 }
 
 .thread-meta {
-  grid-area: meta;
   display: flex;
   align-items: center;
   gap: 14px;
 }
 
-@media (max-width: 768px) {
-  .thread-header {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    grid-template-areas:
-      "title"
-      "badges"
-      "meta";
-    gap: 12px;
-  }
-  
-  .thread-meta-right {
-    align-items: flex-start;
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 0;
-  }
-}
-
 .thread-avatar {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 14px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   border: 2px solid var(--color-surface);
   cursor: pointer;
@@ -1244,7 +1216,7 @@ function getAvatarUrl(author) {
 .thread-meta .author {
   font-weight: 850;
   color: var(--color-text);
-  font-size: 15px;
+  font-size: 13.5px;
   cursor: pointer;
   transition: color 0.2s ease;
 }
@@ -1255,7 +1227,7 @@ function getAvatarUrl(author) {
 }
 
 .thread-meta .time {
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--color-text-muted);
   font-weight: 700;
 }

@@ -23,6 +23,7 @@ const backendCategories = ref([]);
 const isEditorFocused = ref(false);
 const isSubmitting = ref(false);
 const showReadiness = ref(true);
+const showGuidelines = ref(true);
 const descriptionEditorRef = ref(null);
 const CODE_SNIPPET_HEADING = "### Code Snippet";
 const attachedCodeSnippetRegex =
@@ -1133,6 +1134,72 @@ const handleSubmit = async () => {
                       ></i>
                       <span>Add at least 1 Tag</span>
                     </div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
+            <!-- Forum Guidelines Widget -->
+            <div class="readiness-widget guidelines-widget">
+              <div
+                class="widget-header clickable"
+                @click="showGuidelines = !showGuidelines"
+                style="
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  width: 100%;
+                "
+              >
+                <i class="bi bi-file-earmark-text text-gradient-blue"></i>
+                <strong>Forum Guidelines</strong>
+                <i
+                  class="bi ms-auto chevron-toggle"
+                  :class="showGuidelines ? 'bi-chevron-up' : 'bi-chevron-down'"
+                  style="font-size: 11px; color: var(--color-text-muted)"
+                ></i>
+              </div>
+              <transition name="slide-fade">
+                <div
+                  v-if="showGuidelines"
+                  class="readiness-content-body"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    width: 100%;
+                  "
+                >
+                  <p class="guidelines-intro" style="font-size: 12px; color: var(--color-text-muted); margin: 0; line-height: 1.4;">
+                    Follow these guidelines to post effectively:
+                  </p>
+                  <ul class="guidelines-list" style="margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Write a clear, specific, searchable title</span>
+                    </li>
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Include tech stack, framework versions, and OS</span>
+                    </li>
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Format code block using Markdown toolbar button</span>
+                    </li>
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Attach error messages and stack traces</span>
+                    </li>
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Add 2–3 descriptive tags to your post</span>
+                    </li>
+                  </ul>
+                  <div class="guidelines-footer" style="border-top: 1px solid var(--color-border); padding-top: 10px; margin-top: 4px;">
+                    <router-link to="/help" class="text-primary fw-bold" style="font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                      <span>Read full help guide</span>
+                      <i class="bi bi-arrow-right"></i>
+                    </router-link>
                   </div>
                 </div>
               </transition>
