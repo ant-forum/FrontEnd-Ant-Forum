@@ -1245,6 +1245,15 @@ function getAvatarUrl(author) {
   margin-bottom: 0;
 }
 
+.thread-body :deep(img),
+.reply-body :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid var(--color-border);
+}
+
 /* Monospaced code snippets styling */
 .thread-body :deep(code),
 .reply-body :deep(code),

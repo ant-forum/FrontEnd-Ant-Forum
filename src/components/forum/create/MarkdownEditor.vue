@@ -4,6 +4,7 @@ import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
+import Image from "@tiptap/extension-image";
 import { Markdown } from "tiptap-markdown";
 import { useToast } from "@/composables/useToast.js";
 import BaseModal from "@/components/base/BaseModal.vue";
@@ -169,6 +170,9 @@ onMounted(() => {
     content: "",
     extensions: [
       StarterKit,
+      Image.configure({
+        inline: false,
+      }),
       Markdown,
       Placeholder.configure({
         placeholder: props.placeholder,
@@ -318,10 +322,108 @@ const removeLink = () => {
 };
 
 const showTextMenu = ref(false);
+
+// Image Upload Logic
+const showImageModal = ref(false);
+const isDraggingImage = ref(false);
+const imageInputRef = ref(null);
+const uploadProgress = ref({});
+
+const openImageModal = () => {
+  showImageModal.value = true;
+  uploadProgress.value = {};
+};
+
+const openImagePicker = () => {
+  imageInputRef.value?.click();
+};
+
+const uploadImageFile = (file) => {
+  const fileId = Math.random().toString(36).substring(7);
+  uploadProgress.value[fileId] = {
+    name: file.name,
+    size: file.size,
+    percent: 0,
+    status: "uploading",
+  };
+
+  let currentPercent = 0;
+  const interval = setInterval(() => {
+    currentPercent += 10;
+    if (uploadProgress.value[fileId]) {
+      uploadProgress.value[fileId].percent = currentPercent;
+    }
+
+    if (currentPercent >= 100) {
+      clearInterval(interval);
+      if (uploadProgress.value[fileId]) {
+        uploadProgress.value[fileId].status = "success";
+      }
+
+      // Convert local file to a temporary object URL so it displays in the editor body immediately
+      const imageUrl = URL.createObjectURL(file);
+
+      // Insert image in the Tiptap editor
+      editor.value
+        ?.chain()
+        .focus()
+        .setImage({ src: imageUrl, alt: file.name })
+        .run();
+
+      // Auto close modal after a brief delay if all successful
+      setTimeout(() => {
+        if (
+          showImageModal.value &&
+          Object.values(uploadProgress.value).every(
+            (p) => p.status === "success"
+          )
+        ) {
+          showImageModal.value = false;
+        }
+      }, 1500);
+    }
+  }, 150);
+};
+
+const handleImageFiles = (files) => {
+  const imageFiles = Array.from(files).filter(
+    (file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024
+  );
+
+  if (imageFiles.length === 0) {
+    toast.error("Please select valid image files under 5MB.");
+    return;
+  }
+
+  imageFiles.forEach(uploadImageFile);
+};
+
+const handleImageInput = (event) => {
+  if (event.target.files) {
+    handleImageFiles(event.target.files);
+  }
+  event.target.value = "";
+};
+
+const handleImageDrop = (event) => {
+  isDraggingImage.value = false;
+  if (event.dataTransfer?.files) {
+    handleImageFiles(event.dataTransfer.files);
+  }
+};
 </script>
 
 <template>
   <div class="editor-container" :class="{ focused: isEditorFocused }">
+    <input
+      ref="imageInputRef"
+      type="file"
+      accept="image/*"
+      multiple
+      hidden
+      @change="handleImageInput"
+    />
+
     <div v-if="editor" class="editor-toolbar">
       <div class="toolbar-left">
         <!-- Text Type Dropdown -->
@@ -458,6 +560,14 @@ const showTextMenu = ref(false);
             title="Blockquote"
           >
             <i class="bi bi-quote"></i>
+          </button>
+          <button
+            type="button"
+            @mousedown.prevent="openImageModal"
+            class="toolbar-btn"
+            title="Add Image"
+          >
+            <i class="bi bi-image"></i>
           </button>
         </div>
 
@@ -605,6 +715,51 @@ const showTextMenu = ref(false);
         >
           Insert
         </button>
+      </div>
+    </div>
+  </BaseModal>
+
+  <BaseModal
+    v-if="showImageModal"
+    title="Add Image"
+    icon="bi bi-image"
+    theme="primary"
+    @closeModal="showImageModal = false"
+  >
+    <div
+      class="image-dropzone"
+      :class="{ dragging: isDraggingImage }"
+      @click="openImagePicker"
+      @dragover.prevent="isDraggingImage = true"
+      @dragleave.prevent="isDraggingImage = false"
+      @drop.prevent="handleImageDrop"
+    >
+      <div class="upload-file-icon">
+        <i class="bi bi-file-earmark-image"></i>
+        <span><i class="bi bi-cloud-arrow-up-fill"></i></span>
+      </div>
+      <p><u>Click to upload</u> or drag and drop</p>
+      <strong>Maximum 5MB image files.</strong>
+    </div>
+
+    <!-- Upload progress list -->
+    <div v-if="Object.keys(uploadProgress).length > 0" class="upload-progress-list mt-3">
+      <div v-for="(file, id) in uploadProgress" :key="id" class="upload-progress-item">
+        <div class="file-info">
+          <i class="bi bi-file-earmark-image-fill file-icon"></i>
+          <div class="file-details">
+            <span class="file-name">{{ file.name }}</span>
+            <span class="file-size" v-if="file.size">{{ (file.size / 1024).toFixed(1) }} KB</span>
+          </div>
+          <span class="progress-percent" :class="file.status">{{ file.percent }}%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div 
+            class="progress-bar-fill" 
+            :class="file.status" 
+            :style="{ width: file.percent + '%' }"
+          ></div>
+        </div>
       </div>
     </div>
   </BaseModal>
@@ -936,5 +1091,153 @@ const showTextMenu = ref(false);
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Image Dropzone styles */
+.image-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  border: 2px dashed var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.image-dropzone.dragging,
+.image-dropzone:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.upload-file-icon {
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.upload-file-icon span {
+  position: absolute;
+  bottom: 0;
+  right: -10px;
+  font-size: 1.5rem;
+  color: var(--color-success);
+  background: var(--color-surface);
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.image-dropzone p {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.image-dropzone strong {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+/* Upload Progress styles */
+.upload-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+}
+
+.upload-progress-item {
+  background: var(--color-surface-hover);
+  border-radius: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.file-icon {
+  font-size: 1.25rem;
+  color: var(--color-primary);
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.progress-percent {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.progress-percent.success {
+  color: var(--color-success);
+}
+
+.progress-percent.error {
+  color: var(--color-danger);
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--color-primary);
+  transition: width 0.2s ease;
+  border-radius: 99px;
+}
+
+.progress-bar-fill.success {
+  background: var(--color-success);
+}
+
+.progress-bar-fill.error {
+  background: var(--color-danger);
+}
+
+/* Editor content image styles */
+:deep(.tiptap img) {
+  display: block;
+  max-width: 100%;
+  max-height: 400px;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
 }
 </style>
