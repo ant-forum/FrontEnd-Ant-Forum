@@ -65,7 +65,7 @@
               />
             </div>
             <small class="text-muted d-block mt-2" style="font-size: 0.75rem"
-              >PNG, JPG up to 2MB</small
+              >PNG, JPG up to 5MB</small
             >
           </div>
         </div>
@@ -554,8 +554,8 @@ const handleAvatarChange = async (e) => {
     return;
   }
 
-  if (file.size > 2 * 1024 * 1024) {
-    toast.error("Max size is 2MB");
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error("Max size is 5MB");
     clearAvatarInput();
     return;
   }

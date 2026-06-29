@@ -534,9 +534,7 @@ export const useForumStore = defineStore("forum", () => {
           ? "up"
           : getLocalVote(discussionData.id) || discussionData.voted || null;
         discussionData.votes =
-          discussionData.votes !== undefined
-            ? discussionData.votes
-            : likesCount;
+          discussionData.voted === "down" ? Math.max(0, likesCount - 1) : likesCount;
 
         setDiscussion(discussionData);
       }
@@ -781,7 +779,7 @@ export const useForumStore = defineStore("forum", () => {
             ? "up"
             : getLocalVote(savedData.id) || savedData.voted || null;
           savedData.votes =
-            savedData.votes !== undefined ? savedData.votes : likesCount;
+            savedData.voted === "down" ? Math.max(0, likesCount - 1) : likesCount;
           savedData.replies =
             savedData.replies !== undefined
               ? savedData.replies
@@ -814,6 +812,24 @@ export const useForumStore = defineStore("forum", () => {
   const deleteDiscussion = async (id) => {
     try {
       const res = await api.delete(`/api/forums/deleteforum/${id}`);
+
+      if (res.data.result) {
+        discussions.value = discussions.value.filter((item) => item.id !== id);
+
+        if (discussion.value?.id === id) {
+          discussion.value = null;
+        }
+      }
+
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err.message;
+    }
+  };
+
+  const adminDeleteForum = async (id) => {
+    try {
+      const res = await api.delete(`/api/forums/adminDeleteForum/${id}`);
 
       if (res.data.result) {
         discussions.value = discussions.value.filter((item) => item.id !== id);
@@ -1261,7 +1277,7 @@ export const useForumStore = defineStore("forum", () => {
         bd.likes = likesCount;
         bd.likedByUser = isLiked;
         bd.voted = isLiked ? "up" : getLocalVote(bd.id) || bd.voted || null;
-        bd.votes = bd.votes !== undefined ? bd.votes : likesCount;
+        bd.votes = bd.voted === "down" ? Math.max(0, likesCount - 1) : likesCount;
         bd.replies =
           bd.replies !== undefined
             ? bd.replies
@@ -1351,6 +1367,41 @@ export const useForumStore = defineStore("forum", () => {
   const toggleSaveForum = toggleBookmark;
 
   const toggleVoteDiscussion = async (id, direction) => {
+    const found = discussions.value.find((item) => Number(item.id) === Number(id));
+    const target = (discussion.value && Number(discussion.value.id) === Number(id)) ? discussion.value : found;
+
+    if (!target) return;
+
+    const currentVoted = target.voted;
+    const currentLikes = target.likes !== undefined ? target.likes : 0;
+
+    let newVoted = null;
+    let newLikes = currentLikes;
+    let apiCall = null;
+
+    if (direction === "up") {
+      if (currentVoted === "up") {
+        newVoted = null;
+        newLikes = Math.max(0, currentLikes - 1);
+        apiCall = "unlike";
+      } else {
+        newVoted = "up";
+        newLikes = currentLikes + (currentVoted === "up" ? 0 : 1);
+        apiCall = "like";
+      }
+    } else if (direction === "down") {
+      if (currentVoted === "up") {
+        newVoted = null;
+        newLikes = Math.max(0, currentLikes - 1);
+        apiCall = "unlike";
+      } else {
+        // If they click downvote (unvote) when not yet voted, DO NOTHING
+        return { result: false, ignored: true };
+      }
+    }
+
+    const newVotes = newVoted === "down" ? Math.max(0, newLikes - 1) : newLikes;
+
     try {
       let target = null;
       if (discussion.value && Number(discussion.value.id) === Number(id)) {
@@ -1400,7 +1451,7 @@ export const useForumStore = defineStore("forum", () => {
       let res;
       if (apiAction === "like") {
         res = await api.post(`/api/forumlike/like/${id}`);
-      } else {
+      } else if (apiCall === "unlike") {
         res = await api.delete(`/api/forumlike/unlike/${id}`);
       }
 
@@ -1644,7 +1695,7 @@ export const useForumStore = defineStore("forum", () => {
             likes: likesCount,
             likedByUser: isLiked,
             voted: isLiked ? "up" : getLocalVote(d.id) || d.voted || null,
-            votes: d.votes !== undefined ? d.votes : likesCount,
+            votes: (isLiked ? "up" : getLocalVote(d.id) || d.voted || null) === "down" ? Math.max(0, likesCount - 1) : likesCount,
             replies: repliesVal,
             excerpt: d.excerpt || stripMarkdown(d.description || d.body || ""),
           };
@@ -1684,6 +1735,7 @@ export const useForumStore = defineStore("forum", () => {
     createDiscussion,
     updateDiscussion,
     deleteDiscussion,
+    adminDeleteForum,
 
     fetchComments,
     fetchCommentById,

@@ -690,7 +690,7 @@ const confirmDelete = async () => {
   if (!threadToDelete.value) return;
   isSubmitting.value = true;
   try {
-    await forumStore.deleteDiscussion(threadToDelete.value.id);
+    await forumStore.adminDeleteForum(threadToDelete.value.id);
     toast.success("Discussion thread successfully deleted.");
     closeDeleteModal();
   } catch (err) {

@@ -385,15 +385,9 @@ const saveTag = async () => {
       }
 
       const updatePayload = {
+        name: mForm.data.name.trim(),
         description: mForm.data.description,
       };
-
-      const originalName = String(mForm.item?.name || "").trim();
-      const nextName = mForm.data.name.trim();
-
-      if (nextName !== originalName) {
-        updatePayload.name = nextName;
-      }
 
       await tagStore.updateTag(mForm.editId, updatePayload);
       successMessage = "Tag updated successfully!";

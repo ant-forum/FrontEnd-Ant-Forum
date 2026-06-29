@@ -348,6 +348,7 @@ import {
   createPlainTextExcerpt,
   htmlToPlainText,
 } from "../../utils/richContent.js";
+import { resolveMediaUrl } from "../../utils/mediaUrl.js";
 
 const blogStore = useBlogStore();
 const router = useRouter();
@@ -451,7 +452,7 @@ onMounted(async () => {
           : "2";
         form.status = blogData.status || "draft";
         if (blogData.thumbnail || blogData.image) {
-          thumbnailPreview.value = blogData.thumbnail || blogData.image;
+          thumbnailPreview.value = resolveMediaUrl(blogData.thumbnail || blogData.image);
           // Set to a truthy value so preview is showing, but selectedFile is null unless replaced
           form.thumbnail = blogData.thumbnail || blogData.image;
         }

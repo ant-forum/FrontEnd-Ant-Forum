@@ -198,9 +198,14 @@ function toggleSave(d) {
   });
 }
 
-function handleVote(id, direction) {
-  forumStore.toggleVoteDiscussion(id, direction);
-  toast.success(direction === "up" ? "Upvoted!" : "Downvoted!");
+async function handleVote(id, direction) {
+  try {
+    const res = await forumStore.toggleVoteDiscussion(id, direction);
+    if (res && res.ignored) return;
+    toast.success(direction === "up" ? "Upvoted!" : "Downvoted!");
+  } catch (err) {
+    console.error("Failed to vote:", err);
+  }
 }
 
 const categoryGradients = [

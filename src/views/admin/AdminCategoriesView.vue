@@ -478,16 +478,10 @@ const saveCategory = async () => {
       }
 
       const updatePayload = {
+        name: mForm.data.name.trim(),
         description: mForm.data.description,
         type: mForm.data.type || DEFAULT_CATEGORY_TYPE,
       };
-
-      const originalName = String(mForm.item?.name || "").trim();
-      const nextName = mForm.data.name.trim();
-
-      if (nextName !== originalName) {
-        updatePayload.name = nextName;
-      }
 
       await categoryStore.updateCategory(mForm.editId, updatePayload);
       successMessage = "Category updated successfully!";
