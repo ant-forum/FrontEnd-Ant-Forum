@@ -319,7 +319,7 @@ export const useForumStore = defineStore("forum", () => {
           likes: likesCount,
           likedByUser: isLiked,
           voted: isLiked ? "up" : getLocalVote(d.id) || d.voted || null,
-          votes: d.votes !== undefined ? d.votes : likesCount,
+          votes: (isLiked ? "up" : getLocalVote(d.id) || d.voted || null) === "down" ? Math.max(0, likesCount - 1) : likesCount,
           replies: repliesVal,
           excerpt: d.excerpt || stripMarkdown(d.description || d.body || ""),
         };
@@ -533,9 +533,7 @@ export const useForumStore = defineStore("forum", () => {
           ? "up"
           : getLocalVote(discussionData.id) || discussionData.voted || null;
         discussionData.votes =
-          discussionData.votes !== undefined
-            ? discussionData.votes
-            : likesCount;
+          discussionData.voted === "down" ? Math.max(0, likesCount - 1) : likesCount;
 
         setDiscussion(discussionData);
       }
@@ -780,7 +778,7 @@ export const useForumStore = defineStore("forum", () => {
             ? "up"
             : getLocalVote(savedData.id) || savedData.voted || null;
           savedData.votes =
-            savedData.votes !== undefined ? savedData.votes : likesCount;
+            savedData.voted === "down" ? Math.max(0, likesCount - 1) : likesCount;
           savedData.replies =
             savedData.replies !== undefined
               ? savedData.replies
@@ -813,6 +811,24 @@ export const useForumStore = defineStore("forum", () => {
   const deleteDiscussion = async (id) => {
     try {
       const res = await api.delete(`/api/forums/deleteforum/${id}`);
+
+      if (res.data.result) {
+        discussions.value = discussions.value.filter((item) => item.id !== id);
+
+        if (discussion.value?.id === id) {
+          discussion.value = null;
+        }
+      }
+
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err.message;
+    }
+  };
+
+  const adminDeleteForum = async (id) => {
+    try {
+      const res = await api.delete(`/api/forums/adminDeleteForum/${id}`);
 
       if (res.data.result) {
         discussions.value = discussions.value.filter((item) => item.id !== id);
@@ -1260,7 +1276,7 @@ export const useForumStore = defineStore("forum", () => {
         bd.likes = likesCount;
         bd.likedByUser = isLiked;
         bd.voted = isLiked ? "up" : getLocalVote(bd.id) || bd.voted || null;
-        bd.votes = bd.votes !== undefined ? bd.votes : likesCount;
+        bd.votes = bd.voted === "down" ? Math.max(0, likesCount - 1) : likesCount;
         bd.replies =
           bd.replies !== undefined
             ? bd.replies
@@ -1350,98 +1366,74 @@ export const useForumStore = defineStore("forum", () => {
   const toggleSaveForum = toggleBookmark;
 
   const toggleVoteDiscussion = async (id, direction) => {
-    try {
-      let res;
-      if (direction === "up") {
-        res = await api.post(`/api/forumlike/like/${id}`);
+    const found = discussions.value.find((item) => Number(item.id) === Number(id));
+    const target = (discussion.value && Number(discussion.value.id) === Number(id)) ? discussion.value : found;
+
+    if (!target) return;
+
+    const currentVoted = target.voted;
+    const currentLikes = target.likes !== undefined ? target.likes : 0;
+
+    let newVoted = null;
+    let newLikes = currentLikes;
+    let apiCall = null;
+
+    if (direction === "up") {
+      if (currentVoted === "up") {
+        newVoted = null;
+        newLikes = Math.max(0, currentLikes - 1);
+        apiCall = "unlike";
       } else {
+        newVoted = "up";
+        newLikes = currentLikes + (currentVoted === "up" ? 0 : 1);
+        apiCall = "like";
+      }
+    } else if (direction === "down") {
+      if (currentVoted === "up") {
+        newVoted = null;
+        newLikes = Math.max(0, currentLikes - 1);
+        apiCall = "unlike";
+      } else {
+        // If they click downvote (unvote) when not yet voted, DO NOTHING
+        return { result: false, ignored: true };
+      }
+    }
+
+    const newVotes = newVoted === "down" ? Math.max(0, newLikes - 1) : newLikes;
+
+    try {
+      let res = { data: { result: true } };
+      if (apiCall === "like") {
+        res = await api.post(`/api/forumlike/like/${id}`);
+      } else if (apiCall === "unlike") {
         res = await api.delete(`/api/forumlike/unlike/${id}`);
       }
 
       if (res.data.result) {
+        const updateItem = (item) => {
+          item.voted = newVoted;
+          item.likes = newLikes;
+          item.votes = newVotes;
+          item.likedByUser = (newVoted === "up");
+        };
+
         if (discussion.value && Number(discussion.value.id) === Number(id)) {
-          if (direction === "up") {
-            if (discussion.value.voted !== "up") {
-              discussion.value.votes =
-                (discussion.value.votes || 0) +
-                (discussion.value.voted === "down" ? 2 : 1);
-              discussion.value.voted = "up";
-              discussion.value.likedByUser = true;
-              discussion.value.likes = discussion.value.votes;
-            } else {
-              await api.delete(`/api/forumlike/unlike/${id}`);
-              discussion.value.votes = Math.max(
-                0,
-                (discussion.value.votes || 0) - 1,
-              );
-              discussion.value.voted = null;
-              discussion.value.likedByUser = false;
-              discussion.value.likes = discussion.value.votes;
-            }
-          } else {
-            if (discussion.value.voted !== "down") {
-              discussion.value.votes = Math.max(
-                0,
-                (discussion.value.votes || 0) -
-                  (discussion.value.voted === "up" ? 2 : 1),
-              );
-              discussion.value.voted = "down";
-              discussion.value.likedByUser = false;
-              discussion.value.likes = discussion.value.votes;
-            } else {
-              await api.post(`/api/forumlike/like/${id}`);
-              discussion.value.votes = (discussion.value.votes || 0) + 1;
-              discussion.value.voted = null;
-              discussion.value.likedByUser = true;
-              discussion.value.likes = discussion.value.votes;
-            }
+          updateItem(discussion.value);
+        }
+
+        const item = discussions.value.find((item) => Number(item.id) === Number(id));
+        if (item) {
+          updateItem(item);
+        }
+
+        if (bookmarks.value) {
+          const bookmarked = bookmarks.value.find((item) => Number(item.id) === Number(id));
+          if (bookmarked) {
+            updateItem(bookmarked);
           }
         }
 
-        const found = discussions.value.find(
-          (item) => Number(item.id) === Number(id),
-        );
-        if (found) {
-          if (direction === "up") {
-            if (found.voted !== "up") {
-              found.votes =
-                (found.votes || 0) + (found.voted === "down" ? 2 : 1);
-              found.voted = "up";
-              found.likedByUser = true;
-              found.likes = found.votes;
-            } else {
-              await api.delete(`/api/forumlike/unlike/${id}`);
-              found.votes = Math.max(0, (found.votes || 0) - 1);
-              found.voted = null;
-              found.likedByUser = false;
-              found.likes = found.votes;
-            }
-          } else {
-            if (found.voted !== "down") {
-              found.votes = Math.max(
-                0,
-                (found.votes || 0) - (found.voted === "up" ? 2 : 1),
-              );
-              found.voted = "down";
-              found.likedByUser = false;
-              found.likes = found.votes;
-            } else {
-              await api.post(`/api/forumlike/like/${id}`);
-              found.votes = (found.votes || 0) + 1;
-              found.voted = null;
-              found.likedByUser = true;
-              found.likes = found.votes;
-            }
-          }
-        }
-
-        // Save the new vote state to localStorage
-        const newVoteState = discussion.value
-          ? discussion.value.voted
-          : found
-            ? found.voted
-            : null;
-        saveLocalVote(id, newVoteState);
+        saveLocalVote(id, newVoted);
       }
 
       return res.data;
@@ -1666,7 +1658,7 @@ export const useForumStore = defineStore("forum", () => {
             likes: likesCount,
             likedByUser: isLiked,
             voted: isLiked ? "up" : getLocalVote(d.id) || d.voted || null,
-            votes: d.votes !== undefined ? d.votes : likesCount,
+            votes: (isLiked ? "up" : getLocalVote(d.id) || d.voted || null) === "down" ? Math.max(0, likesCount - 1) : likesCount,
             replies: repliesVal,
             excerpt: d.excerpt || stripMarkdown(d.description || d.body || ""),
           };
@@ -1706,6 +1698,7 @@ export const useForumStore = defineStore("forum", () => {
     createDiscussion,
     updateDiscussion,
     deleteDiscussion,
+    adminDeleteForum,
 
     fetchComments,
     fetchCommentById,

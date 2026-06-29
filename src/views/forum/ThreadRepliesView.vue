@@ -262,12 +262,17 @@ const selectTag = (tagName) => {
   router.push({ path: "/forum", query: { tag: cleanTag } });
 };
 
-const handleVote = (direction) => {
+const handleVote = async (direction) => {
   if (discussion.value) {
-    forumStore.toggleVoteDiscussion(discussion.value.id, direction);
-    toast.success(
-      direction === "up" ? "Discussion upvoted!" : "Discussion downvoted!",
-    );
+    try {
+      const res = await forumStore.toggleVoteDiscussion(discussion.value.id, direction);
+      if (res && res.ignored) return;
+      toast.success(
+        direction === "up" ? "Discussion upvoted!" : "Discussion downvoted!",
+      );
+    } catch (err) {
+      console.error("Failed to vote:", err);
+    }
   }
 };
 
