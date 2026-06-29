@@ -521,21 +521,22 @@ const deleteCategory = async () => {
   try {
     mDelete.isLoading = true;
     await categoryStore.deleteCategory(mDelete.item.id);
+    closeDeleteModal();
+    toast.success("Category deleted successfully!");
+
+    try {
+      await categoryStore.fetchCategories();
+    } catch (error) {
+      console.error("Failed to refresh categories:", error);
+      toast.warning("Deleted, but could not refresh categories.");
+    }
   } catch (error) {
     console.error("Failed to delete category:", error);
-    return;
+    const message = error.response?.data?.message || error.message || "Failed to delete category.";
+    toast.error(message);
+    closeDeleteModal();
   } finally {
     mDelete.isLoading = false;
-  }
-
-  closeDeleteModal();
-  toast.success("Category deleted successfully!");
-
-  try {
-    await categoryStore.fetchCategories();
-  } catch (error) {
-    console.error("Failed to refresh categories:", error);
-    toast.warning("Deleted, but could not refresh categories.");
   }
 };
 

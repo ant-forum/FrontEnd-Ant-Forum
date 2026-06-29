@@ -430,7 +430,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, nextTick, computed, onUnmounted } from "vue";
+import { ref, reactive, nextTick, computed, onUnmounted, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../../stores/AuthStore.js";
 import { useRequiredValidator } from "../../composables/useRequiredValidator.js";
@@ -451,6 +451,20 @@ const isOtpVerified = ref(false);
 const verifiedToken = ref("");
 const showNewPassword = ref(false);
 const showConfirmPassword = ref(false);
+
+onMounted(() => {
+  const isFirstLogin = sessionStorage.getItem("ANT_FirstLogin") === "true";
+  const storedToken = sessionStorage.getItem("ANT_VerifiedToken") || authStore.token;
+  if (isFirstLogin && storedToken) {
+    verifiedToken.value = storedToken;
+    isOtpVerified.value = true;
+  } else {
+    const storedResetToken = sessionStorage.getItem("ANT_ResetToken");
+    if (!storedResetToken) {
+      router.push("/login");
+    }
+  }
+});
 
 const { errors: validatorErrors, validatePassword } = useRequiredValidator();
 
@@ -628,6 +642,7 @@ async function handleResetPassword() {
 
     sessionStorage.removeItem("ANT_ResetToken");
     sessionStorage.removeItem("ANT_VerifiedToken");
+    sessionStorage.removeItem("ANT_FirstLogin");
 
     setTimeout(() => {
       router.push("/login");
@@ -697,6 +712,7 @@ const clearTokens = () => {
   sessionStorage.removeItem("ANT_ResetToken");
   sessionStorage.removeItem("ANT_VerifiedToken");
   sessionStorage.removeItem("ANT_ResetEmail");
+  sessionStorage.removeItem("ANT_FirstLogin");
 };
 
 onUnmounted(() => {

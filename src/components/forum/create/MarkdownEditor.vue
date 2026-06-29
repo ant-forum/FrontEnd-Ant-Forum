@@ -8,6 +8,9 @@ import Image from "@tiptap/extension-image";
 import { Markdown } from "tiptap-markdown";
 import { useToast } from "@/composables/useToast.js";
 import BaseModal from "@/components/base/BaseModal.vue";
+import api from "@/api/api.js";
+import ImageCropModal from "@/components/base/ImageCropModal.vue";
+import { useImageCropper } from "@/composables/useImageCropper.js";
 
 const props = defineProps({
   modelValue: {
@@ -329,6 +332,21 @@ const isDraggingImage = ref(false);
 const imageInputRef = ref(null);
 const uploadProgress = ref({});
 
+// Cropper Logic for Forum Images
+const {
+  cropSource: forumImageCropSource,
+  isCropModalOpen: isForumImageCropOpen,
+  openCropper: openForumImageCropper,
+  confirmCrop: confirmForumImageCrop,
+  cancelCrop: cancelForumImageCrop,
+} = useImageCropper({
+  title: "Crop Forum Image",
+  aspectRatio: "original",
+  outputWidth: 1200,
+  outputType: "image/jpeg",
+  shape: "rect",
+});
+
 const openImageModal = () => {
   showImageModal.value = true;
   uploadProgress.value = {};
@@ -338,7 +356,7 @@ const openImagePicker = () => {
   imageInputRef.value?.click();
 };
 
-const uploadImageFile = (file) => {
+const uploadImageFile = async (file) => {
   const fileId = Math.random().toString(36).substring(7);
   uploadProgress.value[fileId] = {
     name: file.name,
@@ -347,21 +365,31 @@ const uploadImageFile = (file) => {
     status: "uploading",
   };
 
-  let currentPercent = 0;
-  const interval = setInterval(() => {
-    currentPercent += 10;
-    if (uploadProgress.value[fileId]) {
-      uploadProgress.value[fileId].percent = currentPercent;
-    }
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
 
-    if (currentPercent >= 100) {
-      clearInterval(interval);
+    const response = await api.post("/api/forums/upload-image", formData, {
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          if (uploadProgress.value[fileId]) {
+            uploadProgress.value[fileId].percent = percentCompleted;
+          }
+        }
+      },
+    });
+
+    const data = response.data;
+    if (data && data.result) {
       if (uploadProgress.value[fileId]) {
+        uploadProgress.value[fileId].percent = 100;
         uploadProgress.value[fileId].status = "success";
       }
 
-      // Convert local file to a temporary object URL so it displays in the editor body immediately
-      const imageUrl = URL.createObjectURL(file);
+      const imageUrl = data.data.url;
 
       // Insert image in the Tiptap editor
       editor.value
@@ -370,22 +398,20 @@ const uploadImageFile = (file) => {
         .setImage({ src: imageUrl, alt: file.name })
         .run();
 
-      // Auto close modal after a brief delay if all successful
-      setTimeout(() => {
-        if (
-          showImageModal.value &&
-          Object.values(uploadProgress.value).every(
-            (p) => p.status === "success"
-          )
-        ) {
-          showImageModal.value = false;
-        }
-      }, 1500);
+      showImageModal.value = false;
+    } else {
+      throw new Error(data.message || "Upload failed");
     }
-  }, 150);
+  } catch (error) {
+    if (uploadProgress.value[fileId]) {
+      uploadProgress.value[fileId].status = "error";
+      uploadProgress.value[fileId].percent = 0;
+    }
+    toast.error(error.message || `Failed to upload ${file.name}`);
+  }
 };
 
-const handleImageFiles = (files) => {
+const handleImageFiles = async (files) => {
   const imageFiles = Array.from(files).filter(
     (file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024
   );
@@ -395,7 +421,20 @@ const handleImageFiles = (files) => {
     return;
   }
 
-  imageFiles.forEach(uploadImageFile);
+  // Close the dropzone upload modal first so they only see the cropper modal
+  showImageModal.value = false;
+
+  for (const file of imageFiles) {
+    const cropped = await openForumImageCropper(file);
+    if (cropped?.file) {
+      // Re-open progress modal and perform upload
+      showImageModal.value = true;
+      await uploadImageFile(cropped.file);
+    } else {
+      // Re-open dropzone modal if canceled
+      showImageModal.value = true;
+    }
+  }
 };
 
 const handleImageInput = (event) => {
@@ -763,6 +802,13 @@ const handleImageDrop = (event) => {
       </div>
     </div>
   </BaseModal>
+
+  <ImageCropModal
+    v-if="isForumImageCropOpen"
+    :source="forumImageCropSource"
+    @confirm="confirmForumImageCrop"
+    @cancel="cancelForumImageCrop"
+  />
 </template>
 
 <style scoped>

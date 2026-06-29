@@ -1007,10 +1007,12 @@ const handleDeleteProject = async () => {
   } catch (error) {
     console.error("Failed to delete project:", error);
     const errorMsg =
+      error.response?.data?.message ||
       error.message ||
       error.msg ||
       "An error occurred while deleting the project.";
     toast.error(errorMsg);
+    closeDeleteModal();
   } finally {
     isPageLoading.value = false;
   }

@@ -614,7 +614,8 @@ const confirmDelete = async () => {
     await blogStore.fetchAllBlogs();
   } catch (err) {
     console.error("Failed to delete blog:", err);
-    toast.error("Failed to delete blog.");
+    const errorMsg = err.response?.data?.message || err.message || "Failed to delete blog.";
+    toast.error(errorMsg);
   } finally {
     isDeleting.value = false;
     showDeleteModal.value = false;

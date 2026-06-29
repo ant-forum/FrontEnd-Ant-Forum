@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted, onBeforeUnmount } from "vue";
 
 const props = defineProps({
   title: {
@@ -70,6 +70,17 @@ const props = defineProps({
 const themeClass = computed(() => `text-${props.theme}`);
 
 defineEmits(["closeModal"]);
+
+onMounted(() => {
+  document.body.classList.add("modal-open");
+});
+
+onBeforeUnmount(() => {
+  const activeModals = document.querySelectorAll(".modal");
+  if (activeModals.length <= 1) {
+    document.body.classList.remove("modal-open");
+  }
+});
 </script>
 
 <style scoped>
@@ -182,6 +193,9 @@ defineEmits(["closeModal"]);
 </style>
 
 <style>
+body.modal-open {
+  overflow: hidden !important;
+}
 [data-theme="dark"] .modal-content {
   background: rgba(2, 16, 36, 1) !important;
   border: 1px solid rgba(125, 160, 202, 0.2) !important;
