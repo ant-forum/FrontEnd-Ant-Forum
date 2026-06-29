@@ -566,6 +566,7 @@ const handleAvatarChange = async (e) => {
 
 const handleAvatarCropConfirm = (result) => {
   if (!result) return;
+  confirmAvatarCrop(result);
   revokePendingAvatarPreview();
   pendingAvatarFile.value = result.file;
   pendingAvatarPreview.value = result.previewUrl;

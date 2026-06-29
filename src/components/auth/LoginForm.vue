@@ -409,12 +409,21 @@ async function handleSignIn() {
   loading.value = true;
   formError.value = "";
   try {
-    await authStore.login({
+    const res = await authStore.login({
       email: form.email,
       password: form.password,
       remember: form.remember,
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    if (authStore.user?.status === "Pending") {
+      toast.warning("Verification required: Please choose your new password.");
+      sessionStorage.setItem("ANT_FirstLogin", "true");
+      sessionStorage.setItem("ANT_VerifiedToken", authStore.token);
+      router.push("/verify-account");
+      return;
+    }
+
     toast.success("Welcome back! Login successful");
     router.push(getPostLoginRoute());
   } catch (error) {

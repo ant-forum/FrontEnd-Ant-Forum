@@ -20,8 +20,12 @@
       empty-title="No user accounts yet"
       empty-description="New forum accounts will appear here after registration."
       :columns="columns"
-      :rows="mappedUsers"
+      :rows="filteredUsers"
       :is-loading="isPageLoading"
+      showTabs
+      :tabs="userTabs"
+      v-model:activeTab="activeTab"
+      :getTabCount="getTabCount"
       @edit="openEditModal"
       @delete="openDeleteModal"
     />
@@ -145,20 +149,24 @@
       </form>
     </BaseModal>
 
-    <!-- Delete Modal -->
+    <!-- Toggle Status Modal (Suspend/Reactivate) -->
     <BaseModal
       v-if="mDelete.isVisible"
-      title="Delete User Account"
-      icon="bi bi-trash"
-      theme="danger"
+      :title="mDelete.item?.status === 'Active' ? 'Suspend User Account' : 'Reactivate User Account'"
+      :icon="mDelete.item?.status === 'Active' ? 'bi bi-person-x' : 'bi bi-person-check'"
+      :theme="mDelete.item?.status === 'Active' ? 'danger' : 'success'"
       kicker=""
       @closeModal="closeDeleteModal"
     >
       <p class="delete-message">
-        Are you sure you want to delete the user
-        <strong>{{ mDelete.item?.name }}</strong
-        >? This action will permanently delete their account and all associated
-        profile details from the system.
+        Are you sure you want to {{ mDelete.item?.status === 'Active' ? 'suspend' : 'reactivate' }} the user
+        <strong>{{ mDelete.item?.name }}</strong>?
+        <span v-if="mDelete.item?.status === 'Active'">
+          Suspending this user will block their account access until reactivated.
+        </span>
+        <span v-else>
+          Reactivating this user will restore their full account access.
+        </span>
       </p>
       <div class="modal-actions">
         <button
@@ -169,7 +177,7 @@
           Cancel
         </button>
         <button
-          class="btn btn-danger"
+          :class="['btn', mDelete.item?.status === 'Active' ? 'btn-danger' : 'btn-success']"
           type="button"
           :disabled="usersStore.isLoading"
           @click="handleDeleteUser"
@@ -178,8 +186,8 @@
             v-if="usersStore.isLoading"
             class="spinner-border spinner-border-sm me-2"
           ></span>
-          <i class="bi bi-trash me-1"></i>
-          <span>Confirm Delete</span>
+          <i :class="['bi', mDelete.item?.status === 'Active' ? 'bi-person-x-fill' : 'bi-person-check-fill', 'me-1']"></i>
+          <span>{{ mDelete.item?.status === 'Active' ? 'Suspend' : 'Reactivate' }}</span>
         </button>
       </div>
     </BaseModal>
@@ -250,7 +258,9 @@ const mappedUsers = computed(() => {
           : u.role
             ? u.role.charAt(0).toUpperCase() + u.role.slice(1)
             : "Student",
-    status: u.status || "Active",
+    status: u.status
+      ? u.status.charAt(0).toUpperCase() + u.status.slice(1).toLowerCase()
+      : "Active",
     joined: formatJoinedDate(u.createdAt || u.created_at),
     avatar: u.profile_pic || u.avatar || u.avatarUrl || "",
     gender: u.gender || "male",
@@ -260,6 +270,36 @@ const mappedUsers = computed(() => {
     rawEmail: u.email || "",
   }));
 });
+
+const activeTab = ref("all");
+
+const userTabs = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "suspended", label: "Suspended" },
+];
+
+const filteredUsers = computed(() => {
+  const list = mappedUsers.value;
+  if (activeTab.value === "active") {
+    return list.filter((u) => u.status === "Active");
+  }
+  if (activeTab.value === "suspended") {
+    return list.filter((u) => u.status === "Suspended");
+  }
+  return list;
+});
+
+const getTabCount = (tabName) => {
+  const list = mappedUsers.value;
+  if (tabName === "active") {
+    return list.filter((u) => u.status === "Active").length;
+  }
+  if (tabName === "suspended") {
+    return list.filter((u) => u.status === "Suspended").length;
+  }
+  return list.length;
+};
 
 const metrics = computed(() => {
   const allUsers = usersStore.users || [];
@@ -450,19 +490,23 @@ const closeDeleteModal = () => {
 
 const handleDeleteUser = async () => {
   try {
-    await usersStore.deleteUser(mDelete.item.id);
-    toast.success("User account deleted successfully!");
+    const isCurrentlyActive = mDelete.item?.status === "Active";
+    const response = await usersStore.deleteUser(mDelete.item.id);
+    const actionLabel = isCurrentlyActive ? "suspended" : "reactivated";
+    toast.success(response?.message || `User account ${actionLabel} successfully!`);
     closeDeleteModal();
     // Show skeleton while loading the refreshed user list
     isPageLoading.value = true;
     await usersStore.fetchUsers(true);
   } catch (error) {
-    console.error("Failed to delete user:", error);
+    console.error("Failed to update user status:", error);
     const errorMsg =
+      error.response?.data?.message ||
       error.message ||
       error.msg ||
-      "An error occurred while deleting the user account.";
+      "An error occurred while updating the user account status.";
     toast.error(errorMsg);
+    closeDeleteModal();
   } finally {
     isPageLoading.value = false;
   }
