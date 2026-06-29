@@ -215,6 +215,45 @@
       </div>
     </div>
   </header>
+
+  <!-- Logout Confirmation Modal -->
+  <BaseModal
+    v-if="showLogoutModal"
+    title="Log out of ANT Forum?"
+    kicker=""
+    icon="bi bi-box-arrow-right"
+    theme="danger"
+    @closeModal="closeLogoutModal"
+  >
+    <p class="logout-modal-copy">
+      Are you sure you want to log out? You will need to sign in again to access
+      your account.
+    </p>
+
+    <template #footer>
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        :disabled="isLoggingOut"
+        @click="closeLogoutModal"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger d-inline-flex align-items-center gap-2"
+        :disabled="isLoggingOut"
+        @click="confirmLogout"
+      >
+        <span
+          v-if="isLoggingOut"
+          class="spinner-border spinner-border-sm"
+          aria-hidden="true"
+        ></span>
+        <span>{{ isLoggingOut ? "Logging out..." : "Logout" }}</span>
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
@@ -223,6 +262,10 @@ import { useDarkMode } from "../../composables/useDarkMode";
 import { useAuthStore } from "../../stores/AuthStore";
 import { useNotificationStore } from "../../stores/NotificationStore";
 import { useRouter } from "vue-router";
+import BaseModal from "../base/BaseModal.vue";
+
+const showLogoutModal = ref(false);
+const isLoggingOut = ref(false);
 
 defineProps({
   currentTitle: {
@@ -314,10 +357,26 @@ const clickNotification = (item) => {
   }
 };
 
-const handleLogout = async () => {
+const handleLogout = () => {
   isProfileMenuOpen.value = false;
-  await authStore.logout();
-  router.push("/login");
+  showLogoutModal.value = true;
+};
+
+const closeLogoutModal = () => {
+  showLogoutModal.value = false;
+};
+
+const confirmLogout = async () => {
+  isLoggingOut.value = true;
+  try {
+    await authStore.logout();
+    router.push("/login");
+  } catch (error) {
+    console.error("Logout failed:", error);
+  } finally {
+    isLoggingOut.value = false;
+    showLogoutModal.value = false;
+  }
 };
 
 const handleAvatarError = (e) => {
@@ -853,5 +912,11 @@ onUnmounted(() => {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+.logout-modal-copy {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0;
 }
 </style>

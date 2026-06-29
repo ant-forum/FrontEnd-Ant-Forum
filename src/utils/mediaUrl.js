@@ -2,7 +2,7 @@ const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const BACKEND_MEDIA_PREFIXES = ["/uploads/"];
 
 const apiBaseUrl = () =>
-  (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+  (import.meta.env.VITE_API_BASE_URL || "https://ant-forum.khei.work.gd").replace(/\/+$/, "");
 
 const isBackendMediaPath = (path) =>
   BACKEND_MEDIA_PREFIXES.some(
