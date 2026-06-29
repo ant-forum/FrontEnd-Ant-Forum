@@ -84,7 +84,7 @@
             accept="image/*"
             @change="handleAvatarFileChange"
           />
-          <span class="file-limits-text">PNG, JPG up to 2MB</span>
+          <span class="file-limits-text">PNG, JPG up to 5MB</span>
         </div>
 
         <div class="profile-edit-fields">
@@ -382,8 +382,8 @@ const handleAvatarFileChange = async (event) => {
     return;
   }
 
-  if (file.size > 2 * 1024 * 1024) {
-    toast.error("Max size is 2MB");
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error("Max size is 5MB");
     return;
   }
 
