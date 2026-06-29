@@ -299,6 +299,7 @@ export const useForumStore = defineStore("forum", () => {
             : d.comment_count !== undefined
               ? Number(d.comment_count)
               : 0;
+        const votedState = isLiked ? "up" : getLocalVote(d.id) || d.voted || null;
         return {
           ...d,
           category: categoryMeta.slug,
@@ -318,8 +319,8 @@ export const useForumStore = defineStore("forum", () => {
           saved: bookmarkedIds.has(Number(d.id)) || d.saved || false,
           likes: likesCount,
           likedByUser: isLiked,
-          voted: isLiked ? "up" : getLocalVote(d.id) || d.voted || null,
-          votes: (isLiked ? "up" : getLocalVote(d.id) || d.voted || null) === "down" ? Math.max(0, likesCount - 1) : likesCount,
+          voted: votedState,
+          votes: d.votes !== undefined ? d.votes : likesCount,
           replies: repliesVal,
           excerpt: d.excerpt || stripMarkdown(d.description || d.body || ""),
         };
@@ -1402,38 +1403,74 @@ export const useForumStore = defineStore("forum", () => {
     const newVotes = newVoted === "down" ? Math.max(0, newLikes - 1) : newLikes;
 
     try {
-      let res = { data: { result: true } };
-      if (apiCall === "like") {
+      let target = null;
+      if (discussion.value && Number(discussion.value.id) === Number(id)) {
+        target = discussion.value;
+      }
+
+      const found = discussions.value.find(
+        (item) => Number(item.id) === Number(id),
+      );
+
+      const currentVoted = target ? target.voted : (found ? found.voted : null);
+      
+      let nextVoted = null;
+      let diff = 0;
+      let apiAction = "unlike";
+
+      if (direction === "up") {
+        if (currentVoted === "up") {
+          nextVoted = null;
+          diff = -1;
+          apiAction = "unlike";
+        } else if (currentVoted === "down") {
+          nextVoted = "up";
+          diff = 1;
+          apiAction = "like";
+        } else {
+          nextVoted = "up";
+          diff = 1;
+          apiAction = "like";
+        }
+      } else if (direction === "down") {
+        if (currentVoted === "down") {
+          nextVoted = null;
+          diff = 0;
+          apiAction = "unlike";
+        } else if (currentVoted === "up") {
+          nextVoted = "down";
+          diff = -1;
+          apiAction = "unlike";
+        } else {
+          nextVoted = "down";
+          diff = 0;
+          apiAction = "unlike";
+        }
+      }
+
+      let res;
+      if (apiAction === "like") {
         res = await api.post(`/api/forumlike/like/${id}`);
       } else if (apiCall === "unlike") {
         res = await api.delete(`/api/forumlike/unlike/${id}`);
       }
 
       if (res.data.result) {
-        const updateItem = (item) => {
-          item.voted = newVoted;
-          item.likes = newLikes;
-          item.votes = newVotes;
-          item.likedByUser = (newVoted === "up");
-        };
-
-        if (discussion.value && Number(discussion.value.id) === Number(id)) {
-          updateItem(discussion.value);
+        if (target) {
+          target.voted = nextVoted;
+          target.votes = Math.max(0, (target.votes || 0) + diff);
+          target.likedByUser = (nextVoted === "up");
+          target.likes = target.votes;
         }
 
-        const item = discussions.value.find((item) => Number(item.id) === Number(id));
-        if (item) {
-          updateItem(item);
+        if (found) {
+          found.voted = nextVoted;
+          found.votes = Math.max(0, (found.votes || 0) + diff);
+          found.likedByUser = (nextVoted === "up");
+          found.likes = found.votes;
         }
 
-        if (bookmarks.value) {
-          const bookmarked = bookmarks.value.find((item) => Number(item.id) === Number(id));
-          if (bookmarked) {
-            updateItem(bookmarked);
-          }
-        }
-
-        saveLocalVote(id, newVoted);
+        saveLocalVote(id, nextVoted);
       }
 
       return res.data;

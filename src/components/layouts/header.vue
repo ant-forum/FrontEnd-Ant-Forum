@@ -167,6 +167,7 @@ onMounted(() => {
             @click="toggleAccountMenu"
           >
             <img
+              
               :src="authStore.user?.profile_pic || defaultProfilePic"
               class="rounded-circle border border-2 border-primary-subtle object-fit-cover"
               width="32"

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useForumStore } from "@/stores/ForumStore";
+import { useTagsStore } from "@/stores/TagsStore";
 
 // Disable automatic attribute inheritance
 defineOptions({
@@ -13,8 +14,50 @@ const emit = defineEmits(["selectTab"]);
 const router = useRouter();
 const route = useRoute();
 const forumStore = useForumStore();
+const tagsStore = useTagsStore();
 
 const isDrawerMobileOpen = ref(false);
+
+const categoryGradients = [
+  "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+  "linear-gradient(135deg, #10b981, #047857)",
+  "linear-gradient(135deg, #5483B3, #052659)",
+  "linear-gradient(135deg, #f59e0b, #b45309)",
+  "linear-gradient(135deg, #0d9488, #0f766e)",
+  "linear-gradient(135deg, #ef4444, #b91c1c)",
+];
+
+const categoryColors = [
+  "#3b82f6", // Blue
+  "#10b981", // Green
+  "#5483B3", // Slate Blue
+  "#f59e0b", // Orange
+  "#0d9488", // Teal
+  "#ef4444", // Red
+];
+
+const categoryLightColors = [
+  "rgba(59, 130, 246, 0.15)",
+  "rgba(16, 185, 129, 0.15)",
+  "rgba(84, 131, 179, 0.15)",
+  "rgba(245, 158, 11, 0.15)",
+  "rgba(13, 148, 136, 0.15)",
+  "rgba(239, 68, 68, 0.15)",
+];
+
+const hashString = (value = "") =>
+  String(value)
+    .split("")
+    .reduce((hash, char) => hash + char.charCodeAt(0), 0);
+
+const getCategoryTheme = (label) => {
+  const index = hashString(label) % categoryColors.length;
+  return {
+    solid: categoryColors[index],
+    light: categoryLightColors[index],
+    gradient: categoryGradients[index],
+  };
+};
 
 const getCategoryIcon = (category) => {
   const label = String(
@@ -35,15 +78,24 @@ const getCategoryIcon = (category) => {
 };
 
 const displayCategories = computed(() => {
-  return forumStore.categories.map((category) => ({
-    id: String(category.id),
-    label:
+  return forumStore.categories.map((category) => {
+    const label =
       category.name ||
       category.label ||
       category.type ||
-      `Category ${category.id}`,
-    icon: category.icon || getCategoryIcon(category),
-  }));
+      `Category ${category.id}`;
+    const theme = getCategoryTheme(label);
+    return {
+      id: String(category.id),
+      label,
+      icon: category.icon || getCategoryIcon(category),
+      theme,
+    };
+  });
+});
+
+const displayTags = computed(() => {
+  return Array.isArray(tagsStore.tags) ? tagsStore.tags.slice(0, 10) : [];
 });
 
 const handleItemClick = (category, tabId) => {
@@ -57,6 +109,23 @@ const handleItemClick = (category, tabId) => {
   router.push({ path: "/forum", query });
 };
 
+const isTagActive = (tagName) => {
+  return String(route.query.tag || "").toLowerCase() === String(tagName || "").toLowerCase();
+};
+
+const handleTagClick = (tagName) => {
+  isDrawerMobileOpen.value = false;
+  const cleanTag = tagName.replace("#", "").trim();
+  
+  if (isTagActive(cleanTag)) {
+    const newQuery = { ...route.query };
+    delete newQuery.tag;
+    router.push({ path: "/forum", query: newQuery });
+  } else {
+    router.push({ path: "/forum", query: { ...route.query, tag: cleanTag } });
+  }
+};
+
 // Computed active states
 const isCategoryActive = (cat) =>
   route.query.category === cat ||
@@ -66,6 +135,9 @@ const isTabActive = (tab) => route.query.tab === tab;
 onMounted(() => {
   if (forumStore.categories.length === 0) {
     forumStore.fetchCategories().catch(() => {});
+  }
+  if (tagsStore.tags.length === 0) {
+    tagsStore.fetchTags().catch(() => {});
   }
 });
 </script>
@@ -112,8 +184,9 @@ onMounted(() => {
       <h3 class="section-heading">EXPLORE</h3>
       <div class="sidebar-menu">
         <button
-          class="sidebar-menu-item"
+          class="sidebar-menu-item category-item"
           :class="{ active: isCategoryActive('all') }"
+          style="--category-color: #3b82f6; --category-color-light: rgba(59, 130, 246, 0.15);"
           @click="handleItemClick('all', null)"
         >
           <i class="bi bi-globe2"></i>
@@ -123,8 +196,12 @@ onMounted(() => {
         <button
           v-for="category in displayCategories"
           :key="category.id"
-          class="sidebar-menu-item"
+          class="sidebar-menu-item category-item"
           :class="{ active: isCategoryActive(category.id) }"
+          :style="{
+            '--category-color': category.theme.solid,
+            '--category-color-light': category.theme.light
+          }"
           @click="handleItemClick(category.id, null)"
         >
           <i :class="['bi', category.icon]"></i>
@@ -164,13 +241,25 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Bottom menu links -->
-    <div class="sidebar-footer">
-      <router-link to="/help" class="footer-link">
-        <i class="bi bi-file-earmark-text"></i>
-        <span>Forum Guidelines</span>
-      </router-link>
-    </div>
+    <!-- Tags Section -->
+    <template v-if="displayTags.length > 0">
+      <hr class="sidebar-divider" />
+      <div class="sidebar-section">
+        <h3 class="section-heading">Popular Tags</h3>
+        <div class="sidebar-tags-container">
+          <button
+            v-for="tag in displayTags"
+            :key="tag.id"
+            class="sidebar-tag-item"
+            :class="{ active: isTagActive(tag.name) }"
+            @click="handleTagClick(tag.name)"
+          >
+            <span class="tag-hash">#</span>
+            <span class="tag-name">{{ tag.name }}</span>
+          </button>
+        </div>
+      </div>
+    </template>
   </aside>
 </template>
 
@@ -192,6 +281,26 @@ onMounted(() => {
   position: sticky;
   top: 80px;
   align-self: start;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar for premium aesthetic */
+.left-sidebar-navigation::-webkit-scrollbar {
+  width: 4px;
+}
+
+.left-sidebar-navigation::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.left-sidebar-navigation::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+}
+
+.left-sidebar-navigation::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .sidebar-header {
@@ -263,6 +372,71 @@ onMounted(() => {
   font-weight: 700;
 }
 
+/* Category Item custom styling */
+.category-item i {
+  color: var(--category-color);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.category-item:hover i {
+  transform: scale(1.1);
+}
+
+.category-item.active {
+  background: var(--category-color-light) !important;
+  color: var(--category-color) !important;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.category-item:hover {
+  background: var(--category-color-light) !important;
+  color: var(--category-color) !important;
+}
+
+/* Sidebar tags widget */
+.sidebar-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.sidebar-tag-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-glass-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-tag-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.sidebar-tag-item.active {
+  background: var(--color-primary-light, rgba(59, 130, 246, 0.15)) !important;
+  border-color: var(--color-primary, #3b82f6) !important;
+  color: var(--color-primary, #3b82f6) !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.tag-hash {
+  opacity: 0.55;
+  margin-right: 1px;
+}
+
 .sidebar-divider {
   margin: 20px 0;
   border: 0;
@@ -300,33 +474,6 @@ onMounted(() => {
   filter: brightness(1.1);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px var(--color-primary-light);
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding: 24px 0 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.footer-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: var(--color-text-muted);
-  font-size: 13px;
-  font-weight: 600;
-  transition: color 0.2s ease;
-}
-
-.footer-link:hover {
-  color: var(--color-text);
-}
-
-.footer-link i {
-  font-size: 15px;
 }
 
 /* Off-canvas sidebar drawer for mobile devices */
@@ -393,3 +540,4 @@ onMounted(() => {
   }
 }
 </style>
+

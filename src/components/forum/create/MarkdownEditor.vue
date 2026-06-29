@@ -1,11 +1,13 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
+import Image from "@tiptap/extension-image";
 import { Markdown } from "tiptap-markdown";
 import { useToast } from "@/composables/useToast.js";
+import BaseModal from "@/components/base/BaseModal.vue";
 
 const props = defineProps({
   modelValue: {
@@ -34,6 +36,12 @@ const editor = ref(null);
 const isEditorFocused = ref(false);
 const wordCount = ref(0);
 const charCount = ref(0);
+const editorStateTrigger = ref(0);
+
+const isOptionActive = (name, attributes = {}) => {
+  const _ = editorStateTrigger.value;
+  return editor.value ? editor.value.isActive(name, attributes) : false;
+};
 
 const updateWordAndCharCount = (text) => {
   const plainText = text || "";
@@ -134,21 +142,20 @@ const setMarkdown = (markdown = "", options = {}) => {
 
   const content = String(markdown || "");
   try {
-    if (content.includes("```")) {
+    // Try using the editor's standard markdown parsing command first
+    editor.value.commands.setContent(content, { emitUpdate: false });
+  } catch (error) {
+    console.warn(
+      "[MarkdownEditor] Failed parsing markdown with standard parser, trying fallback:",
+      error,
+    );
+    try {
       editor.value.commands.setContent(markdownWithCodeToDoc(content), {
         emitUpdate: false,
       });
-    } else {
-      editor.value.commands.setContent(content, { emitUpdate: false });
+    } catch (fallbackError) {
+      console.error("[MarkdownEditor] Fallback markdown parsing failed:", fallbackError);
     }
-  } catch (error) {
-    console.warn(
-      "[MarkdownEditor] Failed to parse markdown, falling back to plain text:",
-      error,
-    );
-    editor.value.commands.setContent(markdownWithCodeToDoc(content), {
-      emitUpdate: false,
-    });
   }
 
   updateWordAndCharCount(editor.value.getText() || content);
@@ -163,6 +170,9 @@ onMounted(() => {
     content: "",
     extensions: [
       StarterKit,
+      Image.configure({
+        inline: false,
+      }),
       Markdown,
       Placeholder.configure({
         placeholder: props.placeholder,
@@ -180,14 +190,20 @@ onMounted(() => {
       const markdown = getMarkdown();
       emit("update:modelValue", markdown);
       updateWordAndCharCount(editor.value?.getText() || "");
+      editorStateTrigger.value++;
+    },
+    onSelectionUpdate: () => {
+      editorStateTrigger.value++;
     },
     onFocus: () => {
       isEditorFocused.value = true;
       emit("focus");
+      editorStateTrigger.value++;
     },
     onBlur: () => {
       isEditorFocused.value = false;
       emit("blur");
+      editorStateTrigger.value++;
     },
   });
 
@@ -244,32 +260,170 @@ const setHorizontalRule = () =>
 const undo = () => editor.value?.chain().focus().undo().run();
 const redo = () => editor.value?.chain().focus().redo().run();
 
-const setLink = () => {
-  const previousUrl = editor.value?.getAttributes("link").href;
-  const url = window.prompt("URL", previousUrl);
+const showLinkModal = ref(false);
+const linkUrl = ref("");
+const linkText = ref("");
+const linkUrlInputRef = ref(null);
+const linkTextInputRef = ref(null);
 
-  if (url === null) {
-    return;
+const openLinkModal = () => {
+  const previousUrl = editor.value?.getAttributes("link").href;
+  linkUrl.value = previousUrl || "";
+
+  if (editor.value) {
+    const { from, to } = editor.value.state.selection;
+    linkText.value = editor.value.state.doc.textBetween(from, to, " ") || "";
+  } else {
+    linkText.value = "";
   }
+
+  showLinkModal.value = true;
+  nextTick(() => {
+    if (linkText.value) {
+      linkUrlInputRef.value?.focus();
+    } else {
+      linkTextInputRef.value?.focus();
+    }
+  });
+};
+
+const saveLink = () => {
+  const url = linkUrl.value.trim();
+  const text = linkText.value.trim();
+  showLinkModal.value = false;
 
   if (url === "") {
     editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
     return;
   }
 
+  const normalizedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  const displayText = text || url;
+
   editor.value
     ?.chain()
     .focus()
-    .extendMarkRange("link")
-    .setLink({ href: url })
+    .insertContent({
+      type: "text",
+      text: displayText,
+      marks: [
+        {
+          type: "link",
+          attrs: { href: normalizedUrl },
+        },
+      ],
+    })
     .run();
 };
 
+const removeLink = () => {
+  showLinkModal.value = false;
+  editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
+};
+
 const showTextMenu = ref(false);
+
+// Image Upload Logic
+const showImageModal = ref(false);
+const isDraggingImage = ref(false);
+const imageInputRef = ref(null);
+const uploadProgress = ref({});
+
+const openImageModal = () => {
+  showImageModal.value = true;
+  uploadProgress.value = {};
+};
+
+const openImagePicker = () => {
+  imageInputRef.value?.click();
+};
+
+const uploadImageFile = (file) => {
+  const fileId = Math.random().toString(36).substring(7);
+  uploadProgress.value[fileId] = {
+    name: file.name,
+    size: file.size,
+    percent: 0,
+    status: "uploading",
+  };
+
+  let currentPercent = 0;
+  const interval = setInterval(() => {
+    currentPercent += 10;
+    if (uploadProgress.value[fileId]) {
+      uploadProgress.value[fileId].percent = currentPercent;
+    }
+
+    if (currentPercent >= 100) {
+      clearInterval(interval);
+      if (uploadProgress.value[fileId]) {
+        uploadProgress.value[fileId].status = "success";
+      }
+
+      // Convert local file to a temporary object URL so it displays in the editor body immediately
+      const imageUrl = URL.createObjectURL(file);
+
+      // Insert image in the Tiptap editor
+      editor.value
+        ?.chain()
+        .focus()
+        .setImage({ src: imageUrl, alt: file.name })
+        .run();
+
+      // Auto close modal after a brief delay if all successful
+      setTimeout(() => {
+        if (
+          showImageModal.value &&
+          Object.values(uploadProgress.value).every(
+            (p) => p.status === "success"
+          )
+        ) {
+          showImageModal.value = false;
+        }
+      }, 1500);
+    }
+  }, 150);
+};
+
+const handleImageFiles = (files) => {
+  const imageFiles = Array.from(files).filter(
+    (file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024
+  );
+
+  if (imageFiles.length === 0) {
+    toast.error("Please select valid image files under 5MB.");
+    return;
+  }
+
+  imageFiles.forEach(uploadImageFile);
+};
+
+const handleImageInput = (event) => {
+  if (event.target.files) {
+    handleImageFiles(event.target.files);
+  }
+  event.target.value = "";
+};
+
+const handleImageDrop = (event) => {
+  isDraggingImage.value = false;
+  if (event.dataTransfer?.files) {
+    handleImageFiles(event.dataTransfer.files);
+  }
+};
 </script>
 
 <template>
   <div class="editor-container" :class="{ focused: isEditorFocused }">
+    <input
+      ref="imageInputRef"
+      type="file"
+      accept="image/*"
+      multiple
+      hidden
+      @change="handleImageInput"
+    />
+
     <div v-if="editor" class="editor-toolbar">
       <div class="toolbar-left">
         <!-- Text Type Dropdown -->
@@ -277,6 +431,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             class="toolbar-btn text-icon"
+            :class="{ 'is-active': isOptionActive('heading') }"
             title="Text Formatting"
             @mousedown.prevent="showTextMenu = !showTextMenu"
           >
@@ -291,7 +446,7 @@ const showTextMenu = ref(false);
                 toggleHeading(1);
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+              :class="{ 'is-active': isOptionActive('heading', { level: 1 }) }"
             >
               <i class="bi bi-type-h1"></i> Heading 1
             </button>
@@ -301,7 +456,7 @@ const showTextMenu = ref(false);
                 toggleHeading(2);
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+              :class="{ 'is-active': isOptionActive('heading', { level: 2 }) }"
             >
               <i class="bi bi-type-h2"></i> Heading 2
             </button>
@@ -311,7 +466,7 @@ const showTextMenu = ref(false);
                 toggleHeading(3);
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+              :class="{ 'is-active': isOptionActive('heading', { level: 3 }) }"
             >
               <i class="bi bi-type-h3"></i> Heading 3
             </button>
@@ -321,7 +476,7 @@ const showTextMenu = ref(false);
                 setParagraph();
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('paragraph') }"
+              :class="{ 'is-active': isOptionActive('paragraph') }"
             >
               <i class="bi bi-paragraph"></i> Paragraph
             </button>
@@ -335,7 +490,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleBold"
-            :class="{ 'is-active': editor.isActive('bold') }"
+            :class="{ 'is-active': isOptionActive('bold') }"
             class="toolbar-btn"
             title="Bold"
           >
@@ -344,7 +499,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleItalic"
-            :class="{ 'is-active': editor.isActive('italic') }"
+            :class="{ 'is-active': isOptionActive('italic') }"
             class="toolbar-btn"
             title="Italic"
           >
@@ -353,7 +508,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleStrike"
-            :class="{ 'is-active': editor.isActive('strike') }"
+            :class="{ 'is-active': isOptionActive('strike') }"
             class="toolbar-btn"
             title="Strikethrough"
           >
@@ -367,7 +522,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleCode"
-            :class="{ 'is-active': editor.isActive('code') }"
+            :class="{ 'is-active': isOptionActive('code') }"
             class="toolbar-btn"
             title="Inline code"
           >
@@ -376,7 +531,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleCodeBlock"
-            :class="{ 'is-active': editor.isActive('codeBlock') }"
+            :class="{ 'is-active': isOptionActive('codeBlock') }"
             class="toolbar-btn"
             title="Code block"
           >
@@ -390,8 +545,8 @@ const showTextMenu = ref(false);
         <div class="toolbar-group">
           <button
             type="button"
-            @mousedown.prevent="setLink"
-            :class="{ 'is-active': editor.isActive('link') }"
+            @mousedown.prevent="openLinkModal"
+            :class="{ 'is-active': isOptionActive('link') }"
             class="toolbar-btn"
             title="Link"
           >
@@ -400,11 +555,19 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleBlockquote"
-            :class="{ 'is-active': editor.isActive('blockquote') }"
+            :class="{ 'is-active': isOptionActive('blockquote') }"
             class="toolbar-btn"
             title="Blockquote"
           >
             <i class="bi bi-quote"></i>
+          </button>
+          <button
+            type="button"
+            @mousedown.prevent="openImageModal"
+            class="toolbar-btn"
+            title="Add Image"
+          >
+            <i class="bi bi-image"></i>
           </button>
         </div>
 
@@ -415,7 +578,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleOrderedList"
-            :class="{ 'is-active': editor.isActive('orderedList') }"
+            :class="{ 'is-active': isOptionActive('orderedList') }"
             class="toolbar-btn"
             title="Numbered list"
           >
@@ -424,7 +587,7 @@ const showTextMenu = ref(false);
           <button
             type="button"
             @mousedown.prevent="toggleBulletList"
-            :class="{ 'is-active': editor.isActive('bulletList') }"
+            :class="{ 'is-active': isOptionActive('bulletList') }"
             class="toolbar-btn"
             title="Bulleted list"
           >
@@ -496,6 +659,110 @@ const showTextMenu = ref(false);
       </div>
     </div>
   </div>
+
+  <BaseModal
+    v-if="showLinkModal"
+    title="Insert Link"
+    icon="bi bi-link-45deg"
+    theme="primary"
+    @closeModal="showLinkModal = false"
+  >
+    <div class="link-modal-body">
+      <div class="form-group mb-3">
+        <label for="link-text-input" class="form-label small fw-bold text-muted">Link Text</label>
+        <input
+          id="link-text-input"
+          ref="linkTextInputRef"
+          v-model="linkText"
+          type="text"
+          class="form-control"
+          placeholder="e.g. Google"
+          @keydown.enter.prevent="saveLink"
+        />
+      </div>
+      <div class="form-group mb-3">
+        <label for="link-url-input" class="form-label small fw-bold text-muted">URL</label>
+        <input
+          id="link-url-input"
+          ref="linkUrlInputRef"
+          v-model="linkUrl"
+          type="text"
+          class="form-control"
+          placeholder="https://example.com"
+          @keydown.enter.prevent="saveLink"
+        />
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button
+          type="button"
+          class="btn btn-light btn-sm fw-bold border"
+          @click="showLinkModal = false"
+        >
+          Cancel
+        </button>
+        <button
+          v-if="editor?.getAttributes('link').href"
+          type="button"
+          class="btn btn-outline-danger btn-sm fw-bold"
+          @click="removeLink"
+        >
+          Remove Link
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm fw-bold"
+          @click="saveLink"
+        >
+          Insert
+        </button>
+      </div>
+    </div>
+  </BaseModal>
+
+  <BaseModal
+    v-if="showImageModal"
+    title="Add Image"
+    icon="bi bi-image"
+    theme="primary"
+    @closeModal="showImageModal = false"
+  >
+    <div
+      class="image-dropzone"
+      :class="{ dragging: isDraggingImage }"
+      @click="openImagePicker"
+      @dragover.prevent="isDraggingImage = true"
+      @dragleave.prevent="isDraggingImage = false"
+      @drop.prevent="handleImageDrop"
+    >
+      <div class="upload-file-icon">
+        <i class="bi bi-file-earmark-image"></i>
+        <span><i class="bi bi-cloud-arrow-up-fill"></i></span>
+      </div>
+      <p><u>Click to upload</u> or drag and drop</p>
+      <strong>Maximum 5MB image files.</strong>
+    </div>
+
+    <!-- Upload progress list -->
+    <div v-if="Object.keys(uploadProgress).length > 0" class="upload-progress-list mt-3">
+      <div v-for="(file, id) in uploadProgress" :key="id" class="upload-progress-item">
+        <div class="file-info">
+          <i class="bi bi-file-earmark-image-fill file-icon"></i>
+          <div class="file-details">
+            <span class="file-name">{{ file.name }}</span>
+            <span class="file-size" v-if="file.size">{{ (file.size / 1024).toFixed(1) }} KB</span>
+          </div>
+          <span class="progress-percent" :class="file.status">{{ file.percent }}%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div 
+            class="progress-bar-fill" 
+            :class="file.status" 
+            :style="{ width: file.percent + '%' }"
+          ></div>
+        </div>
+      </div>
+    </div>
+  </BaseModal>
 </template>
 
 <style scoped>
@@ -574,6 +841,13 @@ const showTextMenu = ref(false);
 .toolbar-btn.is-active {
   background: var(--color-blue-light);
   color: var(--color-blue);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="dark"] .toolbar-btn.is-active {
+  background: rgba(125, 160, 202, 0.18);
+  color: var(--color-blue);
+  box-shadow: inset 0 0 0 1px rgba(125, 160, 202, 0.35);
 }
 
 .toolbar-btn:disabled {
@@ -633,6 +907,13 @@ const showTextMenu = ref(false);
 .toolbar-dropdown button.is-active {
   background: var(--color-blue-light);
   color: var(--color-blue);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="dark"] .toolbar-dropdown button.is-active {
+  background: rgba(125, 160, 202, 0.18);
+  color: var(--color-blue);
+  box-shadow: inset 0 0 0 1px rgba(125, 160, 202, 0.35);
 }
 
 /* Workspace panes */
@@ -810,5 +1091,153 @@ const showTextMenu = ref(false);
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Image Dropzone styles */
+.image-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  border: 2px dashed var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.image-dropzone.dragging,
+.image-dropzone:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.upload-file-icon {
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.upload-file-icon span {
+  position: absolute;
+  bottom: 0;
+  right: -10px;
+  font-size: 1.5rem;
+  color: var(--color-success);
+  background: var(--color-surface);
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.image-dropzone p {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.image-dropzone strong {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+/* Upload Progress styles */
+.upload-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+}
+
+.upload-progress-item {
+  background: var(--color-surface-hover);
+  border-radius: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.file-icon {
+  font-size: 1.25rem;
+  color: var(--color-primary);
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.progress-percent {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.progress-percent.success {
+  color: var(--color-success);
+}
+
+.progress-percent.error {
+  color: var(--color-danger);
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--color-primary);
+  transition: width 0.2s ease;
+  border-radius: 99px;
+}
+
+.progress-bar-fill.success {
+  background: var(--color-success);
+}
+
+.progress-bar-fill.error {
+  background: var(--color-danger);
+}
+
+/* Editor content image styles */
+:deep(.tiptap img) {
+  display: block;
+  max-width: 100%;
+  max-height: 400px;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
 }
 </style>
