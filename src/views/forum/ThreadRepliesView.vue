@@ -33,7 +33,10 @@ const toast = useToast();
 
 const loading = ref(true);
 const isPostingReply = ref(false);
-const newReplyText = ref("");
+const isAnswerComposerOpen = ref(false);
+const newAnswerText = ref("");
+const inlineReplyText = ref("");
+const replyTarget = ref(null);
 const repliesEnd = ref(null);
 
 const categoryGradients = [
@@ -150,9 +153,16 @@ const replyCount = computed(() => {
     : 0;
 });
 
+const answerCount = computed(() => {
+  if (!Array.isArray(discussion.value?.replies)) return 0;
+  return discussion.value.replies.filter((reply) => !reply.parent_id).length;
+});
+
 const sortedReplies = computed(() => {
   if (!Array.isArray(discussion.value?.replies)) return [];
-  return [...discussion.value.replies].sort((a, b) => {
+  return discussion.value.replies.filter((reply) => !reply.parent_id).sort((a, b) => {
+    const acceptedDiff = Number(Boolean(b.is_accepted)) - Number(Boolean(a.is_accepted));
+    if (acceptedDiff !== 0) return acceptedDiff;
     const likeDiff = Number(b.likes || 0) - Number(a.likes || 0);
     if (likeDiff !== 0) return likeDiff;
     return (
@@ -163,9 +173,20 @@ const sortedReplies = computed(() => {
 });
 
 const topReplyId = computed(() => {
-  const first = sortedReplies.value[0];
+  const first = sortedReplies.value.find((reply) => !reply.is_accepted);
   return first && Number(first.likes || 0) > 0 ? first.id : null;
 });
+
+const childReplies = (parentId) => {
+  if (!Array.isArray(discussion.value?.replies)) return [];
+  return discussion.value.replies
+    .filter((reply) => Number(reply.parent_id) === Number(parentId))
+    .sort(
+      (a, b) =>
+        new Date(a.created_at || a.createdAt || a.timestamp || 0) -
+        new Date(b.created_at || b.createdAt || b.timestamp || 0),
+    );
+};
 
 const loadDiscussion = async (id) => {
   loading.value = true;
@@ -320,30 +341,79 @@ const handleLikeReply = (reply) => {
   }
 };
 
-const postReply = async () => {
-  if (!newReplyText.value.trim() || isPostingReply.value) return;
+const submitComment = async ({ body, parentId = null, successMessage }) => {
+  if (!body.trim() || isPostingReply.value) return false;
 
   isPostingReply.value = true;
   const replyData = {
-    body: newReplyText.value.trim(),
+    body: body.trim(),
+    parent_id: parentId,
   };
 
   try {
     await forumStore.postReply(discussion.value.id, replyData);
-    newReplyText.value = "";
-    toast.success("Reply posted successfully!");
+    toast.success(successMessage);
 
-    // Trigger smooth scroll to bottom and reload copy actions
     nextTick(() => {
-      scrollToBottom();
       setupCopyButtons();
     });
+    return true;
   } catch (err) {
     console.error("Failed to post reply:", err);
     toast.error("Failed to post reply.");
+    return false;
   } finally {
     isPostingReply.value = false;
   }
+};
+
+const postAnswer = async () => {
+  const posted = await submitComment({
+    body: newAnswerText.value,
+    successMessage: "Answer posted successfully!",
+  });
+  if (posted) {
+    newAnswerText.value = "";
+    isAnswerComposerOpen.value = false;
+    scrollToBottom();
+  }
+};
+
+const openAnswerComposer = () => {
+  isAnswerComposerOpen.value = true;
+};
+
+const cancelAnswerComposer = () => {
+  isAnswerComposerOpen.value = false;
+  newAnswerText.value = "";
+};
+
+const postInlineReply = async () => {
+  if (!replyTarget.value) return;
+  const targetId = replyTarget.value.id;
+  const posted = await submitComment({
+    body: inlineReplyText.value,
+    parentId: targetId,
+    successMessage: "Reply posted successfully!",
+  });
+  if (posted) {
+    inlineReplyText.value = "";
+    replyTarget.value = null;
+  }
+};
+
+const startReplyTo = (reply) => {
+  replyTarget.value = reply;
+  inlineReplyText.value = "";
+  nextTick(() => {
+    const el = document.querySelector(`#inline-reply-${reply.id}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+};
+
+const cancelReplyTarget = () => {
+  replyTarget.value = null;
+  inlineReplyText.value = "";
 };
 
 const canDeleteDiscussion = computed(() => {
@@ -390,6 +460,14 @@ const canDeleteReply = (reply) => {
   }
 
   return false;
+};
+
+const canAcceptReply = (reply) => {
+  if (!reply || reply.parent_id || !discussion.value || !authStore.user) return false;
+  if (String(authStore.user.role || "").toLowerCase() === "admin") return true;
+  const currentUserId = authStore.user.id;
+  const discussionUserId = discussion.value.user_id || discussion.value.userId;
+  return Boolean(currentUserId && discussionUserId && currentUserId == discussionUserId);
 };
 
 const discussionAuthor = computed(() => {
@@ -449,6 +527,18 @@ const performDeleteReply = async () => {
   } catch (err) {
     console.error("Failed to delete comment:", err);
     toast.error("Failed to delete reply.");
+  }
+};
+
+const toggleAcceptReply = async (reply) => {
+  if (!reply?.id) return;
+  const wasAccepted = Boolean(reply.is_accepted);
+  try {
+    await forumStore.acceptComment(reply.id);
+    toast.success(wasAccepted ? "Accepted answer removed." : "Answer accepted.");
+  } catch (err) {
+    console.error("Failed to accept answer:", err);
+    toast.error("Failed to update accepted answer.");
   }
 };
 
@@ -788,7 +878,7 @@ function getAvatarUrl(author) {
                   <button
                     class="action-btn more-btn"
                     @click.stop="showMoreActionsDropdown = !showMoreActionsDropdown"
-                    title="More actions"
+                    aria-label="More actions"
                   >
                     <i class="bi bi-three-dots"></i>
                   </button>
@@ -844,15 +934,84 @@ function getAvatarUrl(author) {
 
           <!-- Replies Section -->
           <div class="replies-section">
-            <h2>Discussion Replies ({{ replyCount }})</h2>
+            <h2>Answers ({{ answerCount }})</h2>
+
+            <!-- Add Answer Input -->
+            <button
+              v-if="!isAnswerComposerOpen"
+              type="button"
+              class="answer-collapsed-input"
+              @click="openAnswerComposer"
+            >
+              <div
+                class="reply-avatar current-user"
+                :style="getAvatarStyle(authStore.user || '@current_user')"
+              >
+                <img
+                  v-if="getAvatarUrl(authStore.user)"
+                  :src="getAvatarUrl(authStore.user)"
+                  alt="avatar"
+                  class="avatar-img"
+                />
+                <span v-else>{{
+                  getAvatarInitials(authStore.user || "@current_user")
+                }}</span>
+              </div>
+              <span>Add an answer</span>
+            </button>
+
+            <div v-else class="reply-input-wrapper">
+              <div class="input-header">
+                <div
+                  class="reply-avatar current-user"
+                  :style="getAvatarStyle(authStore.user || '@current_user')"
+                >
+                  <img
+                    v-if="getAvatarUrl(authStore.user)"
+                    :src="getAvatarUrl(authStore.user)"
+                    alt="avatar"
+                    class="avatar-img"
+                  />
+                  <span v-else>{{
+                    getAvatarInitials(authStore.user || "@current_user")
+                  }}</span>
+                </div>
+                <span class="input-prompt">
+                  Add an answer
+                </span>
+              </div>
+
+              <MarkdownEditor
+                v-model="newAnswerText"
+                placeholder="Write a constructive answer... Markdown is supported."
+              />
+
+              <div class="reply-footer">
+                <button
+                  class="cancel-reply-btn"
+                  type="button"
+                  @click="cancelAnswerComposer"
+                >
+                  Cancel
+                </button>
+                <button
+                  class="post-btn"
+                  :disabled="!newAnswerText.trim() || isPostingReply"
+                  @click="postAnswer"
+                >
+                  <span v-if="isPostingReply" class="spinner-border spinner-border-sm" style="margin-right: 8px;" role="status" aria-hidden="true"></span>
+                  {{ isPostingReply ? 'Posting...' : 'Post Answer' }}
+                </button>
+              </div>
+            </div>
 
             <div class="reply-list-container">
               <!-- Sleek Timeline Connector lines -->
               <div class="timeline-line"></div>
 
               <div class="reply-list">
-                <div class="no-replies" v-if="replyCount === 0">
-                  No replies yet. Be the first to share your thoughts!
+                <div class="no-replies" v-if="answerCount === 0">
+                  No answers yet. Be the first to share your solution!
                 </div>
 
                 <div
@@ -865,7 +1024,10 @@ function getAvatarUrl(author) {
                   :id="reply.id ? `comment-${reply.id}` : undefined"
                   :class="[
                     'reply-card',
-                    { 'top-reply': topReplyId && reply.id === topReplyId },
+                    {
+                      'top-reply': topReplyId && reply.id === topReplyId,
+                      'accepted-reply': reply.is_accepted,
+                    },
                   ]"
                 >
                   <div class="reply-vote-col" @click.stop>
@@ -928,20 +1090,167 @@ function getAvatarUrl(author) {
                         <i class="bi bi-stars"></i>
                         Top comment
                       </span>
+
+                      <span
+                        v-if="reply.is_accepted"
+                        class="accepted-reply-badge"
+                      >
+                        <i class="bi bi-check-circle-fill"></i>
+                        Accepted answer
+                      </span>
                     </div>
                     <div
                       class="reply-body"
                       v-html="renderStoredContent(reply.body || '')"
                     ></div>
 
-                    <div v-if="canDeleteReply(reply)" class="reply-actions">
+                    <div class="reply-actions">
                       <button
+                        class="reply-action-btn"
+                        @click="startReplyTo(reply)"
+                      >
+                        <i class="bi bi-reply"></i>
+                        <span>Reply</span>
+                      </button>
+                      <button
+                        v-if="canAcceptReply(reply)"
+                        class="reply-action-btn accept-answer-btn"
+                        :class="{ accepted: reply.is_accepted }"
+                        @click="toggleAcceptReply(reply)"
+                      >
+                        <i
+                          :class="[
+                            reply.is_accepted
+                              ? 'bi bi-check-circle-fill'
+                              : 'bi bi-check-circle',
+                          ]"
+                        ></i>
+                        <span>{{ reply.is_accepted ? 'Accepted' : 'Accept answer' }}</span>
+                      </button>
+                      <button
+                        v-if="canDeleteReply(reply)"
                         class="delete-reply-btn"
                         @click="deleteReply(reply.id)"
                       >
                         <i class="bi bi-trash"></i>
                         <span>Delete</span>
                       </button>
+                    </div>
+
+                    <div
+                      v-if="replyTarget?.id === reply.id"
+                      :id="`inline-reply-${reply.id}`"
+                      class="inline-reply-composer"
+                    >
+                      <div class="inline-reply-header">
+                        <div
+                          class="reply-avatar current-user"
+                          :style="getAvatarStyle(authStore.user || '@current_user')"
+                        >
+                          <img
+                            v-if="getAvatarUrl(authStore.user)"
+                            :src="getAvatarUrl(authStore.user)"
+                            alt="avatar"
+                            class="avatar-img"
+                          />
+                          <span v-else>{{
+                            getAvatarInitials(authStore.user || "@current_user")
+                          }}</span>
+                        </div>
+                        <span class="input-prompt">
+                          Replying to {{ getAvatarName(reply.author) }}
+                        </span>
+                      </div>
+
+                      <MarkdownEditor
+                        v-model="inlineReplyText"
+                        placeholder="Write a short follow-up reply... Markdown is supported."
+                      />
+
+                      <div class="reply-footer inline-reply-footer">
+                        <button
+                          class="cancel-reply-btn"
+                          type="button"
+                          @click="cancelReplyTarget"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          class="post-btn"
+                          :disabled="!inlineReplyText.trim() || isPostingReply"
+                          @click="postInlineReply"
+                        >
+                          <span v-if="isPostingReply" class="spinner-border spinner-border-sm" style="margin-right: 8px;" role="status" aria-hidden="true"></span>
+                          {{ isPostingReply ? 'Posting...' : 'Post Reply' }}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="childReplies(reply.id).length"
+                      class="nested-replies"
+                    >
+                      <div
+                        v-for="child in childReplies(reply.id)"
+                        :key="
+                          child.id ||
+                          `${getAvatarName(child.author)}-${getCreatedAt(child)}`
+                        "
+                        :id="child.id ? `comment-${child.id}` : undefined"
+                        class="nested-reply-card"
+                      >
+                        <div class="nested-reply-header">
+                          <div
+                            class="nested-reply-avatar"
+                            :style="getAvatarStyle(child.author)"
+                            @click="goToProfile(child)"
+                          >
+                            <img
+                              v-if="getAvatarUrl(child.author)"
+                              :src="getAvatarUrl(child.author)"
+                              alt="avatar"
+                              class="avatar-img"
+                            />
+                            <span v-else>{{
+                              getAvatarInitials(child.author)
+                            }}</span>
+                          </div>
+                          <div class="reply-user-info">
+                            <span
+                              class="reply-author"
+                              @click="goToProfile(child)"
+                              >{{ getAvatarName(child.author) }}</span
+                            >
+                            <span class="reply-time">{{
+                              getCreatedAt(child)
+                            }}</span>
+                          </div>
+                        </div>
+
+                        <div
+                          class="reply-body nested-reply-body"
+                          v-html="renderStoredContent(child.body || '')"
+                        ></div>
+
+                        <div class="reply-actions nested-reply-actions">
+                          <button
+                            class="reply-action-btn"
+                            :class="{ active: child.likedByUser }"
+                            @click="handleLikeReply(child)"
+                          >
+                            <i class="bi bi-chevron-up"></i>
+                            <span>{{ child.likes || 0 }}</span>
+                          </button>
+                          <button
+                            v-if="canDeleteReply(child)"
+                            class="delete-reply-btn"
+                            @click="deleteReply(child.id)"
+                          >
+                            <i class="bi bi-trash"></i>
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -950,43 +1259,6 @@ function getAvatarUrl(author) {
 
             <!-- Element to target smooth scroll -->
             <div ref="repliesEnd" class="scroll-anchor"></div>
-
-            <!-- Reply Input Box Overhaul -->
-            <div class="reply-input-wrapper">
-              <div class="input-header">
-                <div
-                  class="reply-avatar current-user"
-                  :style="getAvatarStyle(authStore.user || '@current_user')"
-                >
-                  <img
-                    v-if="getAvatarUrl(authStore.user)"
-                    :src="getAvatarUrl(authStore.user)"
-                    alt="avatar"
-                    class="avatar-img"
-                  />
-                  <span v-else>{{
-                    getAvatarInitials(authStore.user || "@current_user")
-                  }}</span>
-                </div>
-                <span class="input-prompt">Add to the discussion</span>
-              </div>
-
-              <MarkdownEditor
-                v-model="newReplyText"
-                placeholder="Write a constructive, formatted reply... Markdown is supported."
-              />
-
-              <div class="reply-footer">
-                <button
-                  class="post-btn"
-                  :disabled="!newReplyText.trim() || isPostingReply"
-                  @click="postReply"
-                >
-                  <span v-if="isPostingReply" class="spinner-border spinner-border-sm" style="margin-right: 8px;" role="status" aria-hidden="true"></span>
-                  {{ isPostingReply ? 'Posting...' : 'Post Reply' }}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1464,6 +1736,8 @@ function getAvatarUrl(author) {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  z-index: 20;
   padding-top: 20px;
   border-top: 1px dashed var(--color-border);
   gap: 16px;
@@ -1658,6 +1932,13 @@ function getAvatarUrl(author) {
     var(--shadow-md);
 }
 
+.reply-card.accepted-reply {
+  border-color: color-mix(in srgb, #10b981 68%, var(--color-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #10b981 28%, transparent),
+    var(--shadow-md);
+}
+
 .reply-vote-col {
   display: flex;
   flex-direction: column;
@@ -1785,6 +2066,21 @@ function getAvatarUrl(author) {
   white-space: nowrap;
 }
 
+.accepted-reply-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  color: #047857;
+  background: color-mix(in srgb, #10b981 14%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, #10b981 34%, transparent);
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 0.74rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
 .reply-body {
   font-size: 14.5px;
   color: var(--color-text);
@@ -1798,6 +2094,33 @@ function getAvatarUrl(author) {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.reply-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.reply-action-btn:hover,
+.reply-action-btn.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.accept-answer-btn.accepted,
+.accept-answer-btn:hover {
+  background: color-mix(in srgb, #10b981 14%, var(--color-surface));
+  color: #047857;
 }
 
 .delete-reply-btn {
@@ -1824,19 +2147,138 @@ function getAvatarUrl(author) {
   font-size: 14px;
 }
 
+.nested-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding-left: 18px;
+  border-left: 2px solid color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+}
+
+.nested-reply-card {
+  background: color-mix(in srgb, var(--color-surface-hover) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.nested-reply-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.nested-reply-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 11px;
+  border: 1.5px solid var(--color-surface);
+  cursor: pointer;
+}
+
+.nested-reply-body {
+  margin-bottom: 10px;
+}
+
+.nested-reply-actions {
+  gap: 6px;
+}
+
+.inline-reply-composer {
+  margin: 16px 0 2px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-bg) 72%, var(--color-primary-light));
+  box-shadow: var(--focus-ring);
+}
+
+.inline-reply-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.inline-reply-composer .reply-avatar.current-user {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
+.inline-reply-composer :deep(.editor-container) {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg);
+  box-shadow: none;
+}
+
+.inline-reply-composer :deep(.editor-workspace),
+.inline-reply-composer :deep(.editor-textarea) {
+  min-height: 150px;
+}
+
+.inline-reply-composer :deep(.preview-pane) {
+  max-height: 220px;
+}
+
+.inline-reply-footer {
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
 /* Reply Input Box */
 .reply-input-wrapper {
   background: var(--color-surface);
   border-radius: 12px;
-  padding: 28px;
-  margin-top: 10px;
+  padding: 16px;
+  margin: 14px 0 18px;
   border: 1px solid var(--color-border);
   transition: all 0.2s ease;
 }
 
-.reply-input-wrapper:focus-within {
+.reply-input-wrapper:focus-within,
+.reply-input-wrapper:hover {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+}
+
+.answer-collapsed-input {
+  width: 100%;
+  min-height: 64px;
+  margin: 14px 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-text-muted);
+  padding: 12px 18px;
+  text-align: left;
+  cursor: text;
+  transition: all 0.2s ease;
+}
+
+.answer-collapsed-input:hover,
+.answer-collapsed-input:focus-visible {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+.answer-collapsed-input span:last-child {
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .reply-input-wrapper :deep(.editor-container) {
@@ -1880,9 +2322,26 @@ function getAvatarUrl(author) {
   font-size: 15px;
 }
 
+.cancel-reply-btn {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.cancel-reply-btn:hover {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
 .reply-footer {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--color-border);
@@ -1966,6 +2425,11 @@ function getAvatarUrl(author) {
 
   .reply-input-wrapper {
     padding: 20px;
+  }
+
+  .answer-collapsed-input {
+    min-height: 58px;
+    padding: 10px 12px;
   }
 }
 
@@ -2198,11 +2662,13 @@ function getAvatarUrl(author) {
 .more-actions-container {
   position: relative;
   display: inline-block;
+  z-index: 50;
 }
 
 .more-dropdown-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: auto;
+  bottom: calc(100% + 8px);
   right: 0;
   min-width: 140px;
   background: var(--color-surface);
@@ -2210,10 +2676,12 @@ function getAvatarUrl(author) {
   border-radius: 12px;
   box-shadow: var(--shadow-md);
   padding: 6px;
-  z-index: 100;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  pointer-events: auto;
+  transform-origin: bottom right;
 }
 
 .dropdown-item {

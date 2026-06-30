@@ -416,11 +416,12 @@ async function handleSignIn() {
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    if (authStore.user?.status === "Pending") {
+    const userStatus = (authStore.user?.status || "").toLowerCase();
+    if (userStatus === "pending") {
       toast.warning("Verification required: Please choose your new password.");
       sessionStorage.setItem("ANT_FirstLogin", "true");
       sessionStorage.setItem("ANT_VerifiedToken", authStore.token);
-      router.push("/verify-account");
+      router.push("/verify");
       return;
     }
 

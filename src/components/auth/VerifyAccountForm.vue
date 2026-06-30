@@ -644,6 +644,8 @@ async function handleResetPassword() {
     sessionStorage.removeItem("ANT_VerifiedToken");
     sessionStorage.removeItem("ANT_FirstLogin");
 
+    authStore.logout();
+
     setTimeout(() => {
       router.push("/login");
     }, 1800);
