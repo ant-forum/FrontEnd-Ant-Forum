@@ -27,7 +27,7 @@
       v-model:activeTab="activeTab"
       :getTabCount="getTabCount"
       @edit="openEditModal"
-      @delete="openDeleteModal"
+      @delete="openStatusModal"
     />
 
     <!-- Edit Modal -->
@@ -100,6 +100,7 @@
               <option value="">Select Role</option>
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
+              <option value="mentor">Mentor</option>
               <option value="admin">Admin</option>
             </select>
             <div v-if="errors.role" class="invalid-feedback d-block">
@@ -151,18 +152,29 @@
 
     <!-- Toggle Status Modal (Suspend/Reactivate) -->
     <BaseModal
-      v-if="mDelete.isVisible"
-      :title="mDelete.item?.status === 'Active' ? 'Suspend User Account' : 'Reactivate User Account'"
-      :icon="mDelete.item?.status === 'Active' ? 'bi bi-person-x' : 'bi bi-person-check'"
-      :theme="mDelete.item?.status === 'Active' ? 'danger' : 'success'"
+      v-if="statusModal.isVisible"
+      :title="
+        statusModal.item?.status === 'Active'
+          ? 'Suspend User Account'
+          : 'Reactivate User Account'
+      "
+      :icon="
+        statusModal.item?.status === 'Active'
+          ? 'bi bi-person-x'
+          : 'bi bi-person-check'
+      "
+      :theme="statusModal.item?.status === 'Active' ? 'danger' : 'success'"
       kicker=""
-      @closeModal="closeDeleteModal"
+      @closeModal="closeStatusModal"
     >
       <p class="delete-message">
-        Are you sure you want to {{ mDelete.item?.status === 'Active' ? 'suspend' : 'reactivate' }} the user
-        <strong>{{ mDelete.item?.name }}</strong>?
-        <span v-if="mDelete.item?.status === 'Active'">
-          Suspending this user will block their account access until reactivated.
+        Are you sure you want to
+        {{ statusModal.item?.status === "Active" ? "suspend" : "reactivate" }}
+        the user <strong>{{ statusModal.item?.name }}</strong
+        >?
+        <span v-if="statusModal.item?.status === 'Active'">
+          Suspending this user will block their account access until
+          reactivated.
         </span>
         <span v-else>
           Reactivating this user will restore their full account access.
@@ -172,22 +184,37 @@
         <button
           class="btn btn-light border"
           type="button"
-          @click="closeDeleteModal"
+          @click="closeStatusModal"
         >
           Cancel
         </button>
         <button
-          :class="['btn', mDelete.item?.status === 'Active' ? 'btn-danger' : 'btn-success']"
+          :class="[
+            'btn',
+            statusModal.item?.status === 'Active'
+              ? 'btn-danger'
+              : 'btn-success',
+          ]"
           type="button"
           :disabled="usersStore.isLoading"
-          @click="handleDeleteUser"
+          @click="handleStatusChange"
         >
           <span
             v-if="usersStore.isLoading"
             class="spinner-border spinner-border-sm me-2"
           ></span>
-          <i :class="['bi', mDelete.item?.status === 'Active' ? 'bi-person-x-fill' : 'bi-person-check-fill', 'me-1']"></i>
-          <span>{{ mDelete.item?.status === 'Active' ? 'Suspend' : 'Reactivate' }}</span>
+          <i
+            :class="[
+              'bi',
+              statusModal.item?.status === 'Active'
+                ? 'bi-person-x-fill'
+                : 'bi-person-check-fill',
+              'me-1',
+            ]"
+          ></i>
+          <span>{{
+            statusModal.item?.status === "Active" ? "Suspend" : "Reactivate"
+          }}</span>
         </button>
       </div>
     </BaseModal>
@@ -246,29 +273,36 @@ const formatJoinedDate = (value) => {
 };
 
 const mappedUsers = computed(() => {
-  return (usersStore.users || []).map((u) => ({
-    id: u.id || u._id,
-    name: u.fullname || u.username || "No Username",
-    detail: (u.fullname && u.username ? '@' + u.username + ' · ' : '') + u.email,
-    role:
-      u.role === "user" || u.role === "student"
-        ? "Student"
-        : u.role === "mentor"
-          ? "Mentor"
-          : u.role
-            ? u.role.charAt(0).toUpperCase() + u.role.slice(1)
-            : "Student",
-    status: u.status
-      ? u.status.charAt(0).toUpperCase() + u.status.slice(1).toLowerCase()
-      : "Active",
-    joined: formatJoinedDate(u.createdAt || u.created_at),
-    avatar: u.profile_pic || u.avatar || u.avatarUrl || "",
-    gender: u.gender || "male",
-    rawRole: u.role || "student",
-    rawUsername: u.username || "",
-    rawFullname: u.fullname || "",
-    rawEmail: u.email || "",
-  }));
+  return (usersStore.users || []).map((u) => {
+    const rawStatus = String(u.status || "active").toLowerCase();
+    const status =
+      rawStatus === "inactive" || rawStatus === "suspended"
+        ? "Suspended"
+        : rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+
+    return {
+      id: u.id || u._id,
+      name: u.fullname || u.username || "No Username",
+      detail:
+        (u.fullname && u.username ? "@" + u.username + " · " : "") + u.email,
+      role:
+        u.role === "user" || u.role === "student"
+          ? "Student"
+          : u.role === "mentor"
+            ? "Mentor"
+            : u.role
+              ? u.role.charAt(0).toUpperCase() + u.role.slice(1)
+              : "Student",
+      status,
+      joined: formatJoinedDate(u.createdAt || u.created_at),
+      avatar: u.profile_pic || u.avatar || u.avatarUrl || "",
+      gender: u.gender || "male",
+      rawRole: u.role || "student",
+      rawUsername: u.username || "",
+      rawFullname: u.fullname || "",
+      rawEmail: u.email || "",
+    };
+  });
 });
 
 const activeTab = ref("all");
@@ -277,6 +311,7 @@ const userTabs = [
   { value: "all", label: "All" },
   { value: "active", label: "Active" },
   { value: "suspended", label: "Suspended" },
+  { value: "pending", label: "Pending" },
 ];
 
 const filteredUsers = computed(() => {
@@ -286,6 +321,9 @@ const filteredUsers = computed(() => {
   }
   if (activeTab.value === "suspended") {
     return list.filter((u) => u.status === "Suspended");
+  }
+  if (activeTab.value === "pending") {
+    return list.filter((u) => u.status === "Pending");
   }
   return list;
 });
@@ -297,6 +335,9 @@ const getTabCount = (tabName) => {
   }
   if (tabName === "suspended") {
     return list.filter((u) => u.status === "Suspended").length;
+  }
+  if (tabName === "pending") {
+    return list.filter((u) => u.status === "Pending").length;
   }
   return list.length;
 };
@@ -328,7 +369,7 @@ const metrics = computed(() => {
     {
       label: "Teachers",
       value: String(teachers),
-      change: "Active teachers",
+      change: "Teacher accounts",
       icon: "bi-person-badge",
       className: "blue",
     },
@@ -377,7 +418,13 @@ const isSaveDisabled = computed(() => {
   const currentGender = mEdit.data.gender;
 
   // Disable if any required fields are empty
-  if (!currentUsername || !currentFullname || !currentEmail || !currentRole || !currentGender) {
+  if (
+    !currentUsername ||
+    !currentFullname ||
+    !currentEmail ||
+    !currentRole ||
+    !currentGender
+  ) {
     return true;
   }
 
@@ -442,7 +489,13 @@ const handleUpdateUser = async () => {
     "Gender is required.",
   );
 
-  if (!isUsernameValid || !isFullnameValid || !isEmailValid || !isRoleValid || !isGenderValid) {
+  if (
+    !isUsernameValid ||
+    !isFullnameValid ||
+    !isEmailValid ||
+    !isRoleValid ||
+    !isGenderValid
+  ) {
     toast.error("Please fix the validation errors before saving.");
     return;
   }
@@ -472,32 +525,34 @@ const handleUpdateUser = async () => {
   }
 };
 
-// Delete Logic
-const mDelete = reactive({
+const statusModal = reactive({
   isVisible: false,
   item: null,
 });
 
-const openDeleteModal = (mappedUser) => {
-  mDelete.item = mappedUser;
-  mDelete.isVisible = true;
+const openStatusModal = (mappedUser) => {
+  statusModal.item = mappedUser;
+  statusModal.isVisible = true;
 };
 
-const closeDeleteModal = () => {
-  mDelete.isVisible = false;
-  mDelete.item = null;
+const closeStatusModal = () => {
+  statusModal.isVisible = false;
+  statusModal.item = null;
 };
 
-const handleDeleteUser = async () => {
+const handleStatusChange = async () => {
   try {
-    const isCurrentlyActive = mDelete.item?.status === "Active";
-    const response = await usersStore.deleteUser(mDelete.item.id);
+    const isCurrentlyActive = statusModal.item?.status === "Active";
+    const nextStatus = isCurrentlyActive ? "suspended" : "active";
+    const response = await usersStore.setUserStatus(
+      statusModal.item.id,
+      nextStatus,
+    );
     const actionLabel = isCurrentlyActive ? "suspended" : "reactivated";
-    toast.success(response?.message || `User account ${actionLabel} successfully!`);
-    closeDeleteModal();
-    // Show skeleton while loading the refreshed user list
-    isPageLoading.value = true;
-    await usersStore.fetchUsers(true);
+    toast.success(
+      response?.message || `User account ${actionLabel} successfully!`,
+    );
+    closeStatusModal();
   } catch (error) {
     console.error("Failed to update user status:", error);
     const errorMsg =
@@ -506,9 +561,7 @@ const handleDeleteUser = async () => {
       error.msg ||
       "An error occurred while updating the user account status.";
     toast.error(errorMsg);
-    closeDeleteModal();
-  } finally {
-    isPageLoading.value = false;
+    closeStatusModal();
   }
 };
 </script>

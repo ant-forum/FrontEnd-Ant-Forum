@@ -27,10 +27,15 @@ export const useTagsStore = defineStore("tags", () => {
   const tag = ref(null);
   const isLoading = ref(false);
 
-  const withCardStyle = (item, index = 0) => ({
-    ...item,
-    colorClass: TAG_COLORS[index % TAG_COLORS.length],
-  });
+  const withCardStyle = (item, index = 0) => {
+    const forumCount = Number(item.forum_count || 0);
+    const projectCount = Number(item.project_count || 0);
+    return {
+      ...item,
+      items: forumCount + projectCount,
+      colorClass: TAG_COLORS[index % TAG_COLORS.length],
+    };
+  };
 
   const fetchTags = async () => {
     try {

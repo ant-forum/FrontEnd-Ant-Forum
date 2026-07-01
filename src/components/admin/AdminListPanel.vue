@@ -4,7 +4,7 @@
       <div>
         <h2>{{ title }}</h2>
         <p>{{ subtitle }}</p>
-        
+
         <!-- Filter Tabs -->
         <div v-if="showTabs" class="filter-tabs">
           <button
@@ -124,14 +124,31 @@
                     <span>Edit</span>
                   </button>
                   <button
-                    v-if="itemLabel === 'users'"
+                    v-if="
+                      itemLabel === 'users' &&
+                      ['Active', 'Suspended'].includes(row.status)
+                    "
                     type="button"
                     @click.stop="handleDelete(row)"
                     class="dropdown-item"
-                    :class="{ 'delete': row.status === 'Active' }"
+                    :class="{ delete: row.status === 'Active' }"
                   >
-                    <i :class="['bi', row.status === 'Active' ? 'bi-person-x-fill text-danger' : 'bi-person-check-fill text-success']"></i>
-                    <span :class="row.status === 'Active' ? 'text-danger' : 'text-success'">{{ row.status === 'Active' ? 'Suspend' : 'Reactivate' }}</span>
+                    <i
+                      :class="[
+                        'bi',
+                        row.status === 'Active'
+                          ? 'bi-person-x-fill text-danger'
+                          : 'bi-person-check-fill text-success',
+                      ]"
+                    ></i>
+                    <span
+                      :class="
+                        row.status === 'Active' ? 'text-danger' : 'text-success'
+                      "
+                      >{{
+                        row.status === "Active" ? "Suspend" : "Reactivate"
+                      }}</span
+                    >
                   </button>
                   <button
                     v-else
@@ -366,7 +383,8 @@ const statusClass = (status) => {
     value.includes("scheduled")
   )
     return "warning";
-  if (value.includes("deactivated") || value.includes("inactive")) return "neutral";
+  if (value.includes("deactivated") || value.includes("inactive"))
+    return "neutral";
   return "neutral";
 };
 

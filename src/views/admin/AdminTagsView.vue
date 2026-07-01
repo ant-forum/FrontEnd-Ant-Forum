@@ -189,11 +189,18 @@ const metrics = computed(() => [
     className: "blue",
   },
   {
-    label: "Described",
-    value: tags.value.filter((tag) => tag.description).length,
-    change: "Ready to use",
-    icon: "bi-card-text",
+    label: "Active Tags",
+    value: tags.value.filter((tag) => tag.items > 0).length,
+    change: "Currently in use",
+    icon: "bi-activity",
     className: "green",
+  },
+  {
+    label: "Total Usages",
+    value: tags.value.reduce((acc, tag) => acc + (tag.items || 0), 0),
+    change: "Forums & Projects",
+    icon: "bi-bar-chart",
+    className: "blue",
   },
   {
     label: "Needs Copy",
@@ -201,13 +208,6 @@ const metrics = computed(() => [
     change: "Missing description",
     icon: "bi-pencil",
     className: "orange",
-  },
-  {
-    label: "Source",
-    value: "API",
-    change: "Live tag records",
-    icon: "bi-cloud-check",
-    className: "blue",
   },
 ]);
 

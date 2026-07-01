@@ -86,6 +86,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .modal {
   display: block;
+  z-index: 1055;
 }
 
 .modal-content {
@@ -165,6 +166,7 @@ onBeforeUnmount(() => {
   background-color: rgba(2, 6, 23, 0.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  z-index: 1050;
 }
 
 .modal-enter-active,
