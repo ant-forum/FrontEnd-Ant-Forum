@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "../api/api.js";
 import { useForumStore } from "./ForumStore";
+import { useAuthStore } from "./AuthStore";
 
 export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref([]);
@@ -21,6 +22,11 @@ export const useNotificationStore = defineStore("notification", () => {
   // Actions
   // Actions
   const fetchNotifications = async () => {
+    const authStore = useAuthStore();
+    if (!authStore.token) {
+      notifications.value = [];
+      return;
+    }
     loading.value = true;
     try {
       const response = await api.get('/api/notifications/getnotification');

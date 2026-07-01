@@ -233,16 +233,26 @@ export const useForumStore = defineStore("forum", () => {
     try {
       isLoading.value = true;
 
+      const authStore = useAuthStore();
+      const hasToken = !!authStore.token;
+
       // Parallel fetch discussions and bookmarks (gracefully handle guest users/unauthorized)
-      const [discussionsRes, bookmarksRes] = await Promise.allSettled([
+      const promises = [
         api.get("/api/forums/getAllforum", {
           params: {
             page: page.value,
             limit: 6,
           },
         }),
-        api.get("/api/saved/my-bookmarks"),
-      ]);
+      ];
+
+      if (hasToken) {
+        promises.push(api.get("/api/saved/my-bookmarks"));
+      }
+
+      const results = await Promise.allSettled(promises);
+      const discussionsRes = results[0];
+      const bookmarksRes = hasToken ? results[1] : null;
 
       let discussionsData = [];
       if (discussionsRes.status === "fulfilled") {
@@ -255,7 +265,7 @@ export const useForumStore = defineStore("forum", () => {
       }
 
       let bookmarkedIds = new Set();
-      if (bookmarksRes.status === "fulfilled") {
+      if (bookmarksRes && bookmarksRes.status === "fulfilled") {
         const raw = bookmarksRes.value.data;
         let bookmarksData = [];
         if (Array.isArray(raw)) {
@@ -350,12 +360,22 @@ export const useForumStore = defineStore("forum", () => {
     try {
       isLoading.value = true;
 
-      const [discussionRes, bookmarksRes, commentsRes] =
-        await Promise.allSettled([
-          api.get(`/api/forums/getforumById/${id}`),
-          api.get("/api/saved/my-bookmarks"),
-          api.get(`/api/comments/forum/${id}`),
-        ]);
+      const authStore = useAuthStore();
+      const hasToken = !!authStore.token;
+
+      const promises = [
+        api.get(`/api/forums/getforumById/${id}`),
+        api.get(`/api/comments/forum/${id}`),
+      ];
+
+      if (hasToken) {
+        promises.push(api.get("/api/saved/my-bookmarks"));
+      }
+
+      const results = await Promise.allSettled(promises);
+      const discussionRes = results[0];
+      const commentsRes = results[1];
+      const bookmarksRes = hasToken ? results[2] : null;
 
       let discussionData = null;
       if (discussionRes.status === "fulfilled") {
@@ -364,7 +384,7 @@ export const useForumStore = defineStore("forum", () => {
       }
 
       let isBookmarked = false;
-      if (bookmarksRes.status === "fulfilled") {
+      if (bookmarksRes && bookmarksRes.status === "fulfilled") {
         const raw = bookmarksRes.value.data;
         let bookmarksData = [];
         if (Array.isArray(raw)) {
@@ -1166,6 +1186,11 @@ export const useForumStore = defineStore("forum", () => {
   };
 
   const fetchBookmarks = async () => {
+    const authStore = useAuthStore();
+    if (!authStore.token) {
+      setBookmarks([]);
+      return [];
+    }
     try {
       const res = await api.get("/api/saved/my-bookmarks");
 
@@ -1645,23 +1670,26 @@ export const useForumStore = defineStore("forum", () => {
         }
 
         let bookmarkedIds = new Set();
-        try {
-          const bookmarksRes = await api.get("/api/saved/my-bookmarks");
-          const raw = bookmarksRes.data;
-          let bookmarksData = [];
-          if (Array.isArray(raw)) {
-            bookmarksData = raw;
-          } else if (raw && Array.isArray(raw.data)) {
-            bookmarksData = raw.data;
+        const authStore = useAuthStore();
+        if (authStore.token) {
+          try {
+            const bookmarksRes = await api.get("/api/saved/my-bookmarks");
+            const raw = bookmarksRes.data;
+            let bookmarksData = [];
+            if (Array.isArray(raw)) {
+              bookmarksData = raw;
+            } else if (raw && Array.isArray(raw.data)) {
+              bookmarksData = raw.data;
+            }
+            bookmarksData.forEach((item) => {
+              if (item.forum_id) bookmarkedIds.add(Number(item.forum_id));
+              else if (item.forum && item.forum.id)
+                bookmarkedIds.add(Number(item.forum.id));
+              else if (item.id) bookmarkedIds.add(Number(item.id));
+            });
+          } catch {
+            // Bookmarks are optional for tag browsing.
           }
-          bookmarksData.forEach((item) => {
-            if (item.forum_id) bookmarkedIds.add(Number(item.forum_id));
-            else if (item.forum && item.forum.id)
-              bookmarkedIds.add(Number(item.forum.id));
-            else if (item.id) bookmarkedIds.add(Number(item.id));
-          });
-        } catch {
-          // Bookmarks are optional for tag browsing.
         }
 
         const mappedDiscussions = forumsList.map((d) => {
