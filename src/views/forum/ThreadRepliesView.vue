@@ -1,5 +1,12 @@
 <script setup>
-import { onMounted, onBeforeUnmount, ref, nextTick, watch, computed } from "vue";
+import {
+  onMounted,
+  onBeforeUnmount,
+  ref,
+  nextTick,
+  watch,
+  computed,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Navbar from "@/components/layouts/header.vue";
 import LeftSidebar from "@/components/forum/LeftSidebar.vue";
@@ -14,7 +21,6 @@ import { useToast } from "vue-toastification";
 import ReportModal from "@/components/base/ReportModal.vue";
 import hljs from "highlight.js";
 import "highlight.js/styles/atom-one-dark.css";
-
 
 const showReportModal = ref(false);
 const showMoreActionsDropdown = ref(false);
@@ -38,6 +44,7 @@ const newAnswerText = ref("");
 const inlineReplyText = ref("");
 const replyTarget = ref(null);
 const repliesEnd = ref(null);
+const viewedImage = ref(null);
 
 const categoryGradients = [
   "linear-gradient(135deg, #3b82f6, #1d4ed8)",
@@ -118,7 +125,7 @@ const attachedCodeSnippetRegex =
 
 const extractedCodeData = computed(() => {
   if (!discussion.value) return { body: "", code: "" };
-  
+
   const candidates = [
     discussion.value.body,
     discussion.value.description,
@@ -126,26 +133,100 @@ const extractedCodeData = computed(() => {
   ].filter(Boolean);
 
   const titlePlain = normalizePlain(discussion.value.title);
-  const rawBody = candidates.find(
-    (candidate) => normalizePlain(candidate) !== titlePlain,
-  ) || "";
+  const rawBody =
+    candidates.find((candidate) => normalizePlain(candidate) !== titlePlain) ||
+    "";
 
   const match = rawBody.match(attachedCodeSnippetRegex);
   if (match) {
     return {
       body: rawBody.replace(attachedCodeSnippetRegex, "").trim(),
-      code: match[1].trimEnd()
+      code: match[1].trimEnd(),
     };
   }
 
   return {
     body: rawBody,
-    code: discussion.value.hasCode || discussion.value.code ? discussion.value.code : ""
+    code:
+      discussion.value.hasCode || discussion.value.code
+        ? discussion.value.code
+        : "",
   };
 });
 
 const discussionBody = computed(() => extractedCodeData.value.body);
 const separateThreadCode = computed(() => extractedCodeData.value.code);
+
+const renderForumContent = (value = "") => {
+  const html = renderStoredContent(value);
+  if (typeof document === "undefined" || !html.includes("<img")) return html;
+
+  const template = document.createElement("template");
+  template.innerHTML = html;
+
+  template.content.querySelectorAll("img").forEach((image, index) => {
+    const imageUrl = image.getAttribute("src");
+    if (!imageUrl) {
+      image.remove();
+      return;
+    }
+
+    const imageAlt = image.getAttribute("alt")?.trim();
+    const existingLink =
+      image.parentElement?.tagName === "A" ? image.parentElement : null;
+    const attachmentButton = document.createElement("button");
+
+    attachmentButton.type = "button";
+    attachmentButton.className = "forum-image-attachment";
+    attachmentButton.dataset.imageSrc = imageUrl;
+    attachmentButton.dataset.imageAlt = imageAlt || "Attached forum image";
+    attachmentButton.setAttribute(
+      "aria-label",
+      imageAlt ? `View image: ${imageAlt}` : `View attached image ${index + 1}`,
+    );
+
+    const icon = document.createElement("i");
+    icon.className = "bi bi-image";
+    icon.setAttribute("aria-hidden", "true");
+
+    const label = document.createElement("span");
+    label.textContent = "View attached image";
+
+    const openIcon = document.createElement("i");
+    openIcon.className = "bi bi-arrows-fullscreen";
+    openIcon.setAttribute("aria-hidden", "true");
+
+    attachmentButton.append(icon, label, openIcon);
+    (existingLink || image).replaceWith(attachmentButton);
+  });
+
+  return template.innerHTML;
+};
+
+const closeImageViewer = () => {
+  viewedImage.value = null;
+  document.body.classList.remove("forum-image-viewer-open");
+  window.removeEventListener("keydown", handleImageViewerKeydown);
+};
+
+const handleImageViewerKeydown = (event) => {
+  if (event.key === "Escape") closeImageViewer();
+};
+
+const handleForumContentClick = (event) => {
+  const target =
+    event.target instanceof Element
+      ? event.target.closest(".forum-image-attachment")
+      : null;
+  if (!target?.dataset.imageSrc) return;
+
+  viewedImage.value = {
+    src: target.dataset.imageSrc,
+    alt: target.dataset.imageAlt || "Attached forum image",
+  };
+  document.body.classList.add("forum-image-viewer-open");
+  window.addEventListener("keydown", handleImageViewerKeydown);
+};
 
 const replyCount = computed(() => {
   return Array.isArray(discussion.value?.replies)
@@ -160,16 +241,19 @@ const answerCount = computed(() => {
 
 const sortedReplies = computed(() => {
   if (!Array.isArray(discussion.value?.replies)) return [];
-  return discussion.value.replies.filter((reply) => !reply.parent_id).sort((a, b) => {
-    const acceptedDiff = Number(Boolean(b.is_accepted)) - Number(Boolean(a.is_accepted));
-    if (acceptedDiff !== 0) return acceptedDiff;
-    const likeDiff = Number(b.likes || 0) - Number(a.likes || 0);
-    if (likeDiff !== 0) return likeDiff;
-    return (
-      new Date(a.created_at || a.createdAt || a.timestamp || 0) -
-      new Date(b.created_at || b.createdAt || b.timestamp || 0)
-    );
-  });
+  return discussion.value.replies
+    .filter((reply) => !reply.parent_id)
+    .sort((a, b) => {
+      const acceptedDiff =
+        Number(Boolean(b.is_accepted)) - Number(Boolean(a.is_accepted));
+      if (acceptedDiff !== 0) return acceptedDiff;
+      const likeDiff = Number(b.likes || 0) - Number(a.likes || 0);
+      if (likeDiff !== 0) return likeDiff;
+      return (
+        new Date(a.created_at || a.createdAt || a.timestamp || 0) -
+        new Date(b.created_at || b.createdAt || b.timestamp || 0)
+      );
+    });
 });
 
 const topReplyId = computed(() => {
@@ -243,6 +327,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", closeDropdown);
+  document.body.classList.remove("forum-image-viewer-open");
+  window.removeEventListener("keydown", handleImageViewerKeydown);
 });
 
 // Utility to handle scrolling to a hash comment
@@ -256,7 +342,8 @@ const scrollToHash = () => {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
           // Optional: Add a highlight effect
           el.style.transition = "background-color 1s ease";
-          el.style.backgroundColor = "var(--bs-primary-bg-subtle, rgba(13, 110, 253, 0.15))";
+          el.style.backgroundColor =
+            "var(--bs-primary-bg-subtle, rgba(13, 110, 253, 0.15))";
           setTimeout(() => {
             el.style.backgroundColor = "";
           }, 2000);
@@ -298,7 +385,10 @@ const selectTag = (tagName) => {
 const handleVote = async (direction) => {
   if (discussion.value) {
     try {
-      const res = await forumStore.toggleVoteDiscussion(discussion.value.id, direction);
+      const res = await forumStore.toggleVoteDiscussion(
+        discussion.value.id,
+        direction,
+      );
       if (res && res.ignored) return;
       toast.success(
         direction === "up" ? "Discussion upvoted!" : "Discussion downvoted!",
@@ -463,11 +553,14 @@ const canDeleteReply = (reply) => {
 };
 
 const canAcceptReply = (reply) => {
-  if (!reply || reply.parent_id || !discussion.value || !authStore.user) return false;
+  if (!reply || reply.parent_id || !discussion.value || !authStore.user)
+    return false;
   if (String(authStore.user.role || "").toLowerCase() === "admin") return true;
   const currentUserId = authStore.user.id;
   const discussionUserId = discussion.value.user_id || discussion.value.userId;
-  return Boolean(currentUserId && discussionUserId && currentUserId == discussionUserId);
+  return Boolean(
+    currentUserId && discussionUserId && currentUserId == discussionUserId,
+  );
 };
 
 const discussionAuthor = computed(() => {
@@ -535,7 +628,9 @@ const toggleAcceptReply = async (reply) => {
   const wasAccepted = Boolean(reply.is_accepted);
   try {
     await forumStore.acceptComment(reply.id);
-    toast.success(wasAccepted ? "Accepted answer removed." : "Answer accepted.");
+    toast.success(
+      wasAccepted ? "Accepted answer removed." : "Answer accepted.",
+    );
   } catch (err) {
     console.error("Failed to accept answer:", err);
     toast.error("Failed to update accepted answer.");
@@ -598,7 +693,7 @@ const setupCopyButtons = () => {
   nextTick(() => {
     // 1. Syntax highlight using highlight.js
     const codeBlocks = document.querySelectorAll(
-      ".thread-body pre code, .reply-body pre code, .thread-code-block code"
+      ".thread-body pre code, .reply-body pre code, .thread-code-block code",
     );
     codeBlocks.forEach((block) => {
       // Avoid highlighting already highlighted elements if any
@@ -776,7 +871,7 @@ function getAvatarUrl(author) {
                   class="category-badge"
                   :style="{
                     background: getCategoryMeta(discussion).gradient,
-                    margin: 0
+                    margin: 0,
                   }"
                 >
                   <i :class="['bi', getCategoryMeta(discussion).icon]"></i>
@@ -787,14 +882,14 @@ function getAvatarUrl(author) {
                 <div
                   v-if="discussion.tags && discussion.tags.length > 0"
                   class="thread-tags-box"
-                  style="margin: 0; display: flex; flex-wrap: wrap; gap: 4px;"
+                  style="margin: 0; display: flex; flex-wrap: wrap; gap: 4px"
                 >
                   <span
                     v-for="t in discussion.tags"
                     :key="t.label"
                     class="tag-badge"
                     @click="selectTag(t.label)"
-                    style="cursor: pointer; margin: 0;"
+                    style="cursor: pointer; margin: 0"
                   >
                     #{{ t.label }}
                   </span>
@@ -804,7 +899,7 @@ function getAvatarUrl(author) {
                 <span
                   v-if="discussion.hasCode || separateThreadCode"
                   class="snippet-badge"
-                  style="margin: 0;"
+                  style="margin: 0"
                 >
                   <i class="bi bi-code-slash"></i> Snippet
                 </span>
@@ -813,8 +908,9 @@ function getAvatarUrl(author) {
 
             <div
               class="thread-body"
+              @click="handleForumContentClick"
               v-html="
-                renderStoredContent(discussionBody || 'No description provided.')
+                renderForumContent(discussionBody || 'No description provided.')
               "
             ></div>
 
@@ -877,7 +973,9 @@ function getAvatarUrl(author) {
                 <div class="more-actions-container">
                   <button
                     class="action-btn more-btn"
-                    @click.stop="showMoreActionsDropdown = !showMoreActionsDropdown"
+                    @click.stop="
+                      showMoreActionsDropdown = !showMoreActionsDropdown
+                    "
                     aria-label="More actions"
                   >
                     <i class="bi bi-three-dots"></i>
@@ -976,9 +1074,7 @@ function getAvatarUrl(author) {
                     getAvatarInitials(authStore.user || "@current_user")
                   }}</span>
                 </div>
-                <span class="input-prompt">
-                  Add an answer
-                </span>
+                <span class="input-prompt"> Add an answer </span>
               </div>
 
               <MarkdownEditor
@@ -999,8 +1095,14 @@ function getAvatarUrl(author) {
                   :disabled="!newAnswerText.trim() || isPostingReply"
                   @click="postAnswer"
                 >
-                  <span v-if="isPostingReply" class="spinner-border spinner-border-sm" style="margin-right: 8px;" role="status" aria-hidden="true"></span>
-                  {{ isPostingReply ? 'Posting...' : 'Post Answer' }}
+                  <span
+                    v-if="isPostingReply"
+                    class="spinner-border spinner-border-sm"
+                    style="margin-right: 8px"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  {{ isPostingReply ? "Posting..." : "Post Answer" }}
                 </button>
               </div>
             </div>
@@ -1101,7 +1203,8 @@ function getAvatarUrl(author) {
                     </div>
                     <div
                       class="reply-body"
-                      v-html="renderStoredContent(reply.body || '')"
+                      @click="handleForumContentClick"
+                      v-html="renderForumContent(reply.body || '')"
                     ></div>
 
                     <div class="reply-actions">
@@ -1125,7 +1228,9 @@ function getAvatarUrl(author) {
                               : 'bi bi-check-circle',
                           ]"
                         ></i>
-                        <span>{{ reply.is_accepted ? 'Accepted' : 'Accept answer' }}</span>
+                        <span>{{
+                          reply.is_accepted ? "Accepted" : "Accept answer"
+                        }}</span>
                       </button>
                       <button
                         v-if="canDeleteReply(reply)"
@@ -1145,7 +1250,9 @@ function getAvatarUrl(author) {
                       <div class="inline-reply-header">
                         <div
                           class="reply-avatar current-user"
-                          :style="getAvatarStyle(authStore.user || '@current_user')"
+                          :style="
+                            getAvatarStyle(authStore.user || '@current_user')
+                          "
                         >
                           <img
                             v-if="getAvatarUrl(authStore.user)"
@@ -1180,8 +1287,14 @@ function getAvatarUrl(author) {
                           :disabled="!inlineReplyText.trim() || isPostingReply"
                           @click="postInlineReply"
                         >
-                          <span v-if="isPostingReply" class="spinner-border spinner-border-sm" style="margin-right: 8px;" role="status" aria-hidden="true"></span>
-                          {{ isPostingReply ? 'Posting...' : 'Post Reply' }}
+                          <span
+                            v-if="isPostingReply"
+                            class="spinner-border spinner-border-sm"
+                            style="margin-right: 8px"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
+                          {{ isPostingReply ? "Posting..." : "Post Reply" }}
                         </button>
                       </div>
                     </div>
@@ -1229,7 +1342,8 @@ function getAvatarUrl(author) {
 
                         <div
                           class="reply-body nested-reply-body"
-                          v-html="renderStoredContent(child.body || '')"
+                          @click="handleForumContentClick"
+                          v-html="renderForumContent(child.body || '')"
                         ></div>
 
                         <div class="reply-actions nested-reply-actions">
@@ -1321,6 +1435,51 @@ function getAvatarUrl(author) {
       title="Report Discussion Thread"
       @closeModal="showReportModal = false"
     />
+
+    <Teleport to="body">
+      <Transition name="forum-image-viewer">
+        <div
+          v-if="viewedImage"
+          class="forum-image-viewer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Attached image viewer"
+          @click.self="closeImageViewer"
+        >
+          <section class="forum-image-viewer-dialog">
+            <header class="forum-image-viewer-header">
+              <div>
+                <span>Forum attachment</span>
+                <strong>Image preview</strong>
+              </div>
+              <button
+                type="button"
+                aria-label="Close image viewer"
+                title="Close"
+                @click="closeImageViewer"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </header>
+
+            <div class="forum-image-viewer-stage">
+              <img :src="viewedImage.src" :alt="viewedImage.alt" />
+            </div>
+
+            <footer class="forum-image-viewer-footer">
+              <button
+                type="button"
+                class="forum-image-back-btn"
+                @click="closeImageViewer"
+              >
+                <i class="bi bi-arrow-left"></i>
+                Back to discussion
+              </button>
+            </footer>
+          </section>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1441,7 +1600,7 @@ function getAvatarUrl(author) {
 }
 
 .thread-title {
-  font-size: clamp(1.4rem, 3.2vw, 2.0rem);
+  font-size: clamp(1.4rem, 3.2vw, 2rem);
   font-weight: 800;
   color: var(--color-text);
   margin: 4px 0 0 0;
@@ -1531,6 +1690,187 @@ function getAvatarUrl(author) {
   border: 1px solid var(--color-border);
 }
 
+.thread-body :deep(.forum-image-attachment),
+.reply-body :deep(.forum-image-attachment) {
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.85rem;
+  color: var(--color-primary);
+  background: var(--color-primary-soft, rgba(84, 131, 179, 0.12));
+  border: 1px solid rgba(84, 131, 179, 0.35);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.thread-body :deep(.forum-image-attachment:hover),
+.reply-body :deep(.forum-image-attachment:hover) {
+  color: var(--color-primary);
+  background: var(--color-primary-soft, rgba(84, 131, 179, 0.2));
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.thread-body :deep(.forum-image-attachment .bi-arrows-fullscreen),
+.reply-body :deep(.forum-image-attachment .bi-arrows-fullscreen) {
+  font-size: 0.72rem;
+  opacity: 0.72;
+}
+
+:global(body.forum-image-viewer-open) {
+  overflow: hidden;
+}
+
+.forum-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: rgba(2, 6, 23, 0.88);
+  backdrop-filter: blur(10px);
+}
+
+.forum-image-viewer-dialog {
+  width: min(1200px, 96vw);
+  height: min(900px, 94vh);
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+}
+
+.forum-image-viewer-header,
+.forum-image-viewer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  background: var(--color-surface);
+}
+
+.forum-image-viewer-header {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.forum-image-viewer-header div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.forum-image-viewer-header span {
+  color: var(--color-primary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.forum-image-viewer-header strong {
+  font-size: 1rem;
+}
+
+.forum-image-viewer-header button {
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.forum-image-viewer-header button:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.forum-image-viewer-stage {
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  overflow: auto;
+  background:
+    linear-gradient(45deg, rgba(148, 163, 184, 0.08) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(148, 163, 184, 0.08) 25%, transparent 25%),
+    #050914;
+  background-position:
+    0 0,
+    8px 8px;
+  background-size: 16px 16px;
+}
+
+.forum-image-viewer-stage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+.forum-image-viewer-footer {
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-border);
+}
+
+.forum-image-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  color: white;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.forum-image-back-btn:hover {
+  filter: brightness(1.08);
+}
+
+.forum-image-viewer-enter-active,
+.forum-image-viewer-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.forum-image-viewer-enter-active .forum-image-viewer-dialog,
+.forum-image-viewer-leave-active .forum-image-viewer-dialog {
+  transition: transform 0.2s ease;
+}
+
+.forum-image-viewer-enter-from,
+.forum-image-viewer-leave-to {
+  opacity: 0;
+}
+
+.forum-image-viewer-enter-from .forum-image-viewer-dialog,
+.forum-image-viewer-leave-to .forum-image-viewer-dialog {
+  transform: scale(0.97) translateY(8px);
+}
+
 /* Monospaced code snippets styling */
 .thread-body :deep(code),
 .reply-body :deep(code),
@@ -1570,7 +1910,9 @@ function getAvatarUrl(author) {
   border: none !important;
   font-size: 13.5px !important;
   line-height: 1.6 !important;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-family:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace !important;
   overflow-x: auto !important;
   white-space: pre !important;
   word-break: normal !important;
@@ -1662,7 +2004,8 @@ function getAvatarUrl(author) {
 
 .thread-code-block code {
   display: block !important;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  font-family:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
   font-size: 13.5px;
   line-height: 1.6;
   color: #abb2bf;
@@ -1686,7 +2029,7 @@ function getAvatarUrl(author) {
 .code-lang {
   font-size: 11px;
   font-weight: 700;
-  color: #5483B3;
+  color: #5483b3;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1703,10 +2046,15 @@ function getAvatarUrl(author) {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.code-dots span:nth-child(1) { background: #ef4444; }
-.code-dots span:nth-child(2) { background: #f59e0b; }
-.code-dots span:nth-child(3) { background: #10b981; }
-
+.code-dots span:nth-child(1) {
+  background: #ef4444;
+}
+.code-dots span:nth-child(2) {
+  background: #f59e0b;
+}
+.code-dots span:nth-child(3) {
+  background: #10b981;
+}
 
 .thread-tags-box {
   display: flex;
@@ -2153,7 +2501,8 @@ function getAvatarUrl(author) {
   gap: 10px;
   margin-top: 16px;
   padding-left: 18px;
-  border-left: 2px solid color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+  border-left: 2px solid
+    color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
 }
 
 .nested-reply-card {
@@ -2195,9 +2544,14 @@ function getAvatarUrl(author) {
 .inline-reply-composer {
   margin: 16px 0 2px;
   padding: 14px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
   border-radius: 10px;
-  background: color-mix(in srgb, var(--color-bg) 72%, var(--color-primary-light));
+  background: color-mix(
+    in srgb,
+    var(--color-bg) 72%,
+    var(--color-primary-light)
+  );
   box-shadow: var(--focus-ring);
 }
 

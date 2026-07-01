@@ -55,14 +55,11 @@ const metrics = computed(() => [
     className: "blue",
   },
   {
-    label: "Create Forum",
-    value: "New Post",
-    change: "Start a discussion",
-    icon: "bi-plus-circle",
+    label: "Total Replies",
+    value: String(forumStore.discussions.reduce((acc, thread) => acc + (Number(thread.replies) || 0), 0)),
+    change: "Community responses",
+    icon: "bi-chat-left-dots",
     className: "green",
-    onClick: () => {
-      threadQueueRef.value?.openCreate();
-    },
   },
 ]);
 </script>

@@ -348,6 +348,14 @@ router.beforeEach(async (to, from) => {
   }
 
   const isLoggedIn = !!authStore.token && !!authStore.user;
+  const isPendingAccount =
+    String(authStore.user?.status || "").toLowerCase() === "pending";
+
+  if (isLoggedIn && isPendingAccount && to.name !== "verify") {
+    sessionStorage.setItem("ANT_FirstLogin", "true");
+    sessionStorage.setItem("ANT_VerifiedToken", authStore.token);
+    return { name: "verify" };
+  }
 
   // 2. Redirect logged-in users away from login page to their dashboard
   if (to.name === "login" && isLoggedIn) {
@@ -409,7 +417,11 @@ router.afterEach((to) => {
   }
 
   // Handle auth route class on body
-  if (to.name === "login" || to.name === "forgot-password" || to.name === "verify") {
+  if (
+    to.name === "login" ||
+    to.name === "forgot-password" ||
+    to.name === "verify"
+  ) {
     document.body.classList.add("auth-route");
   } else {
     document.body.classList.remove("auth-route");

@@ -75,40 +75,51 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      const profilePayload = {
-        username,
-        gender,
-      };
-      const bioPayload = { bio: bio ?? null };
-      const skillsPayload = {
-        skills: skillsToText(normalizeSkills(skills)) || null,
-      };
+      const profilePayload = {};
+      if (username !== undefined) profilePayload.username = username;
+      if (gender !== undefined) profilePayload.gender = gender;
 
-      const res = await api.put("/api/update/profile", profilePayload);
-      ensureSuccess(res, "Failed to update profile");
+      let profileResponse = null;
+      if (Object.keys(profilePayload).length > 0) {
+        profileResponse = await api.put("/api/update/profile", profilePayload);
+        ensureSuccess(profileResponse, "Failed to update profile");
+      }
 
       if (fullname !== undefined) {
         const nameRes = await api.post("/api/fullname", { fullname });
         ensureSuccess(nameRes, "Failed to update fullname");
       }
 
-      const bioRes = await api.put("/api/update/bio", bioPayload);
-      ensureSuccess(bioRes, "Failed to update bio");
+      const savedBio = bio === undefined ? undefined : bio || null;
+      if (savedBio !== undefined) {
+        const bioRes = await api.put("/api/update/bio", { bio: savedBio });
+        ensureSuccess(bioRes, "Failed to update bio");
+      }
 
-      const skillsRes = await api.put("/api/update/skills", skillsPayload);
-      ensureSuccess(skillsRes, "Failed to update skills");
+      const savedSkills =
+        skills === undefined
+          ? undefined
+          : skillsToText(normalizeSkills(skills)) || null;
+      if (savedSkills !== undefined) {
+        const skillsRes = await api.put("/api/update/skills", {
+          skills: savedSkills,
+        });
+        ensureSuccess(skillsRes, "Failed to update skills");
+      }
 
       const savedProfilePatch = {
         ...(profile.value || authStore.user || {}),
-        ...normalizeProfileRecord(extractProfilePayload(res.data)),
-        username,
-        gender,
-        name: fullname,
-        fullname,
+        ...normalizeProfileRecord(extractProfilePayload(profileResponse?.data)),
       };
 
-      savedProfilePatch.bio = bioPayload.bio;
-      savedProfilePatch.skills = skillsPayload.skills;
+      if (username !== undefined) savedProfilePatch.username = username;
+      if (gender !== undefined) savedProfilePatch.gender = gender;
+      if (fullname !== undefined) {
+        savedProfilePatch.name = fullname;
+        savedProfilePatch.fullname = fullname;
+      }
+      if (savedBio !== undefined) savedProfilePatch.bio = savedBio;
+      if (savedSkills !== undefined) savedProfilePatch.skills = savedSkills;
 
       const savedProfile = normalizeProfileRecord(savedProfilePatch);
 
@@ -240,9 +251,12 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
    */
   const fetchViewedProjects = async (userId) => {
     const authStore = useAuthStore();
-    const isOwn = authStore.user && Number(authStore.user.id) === Number(userId);
+    const isOwn =
+      authStore.user && Number(authStore.user.id) === Number(userId);
 
-    const endpoint = isOwn ? "/api/projects/getMyProjects" : "/api/projects/getAllProjects";
+    const endpoint = isOwn
+      ? "/api/projects/getMyProjects"
+      : "/api/projects/getAllProjects";
     const res = await api.get(endpoint);
     const allProjects = res.data?.data || res.data || [];
     const userProjects = allProjects.filter(
