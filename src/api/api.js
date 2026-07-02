@@ -172,6 +172,8 @@ api.interceptors.response.use(
     const skipToast =
       originalRequest?.skipGlobalToast ||
       isProfileRequest ||
+      error.response?.status === 401 ||
+      error.response?.status === 403 ||
       error.response?.data?.message
         ?.toLowerCase()
         .includes("validation error") ||

@@ -283,7 +283,11 @@ export const useProjectStore = defineStore("project", () => {
       formData.append("title", rawData.projectName || rawData.title);
       formData.append("description", rawData.description);
       if (rawData.liveDemoUrl || rawData.link) {
-        formData.append("link", rawData.liveDemoUrl || rawData.link);
+        let linkVal = rawData.liveDemoUrl || rawData.link;
+        if (linkVal && !/^https?:\/\//i.test(linkVal)) {
+          linkVal = "https://" + linkVal;
+        }
+        formData.append("link", linkVal);
       }
       if (rawData.thumbnail) {
         formData.append("thumbnail", rawData.thumbnail);
@@ -330,12 +334,14 @@ export const useProjectStore = defineStore("project", () => {
       if (rawData.description)
         formData.append("description", rawData.description);
       if (rawData.liveDemoUrl !== undefined || rawData.link !== undefined) {
-        formData.append(
-          "link",
+        let linkVal =
           rawData.liveDemoUrl !== undefined
             ? rawData.liveDemoUrl
-            : rawData.link,
-        );
+            : rawData.link;
+        if (linkVal && !/^https?:\/\//i.test(linkVal)) {
+          linkVal = "https://" + linkVal;
+        }
+        formData.append("link", linkVal);
       }
       if (rawData.thumbnail) formData.append("thumbnail", rawData.thumbnail);
       if (rawData.tag_ids) {
