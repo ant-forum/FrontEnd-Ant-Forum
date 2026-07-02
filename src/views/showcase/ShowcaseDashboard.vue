@@ -1059,7 +1059,33 @@ onMounted(() => {
     text-align: center;
   }
   .create-btn {
-    justify-content: center;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    width: 56px !important;
+    height: 56px !important;
+    background: var(--color-primary) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .create-btn span {
+    display: none !important;
+  }
+  .create-btn i {
+    font-size: 22px !important;
+    margin: 0 !important;
+  }
+  .create-btn:hover {
+    background: var(--color-primary-hover, #041d44) !important;
+    color: white !important;
+    transform: translateY(-2px);
   }
   .projects-grid {
     grid-template-columns: 1fr;

@@ -677,7 +677,7 @@ const handleSubmit = async () => {
     <Navbar />
 
     <div class="create-page-grid-layout">
-      <LeftSidebar active-tab="questions" />
+      <LeftSidebar active-tab="questions" class="create-left-sidebar" />
 
       <div class="create-wrapper">
         <!-- Back Link & Title Area -->
@@ -1231,9 +1231,6 @@ const handleSubmit = async () => {
   .create-page-grid-layout {
     grid-template-columns: 1fr;
     padding: 20px 16px 40px;
-  }
-  .left-sidebar-navigation {
-    display: none !important;
   }
 }
 

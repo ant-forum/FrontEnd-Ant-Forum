@@ -299,9 +299,9 @@ onMounted(() => {
 
 .brand-logo-img {
   display: block;
-  width: 118px;
+  width: 100px;
   height: auto;
-  max-height: 64px;
+  max-height: 48px;
   object-fit: contain;
 }
 
@@ -420,8 +420,8 @@ onMounted(() => {
   }
 
   .brand-logo-img {
-    width: 108px;
-    max-height: 54px;
+    width: 85px;
+    max-height: 38px;
   }
 }
 

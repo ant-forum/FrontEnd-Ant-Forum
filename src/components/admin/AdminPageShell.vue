@@ -6,16 +6,7 @@
       <AdminTopbar :current-title="title" :breadcrumbs="breadcrumbs" />
 
       <div class="admin-content-wrapper admin-page-content">
-        <header class="admin-page-header">
-          <div>
-            <slot name="before-title"></slot>
-
-            <h1>{{ title }}</h1>
-            <p>{{ subtitle }}</p>
-          </div>
-
-          <slot name="actions"></slot>
-        </header>
+        
 
         <AdminMetricGrid v-if="metrics.length" :metrics="metrics" />
         <slot></slot>
@@ -92,6 +83,12 @@ defineProps({
   max-width: 760px;
   color: var(--color-text-muted);
   margin-bottom: 0;
+}
+
+@media (max-width: 991.98px) {
+  .admin-page-layout {
+    display: block !important;
+  }
 }
 
 @media (max-width: 767.98px) {

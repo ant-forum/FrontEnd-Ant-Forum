@@ -1521,6 +1521,47 @@ function getAvatarUrl(author) {
   }
 }
 
+@media (max-width: 575.98px) {
+  .replies-page-grid-layout {
+    padding: 16px 12px 40px;
+    gap: 16px;
+  }
+  .main-thread {
+    padding: 20px 16px !important;
+    border-radius: 12px !important;
+  }
+  .thread-title {
+    font-size: 1.6rem !important;
+    margin-bottom: 16px !important;
+  }
+  .thread-meta {
+    gap: 10px !important;
+    padding-bottom: 16px !important;
+  }
+  .reply-card {
+    padding: 16px 14px !important;
+    gap: 12px !important;
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    border-radius: 12px !important;
+  }
+  .reply-list-container {
+    padding-left: 12px !important;
+  }
+  .thread-actions {
+    padding-top: 16px !important;
+    gap: 12px !important;
+  }
+  .vote-action-btn,
+  .action-btn {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+  .thread-body :deep(img),
+  .reply-body :deep(img) {
+    height: 250px !important;
+  }
+}
+
 .replies-wrapper {
   max-width: 900px;
   margin: 0;
@@ -1687,6 +1728,17 @@ function getAvatarUrl(author) {
   line-height: 1.75;
   margin-bottom: 24px;
   overflow-wrap: anywhere;
+}
+
+.thread-body :deep(img),
+.reply-body :deep(img) {
+  max-width: 100%;
+  width: 100%;
+  height: 350px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 16px 0;
+  display: block;
 }
 
 .thread-body :deep(p:last-child),

@@ -1559,6 +1559,12 @@ const formatNumber = (num) => {
   .blog-global-grid {
     grid-template-columns: 1fr;
   }
+  .blog-sidebar {
+    order: 2;
+  }
+  .blog-feed-content {
+    order: 1;
+  }
 }
 
 @media (max-width: 640px) {

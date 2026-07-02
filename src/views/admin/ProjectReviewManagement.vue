@@ -580,7 +580,7 @@ onMounted(async () => {
 
 const handleProjectClick = (project) => {
   if (project && project.id) {
-    router.push(`/showcase/${project.id}`);
+    router.push(`/admin/projects/${project.id}`);
   }
 };
 
