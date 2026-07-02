@@ -258,7 +258,8 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
       ? "/api/projects/getMyProjects"
       : "/api/projects/getAllProjects";
     const res = await api.get(endpoint);
-    const allProjects = res.data?.data || res.data || [];
+    const rawData = res.data?.data || res.data;
+    const allProjects = Array.isArray(rawData) ? rawData : [];
     const userProjects = allProjects.filter(
       (p) =>
         Number(p.user_id) === Number(userId) ||

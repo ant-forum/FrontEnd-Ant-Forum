@@ -26,6 +26,51 @@ export const useAuthStore = defineStore("auth", () => {
   const token = ref(getStoredAccessToken());
   const refreshToken = ref(getStoredRefreshSession().refreshToken);
   let refreshTimerId = null;
+  const socket = ref(null);
+
+  const connectSocket = () => {
+    if (socket.value) return;
+    if (!token.value) return;
+
+    const socketUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:5001" : "https://ant-forum.khei.work.gd");
+    
+    import("socket.io-client").then(({ io }) => {
+      if (socket.value) return;
+      socket.value = io(socketUrl, {
+        auth: {
+          token: token.value,
+        },
+      });
+
+      socket.value.on("connect", () => {
+        console.log("WebSocket connected successfully to", socketUrl);
+      });
+
+      socket.value.on("notification", (notification) => {
+        try {
+          const notificationStore = useNotificationStore();
+          const mapped = notificationStore.mapNotification(notification);
+          notificationStore.addNotification(mapped);
+        } catch (err) {
+          console.error("Failed to process real-time notification:", err);
+        }
+      });
+
+      socket.value.on("connect_error", (err) => {
+        console.error("WebSocket connection error:", err);
+      });
+    }).catch(err => {
+      console.error("Failed to load socket.io-client library:", err);
+    });
+  };
+
+  const disconnectSocket = () => {
+    if (socket.value) {
+      socket.value.disconnect();
+      socket.value = null;
+      console.log("WebSocket disconnected.");
+    }
+  };
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
 
@@ -98,9 +143,11 @@ export const useAuthStore = defineStore("auth", () => {
     if (newAccessToken && newRefreshToken) {
       saveStoredTokens(newAccessToken, newRefreshToken, remember);
       scheduleAccessTokenRefresh(newAccessToken);
+      connectSocket();
     } else {
       saveStoredTokens(null, null, remember);
       clearRefreshTimer();
+      disconnectSocket();
     }
   };
 
@@ -109,6 +156,7 @@ export const useAuthStore = defineStore("auth", () => {
     setRememberPreference(false);
     setTokens(null, null);
     setUser(null);
+    disconnectSocket();
 
     try {
       const notificationStore = useNotificationStore();
@@ -302,11 +350,18 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  if (token.value) {
+    connectSocket();
+  }
+
   return {
     user,
     token,
     refreshToken,
     isAuthenticated,
+    socket,
+    connectSocket,
+    disconnectSocket,
     setUser,
     login,
     fetchProfile,
