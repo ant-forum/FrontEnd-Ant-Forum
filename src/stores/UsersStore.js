@@ -75,7 +75,9 @@ export const useUsersStore = defineStore("users", () => {
   const fetchUsers = async (silent = false) => {
     try {
       if (!silent) isListLoading.value = true;
-      const response = await api.get("/api/admin/users");
+      const response = await api.get("/api/admin/users", {
+        skipGlobalToast: true,
+      });
       ensureSuccess(response);
       users.value = getResponseData(response) || [];
       return users.value;

@@ -2,9 +2,11 @@
 import { ref, computed, onMounted } from "vue";
 import { useForumStore } from "@/stores/ForumStore";
 import { useUsersStore } from "@/stores/UsersStore";
+import { useAuthStore } from "@/stores/AuthStore";
 
 const forumStore = useForumStore();
 const usersStore = useUsersStore();
+const authStore = useAuthStore();
 
 const isCollapsed = ref(
   localStorage.getItem("forum_network_status_collapsed") === "true",
@@ -23,10 +25,12 @@ onMounted(async () => {
   }
 
   // Try to fetch users (only works for admins)
-  try {
-    await usersStore.fetchUsers(true); // silent fetch
-  } catch (err) {
-    // Normal users will fail, which is expected
+  if (authStore.user?.role === "admin") {
+    try {
+      await usersStore.fetchUsers(true); // silent fetch
+    } catch (err) {
+      // Normal users will fail, which is expected
+    }
   }
 });
 

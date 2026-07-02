@@ -318,6 +318,7 @@ const loadDiscussion = async (id) => {
 
   loading.value = false;
   setupCopyButtons();
+  scrollToHash();
 };
 
 onMounted(() => {
@@ -340,13 +341,14 @@ const scrollToHash = () => {
         const el = document.querySelector(route.hash);
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
-          // Optional: Add a highlight effect
-          el.style.transition = "background-color 1s ease";
-          el.style.backgroundColor =
-            "var(--bs-primary-bg-subtle, rgba(13, 110, 253, 0.15))";
+          // Highlight using a dark-mode friendly translucent brand color and subtle shadow glow
+          el.style.transition = "background-color 1.2s ease, box-shadow 1.2s ease";
+          el.style.backgroundColor = "rgba(84, 131, 179, 0.22)";
+          el.style.boxShadow = "0 0 20px rgba(84, 131, 179, 0.25)";
           setTimeout(() => {
             el.style.backgroundColor = "";
-          }, 2000);
+            el.style.boxShadow = "";
+          }, 2400);
         }
       }, 300);
     });
@@ -362,6 +364,17 @@ watch(
     }
   },
 );
+
+// Watch for route hash changes (e.g. clicking a notification for a different comment on the same post)
+watch(
+  () => route.hash,
+  (newHash) => {
+    if (newHash) {
+      scrollToHash();
+    }
+  },
+);
+
 
 // Watch for discussion changes and setup copy code buttons
 watch(
