@@ -225,6 +225,15 @@ const handleSubmit = async () => {
     <main class="container py-4 flex-grow-1 create-container">
       <div class="row g-4">
         <div class="col-12">
+          <!-- Back Link -->
+          <nav aria-label="breadcrumb" class="mb-3">
+            <router-link
+              to="/showcase"
+              class="back-link d-inline-flex align-items-center gap-2"
+            >
+              <i class="bi bi-arrow-left"></i> Back to Showcase
+            </router-link>
+          </nav>
           <div class="mb-4">
             <h1 class="fw-bold h2 mb-2 text-adaptive">
               {{ isEditMode ? "Edit Project" : "Create New Project" }}
@@ -555,6 +564,22 @@ const handleSubmit = async () => {
 </template>
 
 <style scoped>
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--color-primary);
+  transform: translateX(-3px);
+}
+
 .create-project-page {
   min-height: 100vh;
   background: transparent;

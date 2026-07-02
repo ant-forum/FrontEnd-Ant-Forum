@@ -71,28 +71,30 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- Mobile Toggle Button -->
-  <button
-    class="sidebar-mobile-toggle-btn d-lg-none"
-    @click="isDrawerMobileOpen = !isDrawerMobileOpen"
-  >
-    <i class="bi bi-grid-fill"></i>
-  </button>
+  <div class="left-sidebar-wrapper">
+    <!-- Mobile Toggle Button -->
+    <button
+      v-if="!isDrawerMobileOpen"
+      class="sidebar-mobile-toggle-btn d-lg-none"
+      @click="isDrawerMobileOpen = !isDrawerMobileOpen"
+    >
+      <i class="bi bi-grid-fill"></i>
+    </button>
 
-  <!-- Mobile Backdrop -->
-  <transition name="fade">
-    <div
-      v-if="isDrawerMobileOpen"
-      class="sidebar-mobile-backdrop"
-      @click="isDrawerMobileOpen = false"
-    ></div>
-  </transition>
+    <!-- Mobile Backdrop -->
+    <transition name="fade">
+      <div
+        v-if="isDrawerMobileOpen"
+        class="sidebar-mobile-backdrop"
+        @click="isDrawerMobileOpen = false"
+      ></div>
+    </transition>
 
-  <aside
-    class="left-sidebar-navigation"
-    :class="{ 'mobile-open': isDrawerMobileOpen }"
-    v-bind="$attrs"
-  >
+    <aside
+      class="left-sidebar-navigation"
+      :class="{ 'mobile-open': isDrawerMobileOpen }"
+      v-bind="$attrs"
+    >
     <!-- Forum Directory Header -->
     <div class="sidebar-header">
       <h2 class="sidebar-title">Forum Directory</h2>
@@ -172,9 +174,17 @@ onMounted(() => {
       </router-link>
     </div>
   </aside>
+  </div>
 </template>
 
 <style scoped>
+.left-sidebar-wrapper {
+  position: sticky;
+  top: 80px;
+  align-self: start;
+  height: fit-content;
+}
+
 .left-sidebar-navigation {
   display: flex;
   flex-direction: column;
@@ -186,12 +196,8 @@ onMounted(() => {
   border: 1px solid var(--color-glass-border);
   box-shadow: var(--shadow-sm), inset 0 1px 1px rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
-  height: fit-content;
   user-select: none;
   min-height: 480px;
-  position: sticky;
-  top: 80px;
-  align-self: start;
 }
 
 .sidebar-header {
@@ -369,12 +375,21 @@ onMounted(() => {
 }
 
 @media (max-width: 1024px) {
+  .left-sidebar-wrapper {
+    position: relative;
+    z-index: 9999;
+  }
+
   .left-sidebar-navigation {
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
     width: 260px;
+    height: 100vh;
+    max-height: 100vh;
+    min-height: auto !important;
+    overflow-y: auto;
     background: var(--color-surface);
     z-index: 9998;
     padding: 32px 24px;

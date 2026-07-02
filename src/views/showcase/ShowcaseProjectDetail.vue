@@ -1042,4 +1042,20 @@ onMounted(async () => {
     height: 320px;
   }
 }
+
+@media (max-width: 575.98px) {
+  .glass-card {
+    padding: 20px 16px !important;
+  }
+
+  .visual-img,
+  .visual-empty-placeholder {
+    height: 200px !important;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}
 </style>

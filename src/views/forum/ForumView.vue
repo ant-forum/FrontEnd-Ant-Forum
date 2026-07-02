@@ -333,7 +333,7 @@ const clearFilters = () => {
 
     <div class="forum-global-grid">
       <!-- Left Column: Left Sidebar Navigation stuck on the left -->
-      <LeftSidebar />
+      <LeftSidebar class="forum-left-sidebar" />
 
       <!-- Right Column: Main Content Container -->
       <div class="forum-main-container">

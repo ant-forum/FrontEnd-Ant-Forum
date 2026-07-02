@@ -9,7 +9,7 @@
             <router-link v-if="crumb.to" :to="crumb.to">{{
               crumb.label
             }}</router-link>
-            <span v-else>{{ crumb.label }}</span>
+            <span v-else>Blog Details</span>
           </template>
         </template>
         <template v-else>
@@ -440,6 +440,7 @@ onUnmounted(() => {
   color: var(--color-text-muted);
   font-size: 0.78rem;
   font-weight: 700;
+  flex-wrap: wrap;
 }
 
 .breadcrumb-line a {

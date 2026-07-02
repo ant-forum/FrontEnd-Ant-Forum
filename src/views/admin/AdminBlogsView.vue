@@ -555,10 +555,8 @@ const clearCategoryFilter = () => {
 };
 
 const navigateToDetail = (post) => {
-  if (post.status === "draft") {
-    router.push(`/admin/blogs/create?id=${post.id}`);
-  } else {
-    router.push(`/blog/${post.id}`);
+  if (post && post.id) {
+    router.push(`/admin/blogs/${post.id}`);
   }
 };
 
@@ -1300,5 +1298,41 @@ const confirmDelete = async () => {
 .fade-scale-leave-to {
   opacity: 0;
   transform: translateY(-4px) scale(0.96);
+}
+
+@media (max-width: 767.98px) {
+  .panel-heading {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .panel-tools {
+    align-items: stretch !important;
+    width: 100%;
+  }
+
+  .search-box {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .create-btn {
+    justify-content: center;
+  }
+
+  .post-row {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem;
+  }
+
+  .post-thumb {
+    width: 60px;
+    height: 60px;
+  }
+
+  .post-actions-block {
+    justify-content: space-between;
+    width: 100%;
+  }
 }
 </style>

@@ -54,7 +54,7 @@ export const useUsersStore = defineStore("users", () => {
   const fetchUsers = async (silent = false) => {
     try {
       if (!silent) isListLoading.value = true;
-      const response = await api.get("/api/admin/gell-all-users");
+      const response = await api.get("/api/admin/get-all-users");
       ensureSuccess(response);
       users.value = response.data.data || response.data;
       return users.value;

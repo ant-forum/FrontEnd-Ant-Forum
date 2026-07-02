@@ -4,6 +4,8 @@ import { useRoute, useRouter } from "vue-router";
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
 import SkeletonLoader from "../../components/SkeletonLoader.vue";
+import hljs from "highlight.js";
+import "highlight.js/styles/atom-one-dark.css";
 
 // ── Text-to-Speech ────────────────────────────────────────────────────────
 const ttsState = ref("idle"); // 'idle' | 'playing' | 'paused'
@@ -199,6 +201,55 @@ const copyArticleLink = () => {
   }, 2000);
 };
 
+const highlightCodeBlocks = () => {
+  nextTick(() => {
+    const codeBlocks = document.querySelectorAll(
+      ".article-body pre code, .article-body code"
+    );
+    codeBlocks.forEach((block) => {
+      if (!block.classList.contains("hljs")) {
+        hljs.highlightElement(block);
+      }
+    });
+
+    const preBlocks = document.querySelectorAll(".article-body pre");
+    preBlocks.forEach((pre) => {
+      if (pre.querySelector(".copy-code-btn")) return;
+
+      pre.style.position = "relative";
+      const codeText = pre.querySelector("code")?.innerText || pre.innerText;
+
+      const btn = document.createElement("button");
+      btn.className = "copy-code-btn";
+      btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy';
+      btn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(codeText);
+          btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy';
+            btn.classList.remove("copied");
+          }, 2000);
+        } catch (err) {
+          console.error("Failed to copy code: ", err);
+        }
+      });
+      pre.appendChild(btn);
+    });
+  });
+};
+
+watch(
+  () => post.value,
+  (newVal) => {
+    if (newVal) {
+      highlightCodeBlocks();
+    }
+  },
+  { deep: true, immediate: true }
+);
+
 const shareOnTwitter = () => {
   const url = encodeURIComponent(window.location.href);
   const text = encodeURIComponent(post.value?.title || "");
@@ -287,6 +338,7 @@ onMounted(async () => {
   await loadBlogData(route.params.id);
   nextTick(() => {
     setupTocObserver();
+    highlightCodeBlocks();
   });
 });
 
@@ -1080,5 +1132,71 @@ const handleImgError = (e) => {
     font-weight: 600;
     gap: 8px;
   }
+}
+
+.article-body :deep(pre) {
+  position: relative !important;
+  background: #181a1f !important;
+  border-radius: 12px !important;
+  margin: 18px 0;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 0 !important;
+}
+
+.article-body :deep(pre code) {
+  display: block !important;
+  background: transparent !important;
+  color: #abb2bf !important;
+  padding: 16px 20px !important;
+  padding-right: 90px !important;
+  border-radius: 12px !important;
+  border: none !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  overflow-x: auto !important;
+  white-space: pre !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+.article-body :deep(code:not(pre code)) {
+  background: var(--color-surface-hover) !important;
+  padding: 3px 6px !important;
+  border-radius: 6px !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 13.5px !important;
+  color: var(--color-danger) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+.article-body :deep(pre .copy-code-btn) {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #abb2bf;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.article-body :deep(pre .copy-code-btn:hover) {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.article-body :deep(pre .copy-code-btn.copied) {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(52, 211, 153, 0.3);
+  color: #34d399;
 }
 </style>

@@ -43,6 +43,9 @@ import AdminReportsView from "../views/admin/AdminReportsView.vue";
 import AdminProfileView from "../views/admin/AdminProfileView.vue";
 import AdminProfileEditView from "../views/admin/AdminProfileEditView.vue";
 import AdminActivityView from "../views/admin/AdminActivityView.vue";
+import AdminProjectDetailsView from "../views/admin/AdminProjectDetailsView.vue";
+import AdminBlogDetailsView from "../views/admin/AdminBlogDetailsView.vue";
+import AdminThreadDetailsView from "../views/admin/AdminThreadDetailsView.vue";
 
 //this is new
 
@@ -219,10 +222,22 @@ const routes = [
     component: ProjectReviewManagement,
   },
   {
+    path: "/admin/projects/:id",
+    name: "AdminProjectDetails",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminProjectDetailsView,
+  },
+  {
     path: "/admin/threads",
     name: "ThreadManagement",
     meta: { requiresAuth: true, role: "admin" },
     component: ThreadModerationView,
+  },
+  {
+    path: "/admin/threads/:id",
+    name: "AdminThreadDetails",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminThreadDetailsView,
   },
   {
     path: "/admin/analytics",
@@ -253,6 +268,12 @@ const routes = [
     name: "AdminBlogEdit",
     meta: { requiresAuth: true, role: "admin" },
     component: AdminBlogCreateView,
+  },
+  {
+    path: "/admin/blogs/:id",
+    name: "AdminBlogDetails",
+    meta: { requiresAuth: true, role: "admin" },
+    component: AdminBlogDetailsView,
   },
   {
     path: "/admin/categories",
@@ -363,25 +384,21 @@ router.beforeEach(async (to, from) => {
     }
 
     // Role verification guard
-    if (to.meta.role && authStore.user?.role !== to.meta.role) {
+    const routeRole = to.meta.role;
+    const userRole = authStore.user?.role;
+
+    if (routeRole === "admin" && userRole !== "admin") {
       console.warn(
-        `[Route Guard] Unauthorized access attempt to ${to.path}. Required: ${to.meta.role}. Current: ${authStore.user?.role}`,
+        `[Route Guard] Non-admin attempting to access admin route ${to.path}. Current: ${userRole}`,
       );
+      return { name: "not-found" };
+    }
 
-      // Cancel navigation if user was already browsing a valid page inside the app
-      if (from && from.name && from.path !== "/") {
-        return false;
-      }
-
-      // Fallback reload redirect to their last successfully visited page
-      const lastPath = localStorage.getItem("ANT_LastPath");
-      if (lastPath && lastPath !== to.path) {
-        return lastPath;
-      }
-
-      return authStore.user?.role === "admin"
-        ? { name: "AdminDashboard" }
-        : { name: "Dashboard" };
+    if (routeRole !== "admin" && userRole === "admin") {
+      console.warn(
+        `[Route Guard] Admin attempting to access user route ${to.path}.`,
+      );
+      return { name: "not-found" };
     }
   }
 
