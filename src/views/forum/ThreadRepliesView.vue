@@ -1,5 +1,12 @@
 <script setup>
-import { onMounted, ref, nextTick, watch, computed } from "vue";
+import {
+  onMounted,
+  onBeforeUnmount,
+  ref,
+  nextTick,
+  watch,
+  computed,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Navbar from "@/components/layouts/header.vue";
 import LeftSidebar from "@/components/forum/LeftSidebar.vue";
@@ -15,8 +22,14 @@ import ReportModal from "@/components/base/ReportModal.vue";
 import hljs from "highlight.js";
 import "highlight.js/styles/atom-one-dark.css";
 
-
 const showReportModal = ref(false);
+const showMoreActionsDropdown = ref(false);
+
+const closeDropdown = (e) => {
+  if (!e.target.closest(".more-actions-container")) {
+    showMoreActionsDropdown.value = false;
+  }
+};
 
 const route = useRoute();
 const router = useRouter();
@@ -26,8 +39,12 @@ const toast = useToast();
 
 const loading = ref(true);
 const isPostingReply = ref(false);
-const newReplyText = ref("");
+const isAnswerComposerOpen = ref(false);
+const newAnswerText = ref("");
+const inlineReplyText = ref("");
+const replyTarget = ref(null);
 const repliesEnd = ref(null);
+const viewedImage = ref(null);
 
 const categoryGradients = [
   "linear-gradient(135deg, #3b82f6, #1d4ed8)",
@@ -108,7 +125,7 @@ const attachedCodeSnippetRegex =
 
 const extractedCodeData = computed(() => {
   if (!discussion.value) return { body: "", code: "" };
-  
+
   const candidates = [
     discussion.value.body,
     discussion.value.description,
@@ -116,26 +133,100 @@ const extractedCodeData = computed(() => {
   ].filter(Boolean);
 
   const titlePlain = normalizePlain(discussion.value.title);
-  const rawBody = candidates.find(
-    (candidate) => normalizePlain(candidate) !== titlePlain,
-  ) || "";
+  const rawBody =
+    candidates.find((candidate) => normalizePlain(candidate) !== titlePlain) ||
+    "";
 
   const match = rawBody.match(attachedCodeSnippetRegex);
   if (match) {
     return {
       body: rawBody.replace(attachedCodeSnippetRegex, "").trim(),
-      code: match[1].trimEnd()
+      code: match[1].trimEnd(),
     };
   }
 
   return {
     body: rawBody,
-    code: discussion.value.hasCode || discussion.value.code ? discussion.value.code : ""
+    code:
+      discussion.value.hasCode || discussion.value.code
+        ? discussion.value.code
+        : "",
   };
 });
 
 const discussionBody = computed(() => extractedCodeData.value.body);
 const separateThreadCode = computed(() => extractedCodeData.value.code);
+
+const renderForumContent = (value = "") => {
+  const html = renderStoredContent(value);
+  if (typeof document === "undefined" || !html.includes("<img")) return html;
+
+  const template = document.createElement("template");
+  template.innerHTML = html;
+
+  template.content.querySelectorAll("img").forEach((image, index) => {
+    const imageUrl = image.getAttribute("src");
+    if (!imageUrl) {
+      image.remove();
+      return;
+    }
+
+    const imageAlt = image.getAttribute("alt")?.trim();
+    const existingLink =
+      image.parentElement?.tagName === "A" ? image.parentElement : null;
+    const attachmentButton = document.createElement("button");
+
+    attachmentButton.type = "button";
+    attachmentButton.className = "forum-image-attachment";
+    attachmentButton.dataset.imageSrc = imageUrl;
+    attachmentButton.dataset.imageAlt = imageAlt || "Attached forum image";
+    attachmentButton.setAttribute(
+      "aria-label",
+      imageAlt ? `View image: ${imageAlt}` : `View attached image ${index + 1}`,
+    );
+
+    const icon = document.createElement("i");
+    icon.className = "bi bi-image";
+    icon.setAttribute("aria-hidden", "true");
+
+    const label = document.createElement("span");
+    label.textContent = "View attached image";
+
+    const openIcon = document.createElement("i");
+    openIcon.className = "bi bi-arrows-fullscreen";
+    openIcon.setAttribute("aria-hidden", "true");
+
+    attachmentButton.append(icon, label, openIcon);
+    (existingLink || image).replaceWith(attachmentButton);
+  });
+
+  return template.innerHTML;
+};
+
+const closeImageViewer = () => {
+  viewedImage.value = null;
+  document.body.classList.remove("forum-image-viewer-open");
+  window.removeEventListener("keydown", handleImageViewerKeydown);
+};
+
+const handleImageViewerKeydown = (event) => {
+  if (event.key === "Escape") closeImageViewer();
+};
+
+const handleForumContentClick = (event) => {
+  const target =
+    event.target instanceof Element
+      ? event.target.closest(".forum-image-attachment")
+      : null;
+  if (!target?.dataset.imageSrc) return;
+
+  viewedImage.value = {
+    src: target.dataset.imageSrc,
+    alt: target.dataset.imageAlt || "Attached forum image",
+  };
+  document.body.classList.add("forum-image-viewer-open");
+  window.addEventListener("keydown", handleImageViewerKeydown);
+};
 
 const replyCount = computed(() => {
   return Array.isArray(discussion.value?.replies)
@@ -143,22 +234,43 @@ const replyCount = computed(() => {
     : 0;
 });
 
+const answerCount = computed(() => {
+  if (!Array.isArray(discussion.value?.replies)) return 0;
+  return discussion.value.replies.filter((reply) => !reply.parent_id).length;
+});
+
 const sortedReplies = computed(() => {
   if (!Array.isArray(discussion.value?.replies)) return [];
-  return [...discussion.value.replies].sort((a, b) => {
-    const likeDiff = Number(b.likes || 0) - Number(a.likes || 0);
-    if (likeDiff !== 0) return likeDiff;
-    return (
-      new Date(a.created_at || a.createdAt || a.timestamp || 0) -
-      new Date(b.created_at || b.createdAt || b.timestamp || 0)
-    );
-  });
+  return discussion.value.replies
+    .filter((reply) => !reply.parent_id)
+    .sort((a, b) => {
+      const acceptedDiff =
+        Number(Boolean(b.is_accepted)) - Number(Boolean(a.is_accepted));
+      if (acceptedDiff !== 0) return acceptedDiff;
+      const likeDiff = Number(b.likes || 0) - Number(a.likes || 0);
+      if (likeDiff !== 0) return likeDiff;
+      return (
+        new Date(a.created_at || a.createdAt || a.timestamp || 0) -
+        new Date(b.created_at || b.createdAt || b.timestamp || 0)
+      );
+    });
 });
 
 const topReplyId = computed(() => {
-  const first = sortedReplies.value[0];
+  const first = sortedReplies.value.find((reply) => !reply.is_accepted);
   return first && Number(first.likes || 0) > 0 ? first.id : null;
 });
+
+const childReplies = (parentId) => {
+  if (!Array.isArray(discussion.value?.replies)) return [];
+  return discussion.value.replies
+    .filter((reply) => Number(reply.parent_id) === Number(parentId))
+    .sort(
+      (a, b) =>
+        new Date(a.created_at || a.createdAt || a.timestamp || 0) -
+        new Date(b.created_at || b.createdAt || b.timestamp || 0),
+    );
+};
 
 const loadDiscussion = async (id) => {
   loading.value = true;
@@ -206,10 +318,18 @@ const loadDiscussion = async (id) => {
 
   loading.value = false;
   setupCopyButtons();
+  scrollToHash();
 };
 
 onMounted(() => {
   loadDiscussion(route.params.id);
+  document.addEventListener("click", closeDropdown);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", closeDropdown);
+  document.body.classList.remove("forum-image-viewer-open");
+  window.removeEventListener("keydown", handleImageViewerKeydown);
 });
 
 // Utility to handle scrolling to a hash comment
@@ -221,12 +341,14 @@ const scrollToHash = () => {
         const el = document.querySelector(route.hash);
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
-          // Optional: Add a highlight effect
-          el.style.transition = "background-color 1s ease";
-          el.style.backgroundColor = "var(--bs-primary-bg-subtle, rgba(13, 110, 253, 0.15))";
+          // Highlight using a dark-mode friendly translucent brand color and subtle shadow glow
+          el.style.transition = "background-color 1.2s ease, box-shadow 1.2s ease";
+          el.style.backgroundColor = "rgba(84, 131, 179, 0.22)";
+          el.style.boxShadow = "0 0 20px rgba(84, 131, 179, 0.25)";
           setTimeout(() => {
             el.style.backgroundColor = "";
-          }, 2000);
+            el.style.boxShadow = "";
+          }, 2400);
         }
       }, 300);
     });
@@ -242,6 +364,17 @@ watch(
     }
   },
 );
+
+// Watch for route hash changes (e.g. clicking a notification for a different comment on the same post)
+watch(
+  () => route.hash,
+  (newHash) => {
+    if (newHash) {
+      scrollToHash();
+    }
+  },
+);
+
 
 // Watch for discussion changes and setup copy code buttons
 watch(
@@ -265,7 +398,10 @@ const selectTag = (tagName) => {
 const handleVote = async (direction) => {
   if (discussion.value) {
     try {
-      const res = await forumStore.toggleVoteDiscussion(discussion.value.id, direction);
+      const res = await forumStore.toggleVoteDiscussion(
+        discussion.value.id,
+        direction,
+      );
       if (res && res.ignored) return;
       toast.success(
         direction === "up" ? "Discussion upvoted!" : "Discussion downvoted!",
@@ -308,30 +444,79 @@ const handleLikeReply = (reply) => {
   }
 };
 
-const postReply = async () => {
-  if (!newReplyText.value.trim() || isPostingReply.value) return;
+const submitComment = async ({ body, parentId = null, successMessage }) => {
+  if (!body.trim() || isPostingReply.value) return false;
 
   isPostingReply.value = true;
   const replyData = {
-    body: newReplyText.value.trim(),
+    body: body.trim(),
+    parent_id: parentId,
   };
 
   try {
     await forumStore.postReply(discussion.value.id, replyData);
-    newReplyText.value = "";
-    toast.success("Reply posted successfully!");
+    toast.success(successMessage);
 
-    // Trigger smooth scroll to bottom and reload copy actions
     nextTick(() => {
-      scrollToBottom();
       setupCopyButtons();
     });
+    return true;
   } catch (err) {
     console.error("Failed to post reply:", err);
     toast.error("Failed to post reply.");
+    return false;
   } finally {
     isPostingReply.value = false;
   }
+};
+
+const postAnswer = async () => {
+  const posted = await submitComment({
+    body: newAnswerText.value,
+    successMessage: "Answer posted successfully!",
+  });
+  if (posted) {
+    newAnswerText.value = "";
+    isAnswerComposerOpen.value = false;
+    scrollToBottom();
+  }
+};
+
+const openAnswerComposer = () => {
+  isAnswerComposerOpen.value = true;
+};
+
+const cancelAnswerComposer = () => {
+  isAnswerComposerOpen.value = false;
+  newAnswerText.value = "";
+};
+
+const postInlineReply = async () => {
+  if (!replyTarget.value) return;
+  const targetId = replyTarget.value.id;
+  const posted = await submitComment({
+    body: inlineReplyText.value,
+    parentId: targetId,
+    successMessage: "Reply posted successfully!",
+  });
+  if (posted) {
+    inlineReplyText.value = "";
+    replyTarget.value = null;
+  }
+};
+
+const startReplyTo = (reply) => {
+  replyTarget.value = reply;
+  inlineReplyText.value = "";
+  nextTick(() => {
+    const el = document.querySelector(`#inline-reply-${reply.id}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+};
+
+const cancelReplyTarget = () => {
+  replyTarget.value = null;
+  inlineReplyText.value = "";
 };
 
 const canDeleteDiscussion = computed(() => {
@@ -378,6 +563,17 @@ const canDeleteReply = (reply) => {
   }
 
   return false;
+};
+
+const canAcceptReply = (reply) => {
+  if (!reply || reply.parent_id || !discussion.value || !authStore.user)
+    return false;
+  if (String(authStore.user.role || "").toLowerCase() === "admin") return true;
+  const currentUserId = authStore.user.id;
+  const discussionUserId = discussion.value.user_id || discussion.value.userId;
+  return Boolean(
+    currentUserId && discussionUserId && currentUserId == discussionUserId,
+  );
 };
 
 const discussionAuthor = computed(() => {
@@ -440,6 +636,20 @@ const performDeleteReply = async () => {
   }
 };
 
+const toggleAcceptReply = async (reply) => {
+  if (!reply?.id) return;
+  const wasAccepted = Boolean(reply.is_accepted);
+  try {
+    await forumStore.acceptComment(reply.id);
+    toast.success(
+      wasAccepted ? "Accepted answer removed." : "Answer accepted.",
+    );
+  } catch (err) {
+    console.error("Failed to accept answer:", err);
+    toast.error("Failed to update accepted answer.");
+  }
+};
+
 const scrollToBottom = () => {
   repliesEnd.value?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 };
@@ -496,7 +706,7 @@ const setupCopyButtons = () => {
   nextTick(() => {
     // 1. Syntax highlight using highlight.js
     const codeBlocks = document.querySelectorAll(
-      ".thread-body pre code, .reply-body pre code, .thread-code-block code"
+      ".thread-body pre code, .reply-body pre code, .thread-code-block code",
     );
     codeBlocks.forEach((block) => {
       // Avoid highlighting already highlighted elements if any
@@ -638,56 +848,7 @@ function getAvatarUrl(author) {
           <!-- Main Thread Card -->
           <div class="main-thread">
             <div class="thread-header">
-              <div
-                class="thread-header-top-row"
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: flex-start;
-                  margin-bottom: 14px;
-                  gap: 12px;
-                  flex-wrap: wrap;
-                "
-              >
-                <div class="thread-header-meta" style="margin-bottom: 0">
-                  <!-- Styled Category badge -->
-                  <span
-                    v-if="getCategoryMeta(discussion)"
-                    class="category-badge"
-                    :style="{
-                      background: getCategoryMeta(discussion).gradient,
-                    }"
-                  >
-                    <i :class="['bi', getCategoryMeta(discussion).icon]"></i>
-                    {{ getCategoryMeta(discussion).label }}
-                  </span>
-
-                  <!-- Code indicator -->
-                  <span v-if="discussion.hasCode || separateThreadCode" class="snippet-badge">
-                    <i class="bi bi-code-slash"></i> Snippet
-                  </span>
-                </div>
-
-                <!-- Custom tags section moved to top right -->
-                <div
-                  v-if="discussion.tags && discussion.tags.length > 0"
-                  class="thread-tags-box"
-                  style="margin-bottom: 0"
-                >
-                  <span
-                    v-for="t in discussion.tags"
-                    :key="t.label"
-                    class="tag-badge"
-                    @click="selectTag(t.label)"
-                    style="cursor: pointer"
-                  >
-                    #{{ t.label }}
-                  </span>
-                </div>
-              </div>
-
-              <h1 class="thread-title">{{ discussion.title }}</h1>
-
+              <!-- Profile Info -->
               <div class="thread-meta">
                 <div
                   class="thread-avatar"
@@ -711,12 +872,58 @@ function getAvatarUrl(author) {
                   >
                 </div>
               </div>
+
+              <!-- Title -->
+              <h1 class="thread-title">{{ discussion.title }}</h1>
+
+              <!-- Badges under title in the same row -->
+              <div class="thread-meta-right">
+                <!-- Styled Category badge -->
+                <span
+                  v-if="getCategoryMeta(discussion)"
+                  class="category-badge"
+                  :style="{
+                    background: getCategoryMeta(discussion).gradient,
+                    margin: 0,
+                  }"
+                >
+                  <i :class="['bi', getCategoryMeta(discussion).icon]"></i>
+                  {{ getCategoryMeta(discussion).label }}
+                </span>
+
+                <!-- Custom tags section -->
+                <div
+                  v-if="discussion.tags && discussion.tags.length > 0"
+                  class="thread-tags-box"
+                  style="margin: 0; display: flex; flex-wrap: wrap; gap: 4px"
+                >
+                  <span
+                    v-for="t in discussion.tags"
+                    :key="t.label"
+                    class="tag-badge"
+                    @click="selectTag(t.label)"
+                    style="cursor: pointer; margin: 0"
+                  >
+                    #{{ t.label }}
+                  </span>
+                </div>
+
+                <!-- Code indicator -->
+                <span
+                  v-if="discussion.hasCode || separateThreadCode"
+                  class="snippet-badge"
+                  style="margin: 0"
+                >
+                  <i class="bi bi-code-slash"></i> Snippet
+                </span>
+              </div>
             </div>
 
             <div
               class="thread-body"
+              @click="handleForumContentClick"
               v-html="
-                renderStoredContent(discussionBody || 'No description provided.')
+                renderForumContent(discussionBody || 'No description provided.')
               "
             ></div>
 
@@ -772,31 +979,65 @@ function getAvatarUrl(author) {
                       discussion.saved ? 'bi-bookmark-fill' : 'bi-bookmark',
                     ]"
                   ></i>
-                  <span>{{ discussion.saved ? "Saved" : "Save" }}</span>
+                  <!-- <span>{{ discussion.saved ? "Saved" : "Save" }}</span> -->
                 </button>
-                <button
-                  v-if="canDeleteDiscussion"
-                  class="action-btn edit-btn"
-                  @click="editDiscussion"
-                >
-                  <i class="bi bi-pencil-square"></i>
-                  Edit
-                </button>
-                <button
-                  v-if="canDeleteDiscussion"
-                  class="action-btn delete-btn"
-                  @click="confirmDeleteDiscussion"
-                >
-                  <i class="bi bi-trash"></i>
-                  Delete
-                </button>
-                <button class="action-btn report-btn text-danger" @click="showReportModal = true">
-                  <i class="bi bi-flag"></i>
-                  Report
-                </button>
+
+                <!-- More Actions Dropdown -->
+                <div class="more-actions-container">
+                  <button
+                    class="action-btn more-btn"
+                    @click.stop="
+                      showMoreActionsDropdown = !showMoreActionsDropdown
+                    "
+                    aria-label="More actions"
+                  >
+                    <i class="bi bi-three-dots"></i>
+                  </button>
+
+                  <transition name="fade">
+                    <div
+                      v-if="showMoreActionsDropdown"
+                      class="more-dropdown-menu"
+                    >
+                      <button
+                        v-if="canDeleteDiscussion"
+                        class="dropdown-item edit-item"
+                        @click="
+                          editDiscussion();
+                          showMoreActionsDropdown = false;
+                        "
+                      >
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        v-if="canDeleteDiscussion"
+                        class="dropdown-item delete-item text-danger"
+                        @click="
+                          confirmDeleteDiscussion();
+                          showMoreActionsDropdown = false;
+                        "
+                      >
+                        <i class="bi bi-trash"></i>
+                        <span>Delete</span>
+                      </button>
+                      <button
+                        class="dropdown-item report-item text-danger"
+                        @click="
+                          showReportModal = true;
+                          showMoreActionsDropdown = false;
+                        "
+                      >
+                        <i class="bi bi-flag"></i>
+                        <span>Report</span>
+                      </button>
+                    </div>
+                  </transition>
+                </div>
+
                 <button class="action-btn" @click="scrollToBottom">
                   <i class="bi bi-chat-square-text"></i>
-                  {{ replyCount }} {{ replyCount === 1 ? "Reply" : "Replies" }}
+                  {{ replyCount }}
                 </button>
               </div>
             </div>
@@ -804,15 +1045,88 @@ function getAvatarUrl(author) {
 
           <!-- Replies Section -->
           <div class="replies-section">
-            <h2>Discussion Replies ({{ replyCount }})</h2>
+            <h2>Answers ({{ answerCount }})</h2>
+
+            <!-- Add Answer Input -->
+            <button
+              v-if="!isAnswerComposerOpen"
+              type="button"
+              class="answer-collapsed-input"
+              @click="openAnswerComposer"
+            >
+              <div
+                class="reply-avatar current-user"
+                :style="getAvatarStyle(authStore.user || '@current_user')"
+              >
+                <img
+                  v-if="getAvatarUrl(authStore.user)"
+                  :src="getAvatarUrl(authStore.user)"
+                  alt="avatar"
+                  class="avatar-img"
+                />
+                <span v-else>{{
+                  getAvatarInitials(authStore.user || "@current_user")
+                }}</span>
+              </div>
+              <span>Add an answer</span>
+            </button>
+
+            <div v-else class="reply-input-wrapper">
+              <div class="input-header">
+                <div
+                  class="reply-avatar current-user"
+                  :style="getAvatarStyle(authStore.user || '@current_user')"
+                >
+                  <img
+                    v-if="getAvatarUrl(authStore.user)"
+                    :src="getAvatarUrl(authStore.user)"
+                    alt="avatar"
+                    class="avatar-img"
+                  />
+                  <span v-else>{{
+                    getAvatarInitials(authStore.user || "@current_user")
+                  }}</span>
+                </div>
+                <span class="input-prompt"> Add an answer </span>
+              </div>
+
+              <MarkdownEditor
+                v-model="newAnswerText"
+                placeholder="Write a constructive answer... Markdown is supported."
+              />
+
+              <div class="reply-footer">
+                <button
+                  class="cancel-reply-btn"
+                  type="button"
+                  @click="cancelAnswerComposer"
+                >
+                  Cancel
+                </button>
+                <button
+                  class="post-btn"
+                  :disabled="!newAnswerText.trim() || isPostingReply"
+                  @click="postAnswer"
+                >
+                  <span
+                    v-if="isPostingReply"
+                    class="spinner-border spinner-border-sm"
+                    style="margin-right: 8px"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  {{ isPostingReply ? "Posting..." : "Post Answer" }}
+                </button>
+              </div>
+            </div>
 
             <div class="reply-list-container">
               <!-- Sleek Timeline Connector lines -->
               <div class="timeline-line"></div>
 
               <div class="reply-list">
-                <div class="no-replies" v-if="replyCount === 0">
-                  No replies yet. Be the first to share your thoughts!
+                <div class="no-replies" v-if="answerCount === 0">
+                  No answers yet. Be the first to share your solution!
                 </div>
 
                 <div
@@ -825,7 +1139,10 @@ function getAvatarUrl(author) {
                   :id="reply.id ? `comment-${reply.id}` : undefined"
                   :class="[
                     'reply-card',
-                    { 'top-reply': topReplyId && reply.id === topReplyId },
+                    {
+                      'top-reply': topReplyId && reply.id === topReplyId,
+                      'accepted-reply': reply.is_accepted,
+                    },
                   ]"
                 >
                   <div class="reply-vote-col" @click.stop>
@@ -888,20 +1205,179 @@ function getAvatarUrl(author) {
                         <i class="bi bi-stars"></i>
                         Top comment
                       </span>
+
+                      <span
+                        v-if="reply.is_accepted"
+                        class="accepted-reply-badge"
+                      >
+                        <i class="bi bi-check-circle-fill"></i>
+                        Accepted answer
+                      </span>
                     </div>
                     <div
                       class="reply-body"
-                      v-html="renderStoredContent(reply.body || '')"
+                      @click="handleForumContentClick"
+                      v-html="renderForumContent(reply.body || '')"
                     ></div>
 
-                    <div v-if="canDeleteReply(reply)" class="reply-actions">
+                    <div class="reply-actions">
                       <button
+                        class="reply-action-btn"
+                        @click="startReplyTo(reply)"
+                      >
+                        <i class="bi bi-reply"></i>
+                        <span>Reply</span>
+                      </button>
+                      <button
+                        v-if="canAcceptReply(reply)"
+                        class="reply-action-btn accept-answer-btn"
+                        :class="{ accepted: reply.is_accepted }"
+                        @click="toggleAcceptReply(reply)"
+                      >
+                        <i
+                          :class="[
+                            reply.is_accepted
+                              ? 'bi bi-check-circle-fill'
+                              : 'bi bi-check-circle',
+                          ]"
+                        ></i>
+                        <span>{{
+                          reply.is_accepted ? "Accepted" : "Accept answer"
+                        }}</span>
+                      </button>
+                      <button
+                        v-if="canDeleteReply(reply)"
                         class="delete-reply-btn"
                         @click="deleteReply(reply.id)"
                       >
                         <i class="bi bi-trash"></i>
                         <span>Delete</span>
                       </button>
+                    </div>
+
+                    <div
+                      v-if="replyTarget?.id === reply.id"
+                      :id="`inline-reply-${reply.id}`"
+                      class="inline-reply-composer"
+                    >
+                      <div class="inline-reply-header">
+                        <div
+                          class="reply-avatar current-user"
+                          :style="
+                            getAvatarStyle(authStore.user || '@current_user')
+                          "
+                        >
+                          <img
+                            v-if="getAvatarUrl(authStore.user)"
+                            :src="getAvatarUrl(authStore.user)"
+                            alt="avatar"
+                            class="avatar-img"
+                          />
+                          <span v-else>{{
+                            getAvatarInitials(authStore.user || "@current_user")
+                          }}</span>
+                        </div>
+                        <span class="input-prompt">
+                          Replying to {{ getAvatarName(reply.author) }}
+                        </span>
+                      </div>
+
+                      <MarkdownEditor
+                        v-model="inlineReplyText"
+                        placeholder="Write a short follow-up reply... Markdown is supported."
+                      />
+
+                      <div class="reply-footer inline-reply-footer">
+                        <button
+                          class="cancel-reply-btn"
+                          type="button"
+                          @click="cancelReplyTarget"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          class="post-btn"
+                          :disabled="!inlineReplyText.trim() || isPostingReply"
+                          @click="postInlineReply"
+                        >
+                          <span
+                            v-if="isPostingReply"
+                            class="spinner-border spinner-border-sm"
+                            style="margin-right: 8px"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
+                          {{ isPostingReply ? "Posting..." : "Post Reply" }}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="childReplies(reply.id).length"
+                      class="nested-replies"
+                    >
+                      <div
+                        v-for="child in childReplies(reply.id)"
+                        :key="
+                          child.id ||
+                          `${getAvatarName(child.author)}-${getCreatedAt(child)}`
+                        "
+                        :id="child.id ? `comment-${child.id}` : undefined"
+                        class="nested-reply-card"
+                      >
+                        <div class="nested-reply-header">
+                          <div
+                            class="nested-reply-avatar"
+                            :style="getAvatarStyle(child.author)"
+                            @click="goToProfile(child)"
+                          >
+                            <img
+                              v-if="getAvatarUrl(child.author)"
+                              :src="getAvatarUrl(child.author)"
+                              alt="avatar"
+                              class="avatar-img"
+                            />
+                            <span v-else>{{
+                              getAvatarInitials(child.author)
+                            }}</span>
+                          </div>
+                          <div class="reply-user-info">
+                            <span
+                              class="reply-author"
+                              @click="goToProfile(child)"
+                              >{{ getAvatarName(child.author) }}</span
+                            >
+                            <span class="reply-time">{{
+                              getCreatedAt(child)
+                            }}</span>
+                          </div>
+                        </div>
+
+                        <div
+                          class="reply-body nested-reply-body"
+                          @click="handleForumContentClick"
+                          v-html="renderForumContent(child.body || '')"
+                        ></div>
+
+                        <div class="reply-actions nested-reply-actions">
+                          <button
+                            class="reply-action-btn"
+                            :class="{ active: child.likedByUser }"
+                            @click="handleLikeReply(child)"
+                          >
+                            <i class="bi bi-chevron-up"></i>
+                            <span>{{ child.likes || 0 }}</span>
+                          </button>
+                          <button
+                            v-if="canDeleteReply(child)"
+                            class="delete-reply-btn"
+                            @click="deleteReply(child.id)"
+                          >
+                            <i class="bi bi-trash"></i>
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -910,43 +1386,6 @@ function getAvatarUrl(author) {
 
             <!-- Element to target smooth scroll -->
             <div ref="repliesEnd" class="scroll-anchor"></div>
-
-            <!-- Reply Input Box Overhaul -->
-            <div class="reply-input-wrapper">
-              <div class="input-header">
-                <div
-                  class="reply-avatar current-user"
-                  :style="getAvatarStyle(authStore.user || '@current_user')"
-                >
-                  <img
-                    v-if="getAvatarUrl(authStore.user)"
-                    :src="getAvatarUrl(authStore.user)"
-                    alt="avatar"
-                    class="avatar-img"
-                  />
-                  <span v-else>{{
-                    getAvatarInitials(authStore.user || "@current_user")
-                  }}</span>
-                </div>
-                <span class="input-prompt">Add to the discussion</span>
-              </div>
-
-              <MarkdownEditor
-                v-model="newReplyText"
-                placeholder="Write a constructive, formatted reply... Markdown is supported."
-              />
-
-              <div class="reply-footer">
-                <button
-                  class="post-btn"
-                  :disabled="!newReplyText.trim() || isPostingReply"
-                  @click="postReply"
-                >
-                  <span v-if="isPostingReply" class="spinner-border spinner-border-sm" style="margin-right: 8px;" role="status" aria-hidden="true"></span>
-                  {{ isPostingReply ? 'Posting...' : 'Post Reply' }}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1009,6 +1448,51 @@ function getAvatarUrl(author) {
       title="Report Discussion Thread"
       @closeModal="showReportModal = false"
     />
+
+    <Teleport to="body">
+      <Transition name="forum-image-viewer">
+        <div
+          v-if="viewedImage"
+          class="forum-image-viewer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Attached image viewer"
+          @click.self="closeImageViewer"
+        >
+          <section class="forum-image-viewer-dialog">
+            <header class="forum-image-viewer-header">
+              <div>
+                <span>Forum attachment</span>
+                <strong>Image preview</strong>
+              </div>
+              <button
+                type="button"
+                aria-label="Close image viewer"
+                title="Close"
+                @click="closeImageViewer"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </header>
+
+            <div class="forum-image-viewer-stage">
+              <img :src="viewedImage.src" :alt="viewedImage.alt" />
+            </div>
+
+            <footer class="forum-image-viewer-footer">
+              <button
+                type="button"
+                class="forum-image-back-btn"
+                @click="closeImageViewer"
+              >
+                <i class="bi bi-arrow-left"></i>
+                Back to discussion
+              </button>
+            </footer>
+          </section>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1125,7 +1609,7 @@ function getAvatarUrl(author) {
     color-mix(in srgb, var(--color-border) 86%, var(--color-blue) 14%);
   box-shadow: var(--shadow-sm);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .thread-header-meta {
@@ -1160,37 +1644,49 @@ function getAvatarUrl(author) {
   border: 1px solid var(--color-blue-light);
 }
 
+.thread-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 24px;
+}
+
 .thread-title {
-  font-size: clamp(1.8rem, 4vw, 2.55rem);
-  font-weight: 900;
+  font-size: clamp(1.4rem, 3.2vw, 2rem);
+  font-weight: 800;
   color: var(--color-text);
-  margin: 0 0 20px;
-  line-height: 1.12;
+  margin: 4px 0 0 0;
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
-.thread-header {
-  margin-bottom: 24px;
+.thread-meta-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
 }
 
 .thread-meta {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--color-border);
 }
 
 .thread-avatar {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 14px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   border: 2px solid var(--color-surface);
   cursor: pointer;
@@ -1210,7 +1706,7 @@ function getAvatarUrl(author) {
 .thread-meta .author {
   font-weight: 850;
   color: var(--color-text);
-  font-size: 15px;
+  font-size: 13.5px;
   cursor: pointer;
   transition: color 0.2s ease;
 }
@@ -1221,7 +1717,7 @@ function getAvatarUrl(author) {
 }
 
 .thread-meta .time {
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--color-text-muted);
   font-weight: 700;
 }
@@ -1248,6 +1744,196 @@ function getAvatarUrl(author) {
 .thread-body :deep(p:last-child),
 .reply-body :deep(p:last-child) {
   margin-bottom: 0;
+}
+
+.thread-body :deep(img),
+.reply-body :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid var(--color-border);
+}
+
+.thread-body :deep(.forum-image-attachment),
+.reply-body :deep(.forum-image-attachment) {
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.85rem;
+  color: var(--color-primary);
+  background: var(--color-primary-soft, rgba(84, 131, 179, 0.12));
+  border: 1px solid rgba(84, 131, 179, 0.35);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.thread-body :deep(.forum-image-attachment:hover),
+.reply-body :deep(.forum-image-attachment:hover) {
+  color: var(--color-primary);
+  background: var(--color-primary-soft, rgba(84, 131, 179, 0.2));
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.thread-body :deep(.forum-image-attachment .bi-arrows-fullscreen),
+.reply-body :deep(.forum-image-attachment .bi-arrows-fullscreen) {
+  font-size: 0.72rem;
+  opacity: 0.72;
+}
+
+:global(body.forum-image-viewer-open) {
+  overflow: hidden;
+}
+
+.forum-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: rgba(2, 6, 23, 0.88);
+  backdrop-filter: blur(10px);
+}
+
+.forum-image-viewer-dialog {
+  width: min(1200px, 96vw);
+  height: min(900px, 94vh);
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+}
+
+.forum-image-viewer-header,
+.forum-image-viewer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  background: var(--color-surface);
+}
+
+.forum-image-viewer-header {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.forum-image-viewer-header div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.forum-image-viewer-header span {
+  color: var(--color-primary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.forum-image-viewer-header strong {
+  font-size: 1rem;
+}
+
+.forum-image-viewer-header button {
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.forum-image-viewer-header button:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.forum-image-viewer-stage {
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  overflow: auto;
+  background:
+    linear-gradient(45deg, rgba(148, 163, 184, 0.08) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(148, 163, 184, 0.08) 25%, transparent 25%),
+    #050914;
+  background-position:
+    0 0,
+    8px 8px;
+  background-size: 16px 16px;
+}
+
+.forum-image-viewer-stage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+.forum-image-viewer-footer {
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-border);
+}
+
+.forum-image-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  color: white;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.forum-image-back-btn:hover {
+  filter: brightness(1.08);
+}
+
+.forum-image-viewer-enter-active,
+.forum-image-viewer-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.forum-image-viewer-enter-active .forum-image-viewer-dialog,
+.forum-image-viewer-leave-active .forum-image-viewer-dialog {
+  transition: transform 0.2s ease;
+}
+
+.forum-image-viewer-enter-from,
+.forum-image-viewer-leave-to {
+  opacity: 0;
+}
+
+.forum-image-viewer-enter-from .forum-image-viewer-dialog,
+.forum-image-viewer-leave-to .forum-image-viewer-dialog {
+  transform: scale(0.97) translateY(8px);
 }
 
 /* Monospaced code snippets styling */
@@ -1289,7 +1975,9 @@ function getAvatarUrl(author) {
   border: none !important;
   font-size: 13.5px !important;
   line-height: 1.6 !important;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-family:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace !important;
   overflow-x: auto !important;
   white-space: pre !important;
   word-break: normal !important;
@@ -1381,7 +2069,8 @@ function getAvatarUrl(author) {
 
 .thread-code-block code {
   display: block !important;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  font-family:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
   font-size: 13.5px;
   line-height: 1.6;
   color: #abb2bf;
@@ -1405,7 +2094,7 @@ function getAvatarUrl(author) {
 .code-lang {
   font-size: 11px;
   font-weight: 700;
-  color: #5483B3;
+  color: #5483b3;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1422,10 +2111,15 @@ function getAvatarUrl(author) {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.code-dots span:nth-child(1) { background: #ef4444; }
-.code-dots span:nth-child(2) { background: #f59e0b; }
-.code-dots span:nth-child(3) { background: #10b981; }
-
+.code-dots span:nth-child(1) {
+  background: #ef4444;
+}
+.code-dots span:nth-child(2) {
+  background: #f59e0b;
+}
+.code-dots span:nth-child(3) {
+  background: #10b981;
+}
 
 .thread-tags-box {
   display: flex;
@@ -1455,6 +2149,8 @@ function getAvatarUrl(author) {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  z-index: 20;
   padding-top: 20px;
   border-top: 1px dashed var(--color-border);
   gap: 16px;
@@ -1649,6 +2345,13 @@ function getAvatarUrl(author) {
     var(--shadow-md);
 }
 
+.reply-card.accepted-reply {
+  border-color: color-mix(in srgb, #10b981 68%, var(--color-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #10b981 28%, transparent),
+    var(--shadow-md);
+}
+
 .reply-vote-col {
   display: flex;
   flex-direction: column;
@@ -1776,6 +2479,21 @@ function getAvatarUrl(author) {
   white-space: nowrap;
 }
 
+.accepted-reply-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  color: #047857;
+  background: color-mix(in srgb, #10b981 14%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, #10b981 34%, transparent);
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 0.74rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
 .reply-body {
   font-size: 14.5px;
   color: var(--color-text);
@@ -1789,6 +2507,33 @@ function getAvatarUrl(author) {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.reply-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.reply-action-btn:hover,
+.reply-action-btn.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.accept-answer-btn.accepted,
+.accept-answer-btn:hover {
+  background: color-mix(in srgb, #10b981 14%, var(--color-surface));
+  color: #047857;
 }
 
 .delete-reply-btn {
@@ -1815,19 +2560,144 @@ function getAvatarUrl(author) {
   font-size: 14px;
 }
 
+.nested-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding-left: 18px;
+  border-left: 2px solid
+    color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+}
+
+.nested-reply-card {
+  background: color-mix(in srgb, var(--color-surface-hover) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.nested-reply-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.nested-reply-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 11px;
+  border: 1.5px solid var(--color-surface);
+  cursor: pointer;
+}
+
+.nested-reply-body {
+  margin-bottom: 10px;
+}
+
+.nested-reply-actions {
+  gap: 6px;
+}
+
+.inline-reply-composer {
+  margin: 16px 0 2px;
+  padding: 14px;
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+  border-radius: 10px;
+  background: color-mix(
+    in srgb,
+    var(--color-bg) 72%,
+    var(--color-primary-light)
+  );
+  box-shadow: var(--focus-ring);
+}
+
+.inline-reply-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.inline-reply-composer .reply-avatar.current-user {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
+.inline-reply-composer :deep(.editor-container) {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg);
+  box-shadow: none;
+}
+
+.inline-reply-composer :deep(.editor-workspace),
+.inline-reply-composer :deep(.editor-textarea) {
+  min-height: 150px;
+}
+
+.inline-reply-composer :deep(.preview-pane) {
+  max-height: 220px;
+}
+
+.inline-reply-footer {
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
 /* Reply Input Box */
 .reply-input-wrapper {
   background: var(--color-surface);
   border-radius: 12px;
-  padding: 28px;
-  margin-top: 10px;
+  padding: 16px;
+  margin: 14px 0 18px;
   border: 1px solid var(--color-border);
   transition: all 0.2s ease;
 }
 
-.reply-input-wrapper:focus-within {
+.reply-input-wrapper:focus-within,
+.reply-input-wrapper:hover {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+}
+
+.answer-collapsed-input {
+  width: 100%;
+  min-height: 64px;
+  margin: 14px 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-text-muted);
+  padding: 12px 18px;
+  text-align: left;
+  cursor: text;
+  transition: all 0.2s ease;
+}
+
+.answer-collapsed-input:hover,
+.answer-collapsed-input:focus-visible {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+.answer-collapsed-input span:last-child {
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .reply-input-wrapper :deep(.editor-container) {
@@ -1871,9 +2741,26 @@ function getAvatarUrl(author) {
   font-size: 15px;
 }
 
+.cancel-reply-btn {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.cancel-reply-btn:hover {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
 .reply-footer {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--color-border);
@@ -1957,6 +2844,11 @@ function getAvatarUrl(author) {
 
   .reply-input-wrapper {
     padding: 20px;
+  }
+
+  .answer-collapsed-input {
+    min-height: 58px;
+    padding: 10px 12px;
   }
 }
 
@@ -2183,5 +3075,67 @@ function getAvatarUrl(author) {
 .reply-avatar,
 .thread-avatar {
   overflow: hidden;
+}
+
+/* More Actions Dropdown Styling */
+.more-actions-container {
+  position: relative;
+  display: inline-block;
+  z-index: 50;
+}
+
+.more-dropdown-menu {
+  position: absolute;
+  top: auto;
+  bottom: calc(100% + 8px);
+  right: 0;
+  min-width: 140px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: auto;
+  transform-origin: bottom right;
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.dropdown-item i {
+  font-size: 14px;
+}
+
+.dropdown-item.delete-item:hover,
+.dropdown-item.report-item:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.more-btn {
+  padding: 8px 12px;
 }
 </style>

@@ -4,6 +4,20 @@
       <div>
         <h2>{{ title }}</h2>
         <p>{{ subtitle }}</p>
+
+        <!-- Filter Tabs -->
+        <div v-if="showTabs" class="filter-tabs">
+          <button
+            v-for="tab in tabs"
+            :key="tab.value"
+            @click="emit('update:activeTab', tab.value)"
+            :class="['tab-btn', { active: activeTab === tab.value }]"
+            type="button"
+          >
+            <span class="tab-label">{{ tab.label }}</span>
+            <span class="tab-badge">{{ getTabCount(tab.value) }}</span>
+          </button>
+        </div>
       </div>
 
       <label class="search-box">
@@ -110,6 +124,34 @@
                     <span>Edit</span>
                   </button>
                   <button
+                    v-if="
+                      itemLabel === 'users' &&
+                      ['Active', 'Suspended'].includes(row.status)
+                    "
+                    type="button"
+                    @click.stop="handleDelete(row)"
+                    class="dropdown-item"
+                    :class="{ delete: row.status === 'Active' }"
+                  >
+                    <i
+                      :class="[
+                        'bi',
+                        row.status === 'Active'
+                          ? 'bi-person-x-fill text-danger'
+                          : 'bi-person-check-fill text-success',
+                      ]"
+                    ></i>
+                    <span
+                      :class="
+                        row.status === 'Active' ? 'text-danger' : 'text-success'
+                      "
+                      >{{
+                        row.status === "Active" ? "Suspend" : "Reactivate"
+                      }}</span
+                    >
+                  </button>
+                  <button
+                    v-else
                     type="button"
                     @click.stop="handleDelete(row)"
                     class="dropdown-item delete"
@@ -248,6 +290,22 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showTabs: {
+    type: Boolean,
+    default: false,
+  },
+  tabs: {
+    type: Array,
+    default: () => [],
+  },
+  activeTab: {
+    type: String,
+    default: "",
+  },
+  getTabCount: {
+    type: Function,
+    default: () => 0,
+  },
 });
 
 const search = ref("");
@@ -317,6 +375,7 @@ const initials = (name) =>
 const statusClass = (status) => {
   const value = String(status || "").toLowerCase();
 
+  if (value.includes("suspended")) return "danger";
   if (value.includes("active") || value.includes("published")) return "success";
   if (
     value.includes("pending") ||
@@ -324,11 +383,12 @@ const statusClass = (status) => {
     value.includes("scheduled")
   )
     return "warning";
-  if (value.includes("suspended")) return "danger";
+  if (value.includes("deactivated") || value.includes("inactive"))
+    return "neutral";
   return "neutral";
 };
 
-const emit = defineEmits(["edit", "delete", "row-click"]);
+const emit = defineEmits(["edit", "delete", "row-click", "update:activeTab"]);
 
 const handleRowClick = (row, event) => {
   if (!props.clickableRows) return;
@@ -845,5 +905,67 @@ onBeforeUnmount(() => {
   100% {
     background-position: 0 50%;
   }
+}
+
+.filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  width: fit-content;
+  margin-top: 1rem;
+  padding: 0.25rem;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.tab-btn {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.7rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.tab-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.tab-btn.active {
+  background: var(--color-primary-light);
+  border-color: rgba(84, 131, 179, 0.38);
+  color: var(--color-primary-hover);
+  box-shadow: 0 0 0 2px rgba(84, 131, 179, 0.08);
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0.1rem 0.3rem;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-radius: 999px;
+  text-align: center;
+}
+
+.tab-btn.active .tab-badge {
+  background: var(--color-primary);
+  color: #fff;
 }
 </style>

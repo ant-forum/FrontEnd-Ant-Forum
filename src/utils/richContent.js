@@ -46,6 +46,9 @@ const renderInlineMarkdown = (text = "") => {
   html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
 
+  // Unescape backslash-escaped Markdown punctuation characters
+  html = html.replace(/\\([\\`*_{}[\]()#+\-.!|])/g, "$1");
+
   return html;
 };
 

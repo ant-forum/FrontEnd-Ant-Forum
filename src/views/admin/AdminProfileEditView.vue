@@ -452,12 +452,11 @@ const saveProfile = async () => {
   try {
     isSaving.value = true;
 
-    if (editForm.value.name !== adminName.value) {
-      await userProfilesStore.updateProfile({
-        username: editForm.value.name,
-        gender: authStore.user?.gender || "male",
-      });
-    }
+    await userProfilesStore.updateProfile({
+      username: editForm.value.name,
+      gender: authStore.user?.gender || "male",
+      bio: editForm.value.bio,
+    });
 
     localProfile.value = {
       name: editForm.value.name,
@@ -575,11 +574,7 @@ onBeforeUnmount(() => {
 
 .profile-edit-actions .btn-primary {
   color: #ffffff;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-blue)
-  );
+  background: linear-gradient(135deg, var(--color-primary), var(--color-blue));
   border: 0;
   box-shadow: 0 14px 30px -24px var(--color-primary);
 }
@@ -615,11 +610,7 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
   color: #ffffff;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-blue)
-  );
+  background: linear-gradient(135deg, var(--color-primary), var(--color-blue));
   border: 3px solid var(--color-border);
   border-radius: 50%;
   font-size: 2.2rem;

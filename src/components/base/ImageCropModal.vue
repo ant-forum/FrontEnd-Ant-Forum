@@ -6,15 +6,13 @@
     @closeModal="emitCancel"
   >
     <div class="image-cropper">
+      <!-- CROP STAGE -->
       <div
         ref="stageRef"
         class="crop-stage"
-        :class="{ dragging: isDragging }"
-        @pointerdown="startDrag"
-        @pointermove="moveDrag"
-        @pointerup="stopDrag"
-        @pointercancel="stopDrag"
-        @pointerleave="stopDrag"
+        @pointermove="handlePointerMove"
+        @pointerup="handlePointerUp"
+        @pointercancel="handlePointerUp"
       >
         <img
           ref="imageRef"
@@ -26,40 +24,86 @@
           @load="prepareImage"
         />
         <div class="crop-scrim"></div>
+
+        <!-- CROP BOX (Draggable & Resizable) -->
         <div
           ref="cropBoxRef"
           class="crop-box"
           :class="{ circle: cropShape === 'circle' }"
           :style="cropBoxStyle"
+          @pointerdown="handlePointerDown($event, 'move')"
         >
+          <!-- Grid Overlay -->
           <span class="crop-grid horizontal one"></span>
           <span class="crop-grid horizontal two"></span>
           <span class="crop-grid vertical one"></span>
           <span class="crop-grid vertical two"></span>
+
+          <!-- Corner Resize Handles (iPhone style L-shapes) -->
+          <div class="crop-handle top-left" @pointerdown.stop="handlePointerDown($event, 'resize-top-left')"></div>
+          <div class="crop-handle top-right" @pointerdown.stop="handlePointerDown($event, 'resize-top-right')"></div>
+          <div class="crop-handle bottom-left" @pointerdown.stop="handlePointerDown($event, 'resize-bottom-left')"></div>
+          <div class="crop-handle bottom-right" @pointerdown.stop="handlePointerDown($event, 'resize-bottom-right')"></div>
         </div>
       </div>
 
-      <div class="crop-controls">
-        <label for="image-crop-zoom">
-          <i class="bi bi-zoom-in"></i>
-          Zoom
-        </label>
-        <input
-          id="image-crop-zoom"
-          v-model.number="zoom"
-          type="range"
-          min="1"
-          max="3"
-          step="0.01"
-          @input="clampOffset"
-        />
-        <button type="button" class="btn-reset-crop" @click="resetCrop">
-          Reset
-        </button>
+      <!-- ASPECT RATIO PRESETS (Only shown if shape is not circle) -->
+      <div v-if="cropShape !== 'circle'" class="crop-ratio-container mt-2 mb-2">
+        <span class="ratio-label"><i class="bi bi-aspect-ratio"></i> Aspect Ratio</span>
+        <div class="ratio-presets">
+          <button
+            type="button"
+            class="ratio-btn"
+            :class="{ active: selectedAspectRatio === 'free' }"
+            @click="setRatio('free')"
+          >
+            Free
+          </button>
+          <button
+            type="button"
+            class="ratio-btn"
+            :class="{ active: selectedAspectRatio === 'original' }"
+            @click="setRatio('original')"
+          >
+            Original
+          </button>
+          <button
+            type="button"
+            class="ratio-btn"
+            :class="{ active: selectedAspectRatio === '1.77777777778' }"
+            @click="setRatio('1.77777777778')"
+          >
+            16:9
+          </button>
+          <button
+            type="button"
+            class="ratio-btn"
+            :class="{ active: selectedAspectRatio === '1.33333333333' }"
+            @click="setRatio('1.33333333333')"
+          >
+            4:3
+          </button>
+          <button
+            type="button"
+            class="ratio-btn"
+            :class="{ active: selectedAspectRatio === '1.5' }"
+            @click="setRatio('1.5')"
+          >
+            3:2
+          </button>
+          <button
+            type="button"
+            class="ratio-btn"
+            :class="{ active: selectedAspectRatio === '1' }"
+            @click="setRatio('1')"
+          >
+            1:1
+          </button>
+        </div>
       </div>
 
-      <p class="crop-hint">
-        Drag the image to frame the part you want people to see.
+      <p class="crop-hint text-center">
+        Drag corners to resize. Drag inside the box to reposition.
       </p>
     </div>
 
@@ -106,25 +150,25 @@ const emit = defineEmits(["confirm", "cancel"]);
 const stageRef = ref(null);
 const cropBoxRef = ref(null);
 const imageRef = ref(null);
-const zoom = ref(1);
-const offsetX = ref(0);
-const offsetY = ref(0);
+
 const baseWidth = ref(0);
 const baseHeight = ref(0);
 const naturalAspectRatio = ref(1);
 const isReady = ref(false);
-const isDragging = ref(false);
 const isCropping = ref(false);
-const dragStart = ref({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
+
+// Crop box positioning & dimensions (relative to stage coordinates)
+const cropBoxLeft = ref(0);
+const cropBoxTop = ref(0);
+const cropBoxWidth = ref(0);
+const cropBoxHeight = ref(0);
+
+// Pointer interaction state
+const activeAction = ref(null); // 'move' or 'resize-top-left', etc.
+const startPos = ref({ x: 0, y: 0 });
+const startBox = ref({ left: 0, top: 0, width: 0, height: 0 });
 
 const cropOptions = computed(() => props.source?.options || {});
-const aspectRatio = computed(() => {
-  if (cropOptions.value.aspectRatio === "original") {
-    return naturalAspectRatio.value || 1;
-  }
-
-  return Number(cropOptions.value.aspectRatio) || 1;
-});
 const cropShape = computed(() => cropOptions.value.shape || "rect");
 const modalTitle = computed(() => cropOptions.value.title || "Crop Image");
 const outputType = computed(
@@ -133,16 +177,38 @@ const outputType = computed(
 );
 const outputQuality = computed(() => Number(cropOptions.value.quality) || 0.92);
 
-const cropBoxStyle = computed(() => ({
-  aspectRatio: String(aspectRatio.value),
-}));
+// Chosen crop box aspect ratio (can be 'free', 'original', or a numeric string)
+const selectedAspectRatio = ref(
+  cropShape.value === "circle"
+    ? "1"
+    : cropOptions.value.aspectRatio || "free"
+);
+
+const aspectRatio = computed(() => {
+  if (selectedAspectRatio.value === "free") return null;
+  if (selectedAspectRatio.value === "original") {
+    return naturalAspectRatio.value || 1;
+  }
+  return Number(selectedAspectRatio.value) || 1;
+});
+
+const cropBoxStyle = computed(() => {
+  return {
+    position: "absolute",
+    left: `${cropBoxLeft.value}px`,
+    top: `${cropBoxTop.value}px`,
+    width: `${cropBoxWidth.value}px`,
+    height: `${cropBoxHeight.value}px`,
+    transform: "none",
+  };
+});
 
 const imageStyle = computed(() => ({
   width: `${baseWidth.value}px`,
   height: `${baseHeight.value}px`,
-  left: `calc(50% + ${offsetX.value}px)`,
-  top: `calc(50% + ${offsetY.value}px)`,
-  transform: `translate(-50%, -50%) scale(${zoom.value})`,
+  left: "50%",
+  top: "50%",
+  transform: "translate(-50%, -50%)",
 }));
 
 const getContainedOutputName = () => {
@@ -160,47 +226,70 @@ const getContainedOutputName = () => {
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-const clampOffset = () => {
-  const cropRect = cropBoxRef.value?.getBoundingClientRect();
-  if (!cropRect || !baseWidth.value || !baseHeight.value) return;
+// Apply chosen aspect ratio to dimensions inside the image boundaries
+const applyRatioDimensions = (ratioVal) => {
+  const stage = stageRef.value;
+  if (!stage || !baseWidth.value || !baseHeight.value) return;
 
-  const scaledWidth = baseWidth.value * zoom.value;
-  const scaledHeight = baseHeight.value * zoom.value;
-  const maxX = Math.max(0, (scaledWidth - cropRect.width) / 2);
-  const maxY = Math.max(0, (scaledHeight - cropRect.height) / 2);
+  const stageRect = stage.getBoundingClientRect();
+  const imgLeft = (stageRect.width - baseWidth.value) / 2;
+  const imgTop = (stageRect.height - baseHeight.value) / 2;
 
-  offsetX.value = clamp(offsetX.value, -maxX, maxX);
-  offsetY.value = clamp(offsetY.value, -maxY, maxY);
+  let newWidth, newHeight;
+
+  if (ratioVal === "free") {
+    newWidth = baseWidth.value * 0.9;
+    newHeight = baseHeight.value * 0.9;
+  } else {
+    let activeRatio = 1;
+    if (ratioVal === "original") {
+      activeRatio = naturalAspectRatio.value || 1;
+    } else {
+      activeRatio = Number(ratioVal) || 1;
+    }
+
+    // Try filling width
+    newWidth = baseWidth.value * 0.9;
+    newHeight = newWidth / activeRatio;
+
+    // Constrain if height exceeds bounds
+    if (newHeight > baseHeight.value * 0.9) {
+      newHeight = baseHeight.value * 0.9;
+      newWidth = newHeight * activeRatio;
+    }
+  }
+
+  cropBoxWidth.value = newWidth;
+  cropBoxHeight.value = newHeight;
+
+  // Center crop box inside the image boundaries
+  cropBoxLeft.value = imgLeft + (baseWidth.value - newWidth) / 2;
+  cropBoxTop.value = imgTop + (baseHeight.value - newHeight) / 2;
 };
 
 const prepareImage = async () => {
   await nextTick();
 
   const image = imageRef.value;
-  const cropBox = cropBoxRef.value;
-  if (!image || !cropBox || !image.naturalWidth || !image.naturalHeight) return;
+  const stage = stageRef.value;
+  if (!image || !stage || !image.naturalWidth || !image.naturalHeight) return;
 
+  const stageRect = stage.getBoundingClientRect();
   const imageRatio = image.naturalWidth / image.naturalHeight;
   naturalAspectRatio.value = imageRatio;
-  await nextTick();
 
-  const cropRect = cropBox.getBoundingClientRect();
-  const cropRatio = cropRect.width / cropRect.height;
-
-  if (imageRatio > cropRatio) {
-    baseHeight.value = cropRect.height;
-    baseWidth.value = cropRect.height * imageRatio;
+  // Contain the image inside the stage bounding container
+  const stageRatio = stageRect.width / stageRect.height;
+  if (imageRatio > stageRatio) {
+    baseWidth.value = stageRect.width;
+    baseHeight.value = stageRect.width / imageRatio;
   } else {
-    baseWidth.value = cropRect.width;
-    baseHeight.value = cropRect.width / imageRatio;
+    baseHeight.value = stageRect.height;
+    baseWidth.value = stageRect.height * imageRatio;
   }
 
-  zoom.value = 1;
-  offsetX.value = 0;
-  offsetY.value = 0;
   isReady.value = true;
-  await nextTick();
-  clampOffset();
+  applyRatioDimensions(selectedAspectRatio.value);
 };
 
 const resetCrop = async () => {
@@ -208,32 +297,160 @@ const resetCrop = async () => {
   await prepareImage();
 };
 
-const startDrag = (event) => {
+const setRatio = (ratio) => {
+  selectedAspectRatio.value = ratio;
+  nextTick(() => {
+    applyRatioDimensions(ratio);
+  });
+};
+
+// Pointer Events handlers for resizing & moving
+const handlePointerDown = (event, action) => {
   if (!isReady.value || isCropping.value) return;
 
-  isDragging.value = true;
-  event.currentTarget.setPointerCapture?.(event.pointerId);
-  dragStart.value = {
+  event.preventDefault();
+  event.stopPropagation();
+
+  // Capture pointer on the stage element so events are tracked everywhere
+  stageRef.value?.setPointerCapture?.(event.pointerId);
+
+  activeAction.value = action;
+  startPos.value = {
     x: event.clientX,
     y: event.clientY,
-    offsetX: offsetX.value,
-    offsetY: offsetY.value,
+  };
+  startBox.value = {
+    left: cropBoxLeft.value,
+    top: cropBoxTop.value,
+    width: cropBoxWidth.value,
+    height: cropBoxHeight.value,
   };
 };
 
-const moveDrag = (event) => {
-  if (!isDragging.value) return;
+const handlePointerMove = (event) => {
+  if (!activeAction.value) return;
 
-  offsetX.value = dragStart.value.offsetX + event.clientX - dragStart.value.x;
-  offsetY.value = dragStart.value.offsetY + event.clientY - dragStart.value.y;
-  clampOffset();
+  event.preventDefault();
+  event.stopPropagation();
+
+  const dx = event.clientX - startPos.value.x;
+  const dy = event.clientY - startPos.value.y;
+
+  const stage = stageRef.value;
+  if (!stage) return;
+
+  const stageRect = stage.getBoundingClientRect();
+  const imgLeft = (stageRect.width - baseWidth.value) / 2;
+  const imgTop = (stageRect.height - baseHeight.value) / 2;
+  const imgRight = imgLeft + baseWidth.value;
+  const imgBottom = imgTop + baseHeight.value;
+
+  const minSize = 50;
+
+  if (activeAction.value === "move") {
+    let newLeft = startBox.value.left + dx;
+    let newTop = startBox.value.top + dy;
+
+    // Keep crop box fully within image bounds
+    newLeft = clamp(newLeft, imgLeft, imgRight - cropBoxWidth.value);
+    newTop = clamp(newTop, imgTop, imgBottom - cropBoxHeight.value);
+
+    cropBoxLeft.value = newLeft;
+    cropBoxTop.value = newTop;
+  } else if (activeAction.value.startsWith("resize-")) {
+    const handleType = activeAction.value.replace("resize-", "");
+    let newLeft = startBox.value.left;
+    let newTop = startBox.value.top;
+    let newWidth = startBox.value.width;
+    let newHeight = startBox.value.height;
+
+    // Aspect ratio locked resizing
+    if (aspectRatio.value !== null) {
+      const ratio = aspectRatio.value;
+
+      if (handleType === "bottom-right" || handleType === "right" || handleType === "bottom") {
+        let newW = startBox.value.width + dx;
+        newW = clamp(newW, minSize, imgRight - startBox.value.left);
+        let newH = newW / ratio;
+
+        if (newH > imgBottom - startBox.value.top) {
+          newH = imgBottom - startBox.value.top;
+          newW = newH * ratio;
+        }
+        newWidth = newW;
+        newHeight = newH;
+      } else if (handleType === "top-left" || handleType === "left" || handleType === "top") {
+        let newW = startBox.value.width - dx;
+        newW = clamp(newW, minSize, startBox.value.left + startBox.value.width - imgLeft);
+        let newH = newW / ratio;
+
+        if (newH > startBox.value.top + startBox.value.height - imgTop) {
+          newH = startBox.value.top + startBox.value.height - imgTop;
+          newW = newH * ratio;
+        }
+        newLeft = startBox.value.left + (startBox.value.width - newW);
+        newTop = startBox.value.top + (startBox.value.height - newH);
+        newWidth = newW;
+        newHeight = newH;
+      } else if (handleType === "top-right") {
+        let newW = startBox.value.width + dx;
+        newW = clamp(newW, minSize, imgRight - startBox.value.left);
+        let newH = newW / ratio;
+
+        if (newH > startBox.value.top + startBox.value.height - imgTop) {
+          newH = startBox.value.top + startBox.value.height - imgTop;
+          newW = newH * ratio;
+        }
+        newTop = startBox.value.top + (startBox.value.height - newH);
+        newWidth = newW;
+        newHeight = newH;
+      } else if (handleType === "bottom-left") {
+        let newW = startBox.value.width - dx;
+        newW = clamp(newW, minSize, startBox.value.left + startBox.value.width - imgLeft);
+        let newH = newW / ratio;
+
+        if (newH > imgBottom - startBox.value.top) {
+          newH = imgBottom - startBox.value.top;
+          newW = newH * ratio;
+        }
+        newLeft = startBox.value.left + (startBox.value.width - newW);
+        newWidth = newW;
+        newHeight = newH;
+      }
+    } else {
+      // Free resizing
+      if (handleType.includes("right")) {
+        newWidth = clamp(startBox.value.width + dx, minSize, imgRight - startBox.value.left);
+      }
+      if (handleType.includes("left")) {
+        const maxDx = startBox.value.width - minSize;
+        const actualDx = clamp(dx, imgLeft - startBox.value.left, maxDx);
+        newLeft = startBox.value.left + actualDx;
+        newWidth = startBox.value.width - actualDx;
+      }
+      if (handleType.includes("bottom")) {
+        newHeight = clamp(startBox.value.height + dy, minSize, imgBottom - startBox.value.top);
+      }
+      if (handleType.includes("top")) {
+        const maxDy = startBox.value.height - minSize;
+        const actualDy = clamp(dy, imgTop - startBox.value.top, maxDy);
+        newTop = startBox.value.top + actualDy;
+        newHeight = startBox.value.height - actualDy;
+      }
+    }
+
+    cropBoxLeft.value = newLeft;
+    cropBoxTop.value = newTop;
+    cropBoxWidth.value = newWidth;
+    cropBoxHeight.value = newHeight;
+  }
 };
 
-const stopDrag = (event) => {
-  if (!isDragging.value) return;
+const handlePointerUp = (event) => {
+  if (!activeAction.value) return;
 
-  isDragging.value = false;
-  event.currentTarget?.releasePointerCapture?.(event.pointerId);
+  stageRef.value?.releasePointerCapture?.(event.pointerId);
+  activeAction.value = null;
 };
 
 const canvasToBlob = (canvas) =>
@@ -244,13 +461,16 @@ const canvasToBlob = (canvas) =>
 const applyCrop = async () => {
   const image = imageRef.value;
   const cropBox = cropBoxRef.value;
-  if (!image || !cropBox || !isReady.value || isCropping.value) return;
+  const stage = stageRef.value;
+  if (!image || !cropBox || !stage || !isReady.value || isCropping.value) return;
 
   isCropping.value = true;
 
   try {
     const cropRect = cropBox.getBoundingClientRect();
     const imageRect = image.getBoundingClientRect();
+
+    // Map DOM dimensions to natural image dimensions
     const sourceX =
       ((cropRect.left - imageRect.left) / imageRect.width) * image.naturalWidth;
     const sourceY =
@@ -258,11 +478,13 @@ const applyCrop = async () => {
     const sourceWidth = (cropRect.width / imageRect.width) * image.naturalWidth;
     const sourceHeight =
       (cropRect.height / imageRect.height) * image.naturalHeight;
+
     const canvas = document.createElement("canvas");
     const requestedWidth =
       cropOptions.value.outputWidth || Math.min(sourceWidth, 1600);
     const requestedHeight =
-      cropOptions.value.outputHeight || requestedWidth / aspectRatio.value;
+      cropOptions.value.outputHeight || requestedWidth / (sourceWidth / sourceHeight);
+
     const outputScale = Math.min(
       1,
       sourceWidth / requestedWidth,
@@ -364,7 +586,6 @@ onBeforeUnmount(() => {
   min-height: 320px;
   overflow: hidden;
   touch-action: none;
-  cursor: grab;
   background:
     linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%),
     linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%),
@@ -379,10 +600,6 @@ onBeforeUnmount(() => {
   background-size: 32px 32px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-}
-
-.crop-stage.dragging {
-  cursor: grabbing;
 }
 
 .crop-image {
@@ -407,29 +624,25 @@ onBeforeUnmount(() => {
 .crop-box {
   position: absolute;
   z-index: 3;
-  top: 50%;
-  left: 50%;
-  width: min(78%, 680px);
-  max-height: calc(100% - 48px);
-  overflow: hidden;
-  pointer-events: none;
+  cursor: move;
   border: 2px solid rgba(255, 255, 255, 0.92);
   border-radius: 8px;
   box-shadow:
     0 0 0 9999px rgba(0, 0, 0, 0.38),
     0 18px 60px rgba(0, 0, 0, 0.35);
-  transform: translate(-50%, -50%);
+  box-sizing: border-box;
 }
 
 .crop-box.circle {
-  width: min(70%, 420px);
   border-radius: 999px;
+  cursor: move;
 }
 
 .crop-grid {
   position: absolute;
   display: block;
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
 }
 
 .crop-grid.horizontal {
@@ -460,39 +673,93 @@ onBeforeUnmount(() => {
   left: 66.666%;
 }
 
-.crop-controls {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.85rem;
+/* iPhone Style Corner Drag Handles */
+.crop-handle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 4px solid #ffffff;
+  z-index: 10;
+  box-sizing: border-box;
 }
 
-.crop-controls label {
+.crop-handle.top-left {
+  top: -4px;
+  left: -4px;
+  border-right: none;
+  border-bottom: none;
+  cursor: nwse-resize;
+}
+
+.crop-handle.top-right {
+  top: -4px;
+  right: -4px;
+  border-left: none;
+  border-bottom: none;
+  cursor: nesw-resize;
+}
+
+.crop-handle.bottom-left {
+  bottom: -4px;
+  left: -4px;
+  border-right: none;
+  border-top: none;
+  cursor: nesw-resize;
+}
+
+.crop-handle.bottom-right {
+  bottom: -4px;
+  right: -4px;
+  border-left: none;
+  border-top: none;
+  cursor: nwse-resize;
+}
+
+/* Controls */
+.crop-ratio-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.ratio-label {
+  font-weight: 800;
+  color: var(--color-text);
+  font-size: 0.88rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  color: var(--color-text);
-  font-weight: 800;
-  margin: 0;
+  gap: 6px;
+  white-space: nowrap;
 }
 
-.crop-controls input[type="range"] {
-  width: 100%;
-  accent-color: var(--color-primary);
+.ratio-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.btn-reset-crop {
-  height: 36px;
-  padding: 0 0.85rem;
-  color: var(--color-text);
+.ratio-btn {
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-weight: 800;
+  color: var(--color-text-muted);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.btn-reset-crop:hover {
-  border-color: var(--color-primary);
+.ratio-btn:hover {
+  border-color: var(--color-blue);
+  color: var(--color-text);
+}
+
+.ratio-btn.active {
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+  color: #ffffff;
 }
 
 .crop-hint {
@@ -513,14 +780,6 @@ onBeforeUnmount(() => {
   .crop-stage {
     min-height: 280px;
     height: 52vh;
-  }
-
-  .crop-controls {
-    grid-template-columns: 1fr auto;
-  }
-
-  .crop-controls label {
-    grid-column: 1 / -1;
   }
 }
 </style>

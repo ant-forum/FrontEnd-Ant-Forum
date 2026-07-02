@@ -20,10 +20,14 @@
       empty-title="No user accounts yet"
       empty-description="New forum accounts will appear here after registration."
       :columns="columns"
-      :rows="mappedUsers"
+      :rows="filteredUsers"
       :is-loading="isPageLoading"
+      showTabs
+      :tabs="userTabs"
+      v-model:activeTab="activeTab"
+      :getTabCount="getTabCount"
       @edit="openEditModal"
-      @delete="openDeleteModal"
+      @delete="openStatusModal"
     />
 
     <!-- Edit Modal -->
@@ -96,6 +100,7 @@
               <option value="">Select Role</option>
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
+              <option value="mentor">Mentor</option>
               <option value="admin">Admin</option>
             </select>
             <div v-if="errors.role" class="invalid-feedback d-block">
@@ -145,41 +150,71 @@
       </form>
     </BaseModal>
 
-    <!-- Delete Modal -->
+    <!-- Toggle Status Modal (Suspend/Reactivate) -->
     <BaseModal
-      v-if="mDelete.isVisible"
-      title="Delete User Account"
-      icon="bi bi-trash"
-      theme="danger"
+      v-if="statusModal.isVisible"
+      :title="
+        statusModal.item?.status === 'Active'
+          ? 'Suspend User Account'
+          : 'Reactivate User Account'
+      "
+      :icon="
+        statusModal.item?.status === 'Active'
+          ? 'bi bi-person-x'
+          : 'bi bi-person-check'
+      "
+      :theme="statusModal.item?.status === 'Active' ? 'danger' : 'success'"
       kicker=""
-      @closeModal="closeDeleteModal"
+      @closeModal="closeStatusModal"
     >
       <p class="delete-message">
-        Are you sure you want to delete the user
-        <strong>{{ mDelete.item?.name }}</strong
-        >? This action will permanently delete their account and all associated
-        profile details from the system.
+        Are you sure you want to
+        {{ statusModal.item?.status === "Active" ? "suspend" : "reactivate" }}
+        the user <strong>{{ statusModal.item?.name }}</strong
+        >?
+        <span v-if="statusModal.item?.status === 'Active'">
+          Suspending this user will block their account access until
+          reactivated.
+        </span>
+        <span v-else>
+          Reactivating this user will restore their full account access.
+        </span>
       </p>
       <div class="modal-actions">
         <button
           class="btn btn-light border"
           type="button"
-          @click="closeDeleteModal"
+          @click="closeStatusModal"
         >
           Cancel
         </button>
         <button
-          class="btn btn-danger"
+          :class="[
+            'btn',
+            statusModal.item?.status === 'Active'
+              ? 'btn-danger'
+              : 'btn-success',
+          ]"
           type="button"
           :disabled="usersStore.isLoading"
-          @click="handleDeleteUser"
+          @click="handleStatusChange"
         >
           <span
             v-if="usersStore.isLoading"
             class="spinner-border spinner-border-sm me-2"
           ></span>
-          <i class="bi bi-trash me-1"></i>
-          <span>Confirm Delete</span>
+          <i
+            :class="[
+              'bi',
+              statusModal.item?.status === 'Active'
+                ? 'bi-person-x-fill'
+                : 'bi-person-check-fill',
+              'me-1',
+            ]"
+          ></i>
+          <span>{{
+            statusModal.item?.status === "Active" ? "Suspend" : "Reactivate"
+          }}</span>
         </button>
       </div>
     </BaseModal>
@@ -238,28 +273,74 @@ const formatJoinedDate = (value) => {
 };
 
 const mappedUsers = computed(() => {
-  return (usersStore.users || []).map((u) => ({
-    id: u.id || u._id,
-    name: u.fullname || u.username || "No Username",
-    detail: (u.fullname && u.username ? '@' + u.username + ' · ' : '') + u.email,
-    role:
-      u.role === "user" || u.role === "student"
-        ? "Student"
-        : u.role === "mentor"
-          ? "Mentor"
-          : u.role
-            ? u.role.charAt(0).toUpperCase() + u.role.slice(1)
-            : "Student",
-    status: u.status || "Active",
-    joined: formatJoinedDate(u.createdAt || u.created_at),
-    avatar: u.profile_pic || u.avatar || u.avatarUrl || "",
-    gender: u.gender || "male",
-    rawRole: u.role || "student",
-    rawUsername: u.username || "",
-    rawFullname: u.fullname || "",
-    rawEmail: u.email || "",
-  }));
+  return (usersStore.users || []).map((u) => {
+    const rawStatus = String(u.status || "active").toLowerCase();
+    const status =
+      rawStatus === "inactive" || rawStatus === "suspended"
+        ? "Suspended"
+        : rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+
+    return {
+      id: u.id || u._id,
+      name: u.fullname || u.username || "No Username",
+      detail:
+        (u.fullname && u.username ? "@" + u.username + " · " : "") + u.email,
+      role:
+        u.role === "user" || u.role === "student"
+          ? "Student"
+          : u.role === "mentor"
+            ? "Mentor"
+            : u.role
+              ? u.role.charAt(0).toUpperCase() + u.role.slice(1)
+              : "Student",
+      status,
+      joined: formatJoinedDate(u.createdAt || u.created_at),
+      avatar: u.profile_pic || u.avatar || u.avatarUrl || "",
+      gender: u.gender || "male",
+      rawRole: u.role || "student",
+      rawUsername: u.username || "",
+      rawFullname: u.fullname || "",
+      rawEmail: u.email || "",
+    };
+  });
 });
+
+const activeTab = ref("all");
+
+const userTabs = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "suspended", label: "Suspended" },
+  { value: "pending", label: "Pending" },
+];
+
+const filteredUsers = computed(() => {
+  const list = mappedUsers.value;
+  if (activeTab.value === "active") {
+    return list.filter((u) => u.status === "Active");
+  }
+  if (activeTab.value === "suspended") {
+    return list.filter((u) => u.status === "Suspended");
+  }
+  if (activeTab.value === "pending") {
+    return list.filter((u) => u.status === "Pending");
+  }
+  return list;
+});
+
+const getTabCount = (tabName) => {
+  const list = mappedUsers.value;
+  if (tabName === "active") {
+    return list.filter((u) => u.status === "Active").length;
+  }
+  if (tabName === "suspended") {
+    return list.filter((u) => u.status === "Suspended").length;
+  }
+  if (tabName === "pending") {
+    return list.filter((u) => u.status === "Pending").length;
+  }
+  return list.length;
+};
 
 const metrics = computed(() => {
   const allUsers = usersStore.users || [];
@@ -288,7 +369,7 @@ const metrics = computed(() => {
     {
       label: "Teachers",
       value: String(teachers),
-      change: "Active teachers",
+      change: "Teacher accounts",
       icon: "bi-person-badge",
       className: "blue",
     },
@@ -337,7 +418,13 @@ const isSaveDisabled = computed(() => {
   const currentGender = mEdit.data.gender;
 
   // Disable if any required fields are empty
-  if (!currentUsername || !currentFullname || !currentEmail || !currentRole || !currentGender) {
+  if (
+    !currentUsername ||
+    !currentFullname ||
+    !currentEmail ||
+    !currentRole ||
+    !currentGender
+  ) {
     return true;
   }
 
@@ -402,7 +489,13 @@ const handleUpdateUser = async () => {
     "Gender is required.",
   );
 
-  if (!isUsernameValid || !isFullnameValid || !isEmailValid || !isRoleValid || !isGenderValid) {
+  if (
+    !isUsernameValid ||
+    !isFullnameValid ||
+    !isEmailValid ||
+    !isRoleValid ||
+    !isGenderValid
+  ) {
     toast.error("Please fix the validation errors before saving.");
     return;
   }
@@ -432,39 +525,43 @@ const handleUpdateUser = async () => {
   }
 };
 
-// Delete Logic
-const mDelete = reactive({
+const statusModal = reactive({
   isVisible: false,
   item: null,
 });
 
-const openDeleteModal = (mappedUser) => {
-  mDelete.item = mappedUser;
-  mDelete.isVisible = true;
+const openStatusModal = (mappedUser) => {
+  statusModal.item = mappedUser;
+  statusModal.isVisible = true;
 };
 
-const closeDeleteModal = () => {
-  mDelete.isVisible = false;
-  mDelete.item = null;
+const closeStatusModal = () => {
+  statusModal.isVisible = false;
+  statusModal.item = null;
 };
 
-const handleDeleteUser = async () => {
+const handleStatusChange = async () => {
   try {
-    await usersStore.deleteUser(mDelete.item.id);
-    toast.success("User account deleted successfully!");
-    closeDeleteModal();
-    // Show skeleton while loading the refreshed user list
-    isPageLoading.value = true;
-    await usersStore.fetchUsers(true);
+    const isCurrentlyActive = statusModal.item?.status === "Active";
+    const nextStatus = isCurrentlyActive ? "suspended" : "active";
+    const response = await usersStore.setUserStatus(
+      statusModal.item.id,
+      nextStatus,
+    );
+    const actionLabel = isCurrentlyActive ? "suspended" : "reactivated";
+    toast.success(
+      response?.message || `User account ${actionLabel} successfully!`,
+    );
+    closeStatusModal();
   } catch (error) {
-    console.error("Failed to delete user:", error);
+    console.error("Failed to update user status:", error);
     const errorMsg =
+      error.response?.data?.message ||
       error.message ||
       error.msg ||
-      "An error occurred while deleting the user account.";
+      "An error occurred while updating the user account status.";
     toast.error(errorMsg);
-  } finally {
-    isPageLoading.value = false;
+    closeStatusModal();
   }
 };
 </script>

@@ -532,10 +532,7 @@ const metrics = computed(() => {
     const s = String(p.status || "").toLowerCase();
     return s === "published" || s === "active";
   }).length;
-  const pending = allProjects.filter((p) => {
-    const s = String(p.status || "").toLowerCase();
-    return s === "in review" || s === "pending";
-  }).length;
+  const totalViews = allProjects.reduce((acc, p) => acc + (Number(p.view_count) || 0), 0);
 
   return [
     {
@@ -559,14 +556,11 @@ const metrics = computed(() => {
       },
     },
     {
-      label: "Post Project",
-      icon: "bi-plus-circle",
-      className: "orange",
-      underIconText: "Create Project",
-      hideValue: true,
-      onClick: () => {
-        mCreate.isVisible = true;
-      },
+      label: "Total Views",
+      value: String(totalViews),
+      change: "Cumulative traffic",
+      icon: "bi-eye",
+      className: "blue",
     },
   ];
 });
@@ -1007,10 +1001,12 @@ const handleDeleteProject = async () => {
   } catch (error) {
     console.error("Failed to delete project:", error);
     const errorMsg =
+      error.response?.data?.message ||
       error.message ||
       error.msg ||
       "An error occurred while deleting the project.";
     toast.error(errorMsg);
+    closeDeleteModal();
   } finally {
     isPageLoading.value = false;
   }
