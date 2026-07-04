@@ -17,8 +17,12 @@ const toast = useToast();
 const isEditMode = computed(() => route.name === "EditDiscussion");
 const isFetchingData = ref(route.name === "EditDiscussion");
 
-// Backend categories (fetched on mount)
-const backendCategories = ref([]);
+// Backend categories (fetched on mount or from store cache)
+const backendCategories = ref(
+  forumStore.categories && forumStore.categories.length > 0
+    ? [...forumStore.categories]
+    : []
+);
 
 const isEditorFocused = ref(false);
 const isSubmitting = ref(false);
@@ -33,7 +37,9 @@ const attachedCodeSnippetRegex =
 const form = ref({
   title: "",
   excerpt: "",
-  category: "question",
+  category: forumStore.categories && forumStore.categories.length > 0
+    ? forumStore.categories[0].id
+    : "question",
   code: "",
   hasCode: false,
 });
@@ -212,36 +218,7 @@ const handleTagKeydown = (e) => {
 };
 
 // Categories and templates
-const categories = [
-  {
-    id: "question",
-    label: "Question",
-    icon: "bi-question-circle",
-    color: "blue",
-    desc: "Get help with a technical problem",
-  },
-  {
-    id: "discussion",
-    label: "Discussion",
-    icon: "bi-chat-dots",
-    color: "blue",
-    desc: "Share ideas, ask open questions, or debate",
-  },
-  {
-    id: "tutorial",
-    label: "Tutorial",
-    icon: "bi-book",
-    color: "orange",
-    desc: "Share a guide, walkthrough, or article",
-  },
-  {
-    id: "idea",
-    label: "Idea / Proposal",
-    icon: "bi-lightbulb",
-    color: "pink",
-    desc: "Propose a new feature or design",
-  },
-];
+const categories = [];
 
 const templates = {
   question:
@@ -496,34 +473,34 @@ onMounted(async () => {
     checkDraft();
   }
 
-  // Fetch real categories from backend so we can resolve numeric IDs
-  try {
-    const fetched = await forumStore.fetchCategories();
-    if (fetched && fetched.length > 0) {
-      backendCategories.value = fetched;
-      if (!isEditMode.value) {
-        form.value.category = fetched[0].id; // Default category ID
-      }
-    }
-  } catch (err) {
-    console.warn(
-      "Could not fetch backend categories, will use fallback ID:",
-      err,
-    );
-  }
-
-  // Fetch real tags from backend for suggestion pills
-  try {
-    await tagsStore.fetchTags();
-  } catch (err) {
-    console.warn("Could not fetch backend tags:", err);
-  }
-
   if (isEditMode.value) {
     isFetchingData.value = true;
     try {
       const discId = route.params.id;
-      await forumStore.fetchDiscussion(discId);
+
+      // In EditMode, fetch the discussion details and any missing categories/tags in parallel
+      const [catsResult, , ] = await Promise.all([
+        forumStore.categories && forumStore.categories.length > 0
+          ? Promise.resolve(forumStore.categories)
+          : forumStore.fetchCategories().catch(() => []),
+        tagsStore.tags && tagsStore.tags.length > 0
+          ? Promise.resolve()
+          : tagsStore.fetchTags().catch(() => {}),
+        forumStore.fetchDiscussion(discId)
+      ]);
+
+      if (catsResult && catsResult.length > 0) {
+        backendCategories.value = catsResult;
+      }
+
+      // Background refresh categories & tags to keep cache fresh
+      if (forumStore.categories.length > 0) {
+        forumStore.fetchCategories().then(fetched => {
+          if (fetched && fetched.length > 0) backendCategories.value = fetched;
+        }).catch(() => {});
+        tagsStore.fetchTags().catch(() => {});
+      }
+
       const disc = forumStore.discussion;
       if (disc) {
         const rawBody = getDiscussionDescription(disc);
@@ -593,6 +570,49 @@ onMounted(async () => {
       descriptionEditorRef.value?.setMarkdown(form.value.excerpt);
     }
   } else {
+    // Populate immediately from cache if available
+    if (forumStore.categories && forumStore.categories.length > 0) {
+      backendCategories.value = [...forumStore.categories];
+      if (!form.value.category || form.value.category === "question") {
+        form.value.category = forumStore.categories[0].id;
+      }
+    }
+
+    const fetchCatsNeedBlocking = !forumStore.categories || forumStore.categories.length === 0;
+    const fetchTagsNeedBlocking = !tagsStore.tags || tagsStore.tags.length === 0;
+
+    if (fetchCatsNeedBlocking || fetchTagsNeedBlocking) {
+      // If any of the required caches are missing, fetch them in parallel blockingly
+      try {
+        const [catsResult] = await Promise.all([
+          fetchCatsNeedBlocking
+            ? forumStore.fetchCategories().catch(() => [])
+            : Promise.resolve(forumStore.categories),
+          fetchTagsNeedBlocking
+            ? tagsStore.fetchTags().catch(() => [])
+            : Promise.resolve()
+        ]);
+        if (fetchCatsNeedBlocking && catsResult && catsResult.length > 0) {
+          backendCategories.value = catsResult;
+          if (!form.value.category || form.value.category === "question") {
+            form.value.category = catsResult[0].id;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch categories/tags in parallel:", err);
+      }
+    }
+
+    // Refresh caches in background if they were already loaded block-free
+    if (!fetchCatsNeedBlocking) {
+      forumStore.fetchCategories().then(fetched => {
+        if (fetched && fetched.length > 0) backendCategories.value = fetched;
+      }).catch(() => {});
+    }
+    if (!fetchTagsNeedBlocking) {
+      tagsStore.fetchTags().catch(() => {});
+    }
+
     if (!form.value.title) {
       nextTick(() => {
         const titleInput = document.querySelector(".form-input");

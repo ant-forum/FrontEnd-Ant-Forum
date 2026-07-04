@@ -151,15 +151,25 @@ const handleCancel = () => {
 
 const handleSubmit = async () => {
   if (!form.value.projectName || !form.value.description) {
-    alert("Project name and description are required.");
+    toast.error("Project name and description are required.");
     return;
   }
   if (form.value.tag_ids.length === 0) {
-    alert("Please select at least one tag.");
+    toast.error("Please select at least one tag.");
     return;
   }
+  
+  if (form.value.liveDemoUrl) {
+    // Regex for basic domain or URL validation
+    const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i;
+    if (!urlPattern.test(form.value.liveDemoUrl)) {
+      toast.error("Please enter a valid Live Demo URL.");
+      return;
+    }
+  }
+
   if (!agreeToTerms.value) {
-    alert("Please agree to the developer terms and conditions.");
+    toast.error("Please agree to the developer terms and conditions.");
     return;
   }
 
@@ -205,7 +215,17 @@ const handleSubmit = async () => {
     router.push("/showcase");
   } catch (error) {
     console.error("[CreateProject] handleSubmit error:", error);
-    toast.error("Failed to submit project. Please try again.");
+    
+    let errorMsg = "Failed to submit project. Please try again.";
+    if (error.response?.data?.error && Array.isArray(error.response.data.error)) {
+      errorMsg = "Validation error: " + error.response.data.error.join(", ");
+    } else if (error.response?.data?.message) {
+      errorMsg = error.response.data.message;
+    } else if (error.message) {
+      errorMsg = error.message;
+    }
+    
+    toast.error(errorMsg);
   } finally {
     isSubmitting.value = false;
   }
