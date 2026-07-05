@@ -238,22 +238,21 @@ import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
 import { useProjectStore } from "../../stores/ProjectStore";
 import { useReportStore } from "../../stores/ReportStore";
 import { useForumStore } from "../../stores/ForumStore";
+import { useBlogStore } from "../../stores/BlogStore";
 
 const adminStore = useAdminOperationsStore();
 const projectStore = useProjectStore();
 const reportStore = useReportStore();
 const forumStore = useForumStore();
+const blogStore = useBlogStore();
 const selectedPeriod = ref("Week");
 const periods = ["Day", "Week", "Month"];
 
 onMounted(() => {
-  if (projectStore.projects.length === 0) {
-    projectStore.fetchProjects().catch(() => {});
-  }
+  projectStore.fetchProjects().catch(() => {});
   reportStore.fetchAllReports().catch(() => {});
-  if (forumStore.discussions.length === 0) {
-    forumStore.fetchDiscussions().catch(() => {});
-  }
+  forumStore.fetchDiscussions().catch(() => {});
+  blogStore.fetchBlogs().catch(() => {});
 });
 
 const metrics = computed(() => {
@@ -311,32 +310,48 @@ const chartSets = computed(() => {
   const weekLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const monthLabels = ["W1", "W2", "W3", "W4"];
 
-  const dayData = dayLabels.map((day) => ({ day, discussions: 0, replies: 0, projects: 0 }));
-  const weekData = weekLabels.map((day) => ({ day, discussions: 0, replies: 0, projects: 0 }));
-  const monthData = monthLabels.map((day) => ({ day, discussions: 0, replies: 0, projects: 0 }));
+  const dayData = dayLabels.map((day) => ({ day, discussions: 0, projects: 0, blogs: 0 }));
+  const weekData = weekLabels.map((day) => ({ day, discussions: 0, projects: 0, blogs: 0 }));
+  const monthData = monthLabels.map((day) => ({ day, discussions: 0, projects: 0, blogs: 0 }));
 
   const dayIndexMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 0: 6 };
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentDate = now.getDate();
+
+  const sixDaysAgo = new Date(currentYear, currentMonth, currentDate - 6);
+  sixDaysAgo.setHours(0, 0, 0, 0);
 
   const getIndices = (rawDate) => {
     if (!rawDate) return { dIdx: null, wIdx: null, mIdx: null };
     const d = new Date(rawDate);
     if (isNaN(d.getTime())) return { dIdx: null, wIdx: null, mIdx: null };
     
-    const h = d.getHours();
-    let dIdx = 5;
-    if (h < 10) dIdx = 0;
-    else if (h < 12) dIdx = 1;
-    else if (h < 14) dIdx = 2;
-    else if (h < 16) dIdx = 3;
-    else if (h < 18) dIdx = 4;
-
-    const wIdx = dayIndexMap[d.getDay()];
+    let dIdx = null;
+    let wIdx = null;
+    let mIdx = null;
 
     const dateNum = d.getDate();
-    let mIdx = 3;
+    mIdx = 3;
     if (dateNum <= 7) mIdx = 0;
     else if (dateNum <= 14) mIdx = 1;
     else if (dateNum <= 21) mIdx = 2;
+
+    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth && dateNum === currentDate) {
+      const h = d.getHours();
+      dIdx = 5;
+      if (h < 10) dIdx = 0;
+      else if (h < 12) dIdx = 1;
+      else if (h < 14) dIdx = 2;
+      else if (h < 16) dIdx = 3;
+      else if (h < 18) dIdx = 4;
+    }
+
+    if (d >= sixDaysAgo) {
+      wIdx = dayIndexMap[d.getDay()];
+    }
 
     return { dIdx, wIdx, mIdx };
   };
@@ -345,17 +360,15 @@ const chartSets = computed(() => {
     const rawDate = d.createdAt || d.created_at || d.timestamp;
     const { dIdx, wIdx, mIdx } = getIndices(rawDate);
     
-    const increment = (targetData, idx, replies) => {
+    const increment = (targetData, idx) => {
       if (idx !== null) {
         targetData[idx].discussions += 1;
-        targetData[idx].replies += replies;
       }
     };
 
-    const replies = Array.isArray(d.replies) ? d.replies.length : Number(d.replies || d.comment_count || 0);
-    increment(dayData, dIdx, replies);
-    increment(weekData, wIdx, replies);
-    increment(monthData, mIdx, replies);
+    increment(dayData, dIdx);
+    increment(weekData, wIdx);
+    increment(monthData, mIdx);
   });
 
   projectStore.projects.forEach((p) => {
@@ -365,6 +378,15 @@ const chartSets = computed(() => {
     if (dIdx !== null) dayData[dIdx].projects += 1;
     if (wIdx !== null) weekData[wIdx].projects += 1;
     if (mIdx !== null) monthData[mIdx].projects += 1;
+  });
+
+  blogStore.blogs.forEach((b) => {
+    const rawDate = b.createdAt || b.created_at || b.timestamp || b.publishedAt || b.published_at || b.date;
+    const { dIdx, wIdx, mIdx } = getIndices(rawDate);
+
+    if (dIdx !== null) dayData[dIdx].blogs += 1;
+    if (wIdx !== null) weekData[wIdx].blogs += 1;
+    if (mIdx !== null) monthData[mIdx].blogs += 1;
   });
 
   sets.Day = dayData;
@@ -377,8 +399,8 @@ const chartData = computed(() => chartSets.value[selectedPeriod.value]);
 
 const activitySeries = [
   { key: "discussions", label: "Discussions" },
-  { key: "replies", label: "Replies" },
   { key: "projects", label: "Projects" },
+  { key: "blogs", label: "Blogs" },
 ];
 
 const activityTotals = computed(() =>
@@ -713,14 +735,15 @@ const healthItems = computed(() => [
   background: var(--color-primary);
 }
 
-.activity-bar.replies,
-.legend-dot.replies {
-  background: var(--color-success);
-}
 
 .activity-bar.projects,
 .legend-dot.projects {
   background: var(--color-warning);
+}
+
+.activity-bar.blogs,
+.legend-dot.blogs {
+  background: #9b59b6;
 }
 
 .chart-legend {

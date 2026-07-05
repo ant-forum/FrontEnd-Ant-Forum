@@ -549,12 +549,6 @@ onMounted(async () => {
                         <i class="bi bi-check-circle-fill"></i> Saved
                         Successfully
                       </div>
-                      <button
-                        @click="undoTeacherRating"
-                        class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 fw-semibold xx-small"
-                      >
-                        <i class="bi bi-arrow-counterclockwise"></i> Reset
-                      </button>
                     </div>
                     <div v-else class="text-muted small fw-medium">
                       <i class="bi bi-lightbulb"></i> Click stars to rate
