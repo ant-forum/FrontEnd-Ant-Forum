@@ -63,7 +63,7 @@ onUnmounted(() => {
     <div class="account-menu-divider"></div>
 
     <router-link
-      to="/settings/privacy"
+      to="/settings/security"
       class="account-menu-item"
       @click="emit('close')"
     >
@@ -71,8 +71,8 @@ onUnmounted(() => {
         <i class="bi bi-gear-fill"></i>
       </span>
       <span class="account-menu-copy">
-        <strong>Settings & privacy</strong>
-        <small>Manage privacy and account preferences</small>
+        <strong>Settings</strong>
+        <small>Manage security and account preferences</small>
       </span>
       <i class="bi bi-chevron-right account-menu-chevron"></i>
     </router-link>
