@@ -8,13 +8,35 @@ const ensureSuccess = (response) => {
   }
 };
 
+const getResponseData = (response) => response.data?.data ?? response.data;
+
 export const useUsersStore = defineStore("users", () => {
   const users = ref([]);
   const user = ref(null);
   const isLoading = ref(false);
   const isListLoading = ref(false);
 
-  // Real backend endpoint for creating users
+  const updateUserInState = (id, changes) => {
+    const index = users.value.findIndex(
+      (existingUser) =>
+        String(existingUser.id ?? existingUser._id) === String(id),
+    );
+
+    if (index !== -1) {
+      users.value[index] = {
+        ...users.value[index],
+        ...changes,
+      };
+    }
+
+    if (String(user.value?.id ?? user.value?._id) === String(id)) {
+      user.value = {
+        ...user.value,
+        ...changes,
+      };
+    }
+  };
+
   const createUser = async (payload) => {
     try {
       isLoading.value = true;
@@ -27,22 +49,21 @@ export const useUsersStore = defineStore("users", () => {
         gender: payload.gender,
       });
       ensureSuccess(response);
-      console.log("response", response);
 
-      // Save created user in-memory so they show up in the table instantly!
-      const newUserObj = {
-        id:
-          response.data.data?.id ||
-          response.data.data?._id ||
-          String(Date.now()),
+      const createdUser = getResponseData(response) || {};
+      users.value.push({
+        ...createdUser,
         username: payload.username,
         fullname: payload.fullname,
         email: payload.email,
         role: payload.role,
         gender: payload.gender,
-        createdAt: new Date().toISOString(),
-      };
-      users.value.push(newUserObj);
+        status: createdUser.status || "pending",
+        created_at:
+          createdUser.created_at ||
+          createdUser.createdAt ||
+          new Date().toISOString(),
+      });
 
       return response.data;
     } finally {
@@ -54,21 +75,21 @@ export const useUsersStore = defineStore("users", () => {
   const fetchUsers = async (silent = false) => {
     try {
       if (!silent) isListLoading.value = true;
-      const response = await api.get("/api/admin/gell-all-users");
+      const response = await api.get("/api/admin/users");
       ensureSuccess(response);
-      users.value = response.data.data || response.data;
+      users.value = getResponseData(response) || [];
       return users.value;
     } finally {
-      isListLoading.value = false;
+      if (!silent) isListLoading.value = false;
     }
   };
 
   const fetchUserById = async (id) => {
     try {
       isLoading.value = true;
-      const response = await api.get(`/api/admin/get-user/${id}`);
+      const response = await api.get(`/api/admin/users/${id}`);
       ensureSuccess(response);
-      user.value = response.data.data || response.data;
+      user.value = getResponseData(response);
       return user.value;
     } finally {
       isLoading.value = false;
@@ -78,27 +99,32 @@ export const useUsersStore = defineStore("users", () => {
   const updateUser = async (id, payload) => {
     try {
       isLoading.value = true;
-      
       if (payload.role) {
         const roleResponse = await api.put(`/auth/updateRoleByUserID/${id}`, {
           role: payload.role,
         });
         ensureSuccess(roleResponse);
       }
-
-      const response = await api.put(`/api/admin/update-user/${id}`, payload);
+      const response = await api.patch(`/api/admin/users/${id}`, payload);
       ensureSuccess(response);
+      updateUserInState(id, payload);
       return response.data;
     } finally {
       isLoading.value = false;
     }
   };
 
-  const deleteUser = async (id) => {
+  const setUserStatus = async (id, status) => {
     try {
       isLoading.value = true;
-      const response = await api.delete(`/api/admin/delete-user/${id}`);
+      const response = await api.patch(`/api/admin/users/${id}/status`, {
+        status,
+      });
       ensureSuccess(response);
+      const responseData = getResponseData(response);
+      updateUserInState(id, {
+        status: responseData?.status || status,
+      });
       return response.data;
     } finally {
       isLoading.value = false;
@@ -114,6 +140,6 @@ export const useUsersStore = defineStore("users", () => {
     fetchUsers,
     fetchUserById,
     updateUser,
-    deleteUser,
+    setUserStatus,
   };
 });

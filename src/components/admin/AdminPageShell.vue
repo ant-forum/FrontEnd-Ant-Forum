@@ -9,7 +9,7 @@
         <header class="admin-page-header">
           <div>
             <slot name="before-title"></slot>
-
+            <p class="admin-kicker mb-2" v-if="kicker">{{ kicker }}</p>
             <h1>{{ title }}</h1>
             <p>{{ subtitle }}</p>
           </div>
@@ -92,6 +92,12 @@ defineProps({
   max-width: 760px;
   color: var(--color-text-muted);
   margin-bottom: 0;
+}
+
+@media (max-width: 991.98px) {
+  .admin-page-layout {
+    display: block !important;
+  }
 }
 
 @media (max-width: 767.98px) {

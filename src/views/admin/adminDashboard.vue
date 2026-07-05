@@ -222,44 +222,6 @@
                 </router-link>
               </div>
             </div>
-
-            <div class="card border-0 shadow-sm dashboard-panel">
-              <div class="panel-header">
-                <div>
-                  <h5 class="fw-bold text-adaptive mb-1">System Health</h5>
-                  <p class="text-muted small mb-0">
-                    Current operational snapshot
-                  </p>
-                </div>
-              </div>
-
-              <div class="health-list">
-                <div
-                  v-for="item in healthItems"
-                  :key="item.label"
-                  class="health-item"
-                >
-                  <div
-                    class="d-flex justify-content-between align-items-center mb-2"
-                  >
-                    <span class="fw-bold text-adaptive small">{{
-                      item.label
-                    }}</span>
-                    <span class="text-muted small">{{ item.value }}%</span>
-                  </div>
-                  <div class="progress health-progress">
-                    <div
-                      :class="['progress-bar', item.colorClass]"
-                      :style="{ width: `${item.value}%` }"
-                      role="progressbar"
-                      :aria-valuenow="item.value"
-                      aria-valuemin="0"
-                      aria-valuemax="100"
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
       </div>

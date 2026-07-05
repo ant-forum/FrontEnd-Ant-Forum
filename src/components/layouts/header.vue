@@ -7,6 +7,7 @@ import { useNotificationStore } from "../../stores/NotificationStore";
 import NotificationDropdown from "../notification/NotificationDropdown.vue";
 import AccountDropdown from "./AccountDropdown.vue";
 import BaseModal from "../base/BaseModal.vue";
+import defaultProfilePic from "@/assets/profile.jpg";
 
 const route = useRoute();
 const router = useRouter();
@@ -166,14 +167,15 @@ onMounted(() => {
             @click="toggleAccountMenu"
           >
             <img
-              :src="authStore.user?.profile_pic || '/charles_leclerc.png'"
+              
+              :src="authStore.user?.profile_pic || defaultProfilePic"
               class="rounded-circle border border-2 border-primary-subtle object-fit-cover"
               width="32"
               height="32"
               alt="User"
             />
             <span class="small fw-bold d-none d-xl-block">{{
-              authStore.user?.username
+              authStore.user?.fullname
             }}</span>
             <!-- <i :class="['bi', isAccountMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down', 'account-toggle-chevron']"></i> -->
           </button>
@@ -297,9 +299,9 @@ onMounted(() => {
 
 .brand-logo-img {
   display: block;
-  width: 118px;
+  width: 100px;
   height: auto;
-  max-height: 64px;
+  max-height: 48px;
   object-fit: contain;
 }
 
@@ -418,8 +420,8 @@ onMounted(() => {
   }
 
   .brand-logo-img {
-    width: 108px;
-    max-height: 54px;
+    width: 85px;
+    max-height: 38px;
   }
 }
 

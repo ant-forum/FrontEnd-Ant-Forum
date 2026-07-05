@@ -65,7 +65,7 @@
               />
             </div>
             <small class="text-muted d-block mt-2" style="font-size: 0.75rem"
-              >PNG, JPG up to 2MB</small
+              >PNG, JPG up to 5MB</small
             >
           </div>
         </div>
@@ -283,7 +283,7 @@
         <button
           type="button"
           class="btn btn-primary px-4 d-flex align-items-center gap-2"
-          :disabled="!isValid || isProfileSaving"
+          :disabled="!isValid || !isDirty || isProfileSaving"
           @click="handleSubmit"
         >
           <span
@@ -430,6 +430,7 @@ const form = reactive({
 });
 
 const selectedSkills = ref([]);
+const initialFormState = ref(null);
 
 // Avatar
 const fileInput = ref(null);
@@ -467,14 +468,74 @@ const clearAvatarInput = () => {
 };
 
 const resetForm = () => {
-  const u = userProfilesStore.profile || props.user || {};
-  form.fullname = u.name || u.fullname || "";
-  form.username = u.username || "";
-  form.gender = u.gender || "male";
-  form.bio = u.bio || "";
-  selectedSkills.value = normalizeSkills(u.skills);
-  avatarPreview.value = u.profile_pic ? resolveMediaUrl(u.profile_pic) : "";
+  const profile = userProfilesStore.profile || {};
+  const user = props.user || {};
+
+  form.fullname =
+    profile.fullname || profile.name || user.fullname || user.name || "";
+  form.username = profile.username || user.username || "";
+  form.gender = profile.gender || user.gender || "male";
+  form.bio = profile.bio ?? user.bio ?? "";
+  selectedSkills.value = normalizeSkills(profile.skills ?? user.skills);
+
+  const profilePicture = profile.profile_pic || user.profile_pic || "";
+  avatarPreview.value = profilePicture ? resolveMediaUrl(profilePicture) : "";
+
+  initialFormState.value = getFormState();
 };
+
+const getFormState = () => ({
+  fullname: form.fullname.trim(),
+  username: form.username.trim(),
+  gender: form.gender,
+  bio: form.bio.trim(),
+  skills: normalizeSkills(selectedSkills.value),
+});
+
+const getComparableState = (state) =>
+  JSON.stringify({
+    ...state,
+    skills: normalizeSkills(state.skills)
+      .map((skill) => skill.toLowerCase())
+      .sort(),
+  });
+
+const hasFieldChanged = (field) => {
+  if (!initialFormState.value) return false;
+  return getFormState()[field] !== initialFormState.value[field];
+};
+
+const haveSkillsChanged = () => {
+  if (!initialFormState.value) return false;
+  return (
+    getComparableState({ skills: getFormState().skills }) !==
+    getComparableState({ skills: initialFormState.value.skills })
+  );
+};
+
+const getChangedProfilePayload = () => {
+  const current = getFormState();
+  const payload = {};
+
+  if (hasFieldChanged("fullname")) payload.fullname = current.fullname;
+  if (hasFieldChanged("username")) payload.username = current.username;
+  if (hasFieldChanged("gender")) payload.gender = current.gender;
+  if (hasFieldChanged("bio")) payload.bio = current.bio || null;
+  if (haveSkillsChanged()) {
+    payload.skills = skillsToText(current.skills) || null;
+  }
+
+  return payload;
+};
+
+const getFormSnapshot = () =>
+  getComparableState({
+    fullname: form.fullname.trim(),
+    username: form.username.trim(),
+    gender: form.gender,
+    bio: form.bio.trim(),
+    skills: selectedSkills.value,
+  });
 
 const availableSkillTags = computed(() => {
   const seen = new Set();
@@ -520,6 +581,16 @@ const handleCancel = () => {
 
 onMounted(async () => {
   resetForm();
+
+  if (!form.username.trim() || !form.fullname.trim()) {
+    try {
+      await userProfilesStore.fetchProfile();
+      resetForm();
+    } catch (error) {
+      console.error("Failed to refresh profile form data:", error);
+    }
+  }
+
   if (tagsStore.tags.length === 0) {
     try {
       await tagsStore.fetchTags();
@@ -532,7 +603,7 @@ onMounted(async () => {
 onBeforeUnmount(revokePendingAvatarPreview);
 
 // Watch for store changes or prop updates
-watch(() => userProfilesStore.profile, resetForm, {
+watch([() => userProfilesStore.profile, () => props.user], resetForm, {
   deep: true,
   immediate: true,
 });
@@ -554,8 +625,8 @@ const handleAvatarChange = async (e) => {
     return;
   }
 
-  if (file.size > 2 * 1024 * 1024) {
-    toast.error("Max size is 2MB");
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error("Max size is 5MB");
     clearAvatarInput();
     return;
   }
@@ -566,6 +637,7 @@ const handleAvatarChange = async (e) => {
 
 const handleAvatarCropConfirm = (result) => {
   if (!result) return;
+  confirmAvatarCrop(result);
   revokePendingAvatarPreview();
   pendingAvatarFile.value = result.file;
   pendingAvatarPreview.value = result.previewUrl;
@@ -617,25 +689,28 @@ const confirmAvatarUpload = async () => {
 
 // Validation
 const isValid = computed(() => {
-  return !!form.username.trim() && !!form.fullname.trim() && !!form.gender;
+  if (hasFieldChanged("username") && !form.username.trim()) return false;
+  if (hasFieldChanged("fullname") && !form.fullname.trim()) return false;
+  if (hasFieldChanged("gender") && !form.gender) return false;
+  return true;
 });
+
+const isDirty = computed(
+  () =>
+    Boolean(initialFormState.value) &&
+    getFormSnapshot() !== getComparableState(initialFormState.value),
+);
 
 // Submit
 const handleSubmit = async () => {
-  if (!isValid.value || isProfileSaving.value) return;
+  if (!isValid.value || !isDirty.value || isProfileSaving.value) return;
 
   errorMessage.value = "";
   successMessage.value = "";
 
   try {
     isProfileSaving.value = true;
-    await userProfilesStore.updateProfile({
-      fullname: form.fullname,
-      username: form.username,
-      gender: form.gender,
-      bio: form.bio.trim() || null,
-      skills: skillsToText(selectedSkills.value) || null,
-    });
+    await userProfilesStore.updateProfile(getChangedProfilePayload());
 
     successMessage.value = "Profile saved successfully.";
     toast.success("Profile saved successfully.");
@@ -795,11 +870,7 @@ const getPlatformIcon = (platformStr) => {
 
 .skill-tag-option.active {
   color: #ffffff;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-blue)
-  );
+  background: linear-gradient(135deg, var(--color-primary), var(--color-blue));
   border-color: transparent;
   box-shadow: 0 10px 22px -18px var(--color-primary);
 }
@@ -828,7 +899,7 @@ const getPlatformIcon = (platformStr) => {
   gap: 0.35rem;
   color: #5b21b6;
   background: #ede9fe;
-  border: 1px solid #C1E8FF;
+  border: 1px solid #c1e8ff;
   border-radius: var(--radius-pill);
   padding: 0 0.42rem 0 0.75rem;
   font-size: 0.78rem;

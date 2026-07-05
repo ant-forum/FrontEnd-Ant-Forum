@@ -198,9 +198,14 @@ function toggleSave(d) {
   });
 }
 
-function handleVote(id, direction) {
-  forumStore.toggleVoteDiscussion(id, direction);
-  toast.success(direction === "up" ? "Upvoted!" : "Downvoted!");
+async function handleVote(id, direction) {
+  try {
+    const res = await forumStore.toggleVoteDiscussion(id, direction);
+    if (res && res.ignored) return;
+    toast.success(direction === "up" ? "Upvoted!" : "Downvoted!");
+  } catch (err) {
+    console.error("Failed to vote:", err);
+  }
 }
 
 const categoryGradients = [
@@ -314,6 +319,17 @@ function selectTag(tagName) {
               <i :class="['bi', getCategoryMeta(d).icon]"></i>
               {{ getCategoryMeta(d).label }}
             </span>
+
+            <!-- Tag Badges -->
+            <span
+              v-for="tag in d.tags"
+              :key="tag.label || tag.name || tag"
+              class="tag-chip"
+              :style="getTagStyle(tag.label || tag.name || tag, tag.color)"
+              @click.stop="selectTag(tag.label || tag.name || tag)"
+            >
+              #{{ tag.label || tag.name || tag }}
+            </span>
           </div>
         </div>
 
@@ -337,30 +353,28 @@ function selectTag(tagName) {
           <button
             class="foot-btn replies"
             @click.stop="$router.push(`/forum/${d.id}`)"
+            title="Replies"
           >
             <i class="bi bi-chat-square-text"></i>
-            <span
-              >{{ getReplyCount(d) }}
-              {{ getReplyCount(d) === 1 ? "Reply" : "Replies" }}</span
-            >
+            <span>{{ getReplyCount(d) }}</span>
           </button>
 
           <button
             class="foot-btn bookmark"
             :class="{ 'is-saved': d.saved }"
             @click.stop="toggleSave(d)"
+            :title="d.saved ? 'Saved' : 'Save'"
           >
             <i :class="[d.saved ? 'bi-bookmark-fill' : 'bi-bookmark']"></i>
-            <span>{{ d.saved ? "Saved" : "Save" }}</span>
           </button>
 
           <button
             class="foot-btn share"
             :class="{ 'is-copied': copiedId === d.id }"
             @click.stop="shareThread(d.id)"
+            :title="copiedId === d.id ? 'Copied!' : 'Share'"
           >
             <i :class="[copiedId === d.id ? 'bi-check' : 'bi-share']"></i>
-            <span>{{ copiedId === d.id ? "Copied!" : "Share" }}</span>
           </button>
         </div>
       </div>

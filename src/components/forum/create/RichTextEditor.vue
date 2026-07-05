@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { computed, ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -32,6 +32,16 @@ const showLinkPopup = ref(false);
 const showImageModal = ref(false);
 const isDraggingImage = ref(false);
 const linkUrl = ref("");
+const linkText = ref("");
+const editorStateTrigger = ref(0);
+
+const isOptionActive = (name, attributes = {}) => {
+  const _ = editorStateTrigger.value;
+  return editor.value ? editor.value.isActive(name, attributes) : false;
+};
+
+const linkUrlInputRef = ref(null);
+const linkTextInputRef = ref(null);
 
 const {
   cropSource: blogImageCropSource,
@@ -82,15 +92,21 @@ onMounted(() => {
         const html = editor.value.getHTML();
         emit("update:modelValue", html);
         updateCounts();
+        editorStateTrigger.value++;
       }
+    },
+    onSelectionUpdate: () => {
+      editorStateTrigger.value++;
     },
     onFocus: () => {
       isFocused.value = true;
       emit("focus");
+      editorStateTrigger.value++;
     },
     onBlur: () => {
       isFocused.value = false;
       emit("blur");
+      editorStateTrigger.value++;
     },
   });
 
@@ -138,23 +154,56 @@ const redo = () => editor.value?.chain().focus().redo().run();
 const openLinkPopup = () => {
   const previousUrl = editor.value?.getAttributes("link").href;
   linkUrl.value = previousUrl || "";
+
+  if (editor.value) {
+    const { from, to } = editor.value.state.selection;
+    linkText.value = editor.value.state.doc.textBetween(from, to, " ") || "";
+  } else {
+    linkText.value = "";
+  }
+
   showLinkPopup.value = true;
+  nextTick(() => {
+    if (linkText.value) {
+      linkUrlInputRef.value?.focus();
+    } else {
+      linkTextInputRef.value?.focus();
+    }
+  });
 };
 
 const saveLink = () => {
   const url = linkUrl.value.trim();
-  if (!url) {
-    editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
-  } else {
-    const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-    editor.value
-      ?.chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: normalized })
-      .run();
-  }
+  const text = linkText.value.trim();
   showLinkPopup.value = false;
+
+  if (url === "") {
+    editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
+    return;
+  }
+
+  const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  const displayText = text || url;
+
+  editor.value
+    ?.chain()
+    .focus()
+    .insertContent({
+      type: "text",
+      text: displayText,
+      marks: [
+        {
+          type: "link",
+          attrs: { href: normalized },
+        },
+      ],
+    })
+    .run();
+};
+
+const removeLink = () => {
+  showLinkPopup.value = false;
+  editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
 };
 
 const insertImageFiles = async (files = []) => {
@@ -236,6 +285,7 @@ const handleImageDrop = (event) => {
           <button
             type="button"
             class="toolbar-btn text-btn"
+            :class="{ 'is-active': isOptionActive('heading') }"
             title="Heading"
             @mousedown.prevent="showTextMenu = !showTextMenu"
           >
@@ -248,7 +298,7 @@ const handleImageDrop = (event) => {
                 editor.chain().focus().setParagraph().run();
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('paragraph') }"
+              :class="{ 'is-active': isOptionActive('paragraph') }"
             >
               <i class="bi bi-paragraph"></i> Paragraph
             </button>
@@ -258,7 +308,7 @@ const handleImageDrop = (event) => {
                 toggleHeading(1);
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+              :class="{ 'is-active': isOptionActive('heading', { level: 1 }) }"
             >
               <i class="bi bi-type-h1"></i> Heading 1
             </button>
@@ -268,7 +318,7 @@ const handleImageDrop = (event) => {
                 toggleHeading(2);
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+              :class="{ 'is-active': isOptionActive('heading', { level: 2 }) }"
             >
               <i class="bi bi-type-h2"></i> Heading 2
             </button>
@@ -278,7 +328,7 @@ const handleImageDrop = (event) => {
                 toggleHeading(3);
                 showTextMenu = false;
               "
-              :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+              :class="{ 'is-active': isOptionActive('heading', { level: 3 }) }"
             >
               <i class="bi bi-type-h3"></i> Heading 3
             </button>
@@ -288,7 +338,7 @@ const handleImageDrop = (event) => {
         <button
           type="button"
           @mousedown.prevent="toggleBulletList"
-          :class="{ 'is-active': editor.isActive('bulletList') }"
+          :class="{ 'is-active': isOptionActive('bulletList') }"
           class="toolbar-btn"
           title="Bullet List"
         >
@@ -297,7 +347,7 @@ const handleImageDrop = (event) => {
         <button
           type="button"
           @mousedown.prevent="toggleOrderedList"
-          :class="{ 'is-active': editor.isActive('orderedList') }"
+          :class="{ 'is-active': isOptionActive('orderedList') }"
           class="toolbar-btn"
           title="Numbered List"
         >
@@ -307,7 +357,7 @@ const handleImageDrop = (event) => {
         <button
           type="button"
           @mousedown.prevent="toggleCodeBlock"
-          :class="{ 'is-active': editor.isActive('codeBlock') }"
+          :class="{ 'is-active': isOptionActive('codeBlock') }"
           class="toolbar-btn"
           title="Code Block"
         >
@@ -319,7 +369,7 @@ const handleImageDrop = (event) => {
         <button
           type="button"
           @mousedown.prevent="toggleBold"
-          :class="{ 'is-active': editor.isActive('bold') }"
+          :class="{ 'is-active': isOptionActive('bold') }"
           class="toolbar-btn"
           title="Bold"
         >
@@ -328,7 +378,7 @@ const handleImageDrop = (event) => {
         <button
           type="button"
           @mousedown.prevent="toggleItalic"
-          :class="{ 'is-active': editor.isActive('italic') }"
+          :class="{ 'is-active': isOptionActive('italic') }"
           class="toolbar-btn"
           title="Italic"
         >
@@ -337,7 +387,7 @@ const handleImageDrop = (event) => {
         <button
           type="button"
           @mousedown.prevent="toggleStrike"
-          :class="{ 'is-active': editor.isActive('strike') }"
+          :class="{ 'is-active': isOptionActive('strike') }"
           class="toolbar-btn"
           title="Strikethrough"
         >
@@ -346,7 +396,7 @@ const handleImageDrop = (event) => {
         <button
           type="button"
           @mousedown.prevent="toggleCode"
-          :class="{ 'is-active': editor.isActive('code') }"
+          :class="{ 'is-active': isOptionActive('code') }"
           class="toolbar-btn"
           title="Inline Code"
         >
@@ -356,7 +406,7 @@ const handleImageDrop = (event) => {
         <button
           type="button"
           @mousedown.prevent="openLinkPopup"
-          :class="{ 'is-active': editor.isActive('link') }"
+          :class="{ 'is-active': isOptionActive('link') }"
           class="toolbar-btn"
           title="Link"
         >
@@ -376,7 +426,7 @@ const handleImageDrop = (event) => {
         <button
           type="button"
           @mousedown.prevent="toggleBlockquote"
-          :class="{ 'is-active': editor.isActive('blockquote') }"
+          :class="{ 'is-active': isOptionActive('blockquote') }"
           class="toolbar-btn"
           title="Quote"
         >
@@ -397,32 +447,7 @@ const handleImageDrop = (event) => {
       </div>
     </div>
 
-    <div v-if="showLinkPopup" class="link-popup-panel">
-      <label for="rich-link-url">Link URL</label>
-      <div class="link-row">
-        <input
-          id="rich-link-url"
-          v-model="linkUrl"
-          type="text"
-          placeholder="https://example.com"
-          @keydown.enter.prevent="saveLink"
-        />
-        <button
-          type="button"
-          class="btn-save-link"
-          @mousedown.prevent="saveLink"
-        >
-          Apply
-        </button>
-        <button
-          type="button"
-          class="btn-cancel-link"
-          @mousedown.prevent="showLinkPopup = false"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
+
 
     <!-- TIPTAP WORKSPACE -->
     <div class="rich-editable-container">
@@ -471,6 +496,65 @@ const handleImageDrop = (event) => {
     @confirm="confirmBlogImageCrop"
     @cancel="cancelBlogImageCrop"
   />
+
+  <BaseModal
+    v-if="showLinkPopup"
+    title="Insert Link"
+    icon="bi bi-link-45deg"
+    theme="primary"
+    @closeModal="showLinkPopup = false"
+  >
+    <div class="link-modal-body">
+      <div class="form-group mb-3">
+        <label for="rich-link-text-input" class="form-label small fw-bold text-muted">Link Text</label>
+        <input
+          id="rich-link-text-input"
+          ref="linkTextInputRef"
+          v-model="linkText"
+          type="text"
+          class="form-control"
+          placeholder="e.g. Google"
+          @keydown.enter.prevent="saveLink"
+        />
+      </div>
+      <div class="form-group mb-3">
+        <label for="rich-link-url-input" class="form-label small fw-bold text-muted">URL</label>
+        <input
+          id="rich-link-url-input"
+          ref="linkUrlInputRef"
+          v-model="linkUrl"
+          type="text"
+          class="form-control"
+          placeholder="https://example.com"
+          @keydown.enter.prevent="saveLink"
+        />
+      </div>
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button
+          type="button"
+          class="btn btn-light btn-sm fw-bold border"
+          @click="showLinkPopup = false"
+        >
+          Cancel
+        </button>
+        <button
+          v-if="editor?.getAttributes('link').href"
+          type="button"
+          class="btn btn-outline-danger btn-sm fw-bold"
+          @click="removeLink"
+        >
+          Remove Link
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm fw-bold"
+          @click="saveLink"
+        >
+          Insert
+        </button>
+      </div>
+    </div>
+  </BaseModal>
 </template>
 
 <style scoped>

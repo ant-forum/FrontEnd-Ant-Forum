@@ -151,15 +151,25 @@ const handleCancel = () => {
 
 const handleSubmit = async () => {
   if (!form.value.projectName || !form.value.description) {
-    alert("Project name and description are required.");
+    toast.error("Project name and description are required.");
     return;
   }
   if (form.value.tag_ids.length === 0) {
-    alert("Please select at least one tag.");
+    toast.error("Please select at least one tag.");
     return;
   }
+  
+  if (form.value.liveDemoUrl) {
+    // Regex for basic domain or URL validation
+    const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i;
+    if (!urlPattern.test(form.value.liveDemoUrl)) {
+      toast.error("Please enter a valid Live Demo URL.");
+      return;
+    }
+  }
+
   if (!agreeToTerms.value) {
-    alert("Please agree to the developer terms and conditions.");
+    toast.error("Please agree to the developer terms and conditions.");
     return;
   }
 
@@ -205,7 +215,17 @@ const handleSubmit = async () => {
     router.push("/showcase");
   } catch (error) {
     console.error("[CreateProject] handleSubmit error:", error);
-    toast.error("Failed to submit project. Please try again.");
+    
+    let errorMsg = "Failed to submit project. Please try again.";
+    if (error.response?.data?.error && Array.isArray(error.response.data.error)) {
+      errorMsg = "Validation error: " + error.response.data.error.join(", ");
+    } else if (error.response?.data?.message) {
+      errorMsg = error.response.data.message;
+    } else if (error.message) {
+      errorMsg = error.message;
+    }
+    
+    toast.error(errorMsg);
   } finally {
     isSubmitting.value = false;
   }
@@ -225,6 +245,15 @@ const handleSubmit = async () => {
     <main class="container py-4 flex-grow-1 create-container">
       <div class="row g-4">
         <div class="col-12">
+          <!-- Back Link -->
+          <nav aria-label="breadcrumb" class="mb-3">
+            <router-link
+              to="/showcase"
+              class="back-link d-inline-flex align-items-center gap-2"
+            >
+              <i class="bi bi-arrow-left"></i> Back to Showcase
+            </router-link>
+          </nav>
           <div class="mb-4">
             <h1 class="fw-bold h2 mb-2 text-adaptive">
               {{ isEditMode ? "Edit Project" : "Create New Project" }}
@@ -555,6 +584,22 @@ const handleSubmit = async () => {
 </template>
 
 <style scoped>
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--color-primary);
+  transform: translateX(-3px);
+}
+
 .create-project-page {
   min-height: 100vh;
   background: transparent;

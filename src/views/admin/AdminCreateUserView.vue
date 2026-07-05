@@ -31,9 +31,9 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="field-block">
-            <label>Full Name</label>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Full Name</label>
             <input
               v-model="form.fullname"
               class="form-control"
@@ -48,8 +48,8 @@
             </div>
           </div>
 
-          <div class="field-block">
-            <label>Username</label>
+          <div class="col-md-6">
+            <label class="form-label">Username</label>
             <input
               v-model="form.username"
               class="form-control"
@@ -65,9 +65,9 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="field-block">
-            <label>Email Address</label>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Email Address</label>
             <input
               v-model="form.email"
               class="form-control"
@@ -76,14 +76,25 @@
               placeholder="name@example.com"
               autocomplete="email"
               @input="handleInput('email')"
+              @blur="handleEmailBlur"
             />
             <div v-if="errors.email" class="invalid-feedback d-block">
               {{ errors.email }}
             </div>
           </div>
 
-          <div class="field-block">
-            <label>Password</label>
+          <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label mb-0">Password</label>
+              <button
+                type="button"
+                class="btn btn-link btn-sm p-0 text-decoration-none text-primary"
+                @click="generatePassword"
+                style="font-size: 0.825rem; font-weight: 600;"
+              >
+                <i class="bi bi-shield-lock-fill me-1"></i>Generate Password
+              </button>
+            </div>
             <div class="password-wrapper">
               <input
                 v-model="form.password"
@@ -112,19 +123,19 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="field-block">
-            <label>Role</label>
-            <select v-model="form.role" class="form-select">
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label">Role</label>
+            <select v-model="form.role" class="form-select text-black">
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
               <option value="admin">Admin</option>
             </select>
           </div>
 
-          <div class="field-block">
-            <label>Gender</label>
-            <select v-model="form.gender" class="form-select">
+          <div class="col-md-6">
+            <label class="form-label">Gender</label>
+            <select v-model="form.gender" class="form-select text-black">
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
@@ -217,6 +228,46 @@ const handleInput = (field) => {
     if (field === "password") validatePassword(form.password);
   } else {
     clearError(field);
+  }
+};
+
+const generatePassword = () => {
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+  const specials = "@$!%*?&_";
+  
+  let password = "";
+  // Ensure at least one character from each required set
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += specials[Math.floor(Math.random() * specials.length)];
+  
+  const allChars = uppercase + lowercase + numbers + specials;
+  for (let i = 4; i < 8; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  
+  // Shuffle to randomize positions
+  const shuffled = password.split('').sort(() => 0.5 - Math.random()).join('');
+  
+  form.password = shuffled;
+  
+  // Clear any existing password errors
+  clearError("password");
+  
+  // Show the password to make it copyable
+  showPassword.value = true;
+};
+
+const handleEmailBlur = () => {
+  // Only auto-generate if there is an email, it's valid, and password is empty
+  if (form.email && form.email.trim() !== "") {
+    const isEmailValid = validateEmail(form.email);
+    if (isEmailValid && !form.password) {
+      generatePassword();
+    }
   }
 };
 
@@ -360,10 +411,18 @@ const handleCreateUser = async () => {
 }
 
 .form-control,
-.form-select {
+.form-select,
+.form-select option {
   min-height: 42px;
   border-radius: 8px !important;
+  color: #000000 !important;
   font-size: 0.9rem;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-select option {
+  color: #ffffff !important;
 }
 
 .invite-toggle {

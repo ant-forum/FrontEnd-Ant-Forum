@@ -17,12 +17,17 @@ const toast = useToast();
 const isEditMode = computed(() => route.name === "EditDiscussion");
 const isFetchingData = ref(route.name === "EditDiscussion");
 
-// Backend categories (fetched on mount)
-const backendCategories = ref([]);
+// Backend categories (fetched on mount or from store cache)
+const backendCategories = ref(
+  forumStore.categories && forumStore.categories.length > 0
+    ? [...forumStore.categories]
+    : []
+);
 
 const isEditorFocused = ref(false);
 const isSubmitting = ref(false);
 const showReadiness = ref(true);
+const showGuidelines = ref(true);
 const descriptionEditorRef = ref(null);
 const CODE_SNIPPET_HEADING = "### Code Snippet";
 const attachedCodeSnippetRegex =
@@ -32,7 +37,9 @@ const attachedCodeSnippetRegex =
 const form = ref({
   title: "",
   excerpt: "",
-  category: "question",
+  category: forumStore.categories && forumStore.categories.length > 0
+    ? forumStore.categories[0].id
+    : "question",
   code: "",
   hasCode: false,
 });
@@ -211,36 +218,7 @@ const handleTagKeydown = (e) => {
 };
 
 // Categories and templates
-const categories = [
-  {
-    id: "question",
-    label: "Question",
-    icon: "bi-question-circle",
-    color: "blue",
-    desc: "Get help with a technical problem",
-  },
-  {
-    id: "discussion",
-    label: "Discussion",
-    icon: "bi-chat-dots",
-    color: "blue",
-    desc: "Share ideas, ask open questions, or debate",
-  },
-  {
-    id: "tutorial",
-    label: "Tutorial",
-    icon: "bi-book",
-    color: "orange",
-    desc: "Share a guide, walkthrough, or article",
-  },
-  {
-    id: "idea",
-    label: "Idea / Proposal",
-    icon: "bi-lightbulb",
-    color: "pink",
-    desc: "Propose a new feature or design",
-  },
-];
+const categories = [];
 
 const templates = {
   question:
@@ -495,34 +473,34 @@ onMounted(async () => {
     checkDraft();
   }
 
-  // Fetch real categories from backend so we can resolve numeric IDs
-  try {
-    const fetched = await forumStore.fetchCategories();
-    if (fetched && fetched.length > 0) {
-      backendCategories.value = fetched;
-      if (!isEditMode.value) {
-        form.value.category = fetched[0].id; // Default category ID
-      }
-    }
-  } catch (err) {
-    console.warn(
-      "Could not fetch backend categories, will use fallback ID:",
-      err,
-    );
-  }
-
-  // Fetch real tags from backend for suggestion pills
-  try {
-    await tagsStore.fetchTags();
-  } catch (err) {
-    console.warn("Could not fetch backend tags:", err);
-  }
-
   if (isEditMode.value) {
     isFetchingData.value = true;
     try {
       const discId = route.params.id;
-      await forumStore.fetchDiscussion(discId);
+
+      // In EditMode, fetch the discussion details and any missing categories/tags in parallel
+      const [catsResult, , ] = await Promise.all([
+        forumStore.categories && forumStore.categories.length > 0
+          ? Promise.resolve(forumStore.categories)
+          : forumStore.fetchCategories().catch(() => []),
+        tagsStore.tags && tagsStore.tags.length > 0
+          ? Promise.resolve()
+          : tagsStore.fetchTags().catch(() => {}),
+        forumStore.fetchDiscussion(discId)
+      ]);
+
+      if (catsResult && catsResult.length > 0) {
+        backendCategories.value = catsResult;
+      }
+
+      // Background refresh categories & tags to keep cache fresh
+      if (forumStore.categories.length > 0) {
+        forumStore.fetchCategories().then(fetched => {
+          if (fetched && fetched.length > 0) backendCategories.value = fetched;
+        }).catch(() => {});
+        tagsStore.fetchTags().catch(() => {});
+      }
+
       const disc = forumStore.discussion;
       if (disc) {
         const rawBody = getDiscussionDescription(disc);
@@ -592,6 +570,49 @@ onMounted(async () => {
       descriptionEditorRef.value?.setMarkdown(form.value.excerpt);
     }
   } else {
+    // Populate immediately from cache if available
+    if (forumStore.categories && forumStore.categories.length > 0) {
+      backendCategories.value = [...forumStore.categories];
+      if (!form.value.category || form.value.category === "question") {
+        form.value.category = forumStore.categories[0].id;
+      }
+    }
+
+    const fetchCatsNeedBlocking = !forumStore.categories || forumStore.categories.length === 0;
+    const fetchTagsNeedBlocking = !tagsStore.tags || tagsStore.tags.length === 0;
+
+    if (fetchCatsNeedBlocking || fetchTagsNeedBlocking) {
+      // If any of the required caches are missing, fetch them in parallel blockingly
+      try {
+        const [catsResult] = await Promise.all([
+          fetchCatsNeedBlocking
+            ? forumStore.fetchCategories().catch(() => [])
+            : Promise.resolve(forumStore.categories),
+          fetchTagsNeedBlocking
+            ? tagsStore.fetchTags().catch(() => [])
+            : Promise.resolve()
+        ]);
+        if (fetchCatsNeedBlocking && catsResult && catsResult.length > 0) {
+          backendCategories.value = catsResult;
+          if (!form.value.category || form.value.category === "question") {
+            form.value.category = catsResult[0].id;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch categories/tags in parallel:", err);
+      }
+    }
+
+    // Refresh caches in background if they were already loaded block-free
+    if (!fetchCatsNeedBlocking) {
+      forumStore.fetchCategories().then(fetched => {
+        if (fetched && fetched.length > 0) backendCategories.value = fetched;
+      }).catch(() => {});
+    }
+    if (!fetchTagsNeedBlocking) {
+      tagsStore.fetchTags().catch(() => {});
+    }
+
     if (!form.value.title) {
       nextTick(() => {
         const titleInput = document.querySelector(".form-input");
@@ -676,7 +697,7 @@ const handleSubmit = async () => {
     <Navbar />
 
     <div class="create-page-grid-layout">
-      <LeftSidebar active-tab="questions" />
+      <LeftSidebar active-tab="questions" class="create-left-sidebar" />
 
       <div class="create-wrapper">
         <!-- Back Link & Title Area -->
@@ -1137,6 +1158,72 @@ const handleSubmit = async () => {
                 </div>
               </transition>
             </div>
+
+            <!-- Forum Guidelines Widget -->
+            <div class="readiness-widget guidelines-widget">
+              <div
+                class="widget-header clickable"
+                @click="showGuidelines = !showGuidelines"
+                style="
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  width: 100%;
+                "
+              >
+                <i class="bi bi-file-earmark-text text-gradient-blue"></i>
+                <strong>Forum Guidelines</strong>
+                <i
+                  class="bi ms-auto chevron-toggle"
+                  :class="showGuidelines ? 'bi-chevron-up' : 'bi-chevron-down'"
+                  style="font-size: 11px; color: var(--color-text-muted)"
+                ></i>
+              </div>
+              <transition name="slide-fade">
+                <div
+                  v-if="showGuidelines"
+                  class="readiness-content-body"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    width: 100%;
+                  "
+                >
+                  <p class="guidelines-intro" style="font-size: 12px; color: var(--color-text-muted); margin: 0; line-height: 1.4;">
+                    Follow these guidelines to post effectively:
+                  </p>
+                  <ul class="guidelines-list" style="margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Write a clear, specific, searchable title</span>
+                    </li>
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Include tech stack, framework versions, and OS</span>
+                    </li>
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Format code block using Markdown toolbar button</span>
+                    </li>
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Attach error messages and stack traces</span>
+                    </li>
+                    <li style="font-size: 12px; color: var(--color-text-muted); display: flex; align-items: start; gap: 8px;">
+                      <i class="bi bi-check2-circle text-primary" style="font-size: 13px; margin-top: 1px; flex-shrink: 0;"></i>
+                      <span>Add 2–3 descriptive tags to your post</span>
+                    </li>
+                  </ul>
+                  <div class="guidelines-footer" style="border-top: 1px solid var(--color-border); padding-top: 10px; margin-top: 4px;">
+                    <router-link to="/help" class="text-primary fw-bold" style="font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+                      <span>Read full help guide</span>
+                      <i class="bi bi-arrow-right"></i>
+                    </router-link>
+                  </div>
+                </div>
+              </transition>
+            </div>
           </div>
         </div>
       </div>
@@ -1164,9 +1251,6 @@ const handleSubmit = async () => {
   .create-page-grid-layout {
     grid-template-columns: 1fr;
     padding: 20px 16px 40px;
-  }
-  .left-sidebar-navigation {
-    display: none !important;
   }
 }
 

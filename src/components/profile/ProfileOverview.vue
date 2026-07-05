@@ -49,7 +49,7 @@
                 @click="emit('edit')"
               >
                 <i class="bi bi-pencil-square"></i>
-                <span>Edit Profile</span>
+                <!-- <span>Edit Profile</span> -->
               </button>
             </div>
             <!-- Description -->

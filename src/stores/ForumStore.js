@@ -46,7 +46,7 @@ const normalizeTags = (...candidates) => {
   if (typeof tags === "string") {
     try {
       parsed = JSON.parse(tags);
-    } catch (e) {
+    } catch {
       parsed = tags
         .split(",")
         .map((t) => t.trim())
@@ -93,6 +93,14 @@ const getDiscussionBody = (data = {}) => {
     data.message ||
     ""
   );
+};
+
+const ensureApiSuccess = (response, fallbackMessage) => {
+  const data = response?.data ?? response;
+  if (data?.result === false) {
+    throw new Error(data.message || fallbackMessage);
+  }
+  return data;
 };
 
 const slugifyCategory = (value = "") => {
@@ -176,7 +184,9 @@ const saveLocalVote = (id, voteType) => {
       delete votes[id];
     }
     localStorage.setItem(key, JSON.stringify(votes));
-  } catch (e) {}
+  } catch {
+    // Local vote persistence is optional; ignore storage failures.
+  }
 };
 
 export const useForumStore = defineStore("forum", () => {
@@ -223,16 +233,26 @@ export const useForumStore = defineStore("forum", () => {
     try {
       isLoading.value = true;
 
+      const authStore = useAuthStore();
+      const hasToken = !!authStore.token;
+
       // Parallel fetch discussions and bookmarks (gracefully handle guest users/unauthorized)
-      const [discussionsRes, bookmarksRes] = await Promise.allSettled([
+      const promises = [
         api.get("/api/forums/getAllforum", {
           params: {
             page: page.value,
             limit: 6,
           },
         }),
-        api.get("/api/saved/my-bookmarks"),
-      ]);
+      ];
+
+      if (hasToken) {
+        promises.push(api.get("/api/saved/my-bookmarks"));
+      }
+
+      const results = await Promise.allSettled(promises);
+      const discussionsRes = results[0];
+      const bookmarksRes = hasToken ? results[1] : null;
 
       let discussionsData = [];
       if (discussionsRes.status === "fulfilled") {
@@ -241,20 +261,16 @@ export const useForumStore = defineStore("forum", () => {
           discussionsData = raw;
         } else if (raw && Array.isArray(raw.data)) {
           discussionsData = raw.data;
-        } else if (raw && raw.result && Array.isArray(raw.data)) {
-          discussionsData = raw.data;
         }
       }
 
       let bookmarkedIds = new Set();
-      if (bookmarksRes.status === "fulfilled") {
+      if (bookmarksRes && bookmarksRes.status === "fulfilled") {
         const raw = bookmarksRes.value.data;
         let bookmarksData = [];
         if (Array.isArray(raw)) {
           bookmarksData = raw;
         } else if (raw && Array.isArray(raw.data)) {
-          bookmarksData = raw.data;
-        } else if (raw && raw.result && Array.isArray(raw.data)) {
           bookmarksData = raw.data;
         }
         setBookmarks(bookmarksData);
@@ -299,6 +315,7 @@ export const useForumStore = defineStore("forum", () => {
             : d.comment_count !== undefined
               ? Number(d.comment_count)
               : 0;
+        const votedState = isLiked ? "up" : getLocalVote(d.id) || d.voted || null;
         return {
           ...d,
           category: categoryMeta.slug,
@@ -318,7 +335,7 @@ export const useForumStore = defineStore("forum", () => {
           saved: bookmarkedIds.has(Number(d.id)) || d.saved || false,
           likes: likesCount,
           likedByUser: isLiked,
-          voted: isLiked ? "up" : getLocalVote(d.id) || d.voted || null,
+          voted: votedState,
           votes: d.votes !== undefined ? d.votes : likesCount,
           replies: repliesVal,
           excerpt: d.excerpt || stripMarkdown(d.description || d.body || ""),
@@ -343,12 +360,22 @@ export const useForumStore = defineStore("forum", () => {
     try {
       isLoading.value = true;
 
-      const [discussionRes, bookmarksRes, commentsRes] =
-        await Promise.allSettled([
-          api.get(`/api/forums/getforumById/${id}`),
-          api.get("/api/saved/my-bookmarks"),
-          api.get(`/api/comments/forum/${id}`),
-        ]);
+      const authStore = useAuthStore();
+      const hasToken = !!authStore.token;
+
+      const promises = [
+        api.get(`/api/forums/getforumById/${id}`),
+        api.get(`/api/comments/forum/${id}`),
+      ];
+
+      if (hasToken) {
+        promises.push(api.get("/api/saved/my-bookmarks"));
+      }
+
+      const results = await Promise.allSettled(promises);
+      const discussionRes = results[0];
+      const commentsRes = results[1];
+      const bookmarksRes = hasToken ? results[2] : null;
 
       let discussionData = null;
       if (discussionRes.status === "fulfilled") {
@@ -357,14 +384,12 @@ export const useForumStore = defineStore("forum", () => {
       }
 
       let isBookmarked = false;
-      if (bookmarksRes.status === "fulfilled") {
+      if (bookmarksRes && bookmarksRes.status === "fulfilled") {
         const raw = bookmarksRes.value.data;
         let bookmarksData = [];
         if (Array.isArray(raw)) {
           bookmarksData = raw;
         } else if (raw && Array.isArray(raw.data)) {
-          bookmarksData = raw.data;
-        } else if (raw && raw.result && Array.isArray(raw.data)) {
           bookmarksData = raw.data;
         }
         setBookmarks(bookmarksData);
@@ -383,8 +408,6 @@ export const useForumStore = defineStore("forum", () => {
         if (Array.isArray(raw)) {
           rawComments = raw;
         } else if (raw && Array.isArray(raw.data)) {
-          rawComments = raw.data;
-        } else if (raw && raw.result && Array.isArray(raw.data)) {
           rawComments = raw.data;
         }
         const usersStore = useUsersStore();
@@ -453,6 +476,15 @@ export const useForumStore = defineStore("forum", () => {
             body: bodyContent,
             description: bodyContent,
             author: authorObj,
+            parent_id: c.parent_id || c.parentId || null,
+            is_accepted: Boolean(c.is_accepted || c.isAccepted),
+            likes:
+              c.likes !== undefined
+                ? Number(c.likes)
+                : c.like_count !== undefined
+                  ? Number(c.like_count)
+                  : 0,
+            likedByUser: Boolean(c.likedByUser || c.liked || c.isLiked),
           };
         });
         setComments(commentData);
@@ -533,9 +565,7 @@ export const useForumStore = defineStore("forum", () => {
           ? "up"
           : getLocalVote(discussionData.id) || discussionData.voted || null;
         discussionData.votes =
-          discussionData.votes !== undefined
-            ? discussionData.votes
-            : likesCount;
+          discussionData.voted === "down" ? Math.max(0, likesCount - 1) : likesCount;
 
         setDiscussion(discussionData);
       }
@@ -722,7 +752,7 @@ export const useForumStore = defineStore("forum", () => {
       let res;
       try {
         res = await api.put(`/api/forums/updateforum/${id}`, formattedPayload);
-      } catch (primaryErr) {
+      } catch {
         const fallbackPayload = {
           title: payload.title,
           description: payload.description,
@@ -780,7 +810,7 @@ export const useForumStore = defineStore("forum", () => {
             ? "up"
             : getLocalVote(savedData.id) || savedData.voted || null;
           savedData.votes =
-            savedData.votes !== undefined ? savedData.votes : likesCount;
+            savedData.voted === "down" ? Math.max(0, likesCount - 1) : likesCount;
           savedData.replies =
             savedData.replies !== undefined
               ? savedData.replies
@@ -813,6 +843,24 @@ export const useForumStore = defineStore("forum", () => {
   const deleteDiscussion = async (id) => {
     try {
       const res = await api.delete(`/api/forums/deleteforum/${id}`);
+
+      if (res.data.result) {
+        discussions.value = discussions.value.filter((item) => item.id !== id);
+
+        if (discussion.value?.id === id) {
+          discussion.value = null;
+        }
+      }
+
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err.message;
+    }
+  };
+
+  const adminDeleteForum = async (id) => {
+    try {
+      const res = await api.delete(`/api/forums/adminDeleteForum/${id}`);
 
       if (res.data.result) {
         discussions.value = discussions.value.filter((item) => item.id !== id);
@@ -903,6 +951,15 @@ export const useForumStore = defineStore("forum", () => {
             body: bodyContent,
             description: bodyContent,
             author: authorObj,
+            parent_id: c.parent_id || c.parentId || null,
+            is_accepted: Boolean(c.is_accepted || c.isAccepted),
+            likes:
+              c.likes !== undefined
+                ? Number(c.likes)
+                : c.like_count !== undefined
+                  ? Number(c.like_count)
+                  : 0,
+            likedByUser: Boolean(c.likedByUser || c.liked || c.isLiked),
           };
         });
 
@@ -980,6 +1037,15 @@ export const useForumStore = defineStore("forum", () => {
           body: bodyContent,
           description: bodyContent,
           author: authorObj,
+          parent_id: c.parent_id || c.parentId || null,
+          is_accepted: Boolean(c.is_accepted || c.isAccepted),
+          likes:
+            c.likes !== undefined
+              ? Number(c.likes)
+              : c.like_count !== undefined
+                ? Number(c.like_count)
+                : 0,
+          likedByUser: Boolean(c.likedByUser || c.liked || c.isLiked),
         };
       }
       return null;
@@ -988,18 +1054,34 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
-  const createComment = async (forumId, description) => {
+  const createComment = async (forumId, description, parentId = null) => {
     try {
       const res = await api.post(`/api/comments/create/${forumId}`, {
         description,
+        parent_id: parentId,
       });
+      const responseData = ensureApiSuccess(res, "Failed to create comment");
 
-      if (res.data.result) {
-        let commentData = res.data.data;
+      if (responseData.result) {
+        let commentData = responseData.data;
         if (commentData) {
           const bodyContent = commentData.body || commentData.description || "";
           commentData.body = bodyContent;
           commentData.description = bodyContent;
+          commentData.parent_id =
+            commentData.parent_id || commentData.parentId || parentId || null;
+          commentData.is_accepted = Boolean(
+            commentData.is_accepted || commentData.isAccepted,
+          );
+          commentData.likes =
+            commentData.likes !== undefined
+              ? Number(commentData.likes)
+              : commentData.like_count !== undefined
+                ? Number(commentData.like_count)
+                : 0;
+          commentData.likedByUser = Boolean(
+            commentData.likedByUser || commentData.liked || commentData.isLiked,
+          );
         }
         const usersStore = useUsersStore();
         if (!commentData.author) {
@@ -1070,37 +1152,45 @@ export const useForumStore = defineStore("forum", () => {
         }
       }
 
-      return res.data;
+      return responseData;
     } catch (err) {
-      throw err.response?.data || err.message;
+      throw err.response?.data || err.message || err;
     }
   };
 
   const postReply = async (forumId, payload) => {
     const description = payload.body || payload.description;
-    return await createComment(forumId, description);
+    return await createComment(forumId, description, payload.parent_id || null);
   };
 
   const deleteComment = async (id) => {
     try {
       const res = await api.delete(`/api/comments/delete/${id}`);
+      const responseData = ensureApiSuccess(res, "Failed to delete comment");
 
-      if (res.data.result) {
+      if (responseData.result) {
         comments.value = comments.value.filter((item) => item.id !== id);
         if (discussion.value && Array.isArray(discussion.value.replies)) {
           discussion.value.replies = discussion.value.replies.filter(
-            (item) => item.id !== id,
+            (item) =>
+              Number(item.id) !== Number(id) &&
+              Number(item.parent_id) !== Number(id),
           );
         }
       }
 
-      return res.data;
+      return responseData;
     } catch (err) {
-      throw err.response?.data || err.message;
+      throw err.response?.data || err.message || err;
     }
   };
 
   const fetchBookmarks = async () => {
+    const authStore = useAuthStore();
+    if (!authStore.token) {
+      setBookmarks([]);
+      return [];
+    }
     try {
       const res = await api.get("/api/saved/my-bookmarks");
 
@@ -1109,8 +1199,6 @@ export const useForumStore = defineStore("forum", () => {
       if (Array.isArray(raw)) {
         bookmarksData = raw;
       } else if (raw && Array.isArray(raw.data)) {
-        bookmarksData = raw.data;
-      } else if (raw && raw.result && Array.isArray(raw.data)) {
         bookmarksData = raw.data;
       }
 
@@ -1260,7 +1348,7 @@ export const useForumStore = defineStore("forum", () => {
         bd.likes = likesCount;
         bd.likedByUser = isLiked;
         bd.voted = isLiked ? "up" : getLocalVote(bd.id) || bd.voted || null;
-        bd.votes = bd.votes !== undefined ? bd.votes : likesCount;
+        bd.votes = bd.voted === "down" ? Math.max(0, likesCount - 1) : likesCount;
         bd.replies =
           bd.replies !== undefined
             ? bd.replies
@@ -1351,97 +1439,74 @@ export const useForumStore = defineStore("forum", () => {
 
   const toggleVoteDiscussion = async (id, direction) => {
     try {
-      let res;
+      let target = null;
+      if (discussion.value && Number(discussion.value.id) === Number(id)) {
+        target = discussion.value;
+      }
+
+      const found = discussions.value.find(
+        (item) => Number(item.id) === Number(id),
+      );
+
+      const currentVoted = target ? target.voted : (found ? found.voted : null);
+      
+      let nextVoted = null;
+      let diff = 0;
+      let apiAction = "unlike";
+
       if (direction === "up") {
+        if (currentVoted === "up") {
+          nextVoted = null;
+          diff = -1;
+          apiAction = "unlike";
+        } else if (currentVoted === "down") {
+          nextVoted = "up";
+          diff = 1;
+          apiAction = "like";
+        } else {
+          nextVoted = "up";
+          diff = 1;
+          apiAction = "like";
+        }
+      } else if (direction === "down") {
+        if (currentVoted === "down") {
+          nextVoted = null;
+          diff = 0;
+          apiAction = "unlike";
+        } else if (currentVoted === "up") {
+          nextVoted = "down";
+          diff = -1;
+          apiAction = "unlike";
+        } else {
+          nextVoted = "down";
+          diff = 0;
+          apiAction = "unlike";
+        }
+      }
+
+      let res;
+      if (apiAction === "like") {
         res = await api.post(`/api/forumlike/like/${id}`);
-      } else {
+      } else if (apiAction === "unlike") {
         res = await api.delete(`/api/forumlike/unlike/${id}`);
       }
 
       if (res.data.result) {
-        if (discussion.value && Number(discussion.value.id) === Number(id)) {
-          if (direction === "up") {
-            if (discussion.value.voted !== "up") {
-              discussion.value.votes =
-                (discussion.value.votes || 0) +
-                (discussion.value.voted === "down" ? 2 : 1);
-              discussion.value.voted = "up";
-              discussion.value.likedByUser = true;
-              discussion.value.likes = discussion.value.votes;
-            } else {
-              await api.delete(`/api/forumlike/unlike/${id}`);
-              discussion.value.votes = Math.max(
-                0,
-                (discussion.value.votes || 0) - 1,
-              );
-              discussion.value.voted = null;
-              discussion.value.likedByUser = false;
-              discussion.value.likes = discussion.value.votes;
-            }
-          } else {
-            if (discussion.value.voted !== "down") {
-              discussion.value.votes = Math.max(
-                0,
-                (discussion.value.votes || 0) -
-                  (discussion.value.voted === "up" ? 2 : 1),
-              );
-              discussion.value.voted = "down";
-              discussion.value.likedByUser = false;
-              discussion.value.likes = discussion.value.votes;
-            } else {
-              await api.post(`/api/forumlike/like/${id}`);
-              discussion.value.votes = (discussion.value.votes || 0) + 1;
-              discussion.value.voted = null;
-              discussion.value.likedByUser = true;
-              discussion.value.likes = discussion.value.votes;
-            }
-          }
+        if (target) {
+          target.voted = nextVoted;
+          target.votes = Math.max(0, (target.votes || 0) + diff);
+          target.likedByUser = (nextVoted === "up");
+          target.likes = target.votes;
         }
 
-        const found = discussions.value.find(
-          (item) => Number(item.id) === Number(id),
-        );
         if (found) {
-          if (direction === "up") {
-            if (found.voted !== "up") {
-              found.votes =
-                (found.votes || 0) + (found.voted === "down" ? 2 : 1);
-              found.voted = "up";
-              found.likedByUser = true;
-              found.likes = found.votes;
-            } else {
-              await api.delete(`/api/forumlike/unlike/${id}`);
-              found.votes = Math.max(0, (found.votes || 0) - 1);
-              found.voted = null;
-              found.likedByUser = false;
-              found.likes = found.votes;
-            }
-          } else {
-            if (found.voted !== "down") {
-              found.votes = Math.max(
-                0,
-                (found.votes || 0) - (found.voted === "up" ? 2 : 1),
-              );
-              found.voted = "down";
-              found.likedByUser = false;
-              found.likes = found.votes;
-            } else {
-              await api.post(`/api/forumlike/like/${id}`);
-              found.votes = (found.votes || 0) + 1;
-              found.voted = null;
-              found.likedByUser = true;
-              found.likes = found.votes;
-            }
-          }
+          found.voted = nextVoted;
+          found.votes = Math.max(0, (found.votes || 0) + diff);
+          found.likedByUser = (nextVoted === "up");
+          found.likes = found.votes;
         }
 
-        // Save the new vote state to localStorage
-        const newVoteState = discussion.value
-          ? discussion.value.voted
-          : found
-            ? found.voted
-            : null;
-        saveLocalVote(id, newVoteState);
+        saveLocalVote(id, nextVoted);
       }
 
       return res.data;
@@ -1548,6 +1613,37 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  const acceptComment = async (commentId) => {
+    try {
+      const res = await api.put(`/api/comments/accept/${commentId}`);
+      const responseData = ensureApiSuccess(res, "Failed to update accepted answer");
+
+      if (responseData.result) {
+        const updated = responseData.data;
+        const updatedAccepted = Boolean(
+          updated?.is_accepted || updated?.isAccepted,
+        );
+        const updateList = (list) => {
+          if (!Array.isArray(list)) return;
+          list.forEach((item) => {
+            if (item.parent_id) return;
+            item.is_accepted =
+              Number(item.id) === Number(commentId) ? updatedAccepted : false;
+          });
+        };
+
+        updateList(comments.value);
+        if (discussion.value && Array.isArray(discussion.value.replies)) {
+          updateList(discussion.value.replies);
+        }
+      }
+
+      return responseData;
+    } catch (err) {
+      throw err.response?.data || err.message || err;
+    }
+  };
+
   const fetchDiscussionsByTagName = async (tagName) => {
     try {
       isLoading.value = true;
@@ -1574,24 +1670,27 @@ export const useForumStore = defineStore("forum", () => {
         }
 
         let bookmarkedIds = new Set();
-        try {
-          const bookmarksRes = await api.get("/api/saved/my-bookmarks");
-          const raw = bookmarksRes.data;
-          let bookmarksData = [];
-          if (Array.isArray(raw)) {
-            bookmarksData = raw;
-          } else if (raw && Array.isArray(raw.data)) {
-            bookmarksData = raw.data;
-          } else if (raw && raw.result && Array.isArray(raw.data)) {
-            bookmarksData = raw.data;
+        const authStore = useAuthStore();
+        if (authStore.token) {
+          try {
+            const bookmarksRes = await api.get("/api/saved/my-bookmarks");
+            const raw = bookmarksRes.data;
+            let bookmarksData = [];
+            if (Array.isArray(raw)) {
+              bookmarksData = raw;
+            } else if (raw && Array.isArray(raw.data)) {
+              bookmarksData = raw.data;
+            }
+            bookmarksData.forEach((item) => {
+              if (item.forum_id) bookmarkedIds.add(Number(item.forum_id));
+              else if (item.forum && item.forum.id)
+                bookmarkedIds.add(Number(item.forum.id));
+              else if (item.id) bookmarkedIds.add(Number(item.id));
+            });
+          } catch {
+            // Bookmarks are optional for tag browsing.
           }
-          bookmarksData.forEach((item) => {
-            if (item.forum_id) bookmarkedIds.add(Number(item.forum_id));
-            else if (item.forum && item.forum.id)
-              bookmarkedIds.add(Number(item.forum.id));
-            else if (item.id) bookmarkedIds.add(Number(item.id));
-          });
-        } catch (e) {}
+        }
 
         const mappedDiscussions = forumsList.map((d) => {
           let catStr = d.category;
@@ -1666,7 +1765,7 @@ export const useForumStore = defineStore("forum", () => {
             likes: likesCount,
             likedByUser: isLiked,
             voted: isLiked ? "up" : getLocalVote(d.id) || d.voted || null,
-            votes: d.votes !== undefined ? d.votes : likesCount,
+            votes: (isLiked ? "up" : getLocalVote(d.id) || d.voted || null) === "down" ? Math.max(0, likesCount - 1) : likesCount,
             replies: repliesVal,
             excerpt: d.excerpt || stripMarkdown(d.description || d.body || ""),
           };
@@ -1706,6 +1805,7 @@ export const useForumStore = defineStore("forum", () => {
     createDiscussion,
     updateDiscussion,
     deleteDiscussion,
+    adminDeleteForum,
 
     fetchComments,
     fetchCommentById,
@@ -1720,6 +1820,7 @@ export const useForumStore = defineStore("forum", () => {
     toggleLikeDiscussion,
     toggleLikeComment,
     toggleLikeReply,
+    acceptComment,
     fetchCategories,
     fetchTags,
     fetchDiscussionsByTagName,

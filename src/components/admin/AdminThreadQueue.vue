@@ -505,7 +505,7 @@ const handleDeleteClick = (thread) => {
 };
 
 const goToThread = (id) => {
-  router.push(`/forum/${id}`);
+  router.push(`/admin/threads/${id}`);
 };
 
 const goToProfile = (userId) => {
@@ -690,7 +690,7 @@ const confirmDelete = async () => {
   if (!threadToDelete.value) return;
   isSubmitting.value = true;
   try {
-    await forumStore.deleteDiscussion(threadToDelete.value.id);
+    await forumStore.adminDeleteForum(threadToDelete.value.id);
     toast.success("Discussion thread successfully deleted.");
     closeDeleteModal();
   } catch (err) {
@@ -1189,5 +1189,24 @@ defineExpose({
 .user-clickable:hover .user-name-text {
   color: var(--color-primary);
   text-decoration: underline;
+}
+
+@media (max-width: 767.98px) {
+  .panel-title-row {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .toolbar-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .search-box {
+    min-width: 0 !important;
+    width: 100%;
+  }
+  .compact-select {
+    width: 100%;
+  }
 }
 </style>

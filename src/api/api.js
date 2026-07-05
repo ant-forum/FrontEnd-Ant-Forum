@@ -59,7 +59,7 @@ const canRefreshRequest = (config) =>
   );
 
 const api = axios.create({
-  baseURL: import.meta.env.DEV ? "" : import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.DEV ? "" : (import.meta.env.VITE_API_BASE_URL || "https://ant-forum.khei.work.gd"),
   headers: {
     Accept: "application/json",
   },
@@ -172,6 +172,8 @@ api.interceptors.response.use(
     const skipToast =
       originalRequest?.skipGlobalToast ||
       isProfileRequest ||
+      error.response?.status === 401 ||
+      error.response?.status === 403 ||
       error.response?.data?.message
         ?.toLowerCase()
         .includes("validation error") ||

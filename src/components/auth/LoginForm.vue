@@ -409,18 +409,32 @@ async function handleSignIn() {
   loading.value = true;
   formError.value = "";
   try {
-    await authStore.login({
+    const res = await authStore.login({
       email: form.email,
       password: form.password,
       remember: form.remember,
     });
     await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const userStatus = (authStore.user?.status || "").toLowerCase();
+    if (userStatus === "pending") {
+      toast.warning("Verification required: Please choose your new password.");
+      sessionStorage.setItem("ANT_FirstLogin", "true");
+      sessionStorage.setItem("ANT_VerifiedToken", authStore.token);
+      router.push("/verify");
+      return;
+    }
+
     toast.success("Welcome back! Login successful");
     router.push(getPostLoginRoute());
   } catch (error) {
     console.error("Login failed:", error);
     if (isLockoutError(error)) {
       startLoginLockout(error);
+    } else if (error && error.message && error.message.toLowerCase().includes("suspended")) {
+      formError.value = error.message;
+      errors.email = "true";
+      errors.password = "true";
     } else if (error && error.error) {
       if (Array.isArray(error.error)) {
         let hasPasswordLengthValidation = false;
@@ -884,8 +898,8 @@ async function handleSignIn() {
 /* Alert Banner styling */
 .alert-banner {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
   padding: 12px 16px;
   background-color: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
@@ -894,6 +908,18 @@ async function handleSignIn() {
   font-size: 0.85rem;
   font-weight: 500;
   animation: slideDown 0.3s ease-out;
+  width: 100%;
+}
+
+.alert-banner span {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.alert-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 [data-theme="dark"] .alert-banner {
