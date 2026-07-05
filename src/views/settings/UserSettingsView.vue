@@ -14,12 +14,6 @@ const toast = useToast();
 
 const sections = [
   {
-    id: "privacy",
-    label: "Privacy",
-    description: "Visibility and messaging",
-    icon: "bi-shield-check",
-  },
-  {
     id: "security",
     label: "Security",
     description: "Password and sessions",
@@ -41,7 +35,7 @@ const sections = [
 
 const sectionIds = new Set(sections.map((section) => section.id));
 const activeSection = computed(() =>
-  sectionIds.has(route.params.section) ? route.params.section : "privacy",
+  sectionIds.has(route.params.section) ? route.params.section : "security",
 );
 const role = computed(() =>
   String(authStore.user?.role || "student").toLowerCase(),
@@ -138,7 +132,7 @@ watch(
   () => route.params.section,
   (section) => {
     if (!sectionIds.has(section)) {
-      router.replace("/settings/privacy");
+      router.replace("/settings/security");
     }
   },
   { immediate: true },
@@ -184,143 +178,8 @@ watch(
           </aside>
 
           <section class="settings-panel-wrap">
-            <section v-if="activeSection === 'privacy'" class="settings-panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>Privacy Controls</h2>
-                  <p>
-                    Choose how other forum members can discover and interact
-                    with you.
-                  </p>
-                </div>
-                <span class="preview-badge"
-                  ><i class="bi bi-device-ssd"></i> Device preview</span
-                >
-              </div>
-
-              <div class="field-grid">
-                <label class="field-block">
-                  <span>Profile visibility</span>
-                  <select
-                    v-model="form.privacy.profileVisibility"
-                    class="form-select"
-                  >
-                    <option value="members">Forum members only</option>
-                    <option value="private">Only me</option>
-                    <option value="public">Public profile</option>
-                  </select>
-                  <small
-                    >Student profiles should stay members-only unless public
-                    visibility is intentionally enabled.</small
-                  >
-                </label>
-
-                <label class="field-block">
-                  <span>Who can message you</span>
-                  <select
-                    v-model="form.privacy.messagePermission"
-                    class="form-select"
-                  >
-                    <option value="mentors">Mentors only</option>
-                    <option value="members">Forum members</option>
-                    <option value="none">Nobody</option>
-                  </select>
-                  <small>{{
-                    isMentor
-                      ? "Mentors may accept messages from the wider community."
-                      : "Students default to mentor-only messages."
-                  }}</small>
-                </label>
-              </div>
-
-              <div class="toggle-list">
-                <label class="toggle-row">
-                  <span
-                    ><strong>Show showcase projects</strong
-                    ><small
-                      >Allow members to view projects linked to your
-                      profile.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.privacy.showProjects"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-                <label class="toggle-row">
-                  <span
-                    ><strong>Show recent forum activity</strong
-                    ><small
-                      >Display your recent discussions and replies on your
-                      profile.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.privacy.showActivity"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-                <label class="toggle-row">
-                  <span
-                    ><strong>Show social links</strong
-                    ><small
-                      >Display GitHub and LinkedIn links after you add them to
-                      your profile.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.privacy.showSocialLinks"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-                <label class="toggle-row">
-                  <span
-                    ><strong>Appear in forum search</strong
-                    ><small
-                      >Let other members find your profile by username.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.privacy.searchable"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-              </div>
-
-              <div class="integration-note">
-                <i class="bi bi-info-circle"></i>
-                <span
-                  >The backend must enforce these visibility rules before this
-                  ships. The current save stores a device preview only.</span
-                >
-              </div>
-              <div class="settings-actions">
-                <button
-                  class="btn-secondary-action"
-                  type="button"
-                  :disabled="!hasChanges"
-                  @click="discardChanges"
-                >
-                  Discard
-                </button>
-                <button
-                  class="btn-primary-action"
-                  type="button"
-                  :disabled="!hasChanges"
-                  @click="savePreview"
-                >
-                  <i class="bi bi-check2-circle"></i>
-                  {{ saved ? "Saved on device" : "Save privacy preview" }}
-                </button>
-              </div>
-            </section>
-
             <section
-              v-else-if="activeSection === 'security'"
+              v-if="activeSection === 'security'"
               class="settings-panel"
             >
               <div class="panel-heading">

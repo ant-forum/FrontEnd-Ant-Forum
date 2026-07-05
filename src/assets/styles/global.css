@@ -1193,3 +1193,11 @@ button:disabled {
 }
 
 /* toast end  */
+
+/* Fix select option colors in dark mode (prevent white text on white browser dropdown backgrounds) */
+[data-theme="dark"] select option,
+[data-theme="dark"] option {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+}
+

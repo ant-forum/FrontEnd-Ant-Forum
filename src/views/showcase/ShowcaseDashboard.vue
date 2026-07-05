@@ -167,7 +167,7 @@ onMounted(() => {
               {{ filter }}
             </button>
           </div>
-          <button class="create-btn" @click="router.push('/showcase/create')">
+          <button class="create-btn mb-2" @click="router.push('/showcase/create')">
             <i class="bi bi-plus-lg"></i>
             <span>Submit Project</span>
           </button>

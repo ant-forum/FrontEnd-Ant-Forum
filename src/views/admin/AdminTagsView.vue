@@ -72,7 +72,7 @@
     >
       <form class="taxonomy-form" @submit.prevent="saveTag">
         <label>
-          <span>Tag Name</span>
+          <span>Tag Name <span class="text-danger">*</span></span>
           <input
             v-model.trim="mForm.data.name"
             class="form-control"
@@ -87,7 +87,7 @@
           }}</small>
         </label>
         <label>
-          <span>Description</span>
+          <span>Description <span class="text-danger">*</span></span>
           <textarea
             v-model.trim="mForm.data.description"
             class="form-control"
