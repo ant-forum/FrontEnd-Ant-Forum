@@ -235,7 +235,7 @@
     >
       <form class="edit-project-form" @submit.prevent="handleUpdateProject" novalidate>
         <div class="field-block text-start mb-3">
-          <label class="form-label fw-bold text-adaptive small">Project Title</label>
+          <label class="form-label fw-bold text-adaptive small">Project Title <span class="text-danger">*</span></label>
           <input
             v-model="mEdit.data.title"
             class="form-control"
@@ -250,7 +250,7 @@
         </div>
 
         <div class="field-block text-start mb-3">
-          <label class="form-label fw-bold text-adaptive small">Short Description</label>
+          <label class="form-label fw-bold text-adaptive small">Short Description <span class="text-danger">*</span></label>
           <textarea
             v-model="mEdit.data.description"
             class="form-control"

@@ -132,7 +132,7 @@
     >
       <form class="taxonomy-form" @submit.prevent="saveCategory">
         <label>
-          <span>Category Name</span>
+          <span>Category Name <span class="text-danger">*</span></span>
           <input
             v-model.trim="mForm.data.name"
             class="form-control"
@@ -147,7 +147,7 @@
           }}</small>
         </label>
         <label>
-          <span>Description</span>
+          <span>Description <span class="text-danger">*</span></span>
           <textarea
             v-model.trim="mForm.data.description"
             class="form-control"

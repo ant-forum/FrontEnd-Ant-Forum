@@ -23,28 +23,33 @@
       @delete="openStatusModal"
     >
       <template #panel-actions>
-        <router-link class="btn btn-primary action-btn" to="/admin/users/create">
+        <button
+          class="btn btn-primary action-btn"
+          type="button"
+          @click="openCreateModal"
+        >
           <i class="bi bi-person-plus"></i>
           <span>New User</span>
-        </router-link>
+        </button>
       </template>
     </AdminListPanel>
 
     <!-- Edit Modal -->
+    <!-- Create/Edit Modal -->
     <BaseModal
       v-if="mEdit.isVisible"
-      title="Edit User"
-      icon="bi bi-pencil"
+      :title="isCreateMode ? 'Create User' : 'Edit User'"
+      :icon="isCreateMode ? 'bi bi-person-plus' : 'bi bi-pencil'"
       kicker=""
       @closeModal="closeEditModal"
     >
       <form
         class="edit-user-form"
-        @submit.prevent="handleUpdateUser"
+        @submit.prevent="handleSubmitForm"
         novalidate
       >
         <div class="field-block">
-          <label>Full Name</label>
+          <label>Full Name <span class="text-danger">*</span></label>
           <input
             v-model="mEdit.data.fullname"
             class="form-control"
@@ -59,7 +64,7 @@
         </div>
 
         <div class="field-block">
-          <label>Username</label>
+          <label>Username <span class="text-danger">*</span></label>
           <input
             v-model="mEdit.data.username"
             class="form-control"
@@ -74,7 +79,7 @@
         </div>
 
         <div class="field-block">
-          <label>Email Address</label>
+          <label>Email Address <span class="text-danger">*</span></label>
           <input
             v-model="mEdit.data.email"
             class="form-control"
@@ -88,9 +93,49 @@
           </div>
         </div>
 
+        <!-- Password Field - only visible in Create Mode -->
+        <div v-if="isCreateMode" class="field-block">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="mb-0">Password <span class="text-danger">*</span></label>
+            <button
+              type="button"
+              class="btn btn-link btn-sm p-0 text-decoration-none text-primary"
+              @click="generatePassword"
+              style="font-size: 0.8rem; font-weight: 600;"
+            >
+              <i class="bi bi-shield-lock-fill me-1"></i>Generate Password
+            </button>
+          </div>
+          <div class="password-wrapper">
+            <input
+              v-model="mEdit.data.password"
+              class="form-control password-input"
+              :class="{ 'is-invalid': errors.password }"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Enter password (min 8 chars)"
+              autocomplete="new-password"
+              @input="handleEditInput('password')"
+            />
+            <button
+              type="button"
+              class="eye-toggle"
+              @click="showPassword = !showPassword"
+              tabindex="-1"
+            >
+              <i
+                class="bi"
+                :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"
+              ></i>
+            </button>
+          </div>
+          <div v-if="errors.password" class="invalid-feedback d-block">
+            {{ errors.password }}
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="field-block">
-            <label>Role</label>
+            <label>Role <span class="text-danger">*</span></label>
             <select
               v-model="mEdit.data.role"
               class="form-select"
@@ -108,7 +153,7 @@
           </div>
 
           <div class="field-block">
-            <label>Gender</label>
+            <label>Gender <span class="text-danger">*</span></label>
             <select
               v-model="mEdit.data.gender"
               class="form-select"
@@ -143,7 +188,7 @@
               class="spinner-border spinner-border-sm me-2"
             ></span>
             <i v-else class="bi bi-check-lg me-1"></i>
-            <span>Save Changes</span>
+            <span>{{ isCreateMode ? 'Create User' : 'Save Changes' }}</span>
           </button>
         </div>
       </form>
@@ -231,10 +276,13 @@ import { useRequiredValidator } from "../../composables/useRequiredValidator";
 
 const usersStore = useUsersStore();
 const toast = useToast();
+const isCreateMode = ref(false);
+const showPassword = ref(false);
+const { errors, clearError, validateUsername, validateEmail, validatePassword, validateField } =
+  useRequiredValidator();
+
 const isEditSubmitted = ref(false);
 const isPageLoading = ref(true);
-const { errors, clearError, validateUsername, validateEmail, validateField } =
-  useRequiredValidator();
 
 const handleEditInput = (field) => {
   if (isEditSubmitted.value) {
@@ -242,6 +290,7 @@ const handleEditInput = (field) => {
     if (field === "fullname")
       validateField("fullname", mEdit.data.fullname, "Full name is required.");
     if (field === "email") validateEmail(mEdit.data.email);
+    if (field === "password" && isCreateMode.value) validatePassword(mEdit.data.password);
     if (field === "role")
       validateField("role", mEdit.data.role, "Role is required.");
     if (field === "gender")
@@ -402,12 +451,32 @@ const mEdit = reactive({
     username: "",
     fullname: "",
     email: "",
+    password: "",
     role: "student",
     gender: "male",
   },
 });
 
 const isSaveDisabled = computed(() => {
+  if (isCreateMode.value) {
+    const currentUsername = (mEdit.data.username || "").trim();
+    const currentFullname = (mEdit.data.fullname || "").trim();
+    const currentEmail = (mEdit.data.email || "").trim();
+    const currentPassword = mEdit.data.password || "";
+    const currentRole = mEdit.data.role;
+    const currentGender = mEdit.data.gender;
+
+    return (
+      !currentUsername ||
+      !currentFullname ||
+      !currentEmail ||
+      !currentPassword ||
+      currentPassword.length < 8 ||
+      !currentRole ||
+      !currentGender
+    );
+  }
+
   if (!mEdit.item) return true;
 
   const currentUsername = (mEdit.data.username || "").trim();
@@ -444,11 +513,66 @@ const isSaveDisabled = computed(() => {
   return isUnchanged;
 });
 
-const openEditModal = (mappedUser) => {
+const generatePassword = () => {
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+  const specials = "@$!%*?&_";
+  
+  let password = "";
+  // Ensure at least one character from each required set
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += specials[Math.floor(Math.random() * specials.length)];
+  
+  const allChars = uppercase + lowercase + numbers + specials;
+  for (let i = 4; i < 8; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  
+  // Shuffle to randomize positions
+  const shuffled = password.split('').sort(() => 0.5 - Math.random()).join('');
+  
+  mEdit.data.password = shuffled;
+  
+  // Clear any existing password errors
+  clearError("password");
+  
+  // Show the password to make it copyable
+  showPassword.value = true;
+};
+
+const openCreateModal = () => {
+  isCreateMode.value = true;
   isEditSubmitted.value = false;
+  showPassword.value = false;
   clearError("username");
   clearError("fullname");
   clearError("email");
+  clearError("password");
+  clearError("role");
+  clearError("gender");
+  mEdit.item = null;
+  mEdit.data = {
+    username: "",
+    fullname: "",
+    email: "",
+    password: "",
+    role: "student",
+    gender: "male",
+  };
+  mEdit.isVisible = true;
+};
+
+const openEditModal = (mappedUser) => {
+  isCreateMode.value = false;
+  isEditSubmitted.value = false;
+  showPassword.value = false;
+  clearError("username");
+  clearError("fullname");
+  clearError("email");
+  clearError("password");
   clearError("role");
   clearError("gender");
   mEdit.item = mappedUser;
@@ -456,6 +580,7 @@ const openEditModal = (mappedUser) => {
     username: mappedUser.rawUsername,
     fullname: mappedUser.rawFullname,
     email: mappedUser.rawEmail,
+    password: "",
     role: mappedUser.rawRole || "",
     gender: mappedUser.gender || "",
   };
@@ -467,7 +592,7 @@ const closeEditModal = () => {
   mEdit.item = null;
 };
 
-const handleUpdateUser = async () => {
+const handleSubmitForm = async () => {
   isEditSubmitted.value = true;
 
   const isUsernameValid = validateUsername(mEdit.data.username);
@@ -487,39 +612,55 @@ const handleUpdateUser = async () => {
     mEdit.data.gender,
     "Gender is required.",
   );
+  const isPasswordValid = isCreateMode.value
+    ? validatePassword(mEdit.data.password)
+    : true;
 
   if (
     !isUsernameValid ||
     !isFullnameValid ||
     !isEmailValid ||
     !isRoleValid ||
-    !isGenderValid
+    !isGenderValid ||
+    !isPasswordValid
   ) {
     toast.error("Please fix the validation errors before saving.");
     return;
   }
 
   try {
-    await usersStore.updateUser(mEdit.item.id, {
-      username: mEdit.data.username,
-      fullname: mEdit.data.fullname,
-      email: mEdit.data.email,
-      role: mEdit.data.role,
-      gender: mEdit.data.gender,
-    });
-    toast.success("User updated successfully!");
-    closeEditModal();
-    // Show skeleton while loading the refreshed user list
     isPageLoading.value = true;
+    if (isCreateMode.value) {
+      await usersStore.createUser({
+        username: mEdit.data.username,
+        fullname: mEdit.data.fullname,
+        email: mEdit.data.email,
+        password: mEdit.data.password,
+        role: mEdit.data.role,
+        gender: mEdit.data.gender,
+      });
+      toast.success("User created successfully!");
+    } else {
+      await usersStore.updateUser(mEdit.item.id, {
+        username: mEdit.data.username,
+        fullname: mEdit.data.fullname,
+        email: mEdit.data.email,
+        role: mEdit.data.role,
+        gender: mEdit.data.gender,
+      });
+      toast.success("User updated successfully!");
+    }
+    closeEditModal();
+    // Refresh user list
     await usersStore.fetchUsers(true);
   } catch (error) {
-    console.error("Failed to update user:", error);
+    console.error("Failed to save user:", error);
     const serverMessage = error.response?.data?.message || error.response?.data?.msg || (typeof error.response?.data === 'string' ? error.response.data : '');
     const errorMsg =
       serverMessage ||
       error.message ||
       error.msg ||
-      "An error occurred while updating the user account.";
+      "An error occurred while saving the user account.";
     toast.error(errorMsg);
   } finally {
     isPageLoading.value = false;
@@ -641,5 +782,38 @@ const handleStatusChange = async () => {
   font-size: 0.8rem;
   color: var(--color-danger);
   font-weight: 700;
+}
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input {
+  padding-right: 40px !important;
+}
+
+.eye-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+
+.eye-toggle:hover {
+  color: var(--color-primary);
+}
+
+.password-input.is-invalid {
+  padding-right: 40px !important;
 }
 </style>

@@ -177,7 +177,7 @@ const renderForumContent = (value = "") => {
     const attachmentButton = document.createElement("button");
 
     attachmentButton.type = "button";
-    attachmentButton.className = "forum-image-attachment";
+    attachmentButton.className = "forum-image-attachment mb-2 me-2";
     attachmentButton.dataset.imageSrc = imageUrl;
     attachmentButton.dataset.imageAlt = imageAlt || "Attached forum image";
     attachmentButton.setAttribute(
@@ -1759,10 +1759,10 @@ function getAvatarUrl(author) {
 .reply-body :deep(.forum-image-attachment) {
   width: fit-content;
   max-width: 100%;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.55rem;
-  margin: 0.75rem 0;
+  margin: 0.75rem 0.5rem 0.75rem 0;
   padding: 0.65rem 0.85rem;
   color: var(--color-primary);
   background: var(--color-primary-soft, rgba(84, 131, 179, 0.12));
