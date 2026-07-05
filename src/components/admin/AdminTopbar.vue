@@ -71,8 +71,7 @@
               >
                 <img
                   :src="
-                    item.sender?.avatar || 'https://i.pravatar.cc/150?u=default'
-                  "
+                    item.sender?.avatar || defaultProfilePic"
                   class="avatar-sm rounded-circle"
                   alt="Sender avatar"
                   @error="handleAvatarError"
@@ -258,6 +257,7 @@ import { useAuthStore } from "../../stores/AuthStore";
 import { useNotificationStore } from "../../stores/NotificationStore";
 import { useRouter } from "vue-router";
 import BaseModal from "../base/BaseModal.vue";
+import defaultProfilePic from "@/assets/profile.jpg";
 
 const showLogoutModal = ref(false);
 const isLoggingOut = ref(false);
@@ -607,6 +607,11 @@ onUnmounted(() => {
   z-index: 120;
 }
 
+[data-theme="dark"] .admin-profile-dropdown {
+  background: rgba(2, 16, 36, 1);
+  border-color: rgba(125, 160, 202, 0.2);
+}
+
 .admin-profile-card,
 .admin-profile-menu-item {
   display: flex;
@@ -786,6 +791,11 @@ onUnmounted(() => {
   border-radius: 12px;
   z-index: 100;
   overflow: hidden;
+}
+
+[data-theme="dark"] .dropdown-menu-premium {
+  background: rgba(2, 16, 36, 1);
+  border-color: rgba(125, 160, 202, 0.2);
 }
 
 .dropdown-header-premium {
