@@ -16,6 +16,7 @@
       :rows="mappedProjects"
       :is-loading="isPageLoading"
       clickable-rows
+      :show-actions="false"
       @edit="openEditModal"
       @delete="openDeleteModal"
       @row-click="handleProjectClick"

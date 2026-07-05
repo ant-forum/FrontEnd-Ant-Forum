@@ -9,7 +9,7 @@
             <router-link v-if="crumb.to" :to="crumb.to">{{
               crumb.label
             }}</router-link>
-            <span v-else>Blog Details</span>
+            <span v-else>{{ crumb.label }}</span>
           </template>
         </template>
         <template v-else>
@@ -20,11 +20,6 @@
     </div>
 
     <div class="topbar-right">
-      <label class="topbar-search">
-        <i class="bi bi-search"></i>
-        <input type="search" placeholder="Search admin" />
-      </label>
-
       <button
         class="topbar-icon"
         type="button"

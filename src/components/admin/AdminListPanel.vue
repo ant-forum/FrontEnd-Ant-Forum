@@ -20,10 +20,13 @@
         </div>
       </div>
 
-      <label class="search-box">
-        <i class="bi bi-search"></i>
-        <input v-model.trim="search" type="search" :placeholder="placeholder" />
-      </label>
+      <div class="panel-right-col">
+        <label class="search-box">
+          <i class="bi bi-search"></i>
+          <input v-model.trim="search" type="search" :placeholder="placeholder" />
+        </label>
+        <slot name="panel-actions"></slot>
+      </div>
     </div>
 
     <div v-if="search" class="active-filters" aria-label="Active table filters">
@@ -447,6 +450,13 @@ onBeforeUnmount(() => {
   margin-bottom: 1rem;
 }
 
+.panel-right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
 .panel-title-row h2 {
   color: var(--color-text);
   font-size: 1rem;
@@ -529,6 +539,11 @@ onBeforeUnmount(() => {
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
+  white-space: nowrap !important;
+}
+
+.clean-table td {
+  white-space: nowrap !important;
 }
 
 .identity-cell {
@@ -536,6 +551,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  white-space: normal !important;
 }
 
 .identity-cell strong,
