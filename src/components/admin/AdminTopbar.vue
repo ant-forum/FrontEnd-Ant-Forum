@@ -29,82 +29,7 @@
         <i :class="['bi', isDark ? 'bi-moon-stars-fill' : 'bi-sun-fill']"></i>
       </button>
 
-      <!-- Premium Notification Dropdown Wrapper -->
-      <div class="notification-dropdown-wrapper">
-        <button
-          class="topbar-icon notification-button"
-          type="button"
-          title="Notifications"
-          @click.stop="toggleNotifications"
-        >
-          <i class="bi bi-bell"></i>
-          <span v-if="unreadCount > 0"></span>
-        </button>
 
-        <!-- Notifications Dropdown Menu -->
-        <div
-          v-if="isDropdownOpen"
-          class="dropdown-menu-premium shadow-lg fade-in-scale"
-        >
-          <div
-            class="dropdown-header-premium d-flex justify-content-between align-items-center"
-          >
-            <strong>Notifications ({{ unreadCount }})</strong>
-          </div>
-
-          <div class="dropdown-body-premium">
-            <div
-              v-if="notifications.length === 0"
-              class="empty-notifications text-center py-4 text-muted"
-            >
-              <i class="bi bi-bell-slash fs-3 mb-2 d-block"></i>
-              <span>No new alerts</span>
-            </div>
-
-            <div v-else class="notifications-scroll">
-              <div
-                v-for="item in notifications"
-                :key="item.id"
-                class="notification-item-premium"
-                :class="{ unread: !item.read }"
-                @click="clickNotification(item)"
-              >
-                <img
-                  :src="
-                    item.sender?.avatar || defaultProfilePic"
-                  class="avatar-sm rounded-circle"
-                  alt="Sender avatar"
-                  @error="handleAvatarError"
-                />
-                <div class="flex-grow-1 min-width-0">
-                  <div
-                    class="d-flex justify-content-between align-items-baseline mb-1"
-                  >
-                    <span class="sender-name text-truncate">{{
-                      item.title
-                    }}</span>
-                    <span class="notification-time text-nowrap">{{
-                      formatTimeAgo(item.created_at)
-                    }}</span>
-                  </div>
-                  <p class="notification-text">{{ item.message }}</p>
-                </div>
-                <span v-if="!item.read" class="unread-dot-indicator"></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="dropdown-footer-premium text-center">
-            <router-link
-              to="/notifications"
-              class="text-decoration-none fw-bold"
-              @click="isDropdownOpen = false"
-            >
-              View all notifications
-            </router-link>
-          </div>
-        </div>
-      </div>
 
       <div class="admin-profile-menu-wrapper">
         <button
@@ -179,7 +104,7 @@
 
           <button
             type="button"
-            class="admin-profile-menu-item logout"
+            class="admin-profile-menu-item logout text-start"
             role="menuitem"
             @click="handleLogout"
           >
@@ -254,10 +179,8 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useDarkMode } from "../../composables/useDarkMode";
 import { useAuthStore } from "../../stores/AuthStore";
-import { useNotificationStore } from "../../stores/NotificationStore";
 import { useRouter } from "vue-router";
 import BaseModal from "../base/BaseModal.vue";
-import defaultProfilePic from "@/assets/profile.jpg";
 
 const showLogoutModal = ref(false);
 const isLoggingOut = ref(false);
@@ -275,10 +198,8 @@ defineProps({
 
 const { isDark, toggleDarkMode } = useDarkMode();
 const authStore = useAuthStore();
-const notificationStore = useNotificationStore();
 const router = useRouter();
 
-const isDropdownOpen = ref(false);
 const isProfileMenuOpen = ref(false);
 
 const adminName = computed(
@@ -305,51 +226,10 @@ const adminAvatar = computed(
     authStore.user?.profile_pic ||
     authStore.user?.avatarUrl,
 );
-const profileMenuItems = [
-  {
-    label: "Settings & privacy",
-    description: "Manage privacy and account preferences",
-    icon: "bi bi-gear-fill",
-    to: "/admin/settings",
-  },
-  {
-    label: "Help & support",
-    description: "Guides and community support",
-    icon: "bi bi-question-circle-fill",
-    to: "/help",
-  },
-  {
-    label: "Report a problem",
-    description: "Tell us when something is not working",
-    icon: "bi bi-exclamation-square-fill",
-    to: "/help",
-  },
-];
-
-// Notification Dropdown Computeds & Methods
-const unreadCount = computed(() => notificationStore.unreadCount);
-const notifications = computed(() => notificationStore.allNotifications);
-
-const toggleNotifications = () => {
-  isProfileMenuOpen.value = false;
-  isDropdownOpen.value = !isDropdownOpen.value;
-};
+const profileMenuItems = [];
 
 const toggleProfileMenu = () => {
-  isDropdownOpen.value = false;
   isProfileMenuOpen.value = !isProfileMenuOpen.value;
-};
-
-const markAllRead = () => {
-  notificationStore.markAllAsRead();
-};
-
-const clickNotification = (item) => {
-  notificationStore.markAsRead(item.id);
-  isDropdownOpen.value = false;
-  if (item.link) {
-    router.push(item.link);
-  }
 };
 
 const handleLogout = () => {
@@ -378,29 +258,14 @@ const handleAvatarError = (e) => {
   e.target.src = "https://i.pravatar.cc/150?u=default";
 };
 
-const formatTimeAgo = (dateStr) => {
-  if (!dateStr) return "Just now";
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-};
-
 // Handle clicks outside of dropdown to close it
 const closeDropdown = (e) => {
-  if (!e.target.closest(".notification-dropdown-wrapper")) {
-    isDropdownOpen.value = false;
-  }
   if (!e.target.closest(".admin-profile-menu-wrapper")) {
     isProfileMenuOpen.value = false;
   }
 };
 
 onMounted(() => {
-  notificationStore.fetchNotifications();
   document.addEventListener("click", closeDropdown);
 });
 
@@ -652,6 +517,7 @@ onUnmounted(() => {
 .admin-profile-menu-copy {
   min-width: 0;
   flex: 1;
+  text-align: left;
 }
 
 .admin-profile-card-copy strong,

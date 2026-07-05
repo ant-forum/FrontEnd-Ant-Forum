@@ -17,7 +17,7 @@ const teamMembers = [
     skills: ["Project Management", "Agile", "Architecture", "System Design"],
     accent: "blue",
     github: "PhearomDev",
-    linkedin: "vathana-ant",
+    linkedin: "romskyplus@gmail.com",
     email: "phearom@antforum.io",
   },
   {
@@ -29,7 +29,7 @@ const teamMembers = [
     skills: ["Node.js", "Vue.js", "MySQL", "Hosting Server", "APIs"],
     accent: "pink",
     github: "Asycn2006",
-    linkedin: "vathana-ant",
+    linkedin: "https://www.linkedin.com/in/vong-vathana-7b104b3b6/",
     email: "vongvathana18@gmail.com",
   },
   {
@@ -42,7 +42,7 @@ const teamMembers = [
     accent: "cyan",
     github: "V-Sopanha",
     linkedin: "zin-ant",
-    email: "panha@antforum.io",
+    email: "vsopanha23@gmail.com",
   },
   {
     id: 4,
@@ -54,7 +54,7 @@ const teamMembers = [
     accent: "emerald",
     github: "khikhetun168",
     linkedin: "panha-ant",
-    email: "khikhe@antforum.io",
+    email: "khikhetun@gmail.com",
   },
   {
     id: 5,
@@ -66,7 +66,7 @@ const teamMembers = [
     accent: "rose",
     github: "songhai-yeanlang",
     linkedin: "sopanha-ant",
-    email: "yeanlang@antforum.io",
+    email: "langofficial19@gmail.com",
   },
 ];
 
