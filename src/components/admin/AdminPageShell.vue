@@ -6,7 +6,16 @@
       <AdminTopbar :current-title="title" :breadcrumbs="breadcrumbs" />
 
       <div class="admin-content-wrapper admin-page-content">
-        
+        <header class="admin-page-header">
+          <div>
+            <slot name="before-title"></slot>
+            <p class="admin-kicker mb-2" v-if="kicker">{{ kicker }}</p>
+            <h1>{{ title }}</h1>
+            <p>{{ subtitle }}</p>
+          </div>
+
+          <slot name="actions"></slot>
+        </header>
 
         <AdminMetricGrid v-if="metrics.length" :metrics="metrics" />
         <slot></slot>

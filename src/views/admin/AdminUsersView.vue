@@ -5,13 +5,6 @@
     subtitle="Review accounts, roles, status, and recent user activity."
     :metrics="metrics"
   >
-    <template #actions>
-      <router-link class="btn btn-primary action-btn" to="/admin/users/create">
-        <i class="bi bi-person-plus"></i>
-        <span>New User</span>
-      </router-link>
-    </template>
-
     <AdminListPanel
       title="All Users"
       subtitle="A clean table for managing forum members."
@@ -28,7 +21,14 @@
       :getTabCount="getTabCount"
       @edit="openEditModal"
       @delete="openStatusModal"
-    />
+    >
+      <template #panel-actions>
+        <router-link class="btn btn-primary action-btn" to="/admin/users/create">
+          <i class="bi bi-person-plus"></i>
+          <span>New User</span>
+        </router-link>
+      </template>
+    </AdminListPanel>
 
     <!-- Edit Modal -->
     <BaseModal
@@ -100,7 +100,6 @@
               <option value="">Select Role</option>
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
-              <option value="mentor">Mentor</option>
               <option value="admin">Admin</option>
             </select>
             <div v-if="errors.role" class="invalid-feedback d-block">
@@ -515,7 +514,9 @@ const handleUpdateUser = async () => {
     await usersStore.fetchUsers(true);
   } catch (error) {
     console.error("Failed to update user:", error);
+    const serverMessage = error.response?.data?.message || error.response?.data?.msg || (typeof error.response?.data === 'string' ? error.response.data : '');
     const errorMsg =
+      serverMessage ||
       error.message ||
       error.msg ||
       "An error occurred while updating the user account.";

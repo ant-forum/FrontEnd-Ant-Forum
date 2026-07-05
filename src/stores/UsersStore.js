@@ -75,7 +75,7 @@ export const useUsersStore = defineStore("users", () => {
   const fetchUsers = async (silent = false) => {
     try {
       if (!silent) isListLoading.value = true;
-      const response = await api.get("/api/admin/get-all-users");
+      const response = await api.get("/api/admin/users");
       ensureSuccess(response);
       users.value = getResponseData(response) || [];
       return users.value;
@@ -99,6 +99,12 @@ export const useUsersStore = defineStore("users", () => {
   const updateUser = async (id, payload) => {
     try {
       isLoading.value = true;
+      if (payload.role) {
+        const roleResponse = await api.put(`/auth/updateRoleByUserID/${id}`, {
+          role: payload.role,
+        });
+        ensureSuccess(roleResponse);
+      }
       const response = await api.patch(`/api/admin/users/${id}`, payload);
       ensureSuccess(response);
       updateUserInState(id, payload);
