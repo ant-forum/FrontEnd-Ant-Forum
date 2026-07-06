@@ -4,6 +4,7 @@ import api, {
   AUTH_MODES,
   isSessionInvalidError,
   setAuthRefreshHandler,
+  setSessionInvalidHandler,
 } from "@/api/api";
 import { useNotificationStore } from "./NotificationStore";
 import {
@@ -62,7 +63,6 @@ export const useAuthStore = defineStore("auth", () => {
       });
 
       socket.value.on("connect", () => {
-        console.log("WebSocket connected successfully to", socketUrl);
       });
 
       const handleNotification = (notification) => {
@@ -91,7 +91,6 @@ export const useAuthStore = defineStore("auth", () => {
     if (socket.value) {
       socket.value.disconnect();
       socket.value = null;
-      console.log("WebSocket disconnected.");
     }
   };
 
@@ -188,6 +187,20 @@ export const useAuthStore = defineStore("auth", () => {
       console.error("Failed to clear notification store:", err);
     }
   };
+
+  setSessionInvalidHandler(({ reason } = {}) => {
+    clearSession();
+
+    if (
+      typeof window !== "undefined" &&
+      window.location.pathname !== "/login"
+    ) {
+      if (reason === "suspended") {
+        sessionStorage.setItem("ANT_SessionEndedReason", "suspended");
+      }
+      window.location.replace("/login");
+    }
+  });
 
   const getUserProfile = (data) => {
     const userProfile = { ...data };

@@ -159,6 +159,7 @@ import { useAuthStore } from "../../stores/AuthStore";
 import { useAdminOperationsStore } from "../../stores/AdminOperationsStore";
 import { useProjectStore } from "../../stores/ProjectStore";
 import AdminPageShell from "../../components/admin/AdminPageShell.vue";
+import { resolveMediaUrl } from "../../utils/mediaUrl";
 
 const authStore = useAuthStore();
 const adminStore = useAdminOperationsStore();
@@ -188,9 +189,7 @@ const isTemporaryAvatarUrl = (value) =>
 const usableAvatar = (value) =>
   value && !isTemporaryAvatarUrl(value) ? value : "";
 const profileAvatarFrom = (profile = {}) =>
-  usableAvatar(profile.profile_pic) ||
-  usableAvatar(profile.avatar) ||
-  usableAvatar(profile.avatarUrl);
+  resolveMediaUrl(profile.profile_pic || profile.avatar || profile.avatarUrl || "");
 
 const getStoredProfile = () => {
   try {

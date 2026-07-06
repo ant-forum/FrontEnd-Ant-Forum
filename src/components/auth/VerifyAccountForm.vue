@@ -1,5 +1,8 @@
 <template>
-  <div class="login-card-container">
+  <div
+    class="login-card-container"
+    :class="{ 'password-reset-mode': isOtpVerified }"
+  >
     <div class="login-form-pane">
       <template v-if="!isOtpVerified">
         <h1 class="welcome-title">Check your email</h1>
@@ -450,7 +453,7 @@
     </template>
     </div>
 
-    <div class="login-branding-pane" aria-hidden="true">
+    <div v-if="!isOtpVerified" class="login-branding-pane" aria-hidden="true">
       <div class="graphics-wrapper">
         <div class="mock-editor">
           <div class="editor-header">
@@ -845,24 +848,45 @@ async function handleResetPassword() {
   resetSuccessMsg.value = "";
 
   try {
+    const isFirstLoginFlow =
+      sessionStorage.getItem("ANT_FirstLogin") === "true";
+
     await authStore.resetPassword(
       resetForm.newPassword,
       resetForm.confirmPassword,
       verifiedToken.value,
     );
 
-    resetSuccessMsg.value =
-      "Password reset successfully! Redirecting to login...";
-
     sessionStorage.removeItem("ANT_ResetToken");
     sessionStorage.removeItem("ANT_VerifiedToken");
     sessionStorage.removeItem("ANT_FirstLogin");
 
-    authStore.logout();
+    if (isFirstLoginFlow && authStore.token) {
+      // The successful backend response means the pending account is active.
+      // Update local state so the route guard allows immediate site access.
+      if (authStore.user) {
+        authStore.setUser({ ...authStore.user, status: "active" });
+      }
+      resetSuccessMsg.value =
+        "Password created successfully! Redirecting to your account...";
 
-    setTimeout(() => {
-      router.push("/login");
-    }, 1800);
+      const destination =
+        authStore.user?.role === "admin"
+          ? { name: "AdminDashboard" }
+          : { name: "HomePage" };
+
+      setTimeout(() => {
+        router.push(destination);
+      }, 1800);
+    } else {
+      // Forgot-password recovery starts without a login session.
+      resetSuccessMsg.value =
+        "Password reset successfully! Redirecting to login...";
+
+      setTimeout(() => {
+        router.push("/login");
+      }, 1800);
+    }
   } catch (error) {
     console.error("Password reset failed:", error);
     const errMsg = (
@@ -1373,6 +1397,16 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.login-card-container.password-reset-mode {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 550px;
+}
+
+.password-reset-mode .login-form-pane {
+  padding-right: 52px;
+  padding-left: 52px;
+}
+
 [data-theme="dark"] .login-card-container {
   background: rgba(10, 15, 30, 0.7);
   border-color: rgba(255, 255, 255, 0.08);
@@ -1816,6 +1850,10 @@ onUnmounted(() => {
   }
 
   .login-form-pane {
+    padding: 40px 32px;
+  }
+
+  .password-reset-mode .login-form-pane {
     padding: 40px 32px;
   }
 }

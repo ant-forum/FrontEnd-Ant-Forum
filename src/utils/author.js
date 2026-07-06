@@ -7,7 +7,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
   // First, check if we have a cached user
   if (cachedUser) {
     return {
-      name: cachedUser.name || cachedUser.username || "Unknown",
+      name: cachedUser.name || cachedUser.fullname || cachedUser.username || "Unknown",
       avatar: resolveMediaUrl(
         cachedUser.profile_pic || cachedUser.avatar,
         '/profile.jpg',
@@ -18,17 +18,19 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
 
   // First, check if rawItem has direct author fields (like the forum API returns)
   if (rawItem) {
-    if (rawItem.author || rawItem.author_avatar || rawItem.username) {
+    const directAuthor = rawItem.author || rawItem.user || rawItem.created_by || rawItem.createdBy || rawItem.admin;
+    if (directAuthor || rawItem.author_avatar || rawItem.username) {
+      const u = typeof directAuthor === "object" ? directAuthor : rawItem;
       return {
-        name: rawItem.author || rawItem.username || rawItem.name || "Unknown",
+        name: u.name || u.username || u.author || u.fullname || "Unknown",
         avatar: resolveMediaUrl(
-          rawItem.author_avatar || rawItem.avatar || rawItem.profile_pic,
+          u.profile_pic || u.avatar || rawItem.author_avatar,
           '/profile.jpg',
         ),
-        username: rawItem.username
-          ? `@${rawItem.username}`
-          : rawItem.author
-            ? `@${rawItem.author}`
+        username: u.username
+          ? `@${u.username}`
+          : u.author && typeof u.author === 'string'
+            ? `@${u.author}`
             : "@unknown",
       };
     }

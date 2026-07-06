@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/api";
 import { createPlainTextExcerpt, htmlToPlainText } from "@/utils/richContent";
-import { resolveMediaUrl } from "@/utils/mediaUrl";
+import { resolveMediaUrl, rewriteHtmlMediaUrls } from "@/utils/mediaUrl";
 import { useAuthStore } from "@/stores/AuthStore";
 import { useUsersStore } from "@/stores/UsersStore";
 
@@ -202,7 +202,8 @@ export const useBlogStore = defineStore("blog", () => {
       }
     }
 
-    const content = item.content || item.description || "";
+    const rawContent = item.content || item.description || "";
+    const content = rewriteHtmlMediaUrls(rawContent);
     const plainDescription = htmlToPlainText(content);
 
     // Final fallback for missing avatar

@@ -7,6 +7,8 @@ import {
 
 let refreshAccessTokenHandler = null;
 let refreshRequest = null;
+let sessionInvalidHandler = null;
+let sessionInvalidRequest = null;
 
 export const AUTH_MODES = Object.freeze({
   ACCESS: "access",
@@ -17,6 +19,10 @@ export const AUTH_MODES = Object.freeze({
 
 export const setAuthRefreshHandler = (handler) => {
   refreshAccessTokenHandler = handler;
+};
+
+export const setSessionInvalidHandler = (handler) => {
+  sessionInvalidHandler = handler;
 };
 
 const getAuthMode = (config) => config?.authMode || AUTH_MODES.ACCESS;
@@ -47,6 +53,29 @@ export const isSessionInvalidError = (error) => {
     message.includes("token is required") ||
     message.includes("invalid token or expired")
   );
+};
+
+const isSuspendedAccountError = (error) => {
+  const status = error?.response?.status;
+  const message = getErrorMessage(error);
+  return (
+    status === 403 &&
+    (message.includes("suspended") || message.includes("inactive"))
+  );
+};
+
+const handleInvalidSession = async (error) => {
+  if (!sessionInvalidHandler || sessionInvalidRequest) return;
+
+  sessionInvalidRequest = Promise.resolve(
+    sessionInvalidHandler({
+      reason: isSuspendedAccountError(error) ? "suspended" : "invalid",
+    }),
+  ).finally(() => {
+    sessionInvalidRequest = null;
+  });
+
+  await sessionInvalidRequest;
 };
 
 const canRefreshRequest = (config) =>
@@ -156,15 +185,31 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const toast = useToast();
+    const isSuspendedAccount = isSuspendedAccountError(error);
     const shouldRefresh =
       error.response?.status === 401 && canRefreshRequest(originalRequest);
+
+    if (isSuspendedAccount) {
+      await handleInvalidSession(error);
+      return Promise.reject(error);
+    }
 
     if (shouldRefresh) {
       try {
         return await retryRequestWithFreshToken(originalRequest);
       } catch (refreshError) {
+        if (isSessionInvalidError(refreshError)) {
+          await handleInvalidSession(refreshError);
+        }
         return Promise.reject(refreshError);
       }
+    }
+
+    const isAccessSessionUnauthorized =
+      error.response?.status === 401 &&
+      getAuthMode(originalRequest) === AUTH_MODES.ACCESS;
+    if (isAccessSessionUnauthorized) {
+      await handleInvalidSession(error);
     }
 
     // Skip showing generic toasts for internal auth requests or explicit skips
@@ -174,6 +219,7 @@ api.interceptors.response.use(
       isProfileRequest ||
       error.response?.status === 401 ||
       error.response?.status === 403 ||
+      error.response?.status === 423 ||
       error.response?.data?.message
         ?.toLowerCase()
         .includes("validation error") ||

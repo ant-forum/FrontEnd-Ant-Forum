@@ -266,8 +266,7 @@
                   >
                 </div>
                 <router-link
-                  :to="'/blog/' + post.id"
-                  target="_blank"
+                  :to="'/admin/blogs/' + post.id"
                   class="btn btn-view-article btn-sm rounded-pill px-3 py-1.5 flex-shrink-0"
                   style="font-size: 0.76rem; font-weight: 800"
                 >

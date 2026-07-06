@@ -205,6 +205,12 @@ let lockoutTimerId = null;
 const LOGIN_LOCKOUT_STORAGE_KEY = "ANTForumLoginLockout";
 const DEFAULT_LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
 
+if (sessionStorage.getItem("ANT_SessionEndedReason") === "suspended") {
+  formError.value =
+    "Your account has been suspended. Please contact support.";
+  sessionStorage.removeItem("ANT_SessionEndedReason");
+}
+
 const {
   errors,
   clearError: baseClearError,

@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "@/api/api.js";
-import { resolveMediaUrl } from "@/utils/mediaUrl";
+import { resolveMediaUrl, rewriteHtmlMediaUrls } from "@/utils/mediaUrl";
 import { resolveAuthor } from "@/utils/author";
 import { useAuthStore } from "./AuthStore.js";
 import { useForumStore } from "./ForumStore.js";
@@ -41,8 +41,9 @@ export const useProjectStore = defineStore("project", () => {
 
   const fetchAndCacheUser = async (userId) => {
     if (!userId || userCache.value[userId]) return;
+
     try {
-      const res = await api.get(`/api/admin/get-user/${userId}`);
+      const res = await api.get(`/api/get-user/profile/${userId}`, { skipGlobalToast: true });
       const userData = res.data?.data || res.data;
       if (userData) {
         userCache.value[userId] = userData;
@@ -85,7 +86,7 @@ export const useProjectStore = defineStore("project", () => {
       view_count: views,
       views,
       title: item.title || "",
-      description: item.description || "",
+      description: rewriteHtmlMediaUrls(item.description || ""),
       image,
       thumbnail: image,
       link: item.link || "",
