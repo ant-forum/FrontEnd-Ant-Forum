@@ -113,7 +113,7 @@ export const useNotificationStore = defineStore("notification", () => {
       if (response.data && response.data.result) {
         const allowedTypes = ["comment", "like", "like_comment", "like comment", "rating", "rate", "update_rate"];
         const filtered = response.data.data.filter(n => allowedTypes.includes(n.type));
-        console.log("Filtered Notifications:", filtered);
+
         notifications.value = filtered.map(n => mapNotification(n));
       }
     } catch (error) {
