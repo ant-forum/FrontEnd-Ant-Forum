@@ -103,7 +103,9 @@ export const useNotificationStore = defineStore("notification", () => {
 
   const fetchNotifications = async () => {
     const authStore = useAuthStore();
-    if (!authStore.token) {
+    const isPendingAccount =
+      String(authStore.user?.status || "").toLowerCase() === "pending";
+    if (!authStore.token || isPendingAccount) {
       notifications.value = [];
       return;
     }

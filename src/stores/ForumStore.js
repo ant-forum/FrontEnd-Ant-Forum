@@ -80,6 +80,12 @@ const unwrapDiscussionPayload = (raw) => {
   );
 };
 
+const canFetchPrivateForumData = (authStore) =>
+  Boolean(
+    authStore.token &&
+      String(authStore.user?.status || "").toLowerCase() !== "pending",
+  );
+
 const getDiscussionBody = (data = {}) => {
   return (
     data.description ||
@@ -234,7 +240,7 @@ export const useForumStore = defineStore("forum", () => {
       isLoading.value = true;
 
       const authStore = useAuthStore();
-      const hasToken = !!authStore.token;
+      const hasToken = canFetchPrivateForumData(authStore);
 
       // Parallel fetch discussions and bookmarks (gracefully handle guest users/unauthorized)
       const promises = [
@@ -360,7 +366,9 @@ export const useForumStore = defineStore("forum", () => {
     if (isLoading.value) return; // Don't interrupt a main fetch
     try {
       const authStore = useAuthStore();
-      const hasToken = !!authStore.token && String(authStore.user?.role).toLowerCase() !== "admin";
+      const hasToken =
+        canFetchPrivateForumData(authStore) &&
+        String(authStore.user?.role).toLowerCase() !== "admin";
 
       const promises = [
         api.get("/api/forums/getAllforum", {
@@ -449,7 +457,7 @@ export const useForumStore = defineStore("forum", () => {
       isLoading.value = true;
 
       const authStore = useAuthStore();
-      const hasToken = !!authStore.token;
+      const hasToken = canFetchPrivateForumData(authStore);
 
       const promises = [
         api.get(`/api/forums/getforumById/${id}`),
@@ -1275,7 +1283,7 @@ export const useForumStore = defineStore("forum", () => {
 
   const fetchBookmarks = async () => {
     const authStore = useAuthStore();
-    if (!authStore.token) {
+    if (!canFetchPrivateForumData(authStore)) {
       setBookmarks([]);
       return [];
     }
@@ -1759,7 +1767,7 @@ export const useForumStore = defineStore("forum", () => {
 
         let bookmarkedIds = new Set();
         const authStore = useAuthStore();
-        if (authStore.token) {
+        if (canFetchPrivateForumData(authStore)) {
           try {
             const bookmarksRes = await api.get("/api/saved/my-bookmarks");
             const raw = bookmarksRes.data;
