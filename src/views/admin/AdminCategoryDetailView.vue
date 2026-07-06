@@ -249,7 +249,7 @@
               <div class="card-footer-meta">
                 <img
                   :src="
-                    post.author_avatar || 'https://i.pravatar.cc/150?u=author'
+                    post.author_avatar || '/profile.jpg'
                   "
                   class="rounded-circle object-fit-cover author-avatar"
                   width="30"

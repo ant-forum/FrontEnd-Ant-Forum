@@ -32,8 +32,7 @@ import AdminUsersView from "../views/admin/AdminUsersView.vue";
 import AdminCreateUserView from "../views/admin/AdminCreateUserView.vue";
 import ProjectReviewManagement from "../views/admin/ProjectReviewManagement.vue";
 import ThreadModerationView from "../views/admin/ThreadModerationView.vue";
-import AdminAnalyticsView from "../views/admin/AdminAnalyticsView.vue";
-import AdminSettingsView from "../views/admin/AdminSettingsView.vue";
+
 import AdminBlogsView from "../views/admin/AdminBlogsView.vue";
 import AdminBlogCreateView from "../views/admin/AdminBlogCreateView.vue";
 import AdminCategoriesView from "../views/admin/AdminCategoriesView.vue";
@@ -239,18 +238,8 @@ const routes = [
     meta: { requiresAuth: true, role: "admin" },
     component: AdminThreadDetailsView,
   },
-  {
-    path: "/admin/analytics",
-    name: "Analytics",
-    meta: { requiresAuth: true, role: "admin" },
-    component: AdminAnalyticsView,
-  },
-  {
-    path: "/admin/settings",
-    name: "Settings",
-    meta: { requiresAuth: true, role: "admin" },
-    component: AdminSettingsView,
-  },
+
+
   {
     path: "/admin/blogs",
     name: "AdminBlogs",

@@ -34,10 +34,14 @@ export const useNotificationStore = defineStore("notification", () => {
        type = "like";
        title = `${n.sender_username} liked your post`;
        message = `${n.sender_username} reacted to your content.`;
-    } else if (n.type === "mention") {
-       type = "mention";
-       title = `${n.sender_username} mentioned you`;
-       message = `${n.sender_username} mentioned you.`;
+    } else if (n.type === "like comment" || n.type === "like_comment") {
+       type = "like";
+       title = `${n.sender_username} liked your comment`;
+       message = `${n.sender_username} liked a comment you made.`;
+    } else if (n.type === "rating" || n.type === "rate" || n.type === "update_rate") {
+        type = "system";
+       title = n.type === "update_rate" ? `${n.sender_username} updated their rating on your project` : `${n.sender_username} rated your project`;
+       message = `${n.sender_username} left a rating on your project.`;
     }
     
     const baseUrl = import.meta.env.VITE_API_BASE_URL || "https://ant-forum.khei.work.gd";
@@ -45,25 +49,34 @@ export const useNotificationStore = defineStore("notification", () => {
     const targetId = n.forum_id || n.forumId || n.forum?.id || 
                      n.post_id || n.postId || n.post?.id || 
                      n.discussion_id || n.discussionId || n.discussion?.id || 
+                     n.project_id || n.projectId || n.project?.id ||
                      n.reference_id || n.referenceId || 
                      n.target_id || n.targetId || 
                      n.related_id || n.relatedId || 
                      n.item_id || n.itemId || 
                      n.parent_id || n.parentId ||
-                     n.data?.forum_id || n.data?.post_id || n.data?.discussion_id || n.data?.id ||
-                     n.metadata?.forum_id || n.metadata?.post_id || n.meta?.forum_id || n.meta?.post_id;
+                     n.data?.forum_id || n.data?.post_id || n.data?.discussion_id || n.data?.project_id || n.data?.id ||
+                     n.metadata?.forum_id || n.metadata?.post_id || n.meta?.forum_id || n.meta?.post_id || n.meta?.project_id;
     
-    const forumId = n.forum_id || n.forumId || targetId;
+    const forumId = n.forum_id || n.forumId || (n.type !== "rating" && n.type !== "rate" ? targetId : null);
     const commentId = n.comment_id || n.commentId || n.entity_id || n.entityId || (n.reference_type === "comment" ? n.referent_id : null);
     
     let linkUrl = "#";
-    if (forumId) {
-      linkUrl = `/forum/${forumId}`;
-      if (commentId) {
-        linkUrl += `#comment-${commentId}`;
+    if (n.type === "rating" || n.type === "rate" || n.type === "update_rate") {
+      if (targetId) {
+        linkUrl = `/showcase/${targetId}`;
+      } else if ((n.link && n.link !== "#") || (n.url && n.url !== "#")) {
+        linkUrl = (n.link && n.link !== "#") ? n.link : n.url;
       }
-    } else if ((n.link && n.link !== "#") || (n.url && n.url !== "#")) {
-      linkUrl = (n.link && n.link !== "#") ? n.link : n.url;
+    } else {
+      if (forumId) {
+        linkUrl = `/forum/${forumId}`;
+        if (commentId) {
+          linkUrl += `#comment-${commentId}`;
+        }
+      } else if ((n.link && n.link !== "#") || (n.url && n.url !== "#")) {
+        linkUrl = (n.link && n.link !== "#") ? n.link : n.url;
+      }
     }
 
     return {
@@ -98,7 +111,10 @@ export const useNotificationStore = defineStore("notification", () => {
     try {
       const response = await api.get('/api/notifications/getnotification');
       if (response.data && response.data.result) {
-        notifications.value = response.data.data.map(n => mapNotification(n));
+        const allowedTypes = ["comment", "like", "like_comment", "like comment", "rating", "rate", "update_rate"];
+        const filtered = response.data.data.filter(n => allowedTypes.includes(n.type));
+        console.log("Filtered Notifications:", filtered);
+        notifications.value = filtered.map(n => mapNotification(n));
       }
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
@@ -136,11 +152,18 @@ export const useNotificationStore = defineStore("notification", () => {
   };
 
   const addNotification = (item) => {
-    notifications.value.unshift({
+    const newItem = {
       id: Date.now(),
       read: false,
       created_at: new Date().toISOString(),
       ...item,
+    };
+    notifications.value.unshift(newItem);
+    
+    // Show a real-time toast to the user
+    import("../composables/useToast").then(({ useToast }) => {
+      const toast = useToast();
+      toast.info(`New Notification: ${newItem.title}`);
     });
   };
 

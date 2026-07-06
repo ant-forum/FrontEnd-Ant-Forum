@@ -296,6 +296,7 @@ import { useToast } from "../../composables/useToast";
 import hljs from "highlight.js";
 import "highlight.js/styles/atom-one-dark.css";
 import { renderStoredContent } from "../../utils/richContent";
+import { resolveMediaUrl } from "../../utils/mediaUrl";
 
 const route = useRoute();
 const router = useRouter();
@@ -373,12 +374,12 @@ const authorRole = computed(() => {
 
 const authorAvatar = computed(() => {
   const rawAvatar = cachedAuthor.value?.profile_pic || cachedAuthor.value?.avatar || blog.value?.author_avatar;
-  if (rawAvatar) return rawAvatar;
-  return "https://i.pravatar.cc/150?u=admin";
+  if (rawAvatar) return resolveMediaUrl(rawAvatar);
+  return '/profile.jpg';
 });
 
 const handleAuthorAvatarError = (e) => {
-  e.target.src = "https://i.pravatar.cc/150?u=admin";
+  e.target.src = '/profile.jpg';
 };
 
 // Loading logic

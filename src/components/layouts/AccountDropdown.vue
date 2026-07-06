@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import defaultProfilePic from "@/assets/profile.jpg";
+const defaultProfilePic = "/profile.jpg";
 
 const props = defineProps({
   user: {
@@ -102,16 +102,7 @@ onUnmounted(() => {
       <i class="bi bi-chevron-right account-menu-chevron"></i>
     </router-link>
 
-    <router-link to="/help" class="account-menu-item" @click="emit('close')">
-      <span class="account-menu-icon">
-        <i class="bi bi-exclamation-square-fill"></i>
-      </span>
-      <span class="account-menu-copy">
-        <strong>Report a problem</strong>
-        <small>Tell us when something is not working</small>
-      </span>
-      <i class="bi bi-chevron-right account-menu-chevron"></i>
-    </router-link>
+
 
     <button type="button" class="account-menu-item" @click="emit('logout')">
       <span class="account-menu-icon">
@@ -123,15 +114,7 @@ onUnmounted(() => {
       </span>
     </button>
 
-    <footer class="account-menu-footer">
-      <router-link to="/help" @click="emit('close')">Privacy</router-link>
-      <span>·</span>
-      <router-link to="/help" @click="emit('close')">Terms</router-link>
-      <span>·</span>
-      <router-link to="/help" @click="emit('close')"
-        >Community guidelines</router-link
-      >
-    </footer>
+
   </aside>
 </template>
 
@@ -277,24 +260,7 @@ onUnmounted(() => {
   font-size: 0.8rem;
 }
 
-.account-menu-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 16px 14px 4px;
-  color: var(--color-text-muted);
-  font-size: 0.7rem;
-}
 
-.account-menu-footer a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.account-menu-footer a:hover {
-  color: var(--color-text);
-}
 
 @media (max-width: 480px) {
   .account-dropdown {

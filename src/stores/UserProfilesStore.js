@@ -43,13 +43,8 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
 
       // Fetch social links at the same time
       try {
-        const socialRes = await api.get("/api/sociallink/get-all/social-link");
-        const links = socialRes.data?.data || socialRes.data || [];
-        socialLinks.value =
-          links.filter(
-            (l) =>
-              Number(l.user_id) === Number(profile.value?.id) || !l.user_id,
-          ) || [];
+        const socialRes = await api.get("/api/get-owner/social-link");
+        socialLinks.value = socialRes.data?.data || socialRes.data || [];
       } catch (e) {
         console.warn("Failed to fetch social links", e);
       }
@@ -184,25 +179,46 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
   const addSocialLink = async (platform, url) => {
     try {
       isLoading.value = true;
-      const res = await api.post("/api/sociallink/createSocialLink", {
+      const res = await api.post("/api/createSocialLink", {
         platform,
         url,
-        user_id: profile.value?.id,
       });
       if (res.data && res.data.result === false)
         throw new Error(res.data.message);
 
       // Refetch
-      const socialRes = await api.get("/api/sociallink/get-all/social-link");
-      const links = socialRes.data?.data || socialRes.data || [];
-      socialLinks.value =
-        links.filter(
-          (l) => Number(l.user_id) === Number(profile.value?.id) || !l.user_id,
-        ) || [];
+      const socialRes = await api.get("/api/get-owner/social-link");
+      socialLinks.value = socialRes.data?.data || socialRes.data || [];
       return res.data;
     } catch (err) {
       error.value =
         err.response?.data?.message || err.message || "Failed to add link";
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  /**
+   * Update Social Link
+   */
+  const updateSocialLink = async (id, platform, url) => {
+    try {
+      isLoading.value = true;
+      const res = await api.put(`/api/update/social-link/${id}`, {
+        platform,
+        url,
+      });
+      if (res.data && res.data.result === false)
+        throw new Error(res.data.message);
+
+      // Refetch
+      const socialRes = await api.get("/api/get-owner/social-link");
+      socialLinks.value = socialRes.data?.data || socialRes.data || [];
+      return res.data;
+    } catch (err) {
+      error.value =
+        err.response?.data?.message || err.message || "Failed to update link";
       throw err;
     } finally {
       isLoading.value = false;
@@ -215,15 +231,11 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
   const deleteSocialLink = async (id) => {
     try {
       isLoading.value = true;
-      await api.delete(`/api/sociallink/delete/social-link/${id}`);
+      await api.delete(`/api/delete/social-link/${id}`);
 
       // Refetch
-      const socialRes = await api.get("/api/sociallink/get-all/social-link");
-      const links = socialRes.data?.data || socialRes.data || [];
-      socialLinks.value =
-        links.filter(
-          (l) => Number(l.user_id) === Number(profile.value?.id) || !l.user_id,
-        ) || [];
+      const socialRes = await api.get("/api/get-owner/social-link");
+      socialLinks.value = socialRes.data?.data || socialRes.data || [];
     } catch (err) {
       error.value =
         err.response?.data?.message || err.message || "Failed to delete link";
@@ -291,14 +303,12 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
    * Fetch Viewed User Social Links
    */
   const fetchViewedSocialLinks = async (userId) => {
-    const res = await api.get("/api/sociallink/get-all/social-link");
-    const links = res.data?.data || res.data || [];
-    if (links.length > 0 && links[0].user_id) {
-      viewedSocialLinks.value = links.filter(
-        (l) => Number(l.user_id) === Number(userId),
-      );
-    } else {
-      viewedSocialLinks.value = links;
+    try {
+      const res = await api.get(`/api/get-social-links/${userId}`);
+      viewedSocialLinks.value = res.data?.data || res.data || [];
+    } catch (err) {
+      console.error("[UserProfilesStore] fetchViewedSocialLinks failed:", err);
+      viewedSocialLinks.value = [];
     }
     return viewedSocialLinks.value;
   };
@@ -315,6 +325,7 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
     updateProfile,
     uploadAvatar,
     addSocialLink,
+    updateSocialLink,
     deleteSocialLink,
     fetchViewedProfile,
     fetchViewedProjects,

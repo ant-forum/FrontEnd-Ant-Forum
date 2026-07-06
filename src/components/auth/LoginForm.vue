@@ -107,7 +107,7 @@
 
       <!-- Bottom Links -->
       <div class="bottom-links">
-        <p>Don't have an account? <a href="https://t.me/AntTechnologyTrainingCenter" target="_blank" rel="noopener noreferrer" class="contact-admin-link">Contact ANT Admin</a></p>
+        <p>Don't have an account? <a href="https://t.me/AntForum1" target="_blank" rel="noopener noreferrer" class="contact-admin-link">Contact ANT Admin</a></p>
       </div>
     </div>
 
@@ -387,8 +387,17 @@ const validateForm = () => {
 };
 
 const getPostLoginRoute = () => {
+  const userRole = String(authStore.user?.role || "").toLowerCase();
   const redirectPath =
     typeof route.query.redirect === "string" ? route.query.redirect : "";
+
+  if (userRole === "admin") {
+    if (redirectPath.startsWith("/admin") && redirectPath !== "/login") {
+      return redirectPath;
+    }
+    return { name: "AdminDashboard" };
+  }
+
   if (
     redirectPath.startsWith("/") &&
     !redirectPath.startsWith("//") &&
@@ -397,10 +406,7 @@ const getPostLoginRoute = () => {
     return redirectPath;
   }
 
-  const userRole = String(authStore.user?.role || "").toLowerCase();
-  return userRole === "admin"
-    ? { name: "AdminDashboard" }
-    : { name: "HomePage" };
+  return { name: "HomePage" };
 };
 
 async function handleSignIn() {

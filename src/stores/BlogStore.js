@@ -273,7 +273,7 @@ export const useBlogStore = defineStore("blog", () => {
       : Array.isArray(data?.data)
         ? data.data
         : data?.items || [];
-    return { hasNextPage: items.length >= 6 };
+    return { hasNextPage: items.length === 6 };
   };
 
   // --- ACTIONS ---
@@ -300,7 +300,12 @@ export const useBlogStore = defineStore("blog", () => {
       const meta = safeExtractMeta(response);
 
       if (isLoadMore) {
-        blogs.value.push(...normalized);
+        const newBlogs = normalized.filter((b) => !blogs.value.some((existing) => existing.id === b.id));
+        blogs.value.push(...newBlogs);
+        if (newBlogs.length === 0) {
+          hasMore.value = false;
+          return;
+        }
       } else {
         page.value = 1;
         blogs.value = normalized;
@@ -317,6 +322,31 @@ export const useBlogStore = defineStore("blog", () => {
       throw err;
     } finally {
       isLoading.value = false;
+    }
+  };
+
+  const pollLatestBlogs = async () => {
+    if (isLoading.value) return;
+    try {
+      await ensureAuthorProfiles();
+      const response = await api.get("/api/blog/getAllBlogsPublished", {
+        params: { sortBy: "created_at", sortDir: "desc", _per_page: 10, _page: 1 },
+      });
+      const normalized = getNormalizedList(response.data).filter(b => b.status === "published");
+      
+      const currentList = [...blogs.value];
+      for (const item of normalized) {
+        const existingIndex = currentList.findIndex(b => String(b.id) === String(item.id));
+        if (existingIndex !== -1) {
+          currentList[existingIndex] = { ...currentList[existingIndex], ...item };
+        } else {
+          currentList.unshift(item);
+        }
+      }
+      currentList.sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
+      blogs.value = currentList;
+    } catch (err) {
+      console.error("Poll latest blogs failed:", err);
     }
   };
 
@@ -422,6 +452,18 @@ export const useBlogStore = defineStore("blog", () => {
       const response = await api.post("/api/blog/createBlog", body);
       ensureSuccess(response);
       lastAllBlogsFetchedAt = 0;
+      
+      let newBlog = response.data?.data || response.data;
+      if (newBlog) {
+        newBlog = normalizeBlog(newBlog);
+        if (newBlog.status === 'published') {
+          blogs.value.unshift(newBlog);
+        } else {
+          drafts.value.unshift(newBlog);
+        }
+        ownBlogs.value.unshift(newBlog);
+      }
+      
       return response.data;
     } finally {
       isLoading.value = false;
@@ -586,6 +628,7 @@ export const useBlogStore = defineStore("blog", () => {
 
     // actions
     fetchBlogs,
+    pollLatestBlogs,
     loadMore,
     fetchBlogPreview,
     incrementBlogView,

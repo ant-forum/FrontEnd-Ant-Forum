@@ -10,7 +10,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
       name: cachedUser.name || cachedUser.username || "Unknown",
       avatar: resolveMediaUrl(
         cachedUser.profile_pic || cachedUser.avatar,
-        "https://i.pravatar.cc/150?u=default",
+        '/profile.jpg',
       ),
       username: cachedUser.username ? `@${cachedUser.username}` : "@unknown",
     };
@@ -23,7 +23,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
         name: rawItem.author || rawItem.username || rawItem.name || "Unknown",
         avatar: resolveMediaUrl(
           rawItem.author_avatar || rawItem.avatar || rawItem.profile_pic,
-          "https://i.pravatar.cc/150?u=default",
+          '/profile.jpg',
         ),
         username: rawItem.username
           ? `@${rawItem.username}`
@@ -40,7 +40,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
         name: defaultAuthor.name || defaultAuthor.username || "Unknown",
         avatar: resolveMediaUrl(
           defaultAuthor.profile_pic || defaultAuthor.avatar,
-          "https://i.pravatar.cc/150?u=default",
+          '/profile.jpg',
         ),
         username: defaultAuthor.username
           ? `@${defaultAuthor.username}`
@@ -49,7 +49,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
     }
     return {
       name: "Unknown",
-      avatar: "https://i.pravatar.cc/150?u=default",
+      avatar: '/profile.jpg',
       username: "@unknown",
     };
   }
@@ -65,7 +65,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
       name: authStore.user.name || authStore.user.username || "Unknown",
       avatar: resolveMediaUrl(
         authStore.user.profile_pic || authStore.user.avatar,
-        "https://i.pravatar.cc/150?u=default",
+        '/profile.jpg',
       ),
       username: authStore.user.username
         ? `@${authStore.user.username}`
@@ -85,7 +85,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
         name: u.name || u.username || "Unknown",
         avatar: resolveMediaUrl(
           u.profile_pic || u.avatar,
-          "https://i.pravatar.cc/150?u=default",
+          '/profile.jpg',
         ),
         username: u.username ? `@${u.username}` : "@unknown",
       };
@@ -106,7 +106,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
           name: u.name || u.username || "Unknown",
           avatar: resolveMediaUrl(
             u.profile_pic || u.avatar || d.author_avatar,
-            "https://i.pravatar.cc/150?u=default",
+            '/profile.jpg',
           ),
           username: u.username ? `@${u.username}` : "@unknown",
         };
@@ -127,7 +127,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
           name: u.name || u.username || "Unknown",
           avatar: resolveMediaUrl(
             u.profile_pic || u.avatar,
-            "https://i.pravatar.cc/150?u=default",
+            '/profile.jpg',
           ),
           username: u.username ? `@${u.username}` : "@unknown",
         };
@@ -141,7 +141,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
       name: defaultAuthor.name || defaultAuthor.username || "Unknown",
       avatar: resolveMediaUrl(
         defaultAuthor.profile_pic || defaultAuthor.avatar,
-        "https://i.pravatar.cc/150?u=default",
+        '/profile.jpg',
       ),
       username: defaultAuthor.username
         ? `@${defaultAuthor.username}`
@@ -151,7 +151,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
 
   return {
     name: "Unknown",
-    avatar: "https://i.pravatar.cc/150?u=default",
+    avatar: '/profile.jpg',
     username: "@unknown",
   };
 };

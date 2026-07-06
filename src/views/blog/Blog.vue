@@ -338,29 +338,6 @@ const formatNumber = (num) => {
             </button>
           </div>
         </div>
-
-        <!-- Tags Section -->
-        <div class="sidebar-section mt-5">
-          <h3 class="sidebar-heading">POPULAR TAGS</h3>
-          <div class="sidebar-tags">
-            <button
-              type="button"
-              @click="selectedTag = null"
-              :class="['sidebar-tag-pill', { active: !selectedTag }]"
-            >
-              All Tags
-            </button>
-            <button
-              v-for="tag in allTags"
-              :key="tag"
-              type="button"
-              @click="selectedTag = tag"
-              :class="['sidebar-tag-pill', { active: selectedTag === tag }]"
-            >
-              #{{ tag }}
-            </button>
-          </div>
-        </div>
       </aside>
 
       <!-- Right Column: Main Content Container -->
@@ -1167,12 +1144,14 @@ const formatNumber = (num) => {
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background-color: var(--color-surface);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 6px;
-  box-shadow: var(--shadow-md);
-  z-index: 100;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1050;
   min-width: 170px;
   display: flex;
   flex-direction: column;
@@ -1321,7 +1300,7 @@ const formatNumber = (num) => {
 }
 
 .post-category-tag {
-  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  border: 1px solid var(--color-border);
   box-shadow: 0 8px 18px
     color-mix(
       in srgb,
@@ -1460,8 +1439,18 @@ const formatNumber = (num) => {
 }
 
 .bg-surface-blur {
-  background-color: var(--color-surface);
-  opacity: 0.9;
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+[data-theme="dark"] .bg-surface-blur {
+  background-color: rgba(15, 23, 42, 0.85);
 }
 
 .border {
@@ -1596,5 +1585,13 @@ const formatNumber = (num) => {
   .blog-grid {
     grid-template-columns: 1fr;
   }
+}
+</style>
+
+<style>
+[data-theme="dark"] .custom-dropdown-menu {
+  background: rgba(2, 16, 36, 1) !important;
+  border-color: rgba(125, 160, 202, 0.2) !important;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 </style>

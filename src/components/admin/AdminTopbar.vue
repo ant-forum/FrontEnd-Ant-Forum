@@ -255,7 +255,7 @@ const confirmLogout = async () => {
 };
 
 const handleAvatarError = (e) => {
-  e.target.src = "https://i.pravatar.cc/150?u=default";
+  e.target.src = '/profile.jpg';
 };
 
 // Handle clicks outside of dropdown to close it

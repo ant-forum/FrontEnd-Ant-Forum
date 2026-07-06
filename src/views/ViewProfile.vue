@@ -73,7 +73,7 @@
               >
                 {{ profile.name }}
               </h5>
-              <div class="text-muted small mb-2">{{ profile.username }}</div>
+              <div class="text-muted small mb-2">{{ profile.fullname }}</div>
               <span class="role-badge-sidebar mb-2 d-inline-block">{{
                 profile.role
               }}</span>
@@ -131,30 +131,6 @@
                 <p class="bio-text text-muted mb-4">
                   {{ profile.bio }}
                 </p>
-                <div class="row g-3 bio-meta-grid pt-3 border-top border-slate">
-                  <div class="col-6 col-sm-4">
-                    <div class="meta-item-box">
-                      <span class="meta-label">ROLE</span>
-                      <span class="meta-value">{{ profile.role }}</span>
-                    </div>
-                  </div>
-                  <div class="col-6 col-sm-4">
-                    <div class="meta-item-box">
-                      <span class="meta-label">STATUS</span>
-                      <span
-                        class="meta-value text-success d-flex align-items-center gap-1"
-                      >
-                        <span class="status-pulse-dot"></span> Active
-                      </span>
-                    </div>
-                  </div>
-                  <div class="col-6 col-sm-4">
-                    <div class="meta-item-box">
-                      <span class="meta-label">COMMUNITY</span>
-                      <span class="meta-value">ANT Ecosystem</span>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <!-- Showcase Projects Brief -->

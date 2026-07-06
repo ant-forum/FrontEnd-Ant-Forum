@@ -169,6 +169,31 @@ export const useProjectStore = defineStore("project", () => {
     }
   };
 
+  const pollLatestProjects = async () => {
+    if (isLoading.value) return;
+    try {
+      const res = await api.get("/api/projects/getAllProjects");
+      const list = extractList(res.data);
+      const uniqueUserIds = [...new Set(list.map(item => item.user_id || item.userId).filter(Boolean))];
+      await Promise.all(uniqueUserIds.map(id => fetchAndCacheUser(id)));
+      
+      const normalized = list.map(normalizeProject);
+      const currentList = [...projects.value];
+      for (const item of normalized) {
+        const existingIndex = currentList.findIndex(p => String(p.id) === String(item.id));
+        if (existingIndex !== -1) {
+          currentList[existingIndex] = { ...currentList[existingIndex], ...item };
+        } else {
+          currentList.unshift(item);
+        }
+      }
+      currentList.sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
+      projects.value = currentList;
+    } catch (err) {
+      console.error("[ProjectStore] pollLatestProjects failed:", err);
+    }
+  };
+
   const fetchProject = async (id) => {
     isLoading.value = true;
     try {
@@ -481,6 +506,7 @@ export const useProjectStore = defineStore("project", () => {
     createForm,
     resetCreateForm,
     fetchProjects,
+    pollLatestProjects,
     fetchProject,
     incrementProjectView,
     fetchMyProjects,

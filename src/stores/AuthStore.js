@@ -20,6 +20,25 @@ import {
   normalizeSkills,
 } from "@/utils/profileFields";
 
+const createRequestError = (error) => {
+  if (!error.response) return error;
+
+  const responseData = error.response.data;
+  const details =
+    responseData && typeof responseData === "object"
+      ? responseData
+      : { message: responseData || error.message };
+  const retryAfter =
+    error.response.headers?.["retry-after"] ||
+    error.response.headers?.get?.("retry-after");
+
+  return {
+    ...details,
+    status: error.response.status,
+    ...(retryAfter ? { retryAfter } : {}),
+  };
+};
+
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const isRemembered = ref(getRememberPreference());
@@ -46,7 +65,7 @@ export const useAuthStore = defineStore("auth", () => {
         console.log("WebSocket connected successfully to", socketUrl);
       });
 
-      socket.value.on("notification", (notification) => {
+      const handleNotification = (notification) => {
         try {
           const notificationStore = useNotificationStore();
           const mapped = notificationStore.mapNotification(notification);
@@ -54,7 +73,11 @@ export const useAuthStore = defineStore("auth", () => {
         } catch (err) {
           console.error("Failed to process real-time notification:", err);
         }
-      });
+      };
+
+      socket.value.on("notification", handleNotification);
+      socket.value.on("new_notification", handleNotification);
+      socket.value.on("newNotification", handleNotification);
 
       socket.value.on("connect_error", (err) => {
         console.error("WebSocket connection error:", err);
@@ -298,7 +321,7 @@ export const useAuthStore = defineStore("auth", () => {
       );
       return res.data;
     } catch (err) {
-      throw err.response?.data || err;
+      throw createRequestError(err);
     }
   };
 
@@ -319,7 +342,7 @@ export const useAuthStore = defineStore("auth", () => {
       const res = await api.post("/api/verify-otp", payload, config);
       return res.data;
     } catch (err) {
-      throw err.response?.data || err;
+      throw createRequestError(err);
     }
   };
 
@@ -350,6 +373,19 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  const changePassword = async (oldPassword, newPassword) => {
+    try {
+      const res = await api.put(
+        "/api/change-password",
+        { oldPassword, newPassword },
+        { skipGlobalToast: true },
+      );
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
+  };
+
   if (token.value) {
     connectSocket();
   }
@@ -370,5 +406,6 @@ export const useAuthStore = defineStore("auth", () => {
     forgotPassword,
     verifyAccount,
     resetPassword,
+    changePassword,
   };
 });

@@ -116,8 +116,7 @@
             </td>
             <td>
               <div
-                class="identity-cell user-clickable"
-                @click="goToProfile(thread.user_id || thread.userId || thread.author?.id || thread.author?.user_id)"
+                class="identity-cell"
               >
                 <img
                   v-if="getThreadAuthor(thread).avatar && !failedAvatars.has(thread.id)"

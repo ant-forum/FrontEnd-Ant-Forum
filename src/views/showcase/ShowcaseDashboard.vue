@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import Navbar from "../../components/layouts/header.vue";
 import BaseFooter from "../../components/layouts/footer.vue";
@@ -16,6 +16,7 @@ const searchLoading = ref(false);
 const searchQuery = ref("");
 const selectedTag = ref("All");
 const activeTab = ref("projects");
+const visibleCount = ref(6);
 
 const availableTags = computed(() => {
   const list = ["All"];
@@ -67,6 +68,10 @@ const filteredProjects = computed(() => {
   return result;
 });
 
+watch([filterTab, selectedTag, searchQuery], () => {
+  visibleCount.value = 6;
+});
+
 const formatNumber = (num, isRating = false) => {
   const n = Number(num) || 0;
   if (isRating) {
@@ -78,6 +83,7 @@ const formatNumber = (num, isRating = false) => {
 
 const handleSearchInput = () => {
   searchLoading.value = true;
+  visibleCount.value = 6;
   setTimeout(() => {
     searchLoading.value = false;
   }, 350);
@@ -87,6 +93,7 @@ const clearFilters = () => {
   searchQuery.value = "";
   selectedTag.value = "All";
   filterTab.value = "latest";
+  visibleCount.value = 6;
 };
 
 onMounted(() => {
@@ -236,7 +243,7 @@ onMounted(() => {
           <!-- Projects Grid -->
           <div v-else class="projects-grid">
             <div
-              v-for="project in filteredProjects"
+              v-for="project in filteredProjects.slice(0, visibleCount)"
               :key="project.id"
               class="project-card"
             >
@@ -320,10 +327,10 @@ onMounted(() => {
 
           <!-- Load More -->
           <div
-            v-if="filteredProjects.length > 0 && !loading && !searchLoading"
+            v-if="visibleCount < filteredProjects.length && !loading && !searchLoading"
             class="load-more-wrap"
           >
-            <button class="load-more-btn">
+            <button class="load-more-btn" @click="visibleCount += 6">
               <svg
                 width="15"
                 height="15"
