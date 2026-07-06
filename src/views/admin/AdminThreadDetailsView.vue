@@ -334,11 +334,11 @@ const formatDate = (dateStr) => {
 
 // Image Errors fallbacks
 const handleAuthorAvatarError = (e) => {
-  e.target.src = "https://i.pravatar.cc/150?u=admin";
+  e.target.src = '/profile.jpg';
 };
 
 const handleCommentAvatarError = (e) => {
-  e.target.src = "https://i.pravatar.cc/150?u=user";
+  e.target.src = '/profile.jpg';
 };
 
 // Author Meta Resolver
@@ -373,7 +373,7 @@ const authorRole = computed(() => {
 const authorAvatar = computed(() => {
   const rawAvatar = cachedAuthor.value?.profile_pic || cachedAuthor.value?.avatar || thread.value?.author?.profile_pic || thread.value?.author?.avatar;
   if (rawAvatar) return resolveMediaUrl(rawAvatar);
-  return "https://i.pravatar.cc/150?u=admin";
+  return '/profile.jpg';
 });
 
 // Comment Author helpers
@@ -393,7 +393,7 @@ const getCommentAuthorName = (comment) => {
 };
 
 const getCommentAuthorAvatar = (comment) => {
-  if (!comment) return "https://i.pravatar.cc/150?u=user";
+  if (!comment) return '/profile.jpg';
   let avatar = "";
   if (comment.author && typeof comment.author === "object") {
     avatar = comment.author.profile_pic || comment.author.avatar || "";
@@ -403,7 +403,7 @@ const getCommentAuthorAvatar = (comment) => {
     if (u) avatar = u.profile_pic || u.avatar || "";
   }
   if (avatar) return resolveMediaUrl(avatar);
-  return "https://i.pravatar.cc/150?u=user";
+  return '/profile.jpg';
 };
 
 // highlight.js for code blocks

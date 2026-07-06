@@ -1,13 +1,12 @@
 <template>
   <aside class="admin-sidebar d-flex flex-column">
     <!-- Brand Header -->
-    <div class="sidebar-header p-4 mb-3 border-bottom-translucent">
-      <h3 class="fw-bold mb-2 brand-title d-flex align-items-center gap-2">
-        <div class="brand-icon-wrapper">
-          <i class="bi bi-shield-lock-fill text-white"></i>
-        </div>
-        <span>Admin Suite</span>
-      </h3>
+    <div class="sidebar-header p-4 mb-3 border-bottom-translucent d-flex flex-column align-items-center">
+      <div class="mb-2 brand-title d-flex justify-content-center align-items-center gap-2">
+        <router-link to="/admin">
+          <img src="/antforum.png" alt="Ant Forum Logo" style="height: 48px; object-fit: contain; border-radius: 4px;" />
+        </router-link>
+      </div>
       <span class="badge-operations-deck">TECHNICAL OPERATIONS</span>
     </div>
 

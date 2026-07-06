@@ -122,7 +122,7 @@ const previewThreads = [
     title: "How should I handle refresh-token races in Axios?",
     desc: "Multiple protected requests can fail at the same time. Keep the code block, timeline, and accepted answer in one thread.",
     author: "PanhaZin6767",
-    avatar: "https://i.pravatar.cc/150?u=panha-preview",
+    avatar: '/profile.jpg',
     category: "Questions & Answers",
     replies: 8,
     time: "Active",
@@ -132,7 +132,7 @@ const previewThreads = [
     title: "Best way to render markdown code blocks in forum posts?",
     desc: "A clean discussion about storing markdown in description and rendering snippets without breaking edit mode.",
     author: "Admin_Nha",
-    avatar: "https://i.pravatar.cc/150?u=admin-preview",
+    avatar: '/profile.jpg',
     category: "Tutorials",
     replies: 5,
     time: "New",
@@ -142,7 +142,7 @@ const previewThreads = [
     title: "Profile skills should come from admin tags",
     desc: "A product thread for keeping user profile skills consistent with tags managed by admins.",
     author: "Sopanha",
-    avatar: "https://i.pravatar.cc/150?u=sopanha-preview",
+    avatar: '/profile.jpg',
     category: "Resources",
     replies: 3,
     time: "Today",
@@ -155,7 +155,7 @@ const previewProjects = [
     title: "ANT Forum Developer Console",
     desc: "A workspace for discussions, project showcases, blog publishing, and profile tools.",
     author: "Admin_Nha",
-    avatar: "https://i.pravatar.cc/150?u=admin-nha-preview",
+    avatar: '/profile.jpg',
     tags: ["Vue.js", "Pinia", "UI/UX"],
     stars: 12,
     image:
@@ -166,7 +166,7 @@ const previewProjects = [
     title: "Markdown Forum Editor",
     desc: "Create technical posts with code blocks, inline code, categories, and clean edit states.",
     author: "PanhaZin6767",
-    avatar: "https://i.pravatar.cc/150?u=panha-project-preview",
+    avatar: '/profile.jpg',
     tags: ["Markdown", "Tiptap", "Frontend"],
     stars: 9,
     image:
@@ -224,7 +224,7 @@ const countReplies = (discussion = {}) => {
 
 const getAuthorInfo = (discussion = {}) => {
   let author = "Community Member";
-  let avatar = `https://i.pravatar.cc/150?u=${discussion?.id || "community"}`;
+  let avatar = '/profile.jpg';
 
   if (discussion.user) {
     author = discussion.user.username || discussion.user.name || author;
@@ -241,7 +241,7 @@ const getAuthorInfo = (discussion = {}) => {
     author,
     avatar: resolveMediaUrl(
       avatar,
-      `https://i.pravatar.cc/150?u=${encodeURIComponent(author)}`,
+      '/profile.jpg',
     ),
   };
 };

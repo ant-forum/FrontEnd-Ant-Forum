@@ -7,7 +7,7 @@ import { useNotificationStore } from "../../stores/NotificationStore";
 import NotificationDropdown from "../notification/NotificationDropdown.vue";
 import AccountDropdown from "./AccountDropdown.vue";
 import BaseModal from "../base/BaseModal.vue";
-import defaultProfilePic from "@/assets/profile.jpg";
+const defaultProfilePic = "/profile.jpg";
 
 const route = useRoute();
 const router = useRouter();

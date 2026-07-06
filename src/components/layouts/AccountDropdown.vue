@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import defaultProfilePic from "@/assets/profile.jpg";
+const defaultProfilePic = "/profile.jpg";
 
 const props = defineProps({
   user: {

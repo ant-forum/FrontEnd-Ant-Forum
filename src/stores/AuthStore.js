@@ -46,7 +46,7 @@ export const useAuthStore = defineStore("auth", () => {
         console.log("WebSocket connected successfully to", socketUrl);
       });
 
-      socket.value.on("notification", (notification) => {
+      const handleNotification = (notification) => {
         try {
           const notificationStore = useNotificationStore();
           const mapped = notificationStore.mapNotification(notification);
@@ -54,7 +54,11 @@ export const useAuthStore = defineStore("auth", () => {
         } catch (err) {
           console.error("Failed to process real-time notification:", err);
         }
-      });
+      };
+
+      socket.value.on("notification", handleNotification);
+      socket.value.on("new_notification", handleNotification);
+      socket.value.on("newNotification", handleNotification);
 
       socket.value.on("connect_error", (err) => {
         console.error("WebSocket connection error:", err);
