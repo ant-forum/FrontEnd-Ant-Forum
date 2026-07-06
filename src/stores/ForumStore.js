@@ -360,7 +360,7 @@ export const useForumStore = defineStore("forum", () => {
     if (isLoading.value) return; // Don't interrupt a main fetch
     try {
       const authStore = useAuthStore();
-      const hasToken = !!authStore.token;
+      const hasToken = !!authStore.token && String(authStore.user?.role).toLowerCase() !== "admin";
 
       const promises = [
         api.get("/api/forums/getAllforum", {

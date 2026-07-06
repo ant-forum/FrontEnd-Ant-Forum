@@ -24,7 +24,7 @@ onMounted(() => {
     if (!forumStore.isLoading) forumStore.pollLatestDiscussions().catch(() => {});
     if (!blogStore.isLoading) blogStore.pollLatestBlogs().catch(() => {});
     if (!projectStore.isLoading) projectStore.pollLatestProjects().catch(() => {});
-    if (authStore.token && !notificationStore.loading) {
+    if (authStore.token && String(authStore.user?.role).toLowerCase() !== "admin" && !notificationStore.loading) {
       notificationStore.fetchNotifications().catch(() => {});
     }
   }, 10000);

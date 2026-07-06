@@ -41,6 +41,9 @@ export const useProjectStore = defineStore("project", () => {
 
   const fetchAndCacheUser = async (userId) => {
     if (!userId || userCache.value[userId]) return;
+    const authStore = useAuthStore();
+    if (!authStore.token || String(authStore.user?.role).toLowerCase() !== "admin") return;
+
     try {
       const res = await api.get(`/api/admin/get-user/${userId}`);
       const userData = res.data?.data || res.data;
