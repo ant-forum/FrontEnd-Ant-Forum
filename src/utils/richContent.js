@@ -20,6 +20,18 @@ export const looksLikeMarkdown = (value = "") => {
   );
 };
 
+const looksLikeBlockMarkdown = (value = "") => {
+  const text = String(value);
+  return (
+    /(^|\n)\s{0,3}#{1,3}\s+/.test(text) ||
+    /(^|\n)\s*```/.test(text) ||
+    /(^|\n)\s*[-*]\s+/.test(text) ||
+    /(^|\n)\s*\d+\.\s+/.test(text) ||
+    /(^|\n)\s*> /.test(text) ||
+    /\|.+\|\n\s*\|?\s*:?-{3,}/.test(text)
+  );
+};
+
 const escapeHtml = (text = "") =>
   String(text)
     .replaceAll("&", "&amp;")
@@ -88,8 +100,8 @@ export const markdownToHtml = (markdown = "") => {
     // 2. Facebook / Telegram export format: "backslash + space" used as an inline
     //    line-break marker (e.g. "text\ \ next para" or "text\ next line")
     //    Double occurrence = paragraph break, single = line break
-    .replace(/(\\ ){2,}/g, "\n\n")   // \ \ → blank line (paragraph separator)
-    .replace(/\\ /g, "\n")           // remaining \ → line break
+    .replace(/(\\ ){2,}/g, "\n\n") // \ \ → blank line (paragraph separator)
+    .replace(/\\ /g, "\n") // remaining \ → line break
     // 3. Two trailing spaces (classic markdown hard break)
     .replace(/  \n/g, "\n")
     .split("\n");
@@ -226,6 +238,14 @@ export const markdownToHtml = (markdown = "") => {
 export const renderStoredContent = (value = "") => {
   const content = String(value || "");
   if (!content.trim()) return "";
+
+  // Markdown code fences can legitimately contain HTML-like source such as
+  // <template>, <script>, and <style>. Parse structured Markdown before the
+  // generic HTML check so that source code is escaped and displayed instead
+  // of being interpreted as part of the page.
+  if (looksLikeBlockMarkdown(content)) {
+    return sanitizeHtml(markdownToHtml(content));
+  }
 
   if (looksLikeHtml(content)) return sanitizeHtml(content);
   if (looksLikeMarkdown(content)) return sanitizeHtml(markdownToHtml(content));

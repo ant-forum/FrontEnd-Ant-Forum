@@ -350,6 +350,19 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  const changePassword = async (oldPassword, newPassword) => {
+    try {
+      const res = await api.put(
+        "/api/change-password",
+        { oldPassword, newPassword },
+        { skipGlobalToast: true },
+      );
+      return res.data;
+    } catch (err) {
+      throw err.response?.data || err;
+    }
+  };
+
   if (token.value) {
     connectSocket();
   }
@@ -370,5 +383,6 @@ export const useAuthStore = defineStore("auth", () => {
     forgotPassword,
     verifyAccount,
     resetPassword,
+    changePassword,
   };
 });
