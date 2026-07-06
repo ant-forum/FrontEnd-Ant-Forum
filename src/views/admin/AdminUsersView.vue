@@ -273,6 +273,7 @@ import BaseModal from "../../components/base/BaseModal.vue";
 import { useUsersStore } from "../../stores/UsersStore";
 import { useToast } from "../../composables/useToast";
 import { useRequiredValidator } from "../../composables/useRequiredValidator";
+import { resolveMediaUrl } from "../../utils/mediaUrl";
 
 const usersStore = useUsersStore();
 const toast = useToast();
@@ -343,7 +344,7 @@ const mappedUsers = computed(() => {
               : "Student",
       status,
       joined: formatJoinedDate(u.createdAt || u.created_at),
-      avatar: u.profile_pic || u.avatar || u.avatarUrl || "",
+      avatar: resolveMediaUrl(u.profile_pic || u.avatar || u.avatarUrl || ""),
       gender: u.gender || "male",
       rawRole: u.role || "student",
       rawUsername: u.username || "",

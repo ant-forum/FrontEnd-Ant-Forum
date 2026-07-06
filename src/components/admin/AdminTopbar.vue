@@ -181,6 +181,7 @@ import { useDarkMode } from "../../composables/useDarkMode";
 import { useAuthStore } from "../../stores/AuthStore";
 import { useRouter } from "vue-router";
 import BaseModal from "../base/BaseModal.vue";
+import { resolveMediaUrl } from "../../utils/mediaUrl";
 
 const showLogoutModal = ref(false);
 const isLoggingOut = ref(false);
@@ -220,11 +221,13 @@ const adminInitials = computed(() => {
       .toUpperCase() || "AR"
   );
 });
-const adminAvatar = computed(
-  () =>
+const adminAvatar = computed(() =>
+  resolveMediaUrl(
     authStore.user?.avatar ||
-    authStore.user?.profile_pic ||
-    authStore.user?.avatarUrl,
+      authStore.user?.profile_pic ||
+      authStore.user?.avatarUrl ||
+      ""
+  )
 );
 const profileMenuItems = [];
 

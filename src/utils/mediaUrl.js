@@ -32,7 +32,8 @@ export const resolveMediaUrl = (value, fallback = null) => {
   try {
     const parsed = new window.URL(path);
     const isLocalUpload =
-      LOCAL_HOSTS.has(parsed.hostname) && isBackendMediaPath(parsed.pathname);
+      (LOCAL_HOSTS.has(parsed.hostname) || parsed.hostname === window.location.hostname) &&
+      isBackendMediaPath(parsed.pathname);
 
     if (!isLocalUpload) {
       return path;
@@ -54,4 +55,16 @@ export const resolveMediaUrl = (value, fallback = null) => {
   }
 
   return path;
+};
+
+export const rewriteHtmlMediaUrls = (html) => {
+  if (!html || typeof html !== "string") return html;
+  const base = apiBaseUrl();
+  if (!base || import.meta.env.DEV) return html;
+  
+  // Replace relative /uploads/ paths inside src="..." or markdown (![...](/uploads/...))
+  // We match /uploads/ followed by non-whitespace and non-quote characters
+  return html.replace(/(\/uploads\/[^\s"'<>\)]+)/gi, (match, path) => {
+    return `${base}${path}`;
+  });
 };
