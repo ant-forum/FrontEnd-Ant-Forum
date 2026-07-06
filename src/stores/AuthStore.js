@@ -20,6 +20,25 @@ import {
   normalizeSkills,
 } from "@/utils/profileFields";
 
+const createRequestError = (error) => {
+  if (!error.response) return error;
+
+  const responseData = error.response.data;
+  const details =
+    responseData && typeof responseData === "object"
+      ? responseData
+      : { message: responseData || error.message };
+  const retryAfter =
+    error.response.headers?.["retry-after"] ||
+    error.response.headers?.get?.("retry-after");
+
+  return {
+    ...details,
+    status: error.response.status,
+    ...(retryAfter ? { retryAfter } : {}),
+  };
+};
+
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const isRemembered = ref(getRememberPreference());
@@ -302,7 +321,7 @@ export const useAuthStore = defineStore("auth", () => {
       );
       return res.data;
     } catch (err) {
-      throw err.response?.data || err;
+      throw createRequestError(err);
     }
   };
 
@@ -323,7 +342,7 @@ export const useAuthStore = defineStore("auth", () => {
       const res = await api.post("/api/verify-otp", payload, config);
       return res.data;
     } catch (err) {
-      throw err.response?.data || err;
+      throw createRequestError(err);
     }
   };
 
