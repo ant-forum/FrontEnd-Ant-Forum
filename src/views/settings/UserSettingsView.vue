@@ -1,10 +1,10 @@
 <script setup>
 import { computed, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import BaseModal from "../../components/base/BaseModal.vue";
 import Footer from "../../components/layouts/footer.vue";
 import Navbar from "../../components/layouts/header.vue";
 import { useToast } from "../../composables/useToast";
-import { useUnsavedChangesGuard } from "../../composables/useUnsavedChangesGuard";
 import { useAuthStore } from "../../stores/AuthStore";
 
 const route = useRoute();
@@ -12,111 +12,113 @@ const router = useRouter();
 const authStore = useAuthStore();
 const toast = useToast();
 
-const sections = [
-  {
-    id: "security",
-    label: "Security",
-    description: "Password and sessions",
-    icon: "bi-lock",
-  },
-  {
-    id: "notifications",
-    label: "Notifications",
-    description: "Forum and email alerts",
-    icon: "bi-bell",
-  },
-  {
-    id: "account",
-    label: "Account",
-    description: "Account support requests",
-    icon: "bi-person-gear",
-  },
-];
-
-const sectionIds = new Set(sections.map((section) => section.id));
-const activeSection = computed(() =>
-  sectionIds.has(route.params.section) ? route.params.section : "security",
-);
 const role = computed(() =>
   String(authStore.user?.role || "student").toLowerCase(),
 );
 const roleLabel = computed(
   () => role.value.charAt(0).toUpperCase() + role.value.slice(1),
 );
-const isMentor = computed(() => ["mentor", "teacher"].includes(role.value));
-const storageKey = computed(() => {
-  const identity =
-    authStore.user?.id ||
-    authStore.user?.email ||
-    authStore.user?.username ||
-    "user";
-  return `ANT_UserSettingsPreview:${identity}`;
+const isPasswordModalOpen = ref(false);
+const isPasswordSubmitting = ref(false);
+const showCurrentPassword = ref(false);
+const showNewPassword = ref(false);
+const showConfirmPassword = ref(false);
+const passwordForm = reactive({
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
 });
-
-const getDefaults = () => ({
-  privacy: {
-    profileVisibility: "members",
-    showProjects: true,
-    showActivity: true,
-    showSocialLinks: false,
-    searchable: true,
-    messagePermission: isMentor.value ? "members" : "mentors",
-  },
-  notifications: {
-    forumReplies: true,
-    mentions: true,
-    projectUpdates: true,
-    directMessages: true,
-    weeklyDigest: false,
-    emailAlerts: false,
-  },
+const passwordErrors = reactive({
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+  form: "",
 });
-
-const getStoredSettings = () => {
-  try {
-    const stored = JSON.parse(localStorage.getItem(storageKey.value));
-    const defaults = getDefaults();
-    return {
-      privacy: { ...defaults.privacy, ...(stored?.privacy || {}) },
-      notifications: {
-        ...defaults.notifications,
-        ...(stored?.notifications || {}),
-      },
-    };
-  } catch {
-    return getDefaults();
-  }
-};
-
-const form = reactive(getStoredSettings());
-const snapshot = ref(JSON.stringify(form));
-const saved = ref(false);
-const hasChanges = computed(() => JSON.stringify(form) !== snapshot.value);
-
-useUnsavedChangesGuard(
-  hasChanges,
-  "You have unsaved settings changes. Leave this page and discard them?",
+const canSubmitPassword = computed(
+  () =>
+    passwordForm.currentPassword.length > 0 &&
+    passwordForm.newPassword.length >= 8 &&
+    passwordForm.confirmPassword.length > 0 &&
+    passwordForm.newPassword === passwordForm.confirmPassword,
 );
 
-const selectSection = (section) => {
-  router.push(`/settings/${section}`);
+const resetPasswordForm = () => {
+  passwordForm.currentPassword = "";
+  passwordForm.newPassword = "";
+  passwordForm.confirmPassword = "";
+  Object.keys(passwordErrors).forEach((key) => {
+    passwordErrors[key] = "";
+  });
+  showCurrentPassword.value = false;
+  showNewPassword.value = false;
+  showConfirmPassword.value = false;
 };
 
-const savePreview = () => {
-  localStorage.setItem(storageKey.value, JSON.stringify(form));
-  snapshot.value = JSON.stringify(form);
-  saved.value = true;
-  toast.success(
-    "Preferences saved on this device. Backend sync still needs to be connected.",
-  );
-  window.setTimeout(() => {
-    saved.value = false;
-  }, 2200);
+const openPasswordModal = () => {
+  resetPasswordForm();
+  isPasswordModalOpen.value = true;
 };
 
-const discardChanges = () => {
-  Object.assign(form, JSON.parse(snapshot.value));
-  toast.info("Unsaved preferences discarded.");
+const closePasswordModal = () => {
+  if (isPasswordSubmitting.value) return;
+  isPasswordModalOpen.value = false;
+  resetPasswordForm();
+};
+
+const clearPasswordError = (field) => {
+  passwordErrors[field] = "";
+  passwordErrors.form = "";
+};
+
+const validatePasswordForm = () => {
+  Object.keys(passwordErrors).forEach((key) => {
+    passwordErrors[key] = "";
+  });
+
+  if (!passwordForm.currentPassword) {
+    passwordErrors.currentPassword = "Current password is required.";
+  }
+  if (!passwordForm.newPassword) {
+    passwordErrors.newPassword = "New password is required.";
+  } else if (passwordForm.newPassword.length < 8) {
+    passwordErrors.newPassword = "Use at least 8 characters.";
+  } else if (passwordForm.newPassword === passwordForm.currentPassword) {
+    passwordErrors.newPassword =
+      "Your new password must be different from your current password.";
+  }
+  if (!passwordForm.confirmPassword) {
+    passwordErrors.confirmPassword = "Please confirm your new password.";
+  } else if (passwordForm.confirmPassword !== passwordForm.newPassword) {
+    passwordErrors.confirmPassword = "The new passwords do not match.";
+  }
+
+  return !Object.values(passwordErrors).some(Boolean);
+};
+
+const submitPasswordChange = async () => {
+  if (!validatePasswordForm()) return;
+
+  isPasswordSubmitting.value = true;
+  try {
+    const result = await authStore.changePassword(
+      passwordForm.currentPassword,
+      passwordForm.newPassword,
+    );
+    if (result?.result === false) {
+      throw new Error(result.message || "Unable to change password.");
+    }
+
+    isPasswordModalOpen.value = false;
+    resetPasswordForm();
+    toast.success(result?.message || "Password changed successfully.");
+  } catch (error) {
+    passwordErrors.form =
+      error?.message ||
+      error?.error?.message ||
+      "Unable to change password. Please try again.";
+  } finally {
+    isPasswordSubmitting.value = false;
+  }
 };
 
 const browserName = computed(() => {
@@ -131,7 +133,7 @@ const browserName = computed(() => {
 watch(
   () => route.params.section,
   (section) => {
-    if (!sectionIds.has(section)) {
+    if (section !== "security") {
       router.replace("/settings/security");
     }
   },
@@ -149,9 +151,7 @@ watch(
           <div>
             <span class="settings-kicker">Personal settings</span>
             <h1>Settings & Privacy</h1>
-            <p>
-              Manage your ANT Forum privacy, security, and account preferences.
-            </p>
+            <p>Manage your ANT Forum password and account security.</p>
           </div>
           <span class="role-badge"
             ><i class="bi bi-person-badge"></i> {{ roleLabel }}</span
@@ -159,29 +159,8 @@ watch(
         </header>
 
         <div class="settings-content-grid">
-          <aside class="settings-section-nav">
-            <button
-              v-for="section in sections"
-              :key="section.id"
-              type="button"
-              :class="{ active: activeSection === section.id }"
-              @click="selectSection(section.id)"
-            >
-              <span class="section-icon"
-                ><i :class="['bi', section.icon]"></i
-              ></span>
-              <span>
-                <strong>{{ section.label }}</strong>
-                <small>{{ section.description }}</small>
-              </span>
-            </button>
-          </aside>
-
           <section class="settings-panel-wrap">
-            <section
-              v-if="activeSection === 'security'"
-              class="settings-panel"
-            >
+            <section class="settings-panel">
               <div class="panel-heading">
                 <div>
                   <h2>Password & Security</h2>
@@ -190,8 +169,8 @@ watch(
                     your account.
                   </p>
                 </div>
-                <span class="backend-badge"
-                  ><i class="bi bi-plug"></i> Backend required</span
+                <span class="security-badge"
+                  ><i class="bi bi-shield-check"></i> Protected update</span
                 >
               </div>
 
@@ -200,13 +179,17 @@ watch(
                 <div>
                   <strong>Password</strong>
                   <small
-                    >Use the verified reset flow to change your account
+                    >Confirm your current password, then choose a new
                     password.</small
                   >
                 </div>
-                <router-link to="/forgot-password" class="inline-action"
-                  >Reset password</router-link
+                <button
+                  type="button"
+                  class="inline-action"
+                  @click="openPasswordModal"
                 >
+                  Change password
+                </button>
               </div>
 
               <div class="section-heading">
@@ -233,180 +216,151 @@ watch(
                 <span class="current-badge">Active now</span>
               </div>
             </section>
-
-            <section
-              v-else-if="activeSection === 'notifications'"
-              class="settings-panel"
-            >
-              <div class="panel-heading">
-                <div>
-                  <h2>Notification Preferences</h2>
-                  <p>Choose the updates you want to receive from the forum.</p>
-                </div>
-                <span class="preview-badge"
-                  ><i class="bi bi-device-ssd"></i> Device preview</span
-                >
-              </div>
-
-              <div class="toggle-list">
-                <label class="toggle-row">
-                  <span
-                    ><strong>Replies to your discussions</strong
-                    ><small
-                      >Notify when someone responds to a thread you
-                      started.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.notifications.forumReplies"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-                <label class="toggle-row">
-                  <span
-                    ><strong>Mentions</strong
-                    ><small
-                      >Notify when another member mentions your username.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.notifications.mentions"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-                <label class="toggle-row">
-                  <span
-                    ><strong>Project updates</strong
-                    ><small
-                      >Receive showcase review and project activity
-                      updates.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.notifications.projectUpdates"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-                <label class="toggle-row">
-                  <span
-                    ><strong>Direct messages</strong
-                    ><small
-                      >Notify when a permitted member sends you a
-                      message.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.notifications.directMessages"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-                <label class="toggle-row">
-                  <span
-                    ><strong>Weekly forum digest</strong
-                    ><small
-                      >Receive a summary of discussions and projects each
-                      week.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.notifications.weeklyDigest"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-                <label class="toggle-row">
-                  <span
-                    ><strong>Email alerts</strong
-                    ><small
-                      >Send enabled notifications to your verified account
-                      email.</small
-                    ></span
-                  >
-                  <input
-                    v-model="form.notifications.emailAlerts"
-                    class="settings-switch"
-                    type="checkbox"
-                  />
-                </label>
-              </div>
-
-              <div class="settings-actions">
-                <button
-                  class="btn-secondary-action"
-                  type="button"
-                  :disabled="!hasChanges"
-                  @click="discardChanges"
-                >
-                  Discard
-                </button>
-                <button
-                  class="btn-primary-action"
-                  type="button"
-                  :disabled="!hasChanges"
-                  @click="savePreview"
-                >
-                  <i class="bi bi-check2-circle"></i>
-                  {{ saved ? "Saved on device" : "Save notification preview" }}
-                </button>
-              </div>
-            </section>
-
-            <section v-else class="settings-panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>Account Support</h2>
-                  <p>
-                    Get help with account access or request an account status
-                    change.
-                  </p>
-                </div>
-                <span class="backend-badge"
-                  ><i class="bi bi-plug"></i> Backend required</span
-                >
-              </div>
-
-              <div class="account-support-card">
-                <span class="support-icon"><i class="bi bi-download"></i></span>
-                <div>
-                  <strong>Download your data</strong>
-                  <small
-                    >Request an export of your profile, projects, and forum
-                    activity.</small
-                  >
-                </div>
-                <button type="button" disabled>API needed</button>
-              </div>
-              <div class="account-support-card">
-                <span class="support-icon warning"
-                  ><i class="bi bi-person-dash"></i
-                ></span>
-                <div>
-                  <strong>Request account deactivation</strong>
-                  <small
-                    >Send a request to an administrator. Your account is not
-                    deleted automatically.</small
-                  >
-                </div>
-                <button type="button" disabled>API needed</button>
-              </div>
-
-              <div class="integration-note">
-                <i class="bi bi-shield-check"></i>
-                <span
-                  >Self-service profile deletion stays disabled. Account changes
-                  should be reviewed by an administrator.</span
-                >
-              </div>
-            </section>
           </section>
         </div>
       </main>
     </div>
   </div>
+
+  <BaseModal
+    v-if="isPasswordModalOpen"
+    title="Change your password"
+    icon="bi bi-shield-lock"
+    theme="primary"
+    @closeModal="closePasswordModal"
+  >
+    <form
+      id="change-password-form"
+      class="password-change-form"
+      @submit.prevent="submitPasswordChange"
+    >
+      <div class="password-guidance">
+        <i class="bi bi-info-circle"></i>
+        <span>
+          Enter your current password to securely update your account.
+        </span>
+      </div>
+
+      <div class="password-field">
+        <label for="current-password">Current password</label>
+        <span class="password-input-wrap">
+          <input
+            id="current-password"
+            v-model="passwordForm.currentPassword"
+            :type="showCurrentPassword ? 'text' : 'password'"
+            autocomplete="current-password"
+            placeholder="Enter your current password"
+            :class="{ invalid: passwordErrors.currentPassword }"
+            @input="clearPasswordError('currentPassword')"
+          />
+          <button
+            type="button"
+            :aria-label="
+              showCurrentPassword
+                ? 'Hide current password'
+                : 'Show current password'
+            "
+            @click="showCurrentPassword = !showCurrentPassword"
+          >
+            <i
+              :class="['bi', showCurrentPassword ? 'bi-eye-slash' : 'bi-eye']"
+            ></i>
+          </button>
+        </span>
+        <small v-if="passwordErrors.currentPassword" class="password-error">
+          {{ passwordErrors.currentPassword }}
+        </small>
+      </div>
+
+      <div class="password-field">
+        <label for="new-password">New password</label>
+        <span class="password-input-wrap">
+          <input
+            id="new-password"
+            v-model="passwordForm.newPassword"
+            :type="showNewPassword ? 'text' : 'password'"
+            autocomplete="new-password"
+            placeholder="At least 8 characters"
+            :class="{ invalid: passwordErrors.newPassword }"
+            @input="clearPasswordError('newPassword')"
+          />
+          <button
+            type="button"
+            :aria-label="
+              showNewPassword ? 'Hide new password' : 'Show new password'
+            "
+            @click="showNewPassword = !showNewPassword"
+          >
+            <i :class="['bi', showNewPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
+          </button>
+        </span>
+        <small v-if="passwordErrors.newPassword" class="password-error">
+          {{ passwordErrors.newPassword }}
+        </small>
+        <small v-else class="password-hint">Minimum 8 characters.</small>
+      </div>
+
+      <div class="password-field">
+        <label for="confirm-password">Confirm new password</label>
+        <span class="password-input-wrap">
+          <input
+            id="confirm-password"
+            v-model="passwordForm.confirmPassword"
+            :type="showConfirmPassword ? 'text' : 'password'"
+            autocomplete="new-password"
+            placeholder="Repeat your new password"
+            :class="{ invalid: passwordErrors.confirmPassword }"
+            @input="clearPasswordError('confirmPassword')"
+          />
+          <button
+            type="button"
+            :aria-label="
+              showConfirmPassword
+                ? 'Hide confirmed password'
+                : 'Show confirmed password'
+            "
+            @click="showConfirmPassword = !showConfirmPassword"
+          >
+            <i
+              :class="['bi', showConfirmPassword ? 'bi-eye-slash' : 'bi-eye']"
+            ></i>
+          </button>
+        </span>
+        <small v-if="passwordErrors.confirmPassword" class="password-error">
+          {{ passwordErrors.confirmPassword }}
+        </small>
+      </div>
+
+      <div v-if="passwordErrors.form" class="password-form-error" role="alert">
+        <i class="bi bi-exclamation-circle"></i>
+        {{ passwordErrors.form }}
+      </div>
+    </form>
+
+    <template #footer>
+      <button
+        type="button"
+        class="btn-secondary-action"
+        :disabled="isPasswordSubmitting"
+        @click="closePasswordModal"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="change-password-form"
+        class="btn-primary-action"
+        :disabled="!canSubmitPassword || isPasswordSubmitting"
+      >
+        <span
+          v-if="isPasswordSubmitting"
+          class="spinner-border spinner-border-sm"
+          aria-hidden="true"
+        ></span>
+        {{ isPasswordSubmitting ? "Updating..." : "Update password" }}
+      </button>
+    </template>
+  </BaseModal>
 
   <Footer />
 </template>
@@ -456,8 +410,7 @@ watch(
   font-size: 1rem;
 }
 .role-badge,
-.preview-badge,
-.backend-badge,
+.security-badge,
 .current-badge {
   display: inline-flex;
   align-items: center;
@@ -470,77 +423,17 @@ watch(
   white-space: nowrap;
 }
 .role-badge,
-.preview-badge {
+.security-badge {
   color: var(--color-blue);
   background: var(--color-blue-light);
-}
-.backend-badge {
-  color: var(--color-warning);
-  background: var(--color-warning-light);
 }
 .current-badge {
   color: var(--color-success);
   background: var(--color-success-light);
 }
 .settings-content-grid {
-  display: grid;
-  grid-template-columns: 252px 1fr;
-  gap: 24px;
-  margin-top: 24px;
-}
-.settings-section-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  align-self: start;
-  padding: 10px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  box-shadow: var(--shadow-sm);
-}
-.settings-section-nav button {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 11px;
-  color: var(--color-text-muted);
-  background: transparent;
-  border: 0;
-  border-radius: 10px;
-  text-align: left;
-  transition: all var(--transition-base);
-}
-.settings-section-nav button:hover {
-  color: var(--color-text);
-  background: var(--color-surface-hover);
-}
-.settings-section-nav button.active {
-  color: var(--color-blue);
-  background: var(--color-blue-light);
-}
-.section-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  background: var(--color-surface-hover);
-  font-size: 1rem;
-}
-.settings-section-nav strong,
-.settings-section-nav small {
-  display: block;
-}
-.settings-section-nav strong {
-  font-size: 0.9rem;
-}
-.settings-section-nav small {
-  margin-top: 2px;
-  color: var(--color-text-muted);
-  font-size: 0.72rem;
+  max-width: 900px;
+  margin: 24px auto 0;
 }
 .settings-panel-wrap {
   min-width: 0;
@@ -553,11 +446,9 @@ watch(
   box-shadow: var(--shadow-sm);
 }
 .panel-heading,
-.settings-actions,
 .section-heading,
 .security-card,
-.session-card,
-.account-support-card {
+.session-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -586,128 +477,20 @@ watch(
   color: var(--color-text-muted);
   font-size: 0.9rem;
 }
-.field-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
-  margin-bottom: 20px;
-}
-.field-block {
-  display: grid;
-  gap: 8px;
-  color: var(--color-text);
-  font-size: 0.9rem;
-  font-weight: 800;
-}
-.field-block small {
-  color: var(--color-text-muted);
-  font-size: 0.78rem;
-  font-weight: 500;
-  line-height: 1.5;
-}
-.form-select {
-  min-height: 44px;
-  color: var(--color-text);
-  background-color: var(--color-input-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 9px;
-  font-size: 0.92rem;
-}
-.toggle-list {
-  display: grid;
-  gap: 11px;
-}
-.toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 14px 15px;
-  background: color-mix(in srgb, var(--color-surface-hover) 72%, transparent);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-}
-.toggle-row strong,
-.toggle-row small {
-  display: block;
-}
-.toggle-row strong,
 .security-card strong,
-.session-card strong,
-.account-support-card strong {
+.session-card strong {
   color: var(--color-text);
   font-size: 0.94rem;
 }
-.toggle-row small,
 .security-card small,
-.session-card small,
-.account-support-card small {
+.session-card small {
   margin-top: 3px;
   color: var(--color-text-muted);
   font-size: 0.8rem;
 }
-.settings-switch {
-  position: relative;
-  flex-shrink: 0;
-  width: 46px;
-  height: 25px;
-  appearance: none;
-  cursor: pointer;
-  background: rgba(148, 163, 184, 0.28);
-  border: 1px solid rgba(148, 163, 184, 0.34);
-  border-radius: 999px;
-  outline: 0;
-  transition: all var(--transition-base);
-}
-.settings-switch::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 19px;
-  height: 19px;
-  background: #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
-  transition: transform var(--transition-base);
-}
-.settings-switch:checked {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-blue)
-  );
-  border-color: var(--color-primary);
-}
-.settings-switch:checked::after {
-  transform: translateX(21px);
-}
-.settings-switch:focus-visible {
-  box-shadow: var(--focus-ring);
-}
-.integration-note {
-  display: flex;
-  gap: 10px;
-  margin-top: 18px;
-  padding: 13px 14px;
-  color: var(--color-text-muted);
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
-.integration-note i {
-  color: var(--color-blue);
-}
-.settings-actions {
-  justify-content: flex-end;
-  margin-top: 20px;
-}
 .btn-primary-action,
 .btn-secondary-action,
-.inline-action,
-.account-support-card button {
+.inline-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -724,42 +507,35 @@ watch(
   background: var(--color-blue);
   border: 1px solid var(--color-blue);
 }
-.btn-secondary-action,
-.account-support-card button {
+.btn-secondary-action {
   color: var(--color-text-muted);
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
 }
 .btn-primary-action:disabled,
-.btn-secondary-action:disabled,
-.account-support-card button:disabled {
+.btn-secondary-action:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
 .security-card,
-.session-card,
-.account-support-card {
+.session-card {
   padding: 16px;
   background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   border-radius: 10px;
 }
 .security-card > div,
-.session-card > div,
-.account-support-card > div {
+.session-card > div {
   min-width: 0;
   flex: 1;
 }
 .security-card strong,
 .security-card small,
 .session-card strong,
-.session-card small,
-.account-support-card strong,
-.account-support-card small {
+.session-card small {
   display: block;
 }
-.security-icon,
-.support-icon {
+.security-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -775,36 +551,101 @@ watch(
   color: var(--color-success);
   background: var(--color-success-light);
 }
-.support-icon.warning {
-  color: var(--color-warning);
-  background: var(--color-warning-light);
-}
 .inline-action {
   color: var(--color-blue);
   background: var(--color-blue-light);
   border: 1px solid var(--color-blue-light);
 }
+.inline-action:hover {
+  color: #ffffff;
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+}
+.password-change-form {
+  display: grid;
+  gap: 16px;
+}
+.password-guidance,
+.password-form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 12px;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.password-guidance {
+  color: var(--color-blue);
+  background: var(--color-blue-light);
+}
+.password-form-error {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, transparent);
+}
+.password-field {
+  display: grid;
+  gap: 7px;
+  color: var(--color-text);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+.password-input-wrap {
+  position: relative;
+  display: block;
+}
+.password-input-wrap input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 44px 10px 12px;
+  color: var(--color-text);
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  outline: none;
+  transition: all var(--transition-base);
+}
+.password-input-wrap input:focus {
+  border-color: var(--color-blue);
+  box-shadow: var(--focus-ring);
+}
+.password-input-wrap input.invalid {
+  border-color: var(--color-danger);
+}
+.password-input-wrap button {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  transform: translateY(-50%);
+}
+.password-input-wrap button:hover {
+  color: var(--color-blue);
+  background: var(--color-blue-light);
+}
+.password-error,
+.password-hint {
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+.password-error {
+  color: var(--color-danger);
+}
+.password-hint {
+  color: var(--color-text-muted);
+}
 .section-heading {
   align-items: flex-end;
   margin: 24px 0 12px;
-}
-.account-support-card + .account-support-card {
-  margin-top: 10px;
-}
-@media (max-width: 760px) {
-  .settings-content-grid {
-    grid-template-columns: 1fr;
-  }
-  .settings-section-nav {
-    flex-direction: row;
-    overflow-x: auto;
-  }
-  .settings-section-nav button {
-    min-width: 155px;
-  }
-  .field-grid {
-    grid-template-columns: 1fr;
-  }
 }
 @media (max-width: 520px) {
   .settings-page-container {
@@ -820,8 +661,7 @@ watch(
     padding: 16px;
   }
   .security-card,
-  .session-card,
-  .account-support-card {
+  .session-card {
     align-items: flex-start;
     flex-wrap: wrap;
   }
