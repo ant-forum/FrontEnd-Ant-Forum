@@ -24,7 +24,6 @@ watch([activeFilter, searchQuery], () => {
 const filterTypes = [
   { value: 'reply', label: 'Replies', icon: 'bi bi-chat-fill text-primary' },
   { value: 'like', label: 'Likes', icon: 'bi bi-heart-fill text-danger' },
-  { value: 'mention', label: 'Mentions', icon: 'bi bi-at text-warning' },
   { value: 'system', label: 'System Updates', icon: 'bi bi-shield-fill-check text-success' }
 ];
 
@@ -101,13 +100,6 @@ const handleMarkAllRead = async () => {
   await notificationStore.markAllAsRead();
 };
 
-const handleClearAll = () => {
-  if (confirm("Are you sure you want to delete all notifications? This cannot be undone.")) {
-    notificationStore.clearNotifications();
-    toast.success("All notifications deleted successfully");
-  }
-};
-
 const getNotificationIcon = (type) => {
   const icons = {
     reply: "bi bi-chat-fill text-primary",
@@ -137,16 +129,6 @@ const getNotificationIcon = (type) => {
           <span>Notification Center</span>
         </h2>
         <p class="text-muted small m-0 mt-1">Manage, filter, and track all your school activity alerts.</p>
-      </div>
-      <div class="col-sm-auto d-flex gap-2">
-        <button 
-          v-if="notificationStore.notifications.length > 0" 
-          @click="handleClearAll" 
-          class="btn btn-action-modern btn-clear-all d-flex align-items-center gap-2"
-        >
-          <i class="bi bi-trash3"></i>
-          <span>Clear all</span>
-        </button>
       </div>
     </div>
 
@@ -525,11 +507,6 @@ const getNotificationIcon = (type) => {
   border-color: var(--color-primary);
 }
 
-.btn-clear-all:hover {
-  border-color: #ef4444;
-  color: #ef4444;
-}
-
 .btn-primary-gradient {
   background: var(--color-brand-gradient);
   color: white;
@@ -801,12 +778,14 @@ p.text-muted {
 
 /* Custom Dropdown Menu for 3-dots */
 .custom-dropdown-menu {
-  background: var(--color-surface-elevated);
-  backdrop-filter: blur(20px);
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 8px 0;
   min-width: 200px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.1) !important;
 }
 
 .custom-dropdown-menu .dropdown-item {
@@ -833,5 +812,15 @@ p.text-muted {
 .custom-divider {
   border-top-color: var(--color-border);
   margin: 4px 0;
+}
+</style>
+
+<style>
+[data-theme="dark"] .notifications-premium-page .custom-dropdown-menu {
+  background-color: rgba(2, 16, 36, 1) !important;
+  border-color: rgba(125, 160, 202, 0.2) !important;
+  box-shadow:
+    0 32px 64px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 </style>

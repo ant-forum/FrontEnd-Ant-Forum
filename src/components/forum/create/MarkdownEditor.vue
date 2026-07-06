@@ -11,6 +11,7 @@ import BaseModal from "@/components/base/BaseModal.vue";
 import api from "@/api/api.js";
 import ImageCropModal from "@/components/base/ImageCropModal.vue";
 import { useImageCropper } from "@/composables/useImageCropper.js";
+import { resolveMediaUrl } from "@/utils/mediaUrl";
 
 const props = defineProps({
   modelValue: {
@@ -395,7 +396,7 @@ const uploadImageFile = async (file) => {
       editor.value
         ?.chain()
         .focus()
-        .setImage({ src: imageUrl, alt: file.name })
+        .setImage({ src: resolveMediaUrl(imageUrl), alt: file.name })
         .run();
 
       showImageModal.value = false;
