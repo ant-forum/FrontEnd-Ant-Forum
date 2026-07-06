@@ -107,7 +107,7 @@
 
       <!-- Bottom Links -->
       <div class="bottom-links">
-        <p>Don't have an account? <a href="https://t.me/AntTechnologyTrainingCenter" target="_blank" rel="noopener noreferrer" class="contact-admin-link">Contact ANT Admin</a></p>
+        <p>Don't have an account? <a href="https://t.me/AntForum1" target="_blank" rel="noopener noreferrer" class="contact-admin-link">Contact ANT Admin</a></p>
       </div>
     </div>
 
