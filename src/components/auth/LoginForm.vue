@@ -387,8 +387,17 @@ const validateForm = () => {
 };
 
 const getPostLoginRoute = () => {
+  const userRole = String(authStore.user?.role || "").toLowerCase();
   const redirectPath =
     typeof route.query.redirect === "string" ? route.query.redirect : "";
+
+  if (userRole === "admin") {
+    if (redirectPath.startsWith("/admin") && redirectPath !== "/login") {
+      return redirectPath;
+    }
+    return { name: "AdminDashboard" };
+  }
+
   if (
     redirectPath.startsWith("/") &&
     !redirectPath.startsWith("//") &&
@@ -397,10 +406,7 @@ const getPostLoginRoute = () => {
     return redirectPath;
   }
 
-  const userRole = String(authStore.user?.role || "").toLowerCase();
-  return userRole === "admin"
-    ? { name: "AdminDashboard" }
-    : { name: "HomePage" };
+  return { name: "HomePage" };
 };
 
 async function handleSignIn() {

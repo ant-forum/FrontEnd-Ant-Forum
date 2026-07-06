@@ -55,40 +55,9 @@
           <section class="admin-panel">
             <div class="section-heading">
               <div>
-                <span class="section-kicker">Admin Work</span>
-                <h3>Current responsibilities</h3>
-              </div>
-            </div>
-
-            <div class="responsibility-grid">
-              <RouterLink
-                v-for="item in responsibilityCards"
-                :key="item.label"
-                :to="item.to"
-                :class="['responsibility-card', item.tone]"
-              >
-                <span class="responsibility-icon">
-                  <i :class="['bi', item.icon]"></i>
-                </span>
-                <div>
-                  <strong>{{ item.value }}</strong>
-                  <span>{{ item.label }}</span>
-                  <small>{{ item.helper }}</small>
-                </div>
-              </RouterLink>
-            </div>
-          </section>
-
-          <section class="admin-panel">
-            <div class="section-heading">
-              <div>
                 <span class="section-kicker">Audit Trail</span>
                 <h3>Recent admin activity</h3>
               </div>
-              <RouterLink class="text-link" to="/admin/analytics">
-                View analytics
-                <i class="bi bi-arrow-right"></i>
-              </RouterLink>
             </div>
 
             <div v-if="recentActivity.length" class="activity-list">
@@ -176,20 +145,7 @@
             </div>
           </section>
 
-          <section class="admin-panel settings-note">
-            <div>
-              <i class="bi bi-info-circle"></i>
-              <strong>Where did settings go?</strong>
-            </div>
-            <p>
-              Password policy, session timeout, notifications, and moderation
-              rules belong in Admin Settings.
-            </p>
-            <RouterLink to="/admin/settings">
-              Open settings
-              <i class="bi bi-arrow-right"></i>
-            </RouterLink>
-          </section>
+
         </aside>
       </div>
     </section>
@@ -874,10 +830,9 @@ const formatActivityDate = (value) =>
 }
 
 .info-row strong {
-  max-width: 245px;
   text-align: right;
-  word-break: break-all;
-  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .settings-note div {
