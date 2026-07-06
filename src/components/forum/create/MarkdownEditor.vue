@@ -568,6 +568,15 @@ const handleImageDrop = (event) => {
           >
             <i class="bi bi-code-slash"></i>
           </button>
+          <button
+            type="button"
+            @mousedown.prevent="toggleCodeBlock"
+            :class="{ 'is-active': isOptionActive('codeBlock') }"
+            class="toolbar-btn"
+            title="Code block"
+          >
+            <i class="bi bi-braces"></i>
+          </button>
         </div>
 
         <div class="toolbar-divider"></div>

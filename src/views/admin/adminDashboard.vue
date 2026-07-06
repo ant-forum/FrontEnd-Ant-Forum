@@ -414,7 +414,7 @@ const chartMaximum = computed(() => {
   const values = chartData.value.flatMap((item) =>
     activitySeries.map((series) => item[series.key]),
   );
-  return Math.max(100, Math.ceil(Math.max(...values) / 20) * 20);
+  return Math.max(40, Math.ceil(Math.max(...values) / 40) * 40);
 });
 
 const chartScale = computed(() => [
@@ -478,13 +478,6 @@ const quickActions = [
     icon: "bi-grid",
     colorClass: "orange",
     to: "/admin/categories",
-  },
-  {
-    label: "View Analytics",
-    description: "Check platform reports",
-    icon: "bi-bar-chart",
-    colorClass: "blue",
-    to: "/admin/analytics",
   },
 ];
 

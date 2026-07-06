@@ -34,10 +34,14 @@ export const useNotificationStore = defineStore("notification", () => {
        type = "like";
        title = `${n.sender_username} liked your post`;
        message = `${n.sender_username} reacted to your content.`;
-    } else if (n.type === "mention") {
-       type = "mention";
-       title = `${n.sender_username} mentioned you`;
-       message = `${n.sender_username} mentioned you.`;
+    } else if (n.type === "like comment" || n.type === "like_comment") {
+       type = "like";
+       title = `${n.sender_username} liked your comment`;
+       message = `${n.sender_username} liked a comment you made.`;
+    } else if (n.type === "rating") {
+       type = "system";
+       title = `${n.sender_username} rated your project`;
+       message = `${n.sender_username} left a rating on your project.`;
     }
     
     const baseUrl = import.meta.env.VITE_API_BASE_URL || "https://ant-forum.khei.work.gd";
@@ -98,7 +102,9 @@ export const useNotificationStore = defineStore("notification", () => {
     try {
       const response = await api.get('/api/notifications/getnotification');
       if (response.data && response.data.result) {
-        notifications.value = response.data.data.map(n => mapNotification(n));
+        const allowedTypes = ["comment", "like", "like_comment", "like comment", "rating"];
+        const filtered = response.data.data.filter(n => allowedTypes.includes(n.type));
+        notifications.value = filtered.map(n => mapNotification(n));
       }
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
