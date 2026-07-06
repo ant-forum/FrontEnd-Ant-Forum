@@ -25,7 +25,10 @@ defineProps({
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-2xl) var(--spacing-md);
+  padding:
+    calc(90px + var(--spacing-2xl))
+    var(--spacing-md)
+    var(--spacing-2xl);
   position: relative;
   overflow: hidden;
 }

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import defaultProfilePic from "@/assets/profile.jpg";
 
 const props = defineProps({
   user: {
@@ -12,7 +13,7 @@ const emit = defineEmits(["close", "logout"]);
 const dropdownRef = ref(null);
 
 const avatar = computed(
-  () => props.user?.profile_pic,
+  () => props.user?.profile_pic || defaultProfilePic,
 );
 const displayName = computed(
   () => props.user?.fullname || props.user?.name || props.user?.username || "ANT Developer",
@@ -21,6 +22,12 @@ const role = computed(() => {
   const value = props.user?.role || "Member";
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 });
+
+const handleAvatarError = (event) => {
+  if (event.currentTarget.dataset.fallbackApplied === "true") return;
+  event.currentTarget.dataset.fallbackApplied = "true";
+  event.currentTarget.src = defaultProfilePic;
+};
 
 const handleOutsideClick = (event) => {
   if (
@@ -52,7 +59,14 @@ onUnmounted(() => {
 <template>
   <aside ref="dropdownRef" class="account-dropdown" aria-label="Account menu">
     <router-link to="/profile" class="account-card" @click="emit('close')">
-      <img :src="avatar" width="46" height="46" alt="User avatar" class="avatar-img" />
+      <img
+        :src="avatar"
+        width="46"
+        height="46"
+        alt="User avatar"
+        class="avatar-img"
+        @error="handleAvatarError"
+      />
       <span class="account-identity">
         <strong>{{ displayName }}</strong>
         <small>{{ props.user?.email || 'developer@antforum.com' }}</small>
