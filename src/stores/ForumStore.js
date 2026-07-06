@@ -356,6 +356,94 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  const pollLatestDiscussions = async () => {
+    if (isLoading.value) return; // Don't interrupt a main fetch
+    try {
+      const authStore = useAuthStore();
+      const hasToken = !!authStore.token;
+
+      const promises = [
+        api.get("/api/forums/getAllforum", {
+          params: { page: 1, limit: 10 },
+        }),
+      ];
+
+      if (hasToken) {
+        promises.push(api.get("/api/saved/my-bookmarks"));
+      }
+
+      const results = await Promise.allSettled(promises);
+      const discussionsRes = results[0];
+      const bookmarksRes = hasToken ? results[1] : null;
+
+      let discussionsData = [];
+      if (discussionsRes.status === "fulfilled") {
+        const raw = discussionsRes.value.data;
+        if (Array.isArray(raw)) discussionsData = raw;
+        else if (raw && Array.isArray(raw.data)) discussionsData = raw.data;
+      }
+
+      let bookmarkedIds = new Set();
+      if (bookmarksRes && bookmarksRes.status === "fulfilled") {
+        const raw = bookmarksRes.value.data;
+        let bookmarksData = [];
+        if (Array.isArray(raw)) bookmarksData = raw;
+        else if (raw && Array.isArray(raw.data)) bookmarksData = raw.data;
+        setBookmarks(bookmarksData);
+        bookmarksData.forEach((item) => {
+          if (item.forum_id) bookmarkedIds.add(Number(item.forum_id));
+          else if (item.forum && item.forum.id) bookmarkedIds.add(Number(item.forum.id));
+          else if (item.id) bookmarkedIds.add(Number(item.id));
+        });
+      }
+
+      if (categories.value.length === 0) {
+        try { await fetchCategories(); } catch (e) {}
+      }
+
+      const mappedDiscussions = discussionsData.map((d) => {
+        const categoryMeta = resolveCategoryMeta(d, categories.value);
+        const likesCount = d.likes !== undefined ? d.likes : d.like_count !== undefined ? d.like_count : 0;
+        const isLiked = d.likedByUser !== undefined ? d.likedByUser : d.liked !== undefined ? d.liked : d.isLiked !== undefined ? d.isLiked : false;
+        const repliesVal = d.replies !== undefined ? d.replies : d.comment_count !== undefined ? Number(d.comment_count) : 0;
+        const votedState = isLiked ? "up" : getLocalVote(d.id) || d.voted || null;
+        return {
+          ...d,
+          category: categoryMeta.slug,
+          category_id: d.category_id || d.categoryId || categoryMeta.id,
+          categoryMeta,
+          categoryLabel: categoryMeta.label,
+          tags: normalizeTags(d.tags, d.Tags, d.tag_name, d.tag_names, d.tag).map((t, idx) => {
+            if (idx === 0 && d.tag_id) return { ...t, id: d.tag_id };
+            return t;
+          }),
+          saved: bookmarkedIds.has(Number(d.id)) || d.saved || false,
+          likes: likesCount,
+          likedByUser: isLiked,
+          voted: votedState,
+          votes: d.votes !== undefined ? d.votes : likesCount,
+          replies: repliesVal,
+          excerpt: d.excerpt || stripMarkdown(d.description || d.body || ""),
+        };
+      });
+
+      const currentList = [...discussions.value];
+      for (const item of mappedDiscussions) {
+        const existingIndex = currentList.findIndex(d => Number(d.id) === Number(item.id));
+        if (existingIndex !== -1) {
+          currentList[existingIndex] = { ...currentList[existingIndex], ...item };
+        } else {
+          currentList.unshift(item);
+        }
+      }
+      
+      currentList.sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
+      discussions.value = currentList;
+    } catch (err) {
+      console.error("Poll latest discussions failed:", err);
+    }
+  };
+
   const fetchDiscussion = async (id) => {
     try {
       isLoading.value = true;
@@ -1801,6 +1889,7 @@ export const useForumStore = defineStore("forum", () => {
     setTags,
 
     fetchDiscussions,
+    pollLatestDiscussions,
     fetchDiscussion,
     createDiscussion,
     updateDiscussion,

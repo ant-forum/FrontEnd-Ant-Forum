@@ -291,14 +291,28 @@ export const useUserProfilesStore = defineStore("userProfiles", () => {
    * Fetch Viewed User Social Links
    */
   const fetchViewedSocialLinks = async (userId) => {
-    const res = await api.get("/api/sociallink/get-all/social-link");
-    const links = res.data?.data || res.data || [];
-    if (links.length > 0 && links[0].user_id) {
-      viewedSocialLinks.value = links.filter(
-        (l) => Number(l.user_id) === Number(userId),
-      );
-    } else {
-      viewedSocialLinks.value = links;
+    try {
+      const res = await api.get("/api/sociallink/get-all/social-link");
+      const links = res.data?.data || res.data || [];
+      const hasUserId = links.some(l => l.user_id !== undefined || l.userId !== undefined);
+
+      if (hasUserId) {
+        viewedSocialLinks.value = links.filter(
+          (l) => Number(l.user_id || l.userId) === Number(userId),
+        );
+      } else {
+        // If the backend doesn't provide user_id, it is likely returning ONLY the logged in user's links.
+        // We must not leak these links onto other users' profiles!
+        const authStore = useAuthStore();
+        if (authStore.user && Number(authStore.user.id) === Number(userId)) {
+          viewedSocialLinks.value = links;
+        } else {
+          viewedSocialLinks.value = [];
+        }
+      }
+    } catch (err) {
+      console.error("[UserProfilesStore] fetchViewedSocialLinks failed:", err);
+      viewedSocialLinks.value = [];
     }
     return viewedSocialLinks.value;
   };
