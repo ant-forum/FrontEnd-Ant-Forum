@@ -2201,13 +2201,13 @@ function getAvatarUrl(author) {
 }
 
 .vote-action-btn.down.active {
-  background: var(--color-danger-light);
-  color: var(--color-danger);
-  border-color: var(--color-danger);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .vote-action-btn.down.active i {
-  color: var(--color-danger);
+  color: var(--color-primary);
 }
 
 .vote-count-num {
@@ -2223,7 +2223,7 @@ function getAvatarUrl(author) {
 }
 
 .vote-count-num.voted-down {
-  color: var(--color-danger);
+  color: var(--color-primary);
 }
 
 .right-actions {

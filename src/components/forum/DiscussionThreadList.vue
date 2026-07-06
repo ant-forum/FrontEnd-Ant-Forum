@@ -472,8 +472,8 @@ function selectTag(tagName) {
 }
 
 .vote-btn.down.active {
-  color: var(--color-danger);
-  background: var(--color-danger-light);
+  color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 .vote-num {
@@ -488,7 +488,7 @@ function selectTag(tagName) {
 }
 
 .vote-num.voted-down {
-  color: var(--color-danger);
+  color: var(--color-primary);
 }
 
 /* Thread Content Column */
