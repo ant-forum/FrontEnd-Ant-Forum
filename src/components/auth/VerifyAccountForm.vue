@@ -858,7 +858,11 @@ async function handleResetPassword() {
     sessionStorage.removeItem("ANT_VerifiedToken");
     sessionStorage.removeItem("ANT_FirstLogin");
 
-    authStore.logout();
+    // Password recovery is normally unauthenticated, so calling the protected
+    // logout endpoint without an access token would produce an unnecessary 401.
+    if (authStore.token) {
+      await authStore.logout();
+    }
 
     setTimeout(() => {
       router.push("/login");
