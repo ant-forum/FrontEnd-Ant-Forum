@@ -202,7 +202,7 @@
         </div>
       </div>
 
-      <label class="note-field">
+      <label v-if="selectedReport.status === 'Open'" class="note-field">
         <span>Decision note</span>
         <textarea
           v-model.trim="decisionNote"
@@ -214,6 +214,7 @@
 
       <div class="modal-actions">
         <button
+          v-if="selectedReport.status === 'Open'"
           class="btn btn-outline-secondary"
           type="button"
           @click="handleDismiss"
@@ -221,15 +222,11 @@
           Dismiss
         </button>
         <button
-          v-if="selectedReport.status !== 'Open'"
-          class="btn btn-outline-danger"
+          v-if="selectedReport.status === 'Open'"
+          class="btn btn-success"
           type="button"
-          @click="requestDelete"
+          @click="handleResolve"
         >
-          <i class="bi bi-trash"></i>
-          Delete
-        </button>
-        <button class="btn btn-success" type="button" @click="handleResolve">
           <i class="bi bi-check2-circle"></i>
           Resolve
         </button>
