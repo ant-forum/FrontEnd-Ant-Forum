@@ -185,10 +185,7 @@ async function handleReset() {
   try {
     const res = await authStore.forgotPassword(form.email);
 
-    // Save the resetToken for the subsequent OTP verify step
-    if (res && res.resetToken) {
-      sessionStorage.setItem("ANT_ResetToken", res.resetToken);
-    }
+    const resetToken = res?.resetToken;
 
     // Save recovery email for resending OTP code securely
     sessionStorage.setItem("ANT_ResetEmail", form.email);
@@ -197,9 +194,14 @@ async function handleReset() {
     successMsg.value =
       "OTP sent to your email successfully! Please check your inbox mail.";
 
-    setTimeout(() => {
-      router.push("/verify");
-    }, 1800);
+    // A recovery token is required by the OTP page. Older API versions did not
+    // return one for unknown emails, which caused /verify to redirect to /login.
+    if (resetToken) {
+      sessionStorage.setItem("ANT_ResetToken", resetToken);
+      setTimeout(() => {
+        router.push("/verify");
+      }, 1800);
+    }
   } catch (error) {
     console.error("Password reset failed:", error);
     const errMsg = (
@@ -222,15 +224,12 @@ async function handleReset() {
       error.response?.status === 404;
 
     if (isUserNotFound) {
-      // Save recovery email for resending OTP code securely
+      // Keep the response generic and remain on this page when an older API
+      // does not provide the recovery token required by the OTP page.
       sessionStorage.setItem("ANT_ResetEmail", form.email);
       errors.email = "";
       successMsg.value =
         "OTP sent to your email successfully! Please check your inbox mail.";
-
-      setTimeout(() => {
-        router.push("/verify");
-      }, 1800);
     } else {
       errors.email =
         error.message || error.error || "An error occurred. Please try again.";

@@ -16,9 +16,10 @@
             :key="index"
             type="text"
             class="otp-input form-control-custom"
-            :class="{ error: hasError || otpErrorMsg }"
+            :class="{ error: hasError || otpDisplayError }"
             maxlength="1"
             autocomplete="one-time-code"
+            :disabled="isOtpLocked"
             v-model="otp[index]"
             @input="handleInput($event, index)"
             @keydown="handleKeyDown($event, index)"
@@ -30,8 +31,8 @@
         <div v-if="hasError" class="error-msg text-center mt-1">
           Please enter all 6 digits.
         </div>
-        <div v-if="otpErrorMsg" class="error-msg text-center mt-1">
-          {{ otpErrorMsg }}
+        <div v-if="otpDisplayError" class="error-msg text-center mt-1">
+          {{ otpDisplayError }}
         </div>
         <div v-if="otpSuccessMsg" class="success-msg text-center mt-1">
           {{ otpSuccessMsg }}
@@ -39,10 +40,18 @@
 
         <!-- Submit -->
         <div class="action-row">
-          <button type="submit" class="btn-signin mt-3" :disabled="loading">
+          <button
+            type="submit"
+            class="btn-signin mt-3"
+            :disabled="loading || isOtpLocked"
+            :title="isOtpLocked ? `Try again in ${remainingOtpLockoutText}` : undefined"
+          >
             <template v-if="loading">
               <div class="spinner"></div>
               <span>Verifying…</span>
+            </template>
+            <template v-else-if="isOtpLocked">
+              <span>Wait {{ remainingOtpLockoutText }}</span>
             </template>
             <template v-else>
               <span>Verify Account</span>
@@ -54,7 +63,21 @@
 
       <!-- Resend & Back to Login -->
       <div class="bottom-links">
-        <p>Didn't receive the code? <a href="#" @click.prevent="resendCode">Resend code</a> or <router-link to="/login" @click="clearTokens">go back to login</router-link></p>
+        <p>
+          Didn't receive the code?
+          <button
+            type="button"
+            class="link-button"
+            :disabled="loading || isOtpLocked"
+            @click="resendCode"
+          >
+            Resend code
+          </button>
+          or
+          <router-link to="/login" @click="clearTokens">
+            go back to login
+          </router-link>
+        </p>
       </div>
     </template>
 
@@ -509,6 +532,125 @@ const otp = reactive(["", "", "", "", "", ""]);
 const otpInputs = ref([]);
 const otpErrorMsg = ref("");
 const otpSuccessMsg = ref("");
+const otpLockoutExpiresAt = ref(0);
+const otpLockoutRemainingMs = ref(0);
+let otpLockoutTimerId = null;
+
+const OTP_LOCKOUT_STORAGE_KEY = "ANTForumOtpLockout";
+const DEFAULT_OTP_LOCKOUT_MS = 15 * 60 * 1000;
+
+const isOtpLocked = computed(() => otpLockoutRemainingMs.value > 0);
+
+const remainingOtpLockoutText = computed(() => {
+  const totalSeconds = Math.max(
+    Math.ceil(otpLockoutRemainingMs.value / 1000),
+    0,
+  );
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return `${minutes}:${seconds}`;
+});
+
+const otpDisplayError = computed(() => {
+  if (isOtpLocked.value) {
+    return `Too many verification attempts. Please try again in ${remainingOtpLockoutText.value}.`;
+  }
+  return otpErrorMsg.value;
+});
+
+const saveOtpLockout = () => {
+  try {
+    localStorage.setItem(
+      OTP_LOCKOUT_STORAGE_KEY,
+      JSON.stringify({ expiresAt: otpLockoutExpiresAt.value }),
+    );
+  } catch (error) {
+    console.error("Unable to save OTP lockout state:", error);
+  }
+};
+
+const clearOtpLockout = () => {
+  otpLockoutExpiresAt.value = 0;
+  otpLockoutRemainingMs.value = 0;
+
+  if (otpLockoutTimerId !== null) {
+    window.clearInterval(otpLockoutTimerId);
+    otpLockoutTimerId = null;
+  }
+
+  try {
+    localStorage.removeItem(OTP_LOCKOUT_STORAGE_KEY);
+  } catch (error) {
+    console.error("Unable to clear OTP lockout state:", error);
+  }
+};
+
+const updateOtpLockoutCountdown = () => {
+  const remaining = otpLockoutExpiresAt.value - Date.now();
+  if (remaining <= 0) {
+    clearOtpLockout();
+    return;
+  }
+
+  otpLockoutRemainingMs.value = remaining;
+};
+
+const startOtpLockoutTimer = () => {
+  updateOtpLockoutCountdown();
+  if (!otpLockoutExpiresAt.value || otpLockoutTimerId !== null) return;
+  otpLockoutTimerId = window.setInterval(updateOtpLockoutCountdown, 1000);
+};
+
+const loadStoredOtpLockout = () => {
+  try {
+    const savedLockout = JSON.parse(
+      localStorage.getItem(OTP_LOCKOUT_STORAGE_KEY) || "null",
+    );
+
+    if (!savedLockout?.expiresAt || savedLockout.expiresAt <= Date.now()) {
+      clearOtpLockout();
+      return;
+    }
+
+    otpLockoutExpiresAt.value = savedLockout.expiresAt;
+    startOtpLockoutTimer();
+  } catch (error) {
+    console.error("Unable to read OTP lockout state:", error);
+    clearOtpLockout();
+  }
+};
+
+const getOtpLockoutDurationMs = (error) => {
+  const retryAfterSeconds = Number(error?.retryAfter || error?.retry_after);
+  if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
+    return retryAfterSeconds * 1000;
+  }
+
+  const message = String(error?.message || error?.msg || "");
+  const minuteMatch = message.match(/after\s+(\d+)\s+minutes?/i);
+  if (minuteMatch) {
+    return Number(minuteMatch[1]) * 60 * 1000;
+  }
+
+  return DEFAULT_OTP_LOCKOUT_MS;
+};
+
+const isOtpLockoutError = (error) => {
+  const message = String(error?.message || error?.msg || "").toLowerCase();
+  return (
+    error?.status === 429 ||
+    error?.statusCode === 429 ||
+    message.includes("too many verification attempts") ||
+    message.includes("too many requests")
+  );
+};
+
+const startOtpLockout = (error) => {
+  otpLockoutExpiresAt.value = Date.now() + getOtpLockoutDurationMs(error);
+  otpErrorMsg.value = "";
+  saveOtpLockout();
+  startOtpLockoutTimer();
+};
 
 // Password Reset Flow States
 const isOtpVerified = ref(false);
@@ -517,6 +659,8 @@ const showNewPassword = ref(false);
 const showConfirmPassword = ref(false);
 
 onMounted(() => {
+  loadStoredOtpLockout();
+
   const isFirstLogin = sessionStorage.getItem("ANT_FirstLogin") === "true";
   const storedToken = sessionStorage.getItem("ANT_VerifiedToken") || authStore.token;
   if (isFirstLogin && storedToken) {
@@ -633,6 +777,8 @@ function handlePaste(event) {
 }
 
 async function handleVerify() {
+  if (isOtpLocked.value) return;
+
   const code = otp.join("");
   if (code.length < 6) {
     hasError.value = true;
@@ -658,8 +804,12 @@ async function handleVerify() {
     }, 1500);
   } catch (error) {
     console.error("Verification failed:", error);
-    // Security hardening: Mask all verification errors as a clean "OTP is incorrect" to prevent leakage of technical details
-    otpErrorMsg.value = "OTP code is incorrect. Please try again.";
+    if (isOtpLockoutError(error)) {
+      startOtpLockout(error);
+    } else {
+      // Mask verification details without hiding the rate-limit state.
+      otpErrorMsg.value = "OTP code is incorrect. Please try again.";
+    }
     loading.value = false;
   }
 }
@@ -744,6 +894,8 @@ async function handleResetPassword() {
 }
 
 async function resendCode() {
+  if (isOtpLocked.value) return;
+
   const email = sessionStorage.getItem("ANT_ResetEmail");
   if (!email) {
     otpErrorMsg.value =
@@ -782,6 +934,9 @@ const clearTokens = () => {
 };
 
 onUnmounted(() => {
+  if (otpLockoutTimerId !== null) {
+    window.clearInterval(otpLockoutTimerId);
+  }
   clearTokens();
 });
 </script>
@@ -1347,6 +1502,21 @@ onUnmounted(() => {
 
 .bottom-links a {
   color: #5c60f5;
+}
+
+.bottom-links .link-button {
+  padding: 0;
+  color: #5c60f5;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bottom-links .link-button:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
 }
 
 .login-branding-pane {
