@@ -5,7 +5,7 @@
       active ? 'border-blue active-card' : '',
     ]"
   >
-    <div class="d-flex flex-column justify-content-between h-100">
+    <div class="d-flex flex-column justify-content-between py-1">
       <div>
         <p
           class="text-muted-color text-uppercase fw-bold small mb-1"
@@ -13,23 +13,11 @@
         >
           {{ label }}
         </p>
-        <h2 class="fw-bold mb-1 value-text text-color">{{ displayValue }}</h2>
-      </div>
-      <div
-        class="d-flex align-items-center small mt-2"
-        :class="footerClass || descriptionColorClass"
-      >
-        <slot name="footer">
-          <i
-            v-if="footerIcon || descriptionIcon"
-            :class="['bi', footerIcon || descriptionIcon, 'me-1']"
-          ></i>
-          <span class="fw-bold">{{ footerText || description }}</span>
-        </slot>
+        <h2 class="fw-bold value-text text-color">{{ displayValue }}</h2>
       </div>
     </div>
     <div class="stat-card-icon-wrap d-flex align-items-center ms-3">
-      <div :class="['icon-box rounded-circle p-3', bgClass || iconBgClass]">
+      <div :class="['icon-box rounded-circle p-1', bgClass || iconBgClass]">
         <i
           :class="['bi', mainIcon || icon, iconClass || iconColorClass, 'fs-4']"
         ></i>

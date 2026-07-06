@@ -43,7 +43,6 @@ export const useAuthStore = defineStore("auth", () => {
       });
 
       socket.value.on("connect", () => {
-        console.log("WebSocket connected successfully to", socketUrl);
       });
 
       const handleNotification = (notification) => {
@@ -72,7 +71,6 @@ export const useAuthStore = defineStore("auth", () => {
     if (socket.value) {
       socket.value.disconnect();
       socket.value = null;
-      console.log("WebSocket disconnected.");
     }
   };
 

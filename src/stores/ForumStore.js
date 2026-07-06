@@ -4,6 +4,8 @@ import api from "@/api/api";
 import { useUsersStore } from "./UsersStore";
 import { useAuthStore } from "./AuthStore";
 import { useTagsStore } from "./TagsStore";
+import { createPlainTextExcerpt, htmlToPlainText } from "@/utils/richContent";
+import { resolveMediaUrl, rewriteHtmlMediaUrls } from "@/utils/mediaUrl";
 import { stripMarkdown } from "@/utils/markdown";
 
 const getTagColor = (tag) => {
@@ -338,6 +340,8 @@ export const useForumStore = defineStore("forum", () => {
           voted: votedState,
           votes: d.votes !== undefined ? d.votes : likesCount,
           replies: repliesVal,
+          description: rewriteHtmlMediaUrls(d.description || ""),
+          body: rewriteHtmlMediaUrls(d.body || ""),
           excerpt: d.excerpt || stripMarkdown(d.description || d.body || ""),
         };
       });
@@ -423,6 +427,8 @@ export const useForumStore = defineStore("forum", () => {
           voted: votedState,
           votes: d.votes !== undefined ? d.votes : likesCount,
           replies: repliesVal,
+          description: rewriteHtmlMediaUrls(d.description || ""),
+          body: rewriteHtmlMediaUrls(d.body || ""),
           excerpt: d.excerpt || stripMarkdown(d.description || d.body || ""),
         };
       });

@@ -391,7 +391,7 @@ router.beforeEach(async (to, from) => {
       return { name: "not-found" };
     }
 
-    if (routeRole !== "admin" && userRole === "admin") {
+    if (routeRole && routeRole !== "admin" && userRole === "admin") {
       console.warn(
         `[Route Guard] Admin attempting to access user route ${to.path}.`,
       );
