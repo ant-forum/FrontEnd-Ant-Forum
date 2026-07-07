@@ -297,7 +297,6 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     setTokens(accessToken, newRefreshToken);
-    console.log("Access token refreshed at:", new Date().toISOString());
     return accessToken;
   };
 
