@@ -301,6 +301,18 @@ const handleEditInput = (field) => {
   }
 };
 
+const normalizeLookupValue = (value) =>
+  String(value || "").trim().toLowerCase();
+
+const hasExistingCreateValue = (field, value) => {
+  const lookupValue = normalizeLookupValue(value);
+  if (!lookupValue) return false;
+
+  return (usersStore.users || []).some(
+    (existingUser) => normalizeLookupValue(existingUser[field]) === lookupValue,
+  );
+};
+
 const columns = [
   { key: "name", label: "Name" },
   { key: "role", label: "Role" },
@@ -627,6 +639,25 @@ const handleSubmitForm = async () => {
   ) {
     toast.error("Please fix the validation errors before saving.");
     return;
+  }
+
+  if (isCreateMode.value) {
+    const usernameExists = hasExistingCreateValue(
+      "username",
+      mEdit.data.username,
+    );
+    const emailExists = hasExistingCreateValue("email", mEdit.data.email);
+
+    if (usernameExists || emailExists) {
+      if (usernameExists) {
+        errors.username = "Username already exists.";
+      }
+      if (emailExists) {
+        errors.email = "Email already exists.";
+      }
+      toast.error("Please use a different username or email.");
+      return;
+    }
   }
 
   try {

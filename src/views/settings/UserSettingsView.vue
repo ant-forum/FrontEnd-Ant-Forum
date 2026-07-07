@@ -34,6 +34,31 @@ const passwordErrors = reactive({
   confirmPassword: "",
   form: "",
 });
+const passwordUsername = computed(() => {
+  return authStore.user?.email || authStore.user?.username || "";
+});
+const passwordStrength = computed(() => {
+  const value = passwordForm.newPassword;
+  if (!value) return 0;
+
+  let score = 0;
+  if (value.length >= 8) score += 25;
+  if (/[A-Z]/.test(value)) score += 20;
+  if (/[a-z]/.test(value)) score += 20;
+  if (/[0-9]/.test(value)) score += 20;
+  if (/[@$!%*?&_\-#.+=(){}[\]^~]/.test(value)) score += 15;
+  return score;
+});
+const passwordStrengthColor = computed(() => {
+  if (passwordStrength.value <= 40) return "#ef4444";
+  if (passwordStrength.value <= 75) return "#f59e0b";
+  return "#10b981";
+});
+const passwordStrengthLabel = computed(() => {
+  if (passwordStrength.value <= 40) return "Weak";
+  if (passwordStrength.value <= 75) return "Medium";
+  return "Strong";
+});
 const canSubmitPassword = computed(
   () =>
     passwordForm.currentPassword.length > 0 &&
@@ -234,6 +259,17 @@ watch(
       class="password-change-form"
       @submit.prevent="submitPasswordChange"
     >
+      <input
+        class="password-manager-username"
+        type="text"
+        name="username"
+        autocomplete="username"
+        :value="passwordUsername"
+        readonly
+        tabindex="-1"
+        aria-hidden="true"
+      />
+
       <div class="password-guidance">
         <i class="bi bi-info-circle"></i>
         <span>
@@ -294,6 +330,18 @@ watch(
             <i :class="['bi', showNewPassword ? 'bi-eye-slash' : 'bi-eye']"></i>
           </button>
         </span>
+        <div v-if="passwordForm.newPassword" class="strength-bar-container">
+          <div
+            class="strength-bar"
+            :style="{
+              width: passwordStrength + '%',
+              backgroundColor: passwordStrengthColor,
+            }"
+          ></div>
+          <div class="strength-text" :style="{ color: passwordStrengthColor }">
+            Password Strength: {{ passwordStrengthLabel }} ({{ passwordStrength }}%)
+          </div>
+        </div>
         <small v-if="passwordErrors.newPassword" class="password-error">
           {{ passwordErrors.newPassword }}
         </small>
@@ -561,23 +609,127 @@ watch(
   background: var(--color-blue);
   border-color: var(--color-blue);
 }
+:global(.modal-dialog:has(#change-password-form)) {
+  width: min(550px, calc(100vw - 32px));
+  max-width: 550px;
+}
+:global(.modal-content:has(#change-password-form)) {
+  overflow: hidden;
+  color: #0f172a;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 28px;
+  box-shadow: var(--shadow-lg), 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+:global([data-theme="dark"] .modal-content:has(#change-password-form)) {
+  color: #ffffff;
+  background: rgba(10, 15, 30, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 40px 80px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+:global(.modal-content:has(#change-password-form) .modal-header) {
+  padding: 32px 36px 20px;
+  border-bottom: 0;
+}
+:global(.modal-content:has(#change-password-form) .modal-title-row) {
+  align-items: flex-start;
+  gap: 12px;
+}
+:global(.modal-content:has(#change-password-form) .modal-icon) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-top: 2px;
+  color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.12);
+  border-radius: 999px;
+  font-size: 1rem;
+}
+:global(.modal-content:has(#change-password-form) .modal-title-row h2) {
+  color: #0f172a !important;
+  font-family: var(--font-family-display);
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+:global([data-theme="dark"] .modal-content:has(#change-password-form) .modal-title-row h2) {
+  color: #ffffff !important;
+}
+:global(.modal-content:has(#change-password-form) .modal-close) {
+  width: 42px;
+  height: 42px;
+  color: #64748b;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  border-radius: 14px;
+}
+:global(.modal-content:has(#change-password-form) .modal-close:hover) {
+  color: #0f172a;
+  background: #eef2ff;
+  border-color: rgba(92, 96, 245, 0.22);
+}
+:global([data-theme="dark"] .modal-content:has(#change-password-form) .modal-close) {
+  color: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+:global([data-theme="dark"] .modal-content:has(#change-password-form) .modal-close:hover) {
+  color: #ffffff;
+  background: rgba(92, 96, 245, 0.16);
+  border-color: rgba(92, 96, 245, 0.35);
+}
+:global(.modal-content:has(#change-password-form) .modal-body) {
+  padding: 0 36px 24px;
+}
+:global(.modal-content:has(#change-password-form) .modal-footer) {
+  gap: 12px;
+  padding: 20px 36px 32px;
+  background: transparent;
+  border-top: 0;
+}
 .password-change-form {
   display: grid;
-  gap: 16px;
+  gap: 18px;
+}
+.password-manager-username {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 .password-guidance,
 .password-form-error {
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  padding: 11px 12px;
-  border-radius: 9px;
-  font-size: 0.82rem;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 0.86rem;
   line-height: 1.5;
 }
 .password-guidance {
-  color: var(--color-blue);
-  background: var(--color-blue-light);
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+[data-theme="dark"] .password-guidance {
+  color: #9ca3af;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.password-guidance i {
+  color: #10b981;
 }
 .password-form-error {
   color: var(--color-danger);
@@ -586,10 +738,13 @@ watch(
 }
 .password-field {
   display: grid;
-  gap: 7px;
-  color: var(--color-text);
-  font-size: 0.84rem;
+  gap: 8px;
+  color: #0f172a;
+  font-size: 0.9rem;
   font-weight: 800;
+}
+[data-theme="dark"] .password-field {
+  color: #ffffff;
 }
 .password-input-wrap {
   position: relative;
@@ -597,18 +752,38 @@ watch(
 }
 .password-input-wrap input {
   width: 100%;
-  min-height: 44px;
-  padding: 10px 44px 10px 12px;
-  color: var(--color-text);
-  background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 9px;
+  min-height: 58px;
+  padding: 14px 52px 14px 16px;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   outline: none;
   transition: all var(--transition-base);
 }
+.password-input-wrap input::placeholder {
+  color: #94a3b8;
+}
+.password-input-wrap input:hover {
+  border-color: #cbd5e1;
+}
 .password-input-wrap input:focus {
-  border-color: var(--color-blue);
-  box-shadow: var(--focus-ring);
+  background: #ffffff;
+  border-color: #5c60f5;
+  box-shadow: 0 0 0 3px rgba(92, 96, 245, 0.15);
+}
+[data-theme="dark"] .password-input-wrap input {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+[data-theme="dark"] .password-input-wrap input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+[data-theme="dark"] .password-input-wrap input:focus {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: #5c60f5;
+  box-shadow: 0 0 0 3px rgba(92, 96, 245, 0.25);
 }
 .password-input-wrap input.invalid {
   border-color: var(--color-danger);
@@ -616,21 +791,47 @@ watch(
 .password-input-wrap button {
   position: absolute;
   top: 50%;
-  right: 7px;
+  right: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: var(--color-text-muted);
+  width: 34px;
+  height: 34px;
+  color: #64748b;
   background: transparent;
   border: 0;
-  border-radius: 7px;
+  border-radius: 10px;
   transform: translateY(-50%);
 }
 .password-input-wrap button:hover {
-  color: var(--color-blue);
-  background: var(--color-blue-light);
+  color: #5c60f5;
+  background: rgba(92, 96, 245, 0.12);
+}
+.strength-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+[data-theme="dark"] .strength-bar-container {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+.strength-bar {
+  height: 6px;
+  border-radius: 999px;
+  transition:
+    width var(--transition-base, 0.3s),
+    background-color var(--transition-base, 0.3s);
+}
+.strength-text {
+  margin-top: 2px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 .password-error,
 .password-hint {
@@ -643,11 +844,59 @@ watch(
 .password-hint {
   color: var(--color-text-muted);
 }
+:global(.modal-content:has(#change-password-form) .btn-primary-action),
+:global(.modal-content:has(#change-password-form) .btn-secondary-action) {
+  min-width: 104px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+}
+:global(.modal-content:has(#change-password-form) .btn-primary-action) {
+  color: #ffffff;
+  background: #5c60f5;
+  border-color: #5c60f5;
+  box-shadow: 0 4px 14px rgba(92, 96, 245, 0.25);
+}
+:global(.modal-content:has(#change-password-form) .btn-primary-action:hover:not(:disabled)) {
+  background: #4f52d9;
+  border-color: #4f52d9;
+  box-shadow: 0 6px 20px rgba(92, 96, 245, 0.35);
+  transform: translateY(-1px);
+}
+:global(.modal-content:has(#change-password-form) .btn-secondary-action) {
+  color: #475569;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+:global(.modal-content:has(#change-password-form) .btn-secondary-action:hover:not(:disabled)) {
+  color: #0f172a;
+  background: #eef2ff;
+  border-color: rgba(92, 96, 245, 0.22);
+}
+:global([data-theme="dark"] .modal-content:has(#change-password-form) .btn-secondary-action) {
+  color: #d1d5db;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
 .section-heading {
   align-items: flex-end;
   margin: 24px 0 12px;
 }
 @media (max-width: 520px) {
+  :global(.modal-content:has(#change-password-form) .modal-header),
+  :global(.modal-content:has(#change-password-form) .modal-body),
+  :global(.modal-content:has(#change-password-form) .modal-footer) {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+  :global(.modal-content:has(#change-password-form) .modal-footer) {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+  :global(.modal-content:has(#change-password-form) .btn-primary-action),
+  :global(.modal-content:has(#change-password-form) .btn-secondary-action) {
+    width: 100%;
+  }
   .settings-page-container {
     padding: 20px 16px 40px;
   }

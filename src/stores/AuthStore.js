@@ -42,6 +42,7 @@ const createRequestError = (error) => {
 };
 
 export const useAuthStore = defineStore("auth", () => {
+  // Core auth state is kept in Pinia refs, while tokens are mirrored in storage.
   const user = ref(null);
   const isRemembered = ref(getRememberPreference());
   const token = ref(getStoredAccessToken());
@@ -49,69 +50,76 @@ export const useAuthStore = defineStore("auth", () => {
   let refreshTimerId = null;
   const socket = ref(null);
 
+  // Opens one authenticated socket connection for realtime notifications.
   const connectSocket = () => {
     if (socket.value) return;
     if (!token.value) return;
 
-    const socketUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:5001" : "https://ant-forum.khei.work.gd");
-    
-    import("socket.io-client").then(({ io }) => {
-      if (socket.value) return;
-      socket.value = io(socketUrl, {
-        auth: {
-          token: token.value,
-        },
-      });
+    const socketUrl =
+      import.meta.env.VITE_API_BASE_URL ||
+      (import.meta.env.DEV
+        ? "http://localhost:5001"
+        : "https://ant-forum.khei.work.gd");
 
-      socket.value.on("connect", () => {
-      });
+    import("socket.io-client")
+      .then(({ io }) => {
+        if (socket.value) return;
+        socket.value = io(socketUrl, {
+          auth: {
+            token: token.value,
+          },
+        });
 
-      const handleNotification = (notification) => {
-        try {
-          const notificationStore = useNotificationStore();
-          const mapped = notificationStore.mapNotification(notification);
-          notificationStore.addNotification(mapped);
+        socket.value.on("connect", () => {});
 
-          if (
-            mapped.type === "report" || 
-            mapped.title?.toLowerCase().includes("report") || 
-            mapped.message?.toLowerCase().includes("report") ||
-            (notification.type && String(notification.type).toLowerCase() === "report")
-          ) {
+        const handleNotification = (notification) => {
+          try {
+            const notificationStore = useNotificationStore();
+            const mapped = notificationStore.mapNotification(notification);
+            notificationStore.addNotification(mapped);
+
+            if (
+              mapped.type === "report" ||
+              mapped.title?.toLowerCase().includes("report") ||
+              mapped.message?.toLowerCase().includes("report") ||
+              (notification.type &&
+                String(notification.type).toLowerCase() === "report")
+            ) {
+              const reportStore = useReportStore();
+              reportStore.fetchAllReports();
+            }
+          } catch (err) {
+            console.error("Failed to process real-time notification:", err);
+          }
+        };
+
+        socket.value.on("notification", handleNotification);
+        socket.value.on("new_notification", handleNotification);
+        socket.value.on("newNotification", handleNotification);
+
+        const handleReportEvent = () => {
+          try {
             const reportStore = useReportStore();
             reportStore.fetchAllReports();
+          } catch (err) {
+            console.error("Failed to fetch reports on socket event:", err);
           }
-        } catch (err) {
-          console.error("Failed to process real-time notification:", err);
-        }
-      };
+        };
 
-      socket.value.on("notification", handleNotification);
-      socket.value.on("new_notification", handleNotification);
-      socket.value.on("newNotification", handleNotification);
+        socket.value.on("new_report", handleReportEvent);
+        socket.value.on("newReport", handleReportEvent);
+        socket.value.on("report", handleReportEvent);
+        socket.value.on("report_created", handleReportEvent);
+        socket.value.on("reportCreated", handleReportEvent);
+        socket.value.on("admin_new_report", handleReportEvent);
 
-      const handleReportEvent = () => {
-        try {
-          const reportStore = useReportStore();
-          reportStore.fetchAllReports();
-        } catch (err) {
-          console.error("Failed to fetch reports on socket event:", err);
-        }
-      };
-
-      socket.value.on("new_report", handleReportEvent);
-      socket.value.on("newReport", handleReportEvent);
-      socket.value.on("report", handleReportEvent);
-      socket.value.on("report_created", handleReportEvent);
-      socket.value.on("reportCreated", handleReportEvent);
-      socket.value.on("admin_new_report", handleReportEvent);
-
-      socket.value.on("connect_error", (err) => {
-        console.error("WebSocket connection error:", err);
+        socket.value.on("connect_error", (err) => {
+          console.error("WebSocket connection error:", err);
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to load socket.io-client library:", err);
       });
-    }).catch(err => {
-      console.error("Failed to load socket.io-client library:", err);
-    });
   };
 
   const disconnectSocket = () => {
@@ -123,6 +131,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
 
+  // Token refresh is scheduled from the JWT exp value so normal API calls stay authenticated.
   const clearRefreshTimer = () => {
     if (refreshTimerId !== null) {
       window.clearTimeout(refreshTimerId);
@@ -181,6 +190,7 @@ export const useAuthStore = defineStore("auth", () => {
     };
   };
 
+  // Always update memory, persistent storage, refresh timer, and socket together.
   const setTokens = (
     newAccessToken,
     newRefreshToken,
@@ -200,6 +210,7 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  // One place to fully remove user-specific state after logout or invalid session.
   const clearSession = () => {
     isRemembered.value = false;
     setRememberPreference(false);
@@ -215,6 +226,7 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  // Axios calls this handler when refresh/login state becomes invalid globally.
   setSessionInvalidHandler(({ reason } = {}) => {
     clearSession();
 
@@ -238,6 +250,7 @@ export const useAuthStore = defineStore("auth", () => {
     return userProfile;
   };
 
+  // Login stores tokens first, then refreshes the profile so route guards have full user data.
   const login = async (payloads) => {
     try {
       const { email, password, remember = false } = payloads;
@@ -279,6 +292,7 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  // Used by the API interceptor and the timer when an access token is expired or near expiry.
   const requestNewAccessToken = async () => {
     const res = await api.post(
       "/auth/refresh-token",
@@ -297,7 +311,7 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     setTokens(accessToken, newRefreshToken);
-    console.log("Access token refreshed at:", new Date().toISOString());
+    // console.log("Access token refreshed at:", new Date().toISOString());
     return accessToken;
   };
 
@@ -316,6 +330,7 @@ export const useAuthStore = defineStore("auth", () => {
   setAuthRefreshHandler(refreshAccessToken);
   scheduleAccessTokenRefresh(token.value);
 
+  // Fetches the current user from backend and normalizes profile fields used by the UI.
   const fetchProfile = async () => {
     try {
       const res = await api.get("/api/get/profile");
@@ -429,6 +444,10 @@ export const useAuthStore = defineStore("auth", () => {
   if (token.value) {
     connectSocket();
   }
+
+  // Thank you Teacher and Mentor for your guidance
+  // and teaching me how to build this project. 
+  // I am grateful for your support and encouragement throughout the development process. 
 
   return {
     user,

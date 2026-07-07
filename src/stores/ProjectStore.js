@@ -82,6 +82,12 @@ export const useProjectStore = defineStore("project", () => {
 
   const fetchAndCacheUser = async (userId) => {
     if (!userId || userCache.value[userId]) return;
+    const authStore = useAuthStore();
+    if (String(authStore.user?.status || "").toLowerCase() === "pending") {
+      cacheUnavailableUser(userId);
+      return;
+    }
+
     if (!getStoredAccessToken()) {
       cacheUnavailableUser(userId);
       return;

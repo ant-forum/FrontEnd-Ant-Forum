@@ -88,6 +88,7 @@ const canFetchPrivateForumData = (authStore) =>
       String(authStore.user?.status || "").toLowerCase() !== "pending",
   );
 
+// Backend forum responses are not always the same shape, so keep UI fields stable here.
 const getDiscussionBody = (data = {}) => {
   return (
     data.description ||
@@ -198,6 +199,7 @@ const saveLocalVote = (id, voteType) => {
 };
 
 export const useForumStore = defineStore("forum", () => {
+  // Shared forum state for list pages, thread detail, saved posts, and admin views.
   const discussions = ref([]);
   const discussion = ref(null);
   const comments = ref([]);
@@ -237,6 +239,7 @@ export const useForumStore = defineStore("forum", () => {
     tagsStore.tags = data;
   };
 
+  // Loads forum list plus bookmark state, then maps backend fields into the card model.
   const fetchDiscussions = async () => {
     try {
       isLoading.value = true;
@@ -366,6 +369,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Lightweight refresh used to merge new/updated discussions without replacing the whole list.
   const pollLatestDiscussions = async () => {
     if (isLoading.value) return; // Don't interrupt a main fetch
     try {
@@ -458,6 +462,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Loads one thread, its comments, bookmark state, category metadata, and vote fields.
   const fetchDiscussion = async (id) => {
     try {
       isLoading.value = true;
@@ -684,6 +689,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Builds the create payload from the editor form while keeping legacy field names for backend compatibility.
   const createDiscussion = async (payload) => {
     try {
       let categoryName = "Discussion";
@@ -793,6 +799,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Uses the create payload shape first, then retries with a smaller payload for stricter update routes.
   const updateDiscussion = async (id, payload) => {
     try {
       let categoryName = "Discussion";
@@ -978,6 +985,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Normalizes comment authors and body fields so thread rendering does not depend on backend shape.
   const fetchComments = async (forumId) => {
     try {
       const res = await api.get(`/api/comments/forum/${forumId}`);
@@ -1156,6 +1164,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Adds a new reply/comment locally after the backend creates it, avoiding a full thread refetch.
   const createComment = async (forumId, description, parentId = null) => {
     try {
       const res = await api.post(`/api/comments/create/${forumId}`, {
@@ -1287,6 +1296,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Saved posts can arrive as nested forum objects, flat rows, or only IDs; resolve all into discussions.
   const fetchBookmarks = async () => {
     const authStore = useAuthStore();
     if (!canFetchPrivateForumData(authStore)) {
@@ -1503,6 +1513,7 @@ export const useForumStore = defineStore("forum", () => {
     return await tagsStore.fetchTags();
   };
 
+  // Optimistically update saved state, then let fetchBookmarks reconcile with the backend result.
   const toggleBookmark = async (forumId) => {
     // Optimistic UI Update
     let found = discussions.value.find(
@@ -1539,6 +1550,7 @@ export const useForumStore = defineStore("forum", () => {
 
   const toggleSaveForum = toggleBookmark;
 
+  // Keep thread detail and list item in sync when both copies of the discussion are loaded.
   const toggleVoteDiscussion = async (id, direction) => {
     try {
       let target = null;
@@ -1617,6 +1629,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Older components call this direct like/unlike action instead of the vote-direction action.
   const toggleLikeDiscussion = async (id) => {
     try {
       let isLikedCurrently = false;
@@ -1672,6 +1685,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Reply likes update immediately in the UI; the API call confirms the server state afterward.
   const toggleLikeComment = async (commentId) => {
     let reply = null;
     if (discussion.value && Array.isArray(discussion.value.replies)) {
@@ -1705,6 +1719,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Local-only fallback for replies that do not have a backend comment id yet.
   const toggleLikeReply = async (discussionId, replyIndex) => {
     if (discussion.value && Array.isArray(discussion.value.replies)) {
       const reply = discussion.value.replies[replyIndex];
@@ -1715,6 +1730,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Only one top-level answer should be accepted, so clear the others after a successful update.
   const acceptComment = async (commentId) => {
     try {
       const res = await api.put(`/api/comments/accept/${commentId}`);
@@ -1746,6 +1762,7 @@ export const useForumStore = defineStore("forum", () => {
     }
   };
 
+  // Tag search maps discussions like the main list so filters/cards stay consistent.
   const fetchDiscussionsByTagName = async (tagName) => {
     try {
       isLoading.value = true;
