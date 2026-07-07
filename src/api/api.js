@@ -189,7 +189,7 @@ api.interceptors.response.use(
     const shouldRefresh =
       error.response?.status === 401 && canRefreshRequest(originalRequest);
 
-    if (isSuspendedAccount) {
+    if (isSuspendedAccount && !originalRequest?.skipSessionInvalid) {
       await handleInvalidSession(error);
       return Promise.reject(error);
     }
@@ -208,7 +208,7 @@ api.interceptors.response.use(
     const isAccessSessionUnauthorized =
       error.response?.status === 401 &&
       getAuthMode(originalRequest) === AUTH_MODES.ACCESS;
-    if (isAccessSessionUnauthorized) {
+    if (isAccessSessionUnauthorized && !originalRequest?.skipSessionInvalid) {
       await handleInvalidSession(error);
     }
 

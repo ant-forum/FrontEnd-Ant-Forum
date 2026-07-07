@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import api from "@/api/api.js";
 import { resolveMediaUrl, rewriteHtmlMediaUrls } from "@/utils/mediaUrl";
 import { resolveAuthor } from "@/utils/author";
+import { getStoredAccessToken } from "@/utils/authStorage";
 import { useAuthStore } from "./AuthStore.js";
 import { useForumStore } from "./ForumStore.js";
 
@@ -14,6 +15,12 @@ export const useProjectStore = defineStore("project", () => {
   const isLoading = ref(false);
   const userCache = ref({}); // Cache to store users by id
   const allProjects = computed(() => projects.value);
+  const unavailableUserFallback = {
+    name: "Unknown",
+    username: "unknown",
+    avatar: "/profile.jpg",
+    unavailable: true,
+  };
 
   const createForm = ref({
     projectName: "",
@@ -39,8 +46,46 @@ export const useProjectStore = defineStore("project", () => {
     };
   };
 
+  const isUnavailableUserError = (err) => {
+    const status = err?.response?.status;
+    const message = (
+      err?.response?.data?.message ||
+      err?.response?.data?.msg ||
+      err?.message ||
+      ""
+    )
+      .toString()
+      .toLowerCase();
+
+    return (
+      [401, 403, 404, 410, 423].includes(status) ||
+      message.includes("user not found") ||
+      message.includes("suspended") ||
+      message.includes("inactive") ||
+      message.includes("unavailable")
+    );
+  };
+
+  const cacheUnavailableUser = (userId) => {
+    if (!userId) return;
+    userCache.value[userId] = { ...unavailableUserFallback };
+  };
+
+  const getProjectUserId = (item) => item?.user_id || item?.userId;
+
+  const fetchProjectUsers = async (list) => {
+    const uniqueUserIds = [
+      ...new Set(list.map(getProjectUserId).filter(Boolean)),
+    ];
+    await Promise.all(uniqueUserIds.map((id) => fetchAndCacheUser(id)));
+  };
+
   const fetchAndCacheUser = async (userId) => {
     if (!userId || userCache.value[userId]) return;
+    if (!getStoredAccessToken()) {
+      cacheUnavailableUser(userId);
+      return;
+    }
 
     try {
       const res = await api.get(`/api/admin/get-user/${userId}`, { skipGlobalToast: true });
@@ -49,7 +94,14 @@ export const useProjectStore = defineStore("project", () => {
         userCache.value[userId] = userData;
       }
     } catch (err) {
-      console.warn(`[ProjectStore] Failed to fetch user ${userId}:`, err);
+      if (isUnavailableUserError(err)) {
+        cacheUnavailableUser(userId);
+        return;
+      }
+
+      if (import.meta.env.DEV) {
+        console.warn(`[ProjectStore] Failed to fetch user ${userId}:`, err);
+      }
     }
   };
 
@@ -92,7 +144,6 @@ export const useProjectStore = defineStore("project", () => {
       link: item.link || "",
       tags,
       stars: Math.round(averageRating * 200),
-      views,
       createdAt: item.created_at || item.createdAt || new Date().toISOString(),
       average_rating: averageRating,
       my_rating: myRating,
@@ -147,20 +198,14 @@ export const useProjectStore = defineStore("project", () => {
         if (forumStore.discussions.length === 0) {
           forumStore.fetchDiscussions().catch(() => {});
         }
-      } catch (err) {
+      } catch {
         // Ignore background fetch issues
       }
 
       const res = await api.get("/api/projects/getAllProjects");
       ensureSuccess(res);
       const list = extractList(res.data);
-      // Fetch all unique user_ids in the list
-      const uniqueUserIds = [
-        ...new Set(
-          list.map((item) => item.user_id || item.userId).filter(Boolean),
-        ),
-      ];
-      await Promise.all(uniqueUserIds.map((id) => fetchAndCacheUser(id)));
+      await fetchProjectUsers(list);
       projects.value = list.map(normalizeProject);
     } catch (err) {
       console.error("[ProjectStore] fetchProjects failed:", err);
@@ -175,8 +220,7 @@ export const useProjectStore = defineStore("project", () => {
     try {
       const res = await api.get("/api/projects/getAllProjects");
       const list = extractList(res.data);
-      const uniqueUserIds = [...new Set(list.map(item => item.user_id || item.userId).filter(Boolean))];
-      await Promise.all(uniqueUserIds.map(id => fetchAndCacheUser(id)));
+      await fetchProjectUsers(list);
       
       const normalized = list.map(normalizeProject);
       const currentList = [...projects.value];
@@ -203,7 +247,7 @@ export const useProjectStore = defineStore("project", () => {
         if (forumStore.discussions.length === 0) {
           forumStore.fetchDiscussions().catch(() => {});
         }
-      } catch (err) {
+      } catch {
         // Ignore background fetch issues
       }
 
@@ -212,10 +256,7 @@ export const useProjectStore = defineStore("project", () => {
       const raw =
         res.data?.data?.row || res.data?.row || res.data?.data || res.data;
       const rawTags = res.data?.data?.tag || res.data?.tag || [];
-      // Fetch the user if we have user_id
-      if (raw.user_id || raw.userId) {
-        await fetchAndCacheUser(raw.user_id || raw.userId);
-      }
+      await fetchProjectUsers([raw]);
 
       // Preserve existing my_rating if the new data doesn't have it
       const existingRating =
@@ -259,20 +300,13 @@ export const useProjectStore = defineStore("project", () => {
     }
   };
 
-
   const fetchMyProjects = async () => {
     isLoading.value = true;
     try {
       const res = await api.get("/api/projects/getMyProjects");
       ensureSuccess(res);
       const list = extractList(res.data);
-      // Fetch all unique user_ids in the list
-      const uniqueUserIds = [
-        ...new Set(
-          list.map((item) => item.user_id || item.userId).filter(Boolean),
-        ),
-      ];
-      await Promise.all(uniqueUserIds.map((id) => fetchAndCacheUser(id)));
+      await fetchProjectUsers(list);
       myProjects.value = list.map(normalizeProject);
     } catch (err) {
       console.error("[ProjectStore] fetchMyProjects failed:", err);
@@ -287,13 +321,7 @@ export const useProjectStore = defineStore("project", () => {
       const res = await api.get("/api/projects/getRatedProjects");
       ensureSuccess(res);
       const list = extractList(res.data);
-      // Fetch all unique user_ids in the list
-      const uniqueUserIds = [
-        ...new Set(
-          list.map((item) => item.user_id || item.userId).filter(Boolean),
-        ),
-      ];
-      await Promise.all(uniqueUserIds.map((id) => fetchAndCacheUser(id)));
+      await fetchProjectUsers(list);
       ratedProjects.value = list.map(normalizeProject);
     } catch (err) {
       console.warn("[ProjectStore] fetchRatedProjects failed:", err);
@@ -457,7 +485,7 @@ export const useProjectStore = defineStore("project", () => {
           rate_star: rateStar,
         });
         ensureSuccess(res);
-      } catch (rateErr) {
+      } catch {
         // If rate fails (already rated), try to update
         const res = await api.put(`/api/projects/updateRateProject/${id}`, {
           rate_star: rateStar,
