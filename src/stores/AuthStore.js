@@ -6,6 +6,7 @@ import api, {
   setAuthRefreshHandler,
 } from "@/api/api";
 import { useNotificationStore } from "./NotificationStore";
+import { useReportStore } from "./ReportStore";
 import {
   getRememberPreference,
   getStoredAccessToken,
@@ -50,6 +51,16 @@ export const useAuthStore = defineStore("auth", () => {
           const notificationStore = useNotificationStore();
           const mapped = notificationStore.mapNotification(notification);
           notificationStore.addNotification(mapped);
+
+          if (
+            mapped.type === "report" || 
+            mapped.title?.toLowerCase().includes("report") || 
+            mapped.message?.toLowerCase().includes("report") ||
+            (notification.type && String(notification.type).toLowerCase() === "report")
+          ) {
+            const reportStore = useReportStore();
+            reportStore.fetchAllReports();
+          }
         } catch (err) {
           console.error("Failed to process real-time notification:", err);
         }
@@ -58,6 +69,22 @@ export const useAuthStore = defineStore("auth", () => {
       socket.value.on("notification", handleNotification);
       socket.value.on("new_notification", handleNotification);
       socket.value.on("newNotification", handleNotification);
+
+      const handleReportEvent = () => {
+        try {
+          const reportStore = useReportStore();
+          reportStore.fetchAllReports();
+        } catch (err) {
+          console.error("Failed to fetch reports on socket event:", err);
+        }
+      };
+
+      socket.value.on("new_report", handleReportEvent);
+      socket.value.on("newReport", handleReportEvent);
+      socket.value.on("report", handleReportEvent);
+      socket.value.on("report_created", handleReportEvent);
+      socket.value.on("reportCreated", handleReportEvent);
+      socket.value.on("admin_new_report", handleReportEvent);
 
       socket.value.on("connect_error", (err) => {
         console.error("WebSocket connection error:", err);

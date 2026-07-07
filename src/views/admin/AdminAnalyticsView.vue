@@ -480,7 +480,7 @@ const breakdown = computed(() => {
       className: "orange",
     },
     {
-      label: "Resolved Reports",
+      label: "Deleted Reports",
       value: adminStore.resolvedReports.length,
       className: "green",
     },

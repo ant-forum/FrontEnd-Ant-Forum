@@ -390,10 +390,23 @@ router.beforeEach(async (to, from) => {
       );
       return { name: "not-found" };
     }
+  }
 
-    if (routeRole && routeRole !== "admin" && userRole === "admin") {
+  // Prevent admin from accessing non-admin user routes
+  const userRole = authStore.user?.role;
+  const isPublicRoute = to.meta.public === true;
+
+  if (userRole === "admin") {
+    if (
+      !to.path.startsWith("/admin") &&
+      !isPublicRoute &&
+      to.name !== "login" &&
+      to.name !== "not-found" &&
+      to.name !== "empty" &&
+      to.name !== "loading"
+    ) {
       console.warn(
-        `[Route Guard] Admin attempting to access user route ${to.path}.`,
+        `[Route Guard] Admin attempting to access user route ${to.path}. Redirecting to 404.`,
       );
       return { name: "not-found" };
     }

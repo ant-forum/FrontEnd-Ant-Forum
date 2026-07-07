@@ -16,7 +16,7 @@ export const useReportStore = defineStore("report", () => {
     reports.value.filter((r) => r.status === "Open")
   );
   const resolvedReports = computed(() =>
-    reports.value.filter((r) => r.status === "Resolved")
+    reports.value.filter((r) => r.status === "Deleted")
   );
   const highPriorityReports = computed(() =>
     reports.value.filter((r) => r.priority === "High")
@@ -78,7 +78,7 @@ export const useReportStore = defineStore("report", () => {
     let status = "Open";
     const statusLower = String(item.status || "").toLowerCase();
     if (statusLower === "approved" || statusLower === "resolved") {
-      status = "Resolved";
+      status = "Deleted";
     } else if (statusLower === "rejected" || statusLower === "dismissed") {
       status = "Dismissed";
     } else if (statusLower === "pending" || statusLower === "open") {
@@ -193,7 +193,7 @@ export const useReportStore = defineStore("report", () => {
       const updated = res.data?.data || res.data;
       const index = reports.value.findIndex((r) => r.id == id);
       if (index !== -1) {
-        reports.value[index].status = status === "approved" ? "Resolved" : (status === "rejected" ? "Dismissed" : status);
+        reports.value[index].status = status === "approved" ? "Deleted" : (status === "rejected" ? "Dismissed" : status);
       }
       return updated;
     } catch (err) {

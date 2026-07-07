@@ -29,7 +29,7 @@
             aria-label="Filter reports by status"
           >
             <option value="Open">All Report</option>
-            <option value="Resolved">Resolved</option>
+            <option value="Deleted">Deleted</option>
             <option value="Dismissed">Dismissed</option>
           </select>
         </div>
@@ -92,7 +92,23 @@
                     ><i class="bi bi-chat-left-text"></i
                   ></span>
                   <div>
-                    <strong>{{ report.title }}</strong>
+                    <strong>
+                      <router-link
+                        v-if="report.threadId"
+                        :to="'/admin/threads/' + report.threadId"
+                        class="text-decoration-none"
+                      >
+                        {{ report.title }}
+                      </router-link>
+                      <router-link
+                        v-else-if="report.projectId"
+                        :to="'/admin/projects/' + report.projectId"
+                        class="text-decoration-none"
+                      >
+                        {{ report.title }}
+                      </router-link>
+                      <span v-else>{{ report.title }}</span>
+                    </strong>
                     <small>{{ report.detail }} · by {{ report.author }}</small>
                   </div>
                 </div>
@@ -160,7 +176,25 @@
           <span class="case-number"
             >Report #{{ paddedId(selectedReport.id) }}</span
           >
-          <h3>{{ selectedReport.title }}</h3>
+          <h3>
+            <router-link
+              v-if="selectedReport.threadId"
+              :to="'/admin/threads/' + selectedReport.threadId"
+              class="text-decoration-none text-adaptive"
+            >
+              {{ selectedReport.title }}
+              <i class="bi bi-box-arrow-up-right ms-1 text-muted fs-6"></i>
+            </router-link>
+            <router-link
+              v-else-if="selectedReport.projectId"
+              :to="'/admin/projects/' + selectedReport.projectId"
+              class="text-decoration-none text-adaptive"
+            >
+              {{ selectedReport.title }}
+              <i class="bi bi-box-arrow-up-right ms-1 text-muted fs-6"></i>
+            </router-link>
+            <span v-else>{{ selectedReport.title }}</span>
+          </h3>
           <p>{{ selectedReport.detail }} · by {{ selectedReport.author }}</p>
         </div>
       </div>
@@ -228,7 +262,7 @@
           @click="handleResolve"
         >
           <i class="bi bi-check2-circle"></i>
-          Resolve
+          Delete
         </button>
       </div>
     </div>
@@ -317,7 +351,7 @@ const metrics = computed(() => [
   {
     label: "Closed Cases",
     value: String(reportStore.resolvedReports.length),
-    change: "Resolved or dismissed",
+    change: "Deleted or dismissed",
     icon: "bi-check2-circle",
     className: "green",
   },
@@ -325,9 +359,9 @@ const metrics = computed(() => [
 const statusTabs = computed(() => [
   { label: "All Report", value: "Open", count: reportStore.pendingReports.length },
   {
-    label: "Resolved",
-    value: "Resolved",
-    count: reportStore.threadReports.filter((item) => item.status === "Resolved")
+    label: "Deleted",
+    value: "Deleted",
+    count: reportStore.threadReports.filter((item) => item.status === "Deleted")
       .length,
   },
   {
@@ -397,10 +431,10 @@ const handleResolve = async () => {
     for (const r of reportsForSameForum.value) {
       await reportStore.resolveReport(r.id, decisionNote.value);
     }
-    toast.success("Report case resolved and recorded.");
+    toast.success("Report case deleted and recorded.");
     closeReport();
   } catch (err) {
-    const errorMsg = err?.message || err?.msg || (typeof err === "string" ? err : "Failed to resolve report.");
+    const errorMsg = err?.message || err?.msg || (typeof err === "string" ? err : "Failed to delete report.");
     toast.error(errorMsg);
   }
 };
@@ -472,7 +506,7 @@ const priorityClass = (priority) =>
   ({ High: "danger", Medium: "warning", Low: "success" })[priority] ||
   "neutral";
 const statusClass = (status) =>
-  ({ Open: "warning", Resolved: "success", Dismissed: "neutral" })[status] ||
+  ({ Open: "warning", Deleted: "success", Dismissed: "neutral" })[status] ||
   "neutral";
 const formatDate = (date) =>
   new Date(date).toLocaleDateString(undefined, {

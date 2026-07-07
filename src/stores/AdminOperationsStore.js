@@ -63,7 +63,7 @@ const defaultState = {
       author: "Elena Vance",
       priority: "Low",
       reports: 1,
-      status: "Resolved",
+      status: "Deleted",
       locked: true,
       createdAt: "2026-05-29T11:10:00.000Z",
       reasons: ["Duplicate replies"],
@@ -252,8 +252,8 @@ export const useAdminOperationsStore = defineStore("adminOperations", () => {
         
         let status = "Open";
         const statusLower = String(item.status || "").toLowerCase();
-        if (statusLower === "approved" || statusLower === "resolved") {
-          status = "Resolved";
+        if (statusLower === "approved" || statusLower === "deleted") {
+          status = "Deleted";
         } else if (statusLower === "rejected" || statusLower === "dismissed") {
           status = "Dismissed";
         } else if (statusLower === "pending" || statusLower === "open") {
@@ -296,7 +296,7 @@ export const useAdminOperationsStore = defineStore("adminOperations", () => {
 
     if (patch.status !== undefined) {
       let backendStatus = "pending";
-      if (patch.status === "Resolved") {
+      if (patch.status === "Deleted") {
         backendStatus = "approved";
       } else if (patch.status === "Dismissed") {
         backendStatus = "rejected";
@@ -317,7 +317,7 @@ export const useAdminOperationsStore = defineStore("adminOperations", () => {
   };
 
   const resolveReport = async (id, note) =>
-    await updateReport(id, { status: "Resolved" }, "Resolved report", note);
+    await updateReport(id, { status: "Deleted" }, "Deleted report", note);
   const dismissReport = async (id, note) =>
     await updateReport(id, { status: "Dismissed" }, "Dismissed report", note);
   const warnThreadAuthor = async (id, note) =>
