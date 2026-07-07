@@ -425,9 +425,7 @@ router.afterEach((to) => {
   }
 
   // Update page title
-  if (to.meta.title) {
-    document.title = `${to.meta.title} | ANT Forum`;
-  }
+  document.title = to.meta.title ? `${to.meta.title} | ANT Forum` : "ANT Forum";
 
   // Handle admin route class on body
   if (to.path.startsWith("/admin")) {
