@@ -286,7 +286,7 @@ export const useAdminOperationsStore = defineStore("adminOperations", () => {
         };
       });
     } catch (err) {
-      console.error("[AdminOperationsStore] Failed to fetch reports:", err);
+      console.error("AdminOperationsStore Failed to fetch reports:", err);
     }
   };
 
@@ -304,7 +304,7 @@ export const useAdminOperationsStore = defineStore("adminOperations", () => {
       try {
         await api.put(`/api/report/updateStatus/${id}`, { status: backendStatus });
       } catch (err) {
-        console.error(`[AdminOperationsStore] Failed to update status for report ${id}:`, err);
+        console.error(`AdminOperationsStore Failed to update status for report ${id}:`, err);
         throw err.response?.data || err.message;
       }
     }
@@ -339,7 +339,7 @@ export const useAdminOperationsStore = defineStore("adminOperations", () => {
       state.value.threadReports = state.value.threadReports.filter((r) => r.id != id);
       addActivity("moderation", "Deleted report", `Report #${id}`);
     } catch (err) {
-      console.error(`[AdminOperationsStore] Failed to delete report ${id}:`, err);
+      console.error(`AdminOperationsStore Failed to delete report ${id}:`, err);
       throw err.response?.data || err.message;
     }
   };
