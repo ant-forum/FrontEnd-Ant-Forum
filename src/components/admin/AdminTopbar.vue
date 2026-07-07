@@ -116,20 +116,6 @@
               <small>Sign out of your ANT Forum account</small>
             </span>
           </button>
-
-          <footer class="admin-profile-menu-footer">
-            <router-link to="/help" @click="isProfileMenuOpen = false"
-              >Privacy</router-link
-            >
-            <span>·</span>
-            <router-link to="/help" @click="isProfileMenuOpen = false"
-              >Terms</router-link
-            >
-            <span>·</span>
-            <router-link to="/help" @click="isProfileMenuOpen = false"
-              >Community guidelines</router-link
-            >
-          </footer>
         </div>
       </div>
     </div>
