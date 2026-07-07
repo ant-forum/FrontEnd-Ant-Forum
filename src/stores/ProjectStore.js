@@ -88,10 +88,7 @@ export const useProjectStore = defineStore("project", () => {
     }
 
     try {
-      const res = await api.get(`/api/admin/get-user/${userId}`, {
-        skipGlobalToast: true,
-        skipSessionInvalid: true,
-      });
+      const res = await api.get(`/api/admin/get-user/${userId}`, { skipGlobalToast: true });
       const userData = res.data?.data || res.data;
       if (userData) {
         userCache.value[userId] = userData;

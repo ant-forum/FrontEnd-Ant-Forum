@@ -292,7 +292,12 @@ onMounted(() => {
                       {{ formatNumber(project.views) }}</span
                     >
                   </div>
-                  <div class="author-avatars">
+                  <component
+                    :is="project.author && project.author.id ? 'router-link' : 'div'"
+                    :to="project.author && project.author.id ? '/viewprofile/' + project.author.id : undefined"
+                    class="author-avatars text-decoration-none"
+                    :style="project.author && project.author.id ? 'cursor: pointer;' : ''"
+                  >
                     <span
                       class="author-name-text"
                       v-if="project.author && project.author.name !== 'Unknown'"
@@ -319,7 +324,7 @@ onMounted(() => {
                         +{{ project.authors.length - 3 }}
                       </div>
                     </div>
-                  </div>
+                  </component>
                 </div>
               </div>
             </div>
