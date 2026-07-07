@@ -1192,6 +1192,202 @@ button:disabled {
   }
 }
 
+.Vue-Toastification__toast::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 12px !important;
+  top: 14px !important;
+  bottom: 14px !important;
+  width: 3px !important;
+  border-radius: 99px !important;
+  z-index: 2 !important;
+}
+
+.Vue-Toastification__toast--success {
+  color: #a7f3d0 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  box-shadow:
+    0 10px 30px rgba(16, 185, 129, 0.08),
+    0 12px 35px rgba(0, 0, 0, 0.35) !important;
+}
+.Vue-Toastification__toast--success::before {
+  background-color: #10b981 !important;
+  box-shadow:
+    0 0 10px rgba(16, 185, 129, 0.8),
+    0 0 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+.Vue-Toastification__toast--error {
+  color: #fecaca !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  box-shadow:
+    0 10px 30px rgba(239, 68, 68, 0.08),
+    0 12px 35px rgba(0, 0, 0, 0.35) !important;
+}
+.Vue-Toastification__toast--error::before {
+  background-color: #ef4444 !important;
+  box-shadow:
+    0 0 10px rgba(239, 68, 68, 0.8),
+    0 0 20px rgba(239, 68, 68, 0.4) !important;
+}
+
+.Vue-Toastification__toast--info {
+  color: #e0f2fe !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+  box-shadow:
+    0 10px 30px rgba(14, 165, 233, 0.08),
+    0 12px 35px rgba(0, 0, 0, 0.35) !important;
+}
+.Vue-Toastification__toast--info::before {
+  background-color: #0ea5e9 !important;
+  box-shadow:
+    0 0 10px rgba(14, 165, 233, 0.8),
+    0 0 20px rgba(14, 165, 233, 0.4) !important;
+}
+
+.Vue-Toastification__toast--warning {
+  color: #fef3c7 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  box-shadow:
+    0 10px 30px rgba(245, 158, 11, 0.08),
+    0 12px 35px rgba(0, 0, 0, 0.35) !important;
+}
+.Vue-Toastification__toast--warning::before {
+  background-color: #f59e0b !important;
+  box-shadow:
+    0 0 10px rgba(245, 158, 11, 0.8),
+    0 0 20px rgba(245, 158, 11, 0.4) !important;
+}
+
+.Vue-Toastification__icon {
+  display: none !important;
+}
+.Vue-Toastification__toast-body {
+  padding-left: 12px !important;
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+  color: #f3f4f6 !important;
+}
+
+.Vue-Toastification__progress-bar {
+  display: block !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 3px !important;
+  border-radius: 0 0 12px 12px !important;
+  opacity: 0.85 !important;
+  z-index: 10 !important;
+}
+
+.Vue-Toastification__toast--success .Vue-Toastification__progress-bar {
+  background: linear-gradient(90deg, transparent, #10b981) !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8) !important;
+}
+
+.Vue-Toastification__toast--error .Vue-Toastification__progress-bar {
+  background: linear-gradient(90deg, transparent, #ef4444) !important;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8) !important;
+}
+
+.Vue-Toastification__toast--info .Vue-Toastification__progress-bar {
+  background: linear-gradient(90deg, transparent, #0ea5e9) !important;
+  box-shadow: 0 0 8px rgba(14, 165, 233, 0.8) !important;
+}
+
+.Vue-Toastification__toast--warning .Vue-Toastification__progress-bar {
+  background: linear-gradient(90deg, transparent, #f59e0b) !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.8) !important;
+}
+
+.Vue-Toastification__close-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  opacity: 0.65 !important;
+  transition: all var(--transition-base) !important;
+  font-size: 1.3rem !important;
+  font-weight: 300 !important;
+  margin-left: 16px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+  align-self: flex-start !important;
+  margin-top: -2px !important;
+}
+
+.Vue-Toastification__close-button:hover {
+  opacity: 1 !important;
+  color: #ffffff !important;
+  transform: scale(1.1);
+}
+
+.Vue-Toastification__bounce-enter-active {
+  animation: toastFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.Vue-Toastification__bounce-leave-active {
+  animation: toastFadeOut 1.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition:
+    min-height 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+    max-height 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+    padding 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+    margin 1.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  pointer-events: none !important;
+}
+
+.Vue-Toastification__bounce-move {
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.95);
+    max-height: 0;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 150px;
+    min-height: 60px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 12px;
+  }
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 150px;
+    min-height: 60px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 12px;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(40px) scale(0.95);
+    max-height: 0;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+}
+
 /* toast end  */
 
 /* Fix select option colors in dark mode (prevent white text on white browser dropdown backgrounds) */
@@ -1201,3 +1397,11 @@ button:disabled {
   background-color: #ffffff !important;
 }
 
+/* Surface Background utilities */
+.bg-surface {
+  background-color: var(--color-surface) !important;
+}
+
+.glass-card {
+  background-color: var(--color-surface) !important;
+}

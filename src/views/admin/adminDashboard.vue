@@ -293,7 +293,7 @@ const metrics = computed(() => {
     {
       label: "Reports",
       value: reportStore.pendingReports.length,
-      description: `${reportStore.resolvedReports.length} resolved`,
+      description: `${reportStore.resolvedReports.length} deleted`,
       descriptionIcon: "bi-check2-circle",
       descriptionColorClass: "text-success",
       icon: "bi bi-flag",
@@ -467,7 +467,7 @@ const quickActions = [
   },
   {
     label: "Review Reports",
-    description: "Resolve flagged discussions",
+    description: "Delete flagged discussions",
     icon: "bi-flag",
     colorClass: "teal",
     to: "/admin/reports",
