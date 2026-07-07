@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/api.js";
+import { useAuthStore } from "./AuthStore";
 
 const ensureSuccess = (response) => {
   if (response.data && response.data.result === false) {
@@ -9,6 +10,32 @@ const ensureSuccess = (response) => {
 };
 
 const getResponseData = (response) => response.data?.data ?? response.data;
+
+const getApiErrorMessage = (error) => {
+  const data = error.response?.data;
+  if (Array.isArray(data?.error) && data.error.length) {
+    return data.error.join(" ");
+  }
+
+  return (
+    data?.message ||
+    data?.msg ||
+    error.message ||
+    "User request failed."
+  );
+};
+
+const throwReadableError = (error) => {
+  const readableError = new Error(getApiErrorMessage(error));
+  readableError.response = error.response;
+  readableError.config = error.config;
+  throw readableError;
+};
+
+const isPendingAccount = () => {
+  const authStore = useAuthStore();
+  return String(authStore.user?.status || "").toLowerCase() === "pending";
+};
 
 export const useUsersStore = defineStore("users", () => {
   const users = ref([]);
@@ -40,14 +67,18 @@ export const useUsersStore = defineStore("users", () => {
   const createUser = async (payload) => {
     try {
       isLoading.value = true;
-      const response = await api.post("/auth/createUsers", {
-        username: payload.username,
-        fullname: payload.fullname,
-        email: payload.email,
-        password: payload.password,
-        role: payload.role,
-        gender: payload.gender,
-      });
+      const response = await api.post(
+        "/auth/createUsers",
+        {
+          username: payload.username,
+          fullname: payload.fullname,
+          email: payload.email,
+          password: payload.password,
+          role: payload.role,
+          gender: payload.gender,
+        },
+        { skipGlobalToast: true },
+      );
       ensureSuccess(response);
 
       const createdUser = getResponseData(response) || {};
@@ -66,6 +97,8 @@ export const useUsersStore = defineStore("users", () => {
       });
 
       return response.data;
+    } catch (error) {
+      throwReadableError(error);
     } finally {
       isLoading.value = false;
     }
@@ -73,6 +106,10 @@ export const useUsersStore = defineStore("users", () => {
 
   // Admin Get All Users (Real API Endpoint)
   const fetchUsers = async (silent = false) => {
+    if (isPendingAccount()) {
+      return users.value;
+    }
+
     try {
       if (!silent) isListLoading.value = true;
       const response = await api.get("/api/admin/users");
@@ -85,6 +122,10 @@ export const useUsersStore = defineStore("users", () => {
   };
 
   const fetchUserById = async (id) => {
+    if (isPendingAccount()) {
+      return null;
+    }
+
     try {
       isLoading.value = true;
       const response = await api.get(`/api/admin/users/${id}`);

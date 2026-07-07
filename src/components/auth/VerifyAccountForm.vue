@@ -92,6 +92,17 @@
       </p>
 
       <form class="form-stack" @submit.prevent="handleResetPassword" novalidate>
+        <input
+          class="password-manager-username"
+          type="text"
+          name="username"
+          autocomplete="username"
+          :value="resetUsername"
+          readonly
+          tabindex="-1"
+          aria-hidden="true"
+        />
+
         <!-- New Password -->
         <div class="form-group">
           <label class="field-label">New Password</label>
@@ -452,70 +463,6 @@
       </div>
     </template>
     </div>
-
-    <div v-if="!isOtpVerified" class="login-branding-pane" aria-hidden="true">
-      <div class="graphics-wrapper">
-        <div class="mock-editor">
-          <div class="editor-header">
-            <div class="mac-controls">
-              <span class="dot red"></span>
-              <span class="dot yellow"></span>
-              <span class="dot green"></span>
-            </div>
-            <div class="editor-status-pill">
-              <span class="status-dot"></span>
-              <span>Systems Online</span>
-            </div>
-          </div>
-          <pre class="editor-code"><code><span class="keyword">function</span> <span class="function">authenticateUser</span>(<span class="param">credentials</span>) {
-  <span class="keyword">try</span> {
-    <span class="keyword">const</span> token = <span class="keyword">await</span> authService.<span class="method">login</span>({
-      email: credentials.<span class="property">email</span>,
-      password: credentials.<span class="property">password</span>
-    });
-    <span class="keyword">return</span> { success: <span class="literal">true</span> };
-  } <span class="keyword">catch</span> (err) {
-    <span class="comment">// handle error</span>
-  }
-}</code></pre>
-        </div>
-
-        <div class="performance-card">
-          <div class="perf-header">
-            <h3 class="perf-title">System Performance</h3>
-            <i class="bi bi-rocket-takeoff perf-icon"></i>
-          </div>
-          <div class="perf-metrics">
-            <div class="metric-item">
-              <span class="metric-label">RESPONSE TIME</span>
-              <span class="metric-value">42 <span class="metric-unit">ms</span></span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-label">UPTIME</span>
-              <span class="metric-value text-green">99.9 <span class="metric-unit">%</span></span>
-            </div>
-          </div>
-          <div class="perf-chart">
-            <div class="chart-bar" style="height: 15px"></div>
-            <div class="chart-bar active" style="height: 38px"></div>
-            <div class="chart-bar" style="height: 10px"></div>
-            <div class="chart-bar" style="height: 14px"></div>
-            <div class="chart-bar active" style="height: 28px"></div>
-            <div class="chart-bar" style="height: 8px"></div>
-            <div class="chart-bar" style="height: 12px"></div>
-            <div class="chart-bar active" style="height: 48px"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="branding-footer">
-        <h2 class="branding-title">Connect with developers worldwide</h2>
-        <p class="branding-desc">
-          Join discussions, share code snippets, and collaborate on open-source
-          projects.
-        </p>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -690,6 +637,10 @@ const resetErrors = reactive({
 });
 
 const resetSuccessMsg = ref("");
+
+const resetUsername = computed(() => {
+  return sessionStorage.getItem("ANT_ResetEmail") || authStore.user?.email || "";
+});
 
 const passwordStrength = computed(() => {
   const value = resetForm.newPassword;
@@ -1244,6 +1195,18 @@ onUnmounted(() => {
   width: 100%;
 }
 
+.password-manager-username {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .password-input {
   padding-right: 45px !important;
 }
@@ -1384,9 +1347,9 @@ onUnmounted(() => {
 /* Match the login and forgot-password authentication card. */
 .login-card-container {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: minmax(0, 1fr);
   width: 100%;
-  max-width: 1000px;
+  max-width: 550px;
   min-height: 600px;
   margin: 0 auto;
   overflow: hidden;
@@ -1553,300 +1516,9 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-.login-branding-pane {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 32px;
-  overflow: hidden;
-  padding: 48px;
-  background: #f0f4f9;
-}
-
-[data-theme="dark"] .login-branding-pane {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.login-branding-pane::before {
-  position: absolute;
-  top: 10%;
-  left: 10%;
-  width: 250px;
-  height: 250px;
-  background: radial-gradient(circle, rgba(92, 96, 245, 0.08), transparent 70%);
-  content: "";
-  pointer-events: none;
-}
-
-.graphics-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 380px;
-  height: 250px;
-  margin: 20px 0 40px;
-}
-
-.mock-editor {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 2;
-  width: 88%;
-  overflow: hidden;
-  background: #14141e;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 14px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
-  transition: transform 0.3s ease;
-}
-
-.mock-editor:hover {
-  transform: translateY(-4px) scale(1.01);
-}
-
-.editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 38px;
-  padding: 0 16px;
-  background: #1a1a26;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.mac-controls {
-  display: flex;
-  gap: 6px;
-}
-
-.mac-controls .dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.mac-controls .red {
-  background: #ff5f56;
-}
-
-.mac-controls .yellow {
-  background: #ffbd2e;
-}
-
-.mac-controls .green {
-  background: #27c93f;
-}
-
-.editor-status-pill {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  color: #0f172a;
-  font-size: 0.68rem;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 99px;
-}
-
-.editor-status-pill .status-dot {
-  width: 5px;
-  height: 5px;
-  background: #10b981;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #10b981;
-}
-
-[data-theme="dark"] .editor-status-pill {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.editor-code {
-  margin: 0;
-  padding: 16px 20px;
-  overflow: auto;
-  color: #a9b2c3;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.72rem;
-  line-height: 1.5;
-}
-
-.editor-code .keyword {
-  color: #f43f5e;
-}
-
-.editor-code .function {
-  color: #3b82f6;
-}
-
-.editor-code .param {
-  color: #f59e0b;
-}
-
-.editor-code .method {
-  color: #60a5fa;
-}
-
-.editor-code .property {
-  color: #38bdf8;
-}
-
-.editor-code .literal {
-  color: #10b981;
-}
-
-.editor-code .comment {
-  color: #64748b;
-  font-style: italic;
-}
-
-.performance-card {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  z-index: 3;
-  width: 65%;
-  padding: 16px;
-  background: #ffffff;
-  border: 1px solid rgba(92, 96, 245, 0.05);
-  border-radius: 14px;
-  box-shadow:
-    0 15px 35px rgba(92, 96, 245, 0.12),
-    0 5px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
-}
-
-[data-theme="dark"] .performance-card {
-  background: #1a1a26;
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.performance-card:hover {
-  transform: translateY(-4px) scale(1.02);
-}
-
-.perf-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.perf-title {
-  margin: 0;
-  color: #0f172a;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-[data-theme="dark"] .perf-title,
-[data-theme="dark"] .metric-value,
-[data-theme="dark"] .branding-title {
-  color: #ffffff;
-}
-
-.perf-icon {
-  color: #5c60f5;
-}
-
-.perf-metrics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.metric-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.metric-label {
-  color: #94a3b8;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.metric-value {
-  color: #0f172a;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.metric-value.text-green {
-  color: #10b981;
-}
-
-.metric-unit {
-  margin-left: 1px;
-  color: #94a3b8;
-  font-size: 0.7rem;
-  font-weight: 500;
-}
-
-.perf-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 50px;
-  padding-top: 4px;
-  border-top: 1px solid #f1f5f9;
-}
-
-[data-theme="dark"] .perf-chart {
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-.chart-bar {
-  flex: 1;
-  background: #f1f5f9;
-  border-radius: 3px 3px 0 0;
-}
-
-[data-theme="dark"] .chart-bar {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.chart-bar.active {
-  background: rgba(92, 96, 245, 0.7);
-}
-
-.branding-footer {
-  width: 100%;
-  text-align: center;
-}
-
-.branding-title {
-  margin: 0 0 8px;
-  color: #0f172a;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.branding-desc {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-[data-theme="dark"] .branding-desc {
-  color: #9ca3af;
-}
-
 @media (max-width: 900px) {
   .login-card-container {
-    grid-template-columns: 1fr;
     max-width: 480px;
-  }
-
-  .login-branding-pane {
-    display: none;
   }
 
   .login-form-pane {
