@@ -7,6 +7,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
   // First, check if we have a cached user
   if (cachedUser) {
     return {
+      id: cachedUser.id || cachedUser.user_id || userId,
       name: cachedUser.name || cachedUser.fullname || cachedUser.username || "Unknown",
       avatar: resolveMediaUrl(
         cachedUser.profile_pic || cachedUser.avatar,
@@ -22,6 +23,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
     if (directAuthor || rawItem.author_avatar || rawItem.username) {
       const u = typeof directAuthor === "object" ? directAuthor : rawItem;
       return {
+        id: u.id || u.user_id || rawItem.user_id || rawItem.userId || userId,
         name: u.name || u.username || u.author || u.fullname || "Unknown",
         avatar: resolveMediaUrl(
           u.profile_pic || u.avatar || rawItem.author_avatar,
@@ -39,6 +41,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
   if (!userId) {
     if (defaultAuthor) {
       return {
+        id: defaultAuthor.id || defaultAuthor.user_id || userId,
         name: defaultAuthor.name || defaultAuthor.username || "Unknown",
         avatar: resolveMediaUrl(
           defaultAuthor.profile_pic || defaultAuthor.avatar,
@@ -50,6 +53,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
       };
     }
     return {
+      id: userId || null,
       name: "Unknown",
       avatar: '/profile.jpg',
       username: "@unknown",
@@ -64,6 +68,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
       Number(authStore.user.user_id) === Number(userId))
   ) {
     return {
+      id: authStore.user.id || authStore.user.user_id || userId,
       name: authStore.user.name || authStore.user.username || "Unknown",
       avatar: resolveMediaUrl(
         authStore.user.profile_pic || authStore.user.avatar,
@@ -84,6 +89,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
     );
     if (u) {
       return {
+        id: u.id || u.user_id || userId,
         name: u.name || u.username || "Unknown",
         avatar: resolveMediaUrl(
           u.profile_pic || u.avatar,
@@ -105,6 +111,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
       const u = d.user || d.author;
       if (u && typeof u === "object") {
         return {
+          id: u.id || u.user_id || d.user_id || d.userId || userId,
           name: u.name || u.username || "Unknown",
           avatar: resolveMediaUrl(
             u.profile_pic || u.avatar || d.author_avatar,
@@ -126,6 +133,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
       const u = c.author || c.user;
       if (u && typeof u === "object") {
         return {
+          id: u.id || u.user_id || c.user_id || c.userId || userId,
           name: u.name || u.username || "Unknown",
           avatar: resolveMediaUrl(
             u.profile_pic || u.avatar,
@@ -140,6 +148,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
   // Fallback to defaultAuthor or Unknown
   if (defaultAuthor) {
     return {
+      id: defaultAuthor.id || defaultAuthor.user_id || userId,
       name: defaultAuthor.name || defaultAuthor.username || "Unknown",
       avatar: resolveMediaUrl(
         defaultAuthor.profile_pic || defaultAuthor.avatar,
@@ -152,6 +161,7 @@ export const resolveAuthor = (userId, defaultAuthor, rawItem, cachedUser) => {
   }
 
   return {
+    id: userId || null,
     name: "Unknown",
     avatar: '/profile.jpg',
     username: "@unknown",

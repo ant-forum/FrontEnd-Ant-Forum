@@ -43,7 +43,7 @@ export const useProjectStore = defineStore("project", () => {
     if (!userId || userCache.value[userId]) return;
 
     try {
-      const res = await api.get(`/api/get-user/profile/${userId}`, { skipGlobalToast: true });
+      const res = await api.get(`/api/admin/get-user/${userId}`, { skipGlobalToast: true });
       const userData = res.data?.data || res.data;
       if (userData) {
         userCache.value[userId] = userData;
