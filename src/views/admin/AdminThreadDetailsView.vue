@@ -171,7 +171,6 @@
               <div class="d-flex justify-content-between align-items-center">
                 <span class="text-muted small">Upvotes / Likes:</span>
                 <div class="d-flex align-items-center gap-1">
-                  <i class="bi bi-arrow-up-circle-fill text-primary"></i>
                   <span class="fw-bold text-adaptive">{{ thread.votes || thread.likes || 0 }}</span>
                 </div>
               </div>
