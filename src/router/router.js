@@ -401,6 +401,7 @@ router.beforeEach(async (to, from) => {
       !to.path.startsWith("/admin") &&
       !isPublicRoute &&
       to.name !== "login" &&
+      to.name !== "verify" &&
       to.name !== "not-found" &&
       to.name !== "empty" &&
       to.name !== "loading"
