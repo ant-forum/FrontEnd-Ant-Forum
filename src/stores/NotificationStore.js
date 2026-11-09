@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import api from "../api/api.js";
 import { useForumStore } from "./ForumStore";
 import { useAuthStore } from "./AuthStore";
+import { useToast } from "../composables/useToast";
 
 export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref([]);
@@ -44,7 +45,10 @@ export const useNotificationStore = defineStore("notification", () => {
        message = `${n.sender_username} left a rating on your project.`;
     }
     
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "https://ant-forum.khei.work.gd";
+    const baseUrl = (import.meta.env.VITE_API_BASE_URL || "https://ant-forum.syl.work.gd")
+      .trim()
+      .replace(/\/+$/, "")
+      .replace(/\/api$/, "");
     
     const targetId = n.forum_id || n.forumId || n.forum?.id || 
                      n.post_id || n.postId || n.post?.id || 
@@ -163,10 +167,12 @@ export const useNotificationStore = defineStore("notification", () => {
     notifications.value.unshift(newItem);
     
     // Show a real-time toast to the user
-    import("../composables/useToast").then(({ useToast }) => {
+    try {
       const toast = useToast();
       toast.info(`New Notification: ${newItem.title}`);
-    });
+    } catch {
+      // Toast not available
+    }
   };
 
   const clearNotifications = () => {

@@ -5,7 +5,7 @@
         class="modal fade show"
         tabindex="-1"
         role="dialog"
-        @click.self="$emit('closeModal')"
+        @click.self="handleBackdropClick"
       >
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
@@ -21,7 +21,7 @@
                 type="button"
                 aria-label="Close"
                 title="Close"
-                @click="$emit('closeModal')"
+                @click="emit('closeModal')"
               >
                 <i class="bi bi-x-lg"></i>
               </button>
@@ -65,11 +65,21 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  closeOnBackdrop: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const themeClass = computed(() => `text-${props.theme}`);
 
-defineEmits(["closeModal"]);
+const emit = defineEmits(["closeModal"]);
+
+const handleBackdropClick = () => {
+  if (props.closeOnBackdrop) {
+    emit("closeModal");
+  }
+};
 
 onMounted(() => {
   document.body.classList.add("modal-open");

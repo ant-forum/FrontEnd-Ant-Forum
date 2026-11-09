@@ -2,7 +2,10 @@ const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const BACKEND_MEDIA_PREFIXES = ["/uploads/"];
 
 const apiBaseUrl = () =>
-  (import.meta.env.VITE_API_BASE_URL || "https://ant-forum.khei.work.gd").replace(/\/+$/, "");
+  (import.meta.env.VITE_API_BASE_URL || "https://ant-forum.syl.work.gd")
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/api$/, "");
 
 const isBackendMediaPath = (path) =>
   BACKEND_MEDIA_PREFIXES.some(
@@ -64,7 +67,7 @@ export const rewriteHtmlMediaUrls = (html) => {
   
   // Replace relative /uploads/ paths inside src="..." or markdown (![...](/uploads/...))
   // We match /uploads/ followed by non-whitespace and non-quote characters
-  return html.replace(/(\/uploads\/[^\s"'<>\)]+)/gi, (match, path) => {
+  return html.replace(/(\/uploads\/[^\s"'<>()]+)/gi, (match, path) => {
     return `${base}${path}`;
   });
 };

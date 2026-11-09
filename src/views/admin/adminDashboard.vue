@@ -331,10 +331,9 @@ const chartSets = computed(() => {
     
     let dIdx = null;
     let wIdx = null;
-    let mIdx = null;
 
     const dateNum = d.getDate();
-    mIdx = 3;
+    let mIdx = 3;
     if (dateNum <= 7) mIdx = 0;
     else if (dateNum <= 14) mIdx = 1;
     else if (dateNum <= 21) mIdx = 2;

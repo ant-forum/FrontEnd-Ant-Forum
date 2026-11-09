@@ -55,11 +55,12 @@ export const useAuthStore = defineStore("auth", () => {
     if (socket.value) return;
     if (!token.value) return;
 
-    const socketUrl =
+    const rawSocketUrl =
       import.meta.env.VITE_API_BASE_URL ||
       (import.meta.env.DEV
         ? "http://localhost:5001"
-        : "https://ant-forum.khei.work.gd");
+        : "https://ant-forum.syl.work.gd");
+    const socketUrl = String(rawSocketUrl).trim().replace(/\/+$/, "").replace(/\/api$/, "");
 
     import("socket.io-client")
       .then(({ io }) => {

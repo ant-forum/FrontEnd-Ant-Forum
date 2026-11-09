@@ -6,13 +6,27 @@ import vueDevTools from "vite-plugin-vue-devtools";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const target = env.VITE_API_BASE_URL || 'http://localhost:5001';
-  const cleanTarget = target.endsWith('/') ? target.slice(0, -1) : target;
+  const cleanTarget = target.trim().replace(/\/+$/, '').replace(/\/api$/, '');
 
   return {
     plugins: [vue(), vueDevTools()],
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
+      },
+    },
+    build: {
+      chunkSizeWarningLimit: 1200,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("node_modules")) {
+              if (id.includes("@tiptap")) return "vendor-tiptap";
+              if (id.includes("chart.js") || id.includes("highlight.js")) return "vendor-vis";
+              return "vendor";
+            }
+          },
+        },
       },
     },
     server: {

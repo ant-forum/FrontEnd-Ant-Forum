@@ -276,7 +276,9 @@ onMounted(async () => {
   loading.value = true;
   try {
     await tagsStore.fetchTags();
-  } catch (e) {}
+  } catch {
+    // ignore tag prefetch error
+  }
 
   try {
     if (route.query.tab === "saves") {

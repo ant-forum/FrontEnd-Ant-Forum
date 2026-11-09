@@ -1,15 +1,12 @@
 <script setup>
 import TrendingTags from "../forum/TrendingTags.vue";
-import TopContributors from "../forum/TopContributors.vue";
+// TopContributors component is pending implementation
 </script>
 
 <template>
   <aside class="showcase-sidebar">
     <div class="sidebar-card">
       <TrendingTags />
-    </div>
-    <div class="sidebar-card">
-      <TopContributors />
     </div>
   </aside>
 </template>

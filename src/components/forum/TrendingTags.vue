@@ -46,7 +46,7 @@ const staticTagsFallback = [
 ];
 
 const tags = computed(() => {
-  let list = [];
+  let list;
   if (tagsStore.tags && tagsStore.tags.length > 0) {
     list = tagsStore.tags.map((t) => ({
       id: t.id,

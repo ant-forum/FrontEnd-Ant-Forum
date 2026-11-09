@@ -351,7 +351,7 @@ const closeDeleteModal = () => {
 };
 
 const saveTag = async () => {
-  let successMessage = "";
+  let successMessage;
 
   try {
     mForm.isLoading = true;

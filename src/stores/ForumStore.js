@@ -4,8 +4,7 @@ import api from "@/api/api";
 import { useUsersStore } from "./UsersStore";
 import { useAuthStore } from "./AuthStore";
 import { useTagsStore } from "./TagsStore";
-import { createPlainTextExcerpt, htmlToPlainText } from "@/utils/richContent";
-import { resolveMediaUrl, rewriteHtmlMediaUrls } from "@/utils/mediaUrl";
+import { rewriteHtmlMediaUrls } from "@/utils/mediaUrl";
 import { stripMarkdown } from "@/utils/markdown";
 
 const getTagColor = (tag) => {
@@ -414,7 +413,11 @@ export const useForumStore = defineStore("forum", () => {
       }
 
       if (categories.value.length === 0) {
-        try { await fetchCategories(); } catch (e) {}
+        try {
+          await fetchCategories();
+        } catch {
+          // ignore background category prefetch failure
+        }
       }
 
       const mappedDiscussions = discussionsData.map((d) => {

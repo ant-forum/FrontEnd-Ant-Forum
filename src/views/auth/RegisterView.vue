@@ -1,10 +1,10 @@
 <template>
   <AuthLayout customCard>
-    <RegisterForm />
+    <LoginForm />
   </AuthLayout>
 </template>
 
 <script setup>
 import AuthLayout from "@/components/layouts/AuthLayout.vue";
-import RegisterForm from "@/components/auth/RegisterForm.vue";
+import LoginForm from "@/components/auth/LoginForm.vue";
 </script>

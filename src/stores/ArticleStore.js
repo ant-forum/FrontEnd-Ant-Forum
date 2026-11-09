@@ -1,4 +1,4 @@
-import { reactive, ref } from "vue";
+import { ref } from "vue";
 import { defineStore } from "pinia";
 import api from "@/api/api";
 
@@ -32,8 +32,6 @@ export const useArticleStore = defineStore("articles", () => {
       }
 
       hasMore.value = res.data.data.meta.hasNextPage === true;
-    } catch (err) {
-      throw err;
     } finally {
       isLoading.value = false;
     }

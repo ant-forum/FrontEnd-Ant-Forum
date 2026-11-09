@@ -50,7 +50,6 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useForumStore } from "@/stores/ForumStore";
 import { useBlogStore } from "@/stores/BlogStore";
-import { useArticleStore } from "@/stores/ArticleStore";
 import { useTagsStore } from "@/stores/TagsStore";
 
 const props = defineProps({
@@ -67,7 +66,6 @@ const props = defineProps({
 const router = useRouter();
 const forumStore = useForumStore();
 const blogStore = useBlogStore();
-const articleStore = useArticleStore();
 const tagsStore = useTagsStore();
 
 const statusText = ref("Connecting to server...");
@@ -113,15 +111,12 @@ onMounted(async () => {
       animateProgress(65),
     ]);
 
-    // Stage 3: Load Blogs & Articles
+    // Stage 3: Load Blogs
     statusText.value = "Preparing engineering articles and blogs...";
     await Promise.all([
       blogStore
         .fetchBlogs()
         .catch((err) => console.warn("Blogs fetch warning:", err)),
-      articleStore
-        .fetchArticles()
-        .catch((err) => console.warn("Articles fetch warning:", err)),
       animateProgress(90),
     ]);
 

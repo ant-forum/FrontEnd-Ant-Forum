@@ -103,10 +103,6 @@ const tagColorMap = {
     bg: "var(--color-tag-cyan-bg)",
     color: "var(--color-tag-cyan-text)",
   },
-  blue: {
-    bg: "var(--color-tag-blue-bg)",
-    color: "var(--color-tag-blue-text)",
-  },
   pink: { bg: "var(--color-tag-pink-bg)", color: "var(--color-tag-pink-text)" },
   teal: { bg: "var(--color-tag-cyan-bg)", color: "var(--color-tag-cyan-text)" },
   red: { bg: "var(--color-tag-red-bg)", color: "var(--color-tag-red-text)" },

@@ -41,6 +41,7 @@
       :title="isCreateMode ? 'Create User' : 'Edit User'"
       :icon="isCreateMode ? 'bi bi-person-plus' : 'bi bi-pencil'"
       kicker=""
+      :closeOnBackdrop="false"
       @closeModal="closeEditModal"
     >
       <form
@@ -209,6 +210,7 @@
       "
       :theme="statusModal.item?.status === 'Active' ? 'danger' : 'success'"
       kicker=""
+      :closeOnBackdrop="false"
       @closeModal="closeStatusModal"
     >
       <p class="delete-message">

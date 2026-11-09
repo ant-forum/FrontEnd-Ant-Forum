@@ -103,7 +103,7 @@ export const markdownToHtml = (markdown = "") => {
     .replace(/(\\ ){2,}/g, "\n\n") // \ \ → blank line (paragraph separator)
     .replace(/\\ /g, "\n") // remaining \ → line break
     // 3. Two trailing spaces (classic markdown hard break)
-    .replace(/  \n/g, "\n")
+    .replace(/ {2}\n/g, "\n")
     .split("\n");
   const output = [];
   let i = 0;

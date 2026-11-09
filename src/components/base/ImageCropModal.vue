@@ -241,7 +241,7 @@ const applyRatioDimensions = (ratioVal) => {
     newWidth = baseWidth.value * 0.9;
     newHeight = baseHeight.value * 0.9;
   } else {
-    let activeRatio = 1;
+    let activeRatio;
     if (ratioVal === "original") {
       activeRatio = naturalAspectRatio.value || 1;
     } else {

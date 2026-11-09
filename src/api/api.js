@@ -87,8 +87,11 @@ const canRefreshRequest = (config) =>
     refreshAccessTokenHandler,
   );
 
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || "https://ant-forum.syl.work.gd").trim();
+const sanitizedBaseUrl = rawBaseUrl.replace(/\/+$/, "").replace(/\/api$/, "");
+
 const api = axios.create({
-  baseURL: import.meta.env.DEV ? "" : (import.meta.env.VITE_API_BASE_URL || "https://ant-forum.khei.work.gd"),
+  baseURL: import.meta.env.DEV ? "" : sanitizedBaseUrl,
   headers: {
     Accept: "application/json",
   },

@@ -316,7 +316,7 @@ const routes = [
     path: "/forum/edit/:id",
     name: "EditDiscussion",
     meta: { requiresAuth: true },
-    component: () => import("../views/forum/CreateDiscussionView.vue"),
+    component: CreateDiscussionView,
   },
   {
     path: "/forum/create",
@@ -339,20 +339,20 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
+  scrollBehavior() {
     // always scroll to top
     return { top: 0 };
   },
 });
 
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore();
 
   // 1. Unify profile loading: fetch user info once if token is present but user state is null
   if (authStore.token && !authStore.user) {
     try {
       await authStore.fetchProfile();
-    } catch (err) {
+    } catch {
       // Ignored: fetchProfile handles token invalidation on 401s internally
     }
   }
